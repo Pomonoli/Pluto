@@ -47,6 +47,12 @@
   transform:translateY(-10px)
 }
 .card-fan .playing-card.legal{box-shadow:0 0 0 1px rgba(112,212,155,.25)}
+.pesten-fan .playing-card{margin-right:-17px}
+.pesten-fan .playing-card:last-child{margin-right:0}
+.pesten-fan .playing-card:hover,.pesten-fan .playing-card.selected{z-index:100!important}
+.pesten-fan .playing-card[aria-disabled="true"]{cursor:default;filter:saturate(.72);opacity:.82}
+.pesten-fan .playing-card .rank{position:absolute;top:8px;left:8px;font-size:19px}
+.pesten-fan .playing-card .suit{position:absolute;top:29px;left:8px;font-size:15px}
 @media(hover:hover) and (pointer:fine){
   .card-fan .playing-card:not(:disabled):hover{
     z-index:30;
@@ -705,6 +711,19 @@ body{
   position:relative;
   overflow-x:hidden;
 }
+html,body{width:100%;max-width:100%;overflow-x:clip}
+#roomView,.room-layout,.room-main,#gameSection,.game-panel,#gameStage,.table-surface{min-width:0;max-width:100%;width:100%}
+.room-main,#gameSection,.game-panel{overflow:hidden}
+.game-player-strip,.card-fan,.pest-top{max-width:100%}
+.pest-top{flex-wrap:wrap}
+.pesten-opponents{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:8px;margin-bottom:12px;min-width:0}
+.pesten-opponent{min-width:0;border:1px solid rgba(238,216,205,.12);border-radius:11px;background:rgba(8,11,20,.58);padding:8px;overflow:hidden;text-align:center}
+.pesten-opponent.active{border-color:#9ee8ef;box-shadow:inset 0 0 0 1px rgba(158,232,239,.12)}
+.pesten-opponent>strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;margin-bottom:7px}
+.pesten-card-backs{height:42px;display:flex;align-items:center;justify-content:center;padding-right:14px;min-width:0}
+.pesten-card-back{flex:0 0 26px;width:26px;height:38px;margin-right:-15px;border:1px solid rgba(222,230,246,.48);border-radius:5px;background:repeating-linear-gradient(45deg,#6f3136 0 4px,#8f4144 4px 8px);box-shadow:0 2px 5px rgba(0,0,0,.28)}
+.pesten-card-backs small{position:relative;margin-left:19px;color:#e9c0ae;font-weight:800}
+.pesten-current-suit{font-size:clamp(17px,5vw,24px);white-space:nowrap}
 body::before{
   content:"";
   position:fixed;
@@ -803,6 +822,15 @@ input{
   .mobile-nav-item{color:#cdd4f5}
   .mobile-nav-item.active{color:#fff;background:rgba(255,255,255,.06)}
   .mobile-nav-item.active::after{background:#f0c964}
+}
+@media(max-width:480px){
+  .game-panel{padding-left:10px;padding-right:10px}
+  .table-surface{padding-left:10px;padding-right:10px}
+  .pesten-opponents{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+  .pesten-opponent{padding:7px 4px}
+  .pesten-card-back{flex-basis:22px;width:22px;height:34px;margin-right:-14px}
+  .pesten-fan{padding-left:4px;padding-right:18px}
+  .pesten-fan .playing-card{margin-right:-13px}
 }
 
 

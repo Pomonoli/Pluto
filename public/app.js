@@ -1,6 +1,6 @@
-import { RULES } from './js/rules.js?v=0.11.7';
-import { createGameUi } from './js/game-ui.js?v=0.11.7';
-import { createMapEditor } from './js/map-editor.js?v=0.11.7';
+import { RULES } from './js/rules.js?v=0.11.8';
+import { createGameUi } from './js/game-ui.js?v=0.11.8';
+import { createMapEditor } from './js/map-editor.js?v=0.11.8';
 
 const socket = window.io();
   const $ = (id) => document.getElementById(id);
@@ -596,7 +596,7 @@ const socket = window.io();
   if('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const registration = await navigator.serviceWorker.register('/service-worker.js?v=0.11.7', {
+        const registration = await navigator.serviceWorker.register('/service-worker.js?v=0.11.8', {
           updateViaCache:'none'
         });
         await registration.update();

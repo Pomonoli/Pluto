@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.11.8 — Pesten-weergave
+
+- Mobiele spelkaart blijft binnen de toestelbreedte.
+- Eigen hand is leesbaar gestapeld met de rechtse kaart bovenaan.
+- Handen van tegenstanders worden als kaart-ruggen rond de tafel getoond.
+- Dubbel Pesten-label verwijderd.
+
 ## v0.11.7 — Blackjack fixen
 
 - Accountbrede chips met correcte uitbetalingen en automatische reset bij nul.

@@ -51,7 +51,7 @@ function renderGame(room) {
     return;
   }
 
-  if(!['minigolf','blackjack'].includes(game.kind))els.gameStage.append(renderGamePlayerStrip(room,game));
+  if(!['minigolf','blackjack','pesten'].includes(game.kind))els.gameStage.append(renderGamePlayerStrip(room,game));
   const renderer = { blackjack:renderBlackjack, solitaire:renderSolitaire, presidenten:renderPresidenten, pesten:renderPesten, zenuwen:renderZenuwen, hartenjagen:renderHartenjagen, cluedo:renderCluedo, minigolf:renderMinigolf }[game.kind];
   if (renderer) renderer(room, game); else els.gameStage.textContent = 'Renderer ontbreekt.';
 }
@@ -284,9 +284,10 @@ function renderPresidenten(room,game) {
 }
 
 function renderPesten(room,game) {
-  const me=game.players.find(p=>p.id===room.meId),turn=game.players.find(p=>p.id===game.turnPlayerId),mine=me?.id===game.turnPlayerId;els.gameStage.append(titlebar('Pesten',game.gameOver?'Spel afgelopen.':mine?'Jouw beurt.':`${turn?.name||''} is aan de beurt.`));const table=E('div','table-surface');table.append(E('div','turn-banner',`${game.rulesNote} ${game.drawPenalty?`Openstaande straf: +${game.drawPenalty}.`:''}`));
-  const top=E('div','pest-top');top.append(E('div','pest-direction',game.direction===1?'↻':'↺'));top.append(cardNode(game.topCard,{button:false}));const suit=E('div','',`Huidige suit: ${game.currentSuit}`);suit.style.fontSize='24px';top.append(suit);table.append(top,scoreList(game.players,p=>`${p.handCount} kaarten`));
-  const hand=E('div','hand-area');const row=E('div','card-fan');const playable=new Set(game.playableIds||[]);(me?.hand||[]).forEach(c=>{const legal=mine&&playable.has(c.id);const n=cardNode(c,{legal,selected:state.selection?.game==='pesten'&&state.selection.cardId===c.id});n.disabled=!legal;n.onclick=()=>{if(c.rank==='J'){state.selection={game:'pesten',cardId:c.id};renderGame(state.room)}else action('play',{cardId:c.id})};row.append(n)});hand.append(E('span','eyebrow','JOUW HAND'),row);
+  const me=game.players.find(p=>p.id===room.meId),turn=game.players.find(p=>p.id===game.turnPlayerId),mine=me?.id===game.turnPlayerId;els.gameStage.append(titlebar('Pesten',game.gameOver?'Spel afgelopen.':mine?'Jouw beurt.':`${turn?.name||''} is aan de beurt.`,{hideEyebrow:true}));const table=E('div','table-surface');table.append(E('div','turn-banner',`${game.rulesNote} ${game.drawPenalty?`Openstaande straf: +${game.drawPenalty}.`:''}`));
+  const opponents=E('div','pesten-opponents');game.players.filter(p=>p.id!==room.meId).forEach(p=>{const seat=E('div',`pesten-opponent ${p.id===game.turnPlayerId?'active':''}`);seat.append(E('strong','',`${p.name}${p.isNpc?' · NPC':''}`));const backs=E('div','pesten-card-backs');const visible=Math.min(p.handCount,12);for(let i=0;i<visible;i+=1)backs.append(E('span','pesten-card-back'));if(p.handCount>visible)backs.append(E('small','',`+${p.handCount-visible}`));seat.append(backs);opponents.append(seat)});if(opponents.childElementCount)table.append(opponents);
+  const top=E('div','pest-top');top.append(E('div','pest-direction',game.direction===1?'↻':'↺'));top.append(cardNode(game.topCard,{button:false}));const suit=E('div','pesten-current-suit',`Huidige suit: ${game.currentSuit}`);top.append(suit);table.append(top);
+  const hand=E('div','hand-area');const row=E('div','card-fan pesten-fan');const playable=new Set(game.playableIds||[]);(me?.hand||[]).forEach((c,index)=>{const legal=mine&&playable.has(c.id);const n=cardNode(c,{legal,selected:state.selection?.game==='pesten'&&state.selection.cardId===c.id});n.style.zIndex=String(index+1);n.setAttribute('aria-disabled',legal?'false':'true');n.onclick=()=>{if(!legal)return;if(c.rank==='J'){state.selection={game:'pesten',cardId:c.id};renderGame(state.room)}else action('play',{cardId:c.id})};row.append(n)});hand.append(E('span','eyebrow','JOUW HAND'),row);
   if(mine&&!game.gameOver){const ar=E('div','action-row');const draw=E('button','secondary',game.drawPenalty?`Neem +${game.drawPenalty}`:'Trek kaart');draw.onclick=()=>action('draw');ar.append(draw);hand.append(ar)}
   if(state.selection?.game==='pesten'&&state.selection.cardId&&mine){const picker=E('div','suit-picker');['♣','♦','♥','♠'].forEach(s=>{const b=E('button','secondary',s);b.onclick=()=>{action('play',{cardId:state.selection.cardId,suit:s});state.selection=null};picker.append(b)});hand.append(E('div','player-note','Kies een suit voor de Boer:'),picker)}table.append(hand,logBox(game.log));els.gameStage.append(table);
 }
