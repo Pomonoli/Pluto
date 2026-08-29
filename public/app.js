@@ -1,6 +1,6 @@
-import { RULES } from './js/rules.js?v=0.11.6';
-import { createGameUi } from './js/game-ui.js?v=0.11.6';
-import { createMapEditor } from './js/map-editor.js?v=0.11.6';
+import { RULES } from './js/rules.js?v=0.11.7';
+import { createGameUi } from './js/game-ui.js?v=0.11.7';
+import { createMapEditor } from './js/map-editor.js?v=0.11.7';
 
 const socket = window.io();
   const $ = (id) => document.getElementById(id);
@@ -437,7 +437,7 @@ const socket = window.io();
     state.room = room; state.previousRoom=room; rememberRecentGame(room.gameKey); showRoom();
     document.body.classList.toggle('minigolf-mode', room.gameKey==='minigolf' && room.status!=='lobby');
     els.roomGameName.textContent = room.gameMeta.name.toUpperCase(); els.roomCodeHeading.textContent = room.id; els.shareLink.value = `${location.origin}/room/${room.id}`;
-    const canRematch = room.status !== 'lobby' && room.gameState?.gameOver && room.isHost;
+    const canRematch = room.gameKey !== 'blackjack' && room.status !== 'lobby' && room.gameState?.gameOver && room.isHost;
     els.roomRematchButton.classList.toggle('hidden', !canRematch);
     if(!canRematch){els.roomRematchButton.disabled=false;els.roomRematchButton.textContent='Rematch'}
     els.roomLayout.classList.toggle('solo', room.gameMeta.solo); els.chatPanel.classList.toggle('hidden', room.gameMeta.solo);
@@ -596,7 +596,7 @@ const socket = window.io();
   if('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const registration = await navigator.serviceWorker.register('/service-worker.js?v=0.11.6', {
+        const registration = await navigator.serviceWorker.register('/service-worker.js?v=0.11.7', {
           updateViaCache:'none'
         });
         await registration.update();

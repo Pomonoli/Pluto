@@ -254,6 +254,41 @@ function createRealtime(io) {
     room.matchRecorded = true;
   }
 
+  function syncBlackjackChipUpdates(room) {
+    if (room.gameKey !== 'blackjack' || !room.gameState?.pendingChipUpdates?.length) return;
+    const updates = room.gameState.pendingChipUpdates.splice(0);
+    for (const update of updates) {
+      const roomPlayer = room.players.find((player) => player.id === update.playerId);
+      if (!roomPlayer?.userId) continue;
+      const persisted = authDb.setBlackjackChips(roomPlayer.userId, update.chips);
+      const gamePlayer = room.gameState.players.find((player) => player.id === update.playerId);
+      if (gamePlayer) {
+        gamePlayer.chips = persisted.chips;
+        gamePlayer.resetChips = persisted.reset;
+      }
+    }
+  }
+
+  function recordBlackjackRound(room) {
+    const round = room.gameKey === 'blackjack' ? room.gameState?.pendingRoundRecord : null;
+    if (!round) return;
+    room.gameState.pendingRoundRecord = null;
+    if (room.players.filter((player) => !player.isNpc).length < 2) return;
+    const resultByPlayer = new Map(round.players.map((result) => [result.playerId, result]));
+    authDb.recordMatch({
+      gameKey:'blackjack',roomId:room.id,startedAt:round.startedAt,endedAt:round.endedAt,
+      players:room.players.map((player) => {
+        const result = resultByPlayer.get(player.id) || {};
+        return {
+          userId:player.userId || null,displayName:player.name,
+          placement:result.placement ?? null,score:result.score ?? null,
+          won:Boolean(result.won),outcome:result.outcome || null,
+          durationMs:Math.max(0,round.endedAt-round.startedAt),moves:null
+        };
+      })
+    });
+  }
+
   function startGame(room) {
     const module = gameModule(room);
     const { minPlayers, maxPlayers } = module.meta;
@@ -268,7 +303,13 @@ function createRealtime(io) {
 
     if (!allHumansConnected(room)) throw new Error('Niet alle spelers zijn verbonden.');
 
-    room.gameState = module.createGame(room.players);
+    const gamePlayers = room.gameKey === 'blackjack'
+      ? room.players.map((player) => ({
+          ...player,
+          blackjackChips:player.userId ? authDb.getBlackjackChips(player.userId) : 100
+        }))
+      : room.players;
+    room.gameState = module.createGame(gamePlayers);
     room.status = room.gameState.gameOver ? 'finished' : 'playing';
     room.startedAt = Date.now();
     room.matchRecorded = false;
@@ -482,6 +523,8 @@ function createRealtime(io) {
           String(payload.action || ''),
           payload.data || {}
         );
+        syncBlackjackChipUpdates(room);
+        recordBlackjackRound(room);
         room.gameRevision = (room.gameRevision || 0) + 1;
 
         if (room.gameState.gameOver) {
@@ -579,6 +622,8 @@ function createRealtime(io) {
 
         try {
           const changed = module.tick(room.gameState, now);
+          syncBlackjackChipUpdates(room);
+          recordBlackjackRound(room);
 
           if (room.gameState.gameOver) {
             room.status = 'finished';

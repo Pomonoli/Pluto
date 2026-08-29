@@ -71,6 +71,10 @@ db.exec(`
   );
 `);
 
+if (!db.prepare("PRAGMA table_info(users)").all().some((column) => column.name === 'blackjack_chips')) {
+  db.exec('ALTER TABLE users ADD COLUMN blackjack_chips INTEGER NOT NULL DEFAULT 100');
+}
+
 function applyDataMigrations() {
   const resetKey = 'v0.10.3-reset-leaderboards';
   const alreadyApplied = db.prepare(
@@ -395,6 +399,28 @@ function getOwnStats(userId) {
   return { games, wins, winRate: games ? Math.round((wins / games) * 1000) / 10 : 0 };
 }
 
+function getBlackjackChips(userId) {
+  const row = db.prepare('SELECT blackjack_chips AS chips FROM users WHERE id = ?').get(userId);
+  return Math.max(0, Number(row?.chips ?? 100));
+}
+
+function adjustBlackjackChips(userId, delta) {
+  const current = getBlackjackChips(userId);
+  let chips = current + Number(delta || 0);
+  const reset = chips <= 0;
+  if (reset) chips = 100;
+  db.prepare('UPDATE users SET blackjack_chips = ? WHERE id = ?').run(chips, userId);
+  return { chips, delta:Number(delta || 0), reset };
+}
+
+function setBlackjackChips(userId, value) {
+  let chips = Math.max(0, Number(value ?? 100));
+  const reset = chips <= 0;
+  if (reset) chips = 100;
+  db.prepare('UPDATE users SET blackjack_chips = ? WHERE id = ?').run(chips, userId);
+  return { chips, reset };
+}
+
 function headToHead(viewerUserId, opponentUsername, gameKey = null) {
   const key = normalizeUsername(opponentUsername).toLocaleLowerCase('nl-BE');
   const opponent = db.prepare(
@@ -559,6 +585,9 @@ module.exports = {
   leaderboard,
   getProfile,
   getOwnStats,
+  getBlackjackChips,
+  adjustBlackjackChips,
+  setBlackjackChips,
   headToHead,
   validateUsername,
   listMinigolfMaps,

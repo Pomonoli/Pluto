@@ -1,16 +1,38 @@
 export function createGameUi(ctx) {
   const { state, els, E, action, profileButton, sound, socket, handleAck, cardNode, valueLabel, requestRematch } = ctx;
 
+function resultPresentation(room,game){
+  let winners=[];
+  if(game.kind==='blackjack')winners=(game.players||[]).filter(player=>['Wint','Blackjack'].includes(player.result));
+  else if(game.kind==='cluedo')winners=(game.players||[]).filter(player=>player.id===game.winnerId);
+  else if(game.kind==='presidenten')winners=(game.players||[]).filter(player=>player.place===1);
+  else if(game.kind==='pesten')winners=(game.players||[]).filter(player=>player.handCount===0);
+  else if(game.kind==='zenuwen')winners=(game.players||[]).filter(player=>player.stockCount+player.handCount===0);
+  else if(game.kind==='hofslag'&&game.players?.length){const best=Math.max(...game.players.map(player=>player.score));winners=game.players.filter(player=>player.score===best)}
+  else if(game.kind==='hartenjagen'&&game.players?.length){const best=Math.min(...game.players.map(player=>player.totalScore));winners=game.players.filter(player=>player.totalScore===best)}
+  else if(game.kind==='minigolf'&&game.players?.length){const best=Math.max(...game.players.map(player=>player.totalPoints));winners=game.players.filter(player=>player.totalPoints===best)}
+  else if(game.kind==='solitaire')winners=(game.players||room.players||[]).filter(player=>player.id===room.meId).slice(0,1);
+  if(!winners.length){
+    const text=String(game.resultText||'');
+    if(/dealer wint/i.test(text))return {title:'Dealer',copy:'is de winnaar.'};
+    winners=(room.players||[]).filter(player=>text.includes(player.name));
+  }
+  if(winners.length===1)return {title:winners[0].name,copy:'is de winnaar.'};
+  return {title:'Gelijkspel',copy:'Er is geen unieke winnaar.'};
+}
+
 function renderGame(room) {
   const game = room.gameState; if (!game) return; state.selection = normalizeSelection(state.selection, game);
   if (game.kind === 'hofslag' && state.hofAnimation?.active && state.hofAnimation.round === game.lastRound?.round) return;
-  els.gameStage.replaceChildren(); els.gameResult.replaceChildren(); els.gameResult.classList.toggle('hidden', !game.gameOver); els.gameResult.classList.remove('result-pop');
-  if (game.gameOver) {
+  const showGameResult=Boolean(game.gameOver&&game.kind!=='blackjack');
+  els.gameStage.replaceChildren(); els.gameResult.replaceChildren(); els.gameResult.classList.toggle('hidden', !showGameResult); els.gameResult.classList.remove('result-pop');
+  if (showGameResult) {
     els.gameResult.classList.add('result-pop');
+    const presentation=resultPresentation(room,game);
     const resultCard = E('div','result-modal-card');
     resultCard.append(E('span','eyebrow','SPEL AFGELOPEN'));
-    resultCard.append(E('h2','result-modal-title','De winnaar'));
-    resultCard.append(E('p','result-modal-copy',game.resultText || 'Spel afgelopen.'));
+    resultCard.append(E('h2','result-modal-title',presentation.title));
+    resultCard.append(E('p','result-modal-copy',presentation.copy));
     const actions = E('div','result-modal-actions');
     if (room.isHost) {
       const rematch = E('button','primary','Rematch');
@@ -29,7 +51,7 @@ function renderGame(room) {
     return;
   }
 
-  if(game.kind!=='minigolf')els.gameStage.append(renderGamePlayerStrip(room,game));
+  if(!['minigolf','blackjack'].includes(game.kind))els.gameStage.append(renderGamePlayerStrip(room,game));
   const renderer = { blackjack:renderBlackjack, solitaire:renderSolitaire, presidenten:renderPresidenten, pesten:renderPesten, zenuwen:renderZenuwen, hartenjagen:renderHartenjagen, cluedo:renderCluedo, minigolf:renderMinigolf }[game.kind];
   if (renderer) renderer(room, game); else els.gameStage.textContent = 'Renderer ontbreekt.';
 }
@@ -75,7 +97,7 @@ function renderGamePlayerStrip(room,game) {
 
 function normalizeSelection(sel, game) { if (!sel || sel.game !== game.kind) return null; return sel; }
 
-function titlebar(name, status) { const wrap=E('div','game-titlebar'); const left=E('div'); left.append(E('span','eyebrow',name.toUpperCase()),E('h2','',name)); wrap.append(left,E('div','game-status',status)); return wrap; }
+function titlebar(name, status, {hideEyebrow=false}={}) { const wrap=E('div','game-titlebar'); const left=E('div'); if(!hideEyebrow)left.append(E('span','eyebrow',name.toUpperCase())); left.append(E('h2','',name)); wrap.append(left,E('div','game-status',status)); return wrap; }
 function logBox(lines) { const box=E('div','log-box'); (lines||[]).slice(0,18).forEach(line=>box.append(E('div','log-line',line))); return box; }
 
 function renderHofslag(room, game) {
@@ -198,10 +220,13 @@ function renderHofBoard(board,game,opts={}) {
 function scoreList(players, valueFn) { const box=E('div','score-list'); players.forEach(p=>{const r=E('div','score-row');r.append(E('span',`player-dot ${p.connected?'connected':''}`),E('div','player-name',`${p.name}${p.isNpc?' · NPC':''}`),E('strong','',valueFn(p)));box.append(r)});return box; }
 
 function renderBlackjack(room,game) {
-  const me=game.players.find(p=>p.id===room.meId); const turn=game.players.find(p=>p.id===game.turnPlayerId); els.gameStage.append(titlebar('Blackjack',game.gameOver?'Ronde klaar.':game.phase==='dealer'?'Dealer speelt stap voor stap…':turn?`${turn.name} is aan de beurt.`:'Dealer speelt.'));
-  const table=E('div','blackjack-table'); const dealer=E('div','blackjack-player');dealer.append(E('div','blackjack-meta','Dealer'));const cards=E('div','card-row');game.dealer.hand.forEach(c=>cards.append(cardNode(c,{button:false})));dealer.append(cards);if(game.dealer.value!==null)dealer.append(E('div','player-note',`Waarde: ${game.dealer.value}`));table.append(dealer);
-  const zone=E('div','players-zone'); game.players.forEach(p=>{const b=E('div',`blackjack-player ${p.id===game.turnPlayerId?'active':''}`);const m=E('div','blackjack-meta');m.append(E('strong','',p.name),E('span','',`${p.value}${p.result?` · ${p.result}`:''}`));b.append(m);const row=E('div','card-row');p.hand.forEach(c=>row.append(cardNode(c,{button:false})));b.append(row);zone.append(b)});table.append(zone);
-  if(me?.id===game.turnPlayerId&&!game.gameOver){const ar=E('div','blackjack-actions');const hit=E('button','primary','Hit');hit.onclick=()=>action('hit');const stand=E('button','secondary','Stand');stand.onclick=()=>action('stand');ar.append(hit,stand);table.append(ar)}
+  const me=game.players.find(p=>p.id===room.meId); const turn=game.players.find(p=>p.id===game.turnPlayerId); const status=game.phase==='round_end'?'Ronde afgelopen':game.phase==='dealer'?'Dealer speelt stap voor stap…':turn?`${turn.name} is aan de beurt.`:'Dealer speelt.';const heading=titlebar(`Blackjack · ronde ${game.roundNumber??1}`,status,{hideEyebrow:true});heading.classList.add('blackjack-titlebar');els.gameStage.append(heading);
+  if(me){const wallet=E('div','blackjack-wallet');wallet.append(E('span','','Jouw chips'),E('strong','',String(me.chips??100)),E('small','',`Inzet: ${me.bet??10}`));els.gameStage.append(wallet)}
+  const table=E('div','blackjack-table'); const dealer=E('div','blackjack-player');dealer.append(E('div','blackjack-meta','Dealer'));const dealerHand=E('div','blackjack-hand');const cards=E('div','card-row');game.dealer.hand.forEach(c=>cards.append(cardNode(c,{button:false})));dealerHand.append(cards,E('strong','blackjack-total',game.dealer.value===null?'?':String(game.dealer.value)));dealer.append(dealerHand);table.append(dealer);
+  const zone=E('div','players-zone'); game.players.forEach(p=>{const chips=p.chips??100;const b=E('div',`blackjack-player ${p.id===game.turnPlayerId?'active':''}`);const m=E('div','blackjack-meta');m.append(E('strong','',p.name),E('span','',`${chips} chips`));b.append(m);(p.hands||[{cards:p.hand,value:p.value,bet:p.bet,result:p.result,chipDelta:p.chipDelta}]).forEach((h,index)=>{const handBox=E('div',`blackjack-split-hand ${p.id===game.turnPlayerId&&index===p.activeHandIndex?'active':''}`);if((p.hands||[]).length>1)handBox.append(E('small','',`Hand ${index+1} · inzet ${h.bet}`));const hand=E('div','blackjack-hand');const row=E('div','card-row');h.cards.forEach(c=>row.append(cardNode(c,{button:false})));hand.append(row,E('strong','blackjack-total',String(h.value)));handBox.append(hand);b.append(handBox)});if(p.resetChips)b.append(E('div','player-note','Reset naar 100 chips'));zone.append(b)});table.append(zone);
+  if(game.phase==='round_end'&&me){const results=(me.hands||[]).filter(h=>h.result).map((h,index)=>`${(me.hands||[]).length>1?`Hand ${index+1}: `:''}${h.result} (${h.chipDelta>0?'+':''}${h.chipDelta})`);if(results.length)table.append(E('div','blackjack-round-result',results.join(' · ')))}
+  if(me?.id===game.turnPlayerId&&game.phase==='players'){const ar=E('div','blackjack-actions');const hit=E('button','primary','Hit');hit.onclick=()=>action('hit');const stand=E('button','secondary','Stand');stand.onclick=()=>action('stand');ar.append(hit,stand);if(me.canDouble){const double=E('button','secondary','Double');double.onclick=()=>action('double');ar.append(double)}if(me.canSplit){const split=E('button','secondary','Split');split.onclick=()=>action('split');ar.append(split)}table.append(ar)}
+  if(game.phase==='round_end'){const ar=E('div','blackjack-actions');const again=E('button','primary','Opnieuw');again.onclick=()=>action('newRound');ar.append(again);table.append(ar)}
   els.gameStage.append(table,logBox(game.log));
 }
 
