@@ -1,7 +1,7 @@
 const { makeDeck, shuffle } = require('./cards');
 
 const meta = {
-  key: 'solitaire', name: 'Solitaire', description: 'Klondike draw-1.',
+  key: 'solitaire', name: 'Solitaire', description: 'Klondike draw-3.',
   minPlayers: 1, maxPlayers: 1, supportsNpc: false, realtime: false, solo: true
 };
 
@@ -51,7 +51,9 @@ function handleAction(game, playerId, action, payload = {}) {
 
   if (action === 'draw') {
     if (game.stock.length) {
-      const card = game.stock.pop(); card.faceUp = true; game.waste.push(card);
+      for (let i = 0; i < 3 && game.stock.length; i += 1) {
+        const card = game.stock.pop(); card.faceUp = true; game.waste.push(card);
+      }
     } else if (game.waste.length) {
       game.stock = game.waste.reverse().map((c) => ({ ...c, faceUp: false }));
       game.waste = [];

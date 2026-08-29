@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.12.1 — Spelregels en Solitaire draw-3
+
+- Infoknoppen op het startscherm openen voortaan de volledige spelregels.
+- Korte spelbeschrijvingen zijn uit de gamekaarten verwijderd.
+- Solitaire gebruikt nu de uitdagendere Klondike draw-3-variant.
+
 ## v0.12.0 — Kaartspellen verfijnd
 
 - Hartenjagen heeft een stabiele mobiele tafel, compacte score- en handkaarten en logisch gesorteerde speelkaarten.

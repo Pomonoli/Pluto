@@ -1,6 +1,6 @@
-import { RULES } from './js/rules.js?v=0.12.0';
-import { createGameUi } from './js/game-ui.js?v=0.12.0';
-import { createMapEditor } from './js/map-editor.js?v=0.12.0';
+import { RULES } from './js/rules.js?v=0.12.1';
+import { createGameUi } from './js/game-ui.js?v=0.12.1';
+import { createMapEditor } from './js/map-editor.js?v=0.12.1';
 
 const socket = window.io();
   const $ = (id) => document.getElementById(id);
@@ -484,7 +484,7 @@ const socket = window.io();
 
 
   function renderChat(messages) { const near=els.chatMessages.scrollHeight-els.chatMessages.scrollTop-els.chatMessages.clientHeight<80;els.chatMessages.replaceChildren();messages.forEach(m=>{const d=E('div',`chat-message ${m.type==='system'?'system':''}`);d.append(E('strong','',m.name),E('p','',m.text));els.chatMessages.append(d)});if(near||messages.length<4)els.chatMessages.scrollTop=els.chatMessages.scrollHeight; }
-  function openRules(){if(!state.room)return;els.rulesGameName.textContent=state.room.gameMeta.name.toUpperCase();els.rulesContent.innerHTML=RULES[state.room.gameKey]||'<p>Geen regels beschikbaar.</p>';els.rulesModal.classList.remove('hidden');els.rulesModal.setAttribute('aria-hidden','false')}
+  function openRules(gameKey,stateName){const key=gameKey||state.room?.gameKey;if(!key)return;const name=stateName||state.room?.gameMeta?.name||GAME_NAMES[key]||key;els.rulesGameName.textContent=name.toUpperCase();els.rulesContent.innerHTML=RULES[key]||'<p>Geen regels beschikbaar.</p>';els.rulesModal.classList.remove('hidden');els.rulesModal.setAttribute('aria-hidden','false')}
   function closeRules(){els.rulesModal.classList.add('hidden');els.rulesModal.setAttribute('aria-hidden','true')}
   function leaveRoom(){
     state.roomStateBlocked=true;state.expectedRoomId=null;state.directRoomId=null;
@@ -513,7 +513,7 @@ const socket = window.io();
   socket.on('room:state',(room)=>renderRoom(room));
   socket.on('session:replaced',()=>toast('Deze speler is in een andere tab opnieuw verbonden.'));
 
-  els.gameGrid.addEventListener('click',(e)=>{const b=e.target.closest('.game-launch');if(b)createRoom(b.dataset.game)});
+  els.gameGrid.addEventListener('click',(e)=>{const info=e.target.closest('[data-rules-game]');if(info){openRules(info.dataset.rulesGame);return}const b=e.target.closest('.game-launch');if(b)createRoom(b.dataset.game)});
   els.minigolfEditorButton.onclick=()=>{if(state.room)return toast('Verlaat eerst de room.');setRoute('/minigolf/editor');mapEditor.showMinigolfEditor()};
   els.mapToolGrid.addEventListener('click',(e)=>{const b=e.target.closest('.map-tool');if(b&&!mapEditor.ensureMapEditor().testMode)mapEditor.selectEditorTool(b.dataset.tool)});
   els.newGolfMapButton.onclick=()=>{if(mapEditor.ensureMapEditor().dirty&&!confirm('Niet-opgeslagen wijzigingen wissen?'))return;mapEditor.resetEditorMap()};
@@ -532,7 +532,7 @@ const socket = window.io();
   els.headToHeadGame.onchange=()=>{if(state.viewedProfileUsername)loadHeadToHead(state.viewedProfileUsername,els.headToHeadGame.value)};
   els.roomRematchButton.onclick=()=>requestRematch(els.roomRematchButton);
   els.roomLeaveButton.onclick=leaveRoom;
-  els.rulesButton.onclick=openRules;
+  els.rulesButton.onclick=()=>openRules();
   els.closeRulesButton.onclick=closeRules;
   els.leaveButton.onclick=leaveRoom;
   els.rulesModal.onclick=(e)=>{if(e.target===els.rulesModal)closeRules()};
@@ -599,7 +599,7 @@ const socket = window.io();
   if('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const registration = await navigator.serviceWorker.register('/service-worker.js?v=0.12.0', {
+        const registration = await navigator.serviceWorker.register('/service-worker.js?v=0.12.1', {
           updateViaCache:'none'
         });
         await registration.update();

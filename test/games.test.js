@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const blackjack = require('../src/blackjack');
 const { handValue } = blackjack;
+const solitaire = require('../src/solitaire');
 const { presidentRank, playableCardIds } = require('../src/presidenten');
 const { cardPoints } = require('../src/hartenjagen');
 const { getGame, listGames } = require('../src/games');
@@ -13,6 +14,24 @@ test('alle 8 games zijn geregistreerd', () => {
 test('Blackjack Aas telt als 1 wanneer nodig', () => {
   assert.equal(handValue([{rank:'A'},{rank:'9'},{rank:'5'}]), 15);
   assert.equal(handValue([{rank:'A'},{rank:'K'}]), 21);
+});
+
+test('Solitaire trekt maximaal drie kaarten per draw', () => {
+  const game=solitaire.createGame([{id:'solo'}]);
+  game.stock=[
+    {id:'A♣',faceUp:false},
+    {id:'2♣',faceUp:false},
+    {id:'3♣',faceUp:false},
+    {id:'4♣',faceUp:false}
+  ];
+  game.waste=[];
+  solitaire.handleAction(game,'solo','draw');
+  assert.equal(game.stock.length,1);
+  assert.deepEqual(game.waste.map(card=>card.id),['4♣','3♣','2♣']);
+  assert.ok(game.waste.every(card=>card.faceUp));
+  solitaire.handleAction(game,'solo','draw');
+  assert.equal(game.stock.length,0);
+  assert.equal(game.waste.at(-1).id,'A♣');
 });
 
 test('Blackjack natural betaalt 3 op 2 en nul chips reset naar 100', () => {
