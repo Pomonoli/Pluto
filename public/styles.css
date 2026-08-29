@@ -1335,3 +1335,5 @@ input:focus,select:focus,textarea:focus{border-color:rgba(226,163,134,.48);box-s
     padding-right:max(14px,env(safe-area-inset-right));
   }
 }
+
+#installButton{font-weight:400}

@@ -1,6 +1,6 @@
-import { RULES } from './js/rules.js?v=0.11.5';
-import { createGameUi } from './js/game-ui.js?v=0.11.5';
-import { createMapEditor } from './js/map-editor.js?v=0.11.5';
+import { RULES } from './js/rules.js?v=0.11.6';
+import { createGameUi } from './js/game-ui.js?v=0.11.6';
+import { createMapEditor } from './js/map-editor.js?v=0.11.6';
 
 const socket = window.io();
   const $ = (id) => document.getElementById(id);
@@ -90,9 +90,7 @@ const socket = window.io();
   function updateInstallButtonVisibility() {
     const onStandalone = isStandaloneApp();
     document.body.classList.toggle('standalone-mode', onStandalone);
-    const isiOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-    const canInstall = Boolean(state.deferredInstallPrompt) || (isiOS && !window.navigator.standalone);
-    els.installButton.classList.toggle('hidden', onStandalone || !canInstall);
+    els.installButton.classList.toggle('hidden', onStandalone);
   }
 
   function hideMainViews() {
@@ -598,7 +596,7 @@ const socket = window.io();
   if('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const registration = await navigator.serviceWorker.register('/service-worker.js?v=0.11.5', {
+        const registration = await navigator.serviceWorker.register('/service-worker.js?v=0.11.6', {
           updateViaCache:'none'
         });
         await registration.update();
