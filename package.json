@@ -1,0 +1,19 @@
+{
+  "name": "minigames-platform",
+  "version": "0.11.4",
+  "private": true,
+  "description": "Pluto gaming space - unified site/app logo",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test",
+    "check": "node --check server.js && node --test"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "express": "5.2.1",
+    "socket.io": "4.8.3"
+  }
+}

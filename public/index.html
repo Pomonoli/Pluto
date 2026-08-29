@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1d2148">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Pluto">
+  <title>Pluto</title>
+  <link rel="manifest" href="/manifest.webmanifest?v=0.11.4">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png?v=0.11.4">
+  <link rel="stylesheet" href="/styles.css?v=0.11.4">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <button class="brand-button" id="brandButton" type="button" aria-label="Naar Pluto home">
+        <span class="brand-mark" aria-hidden="true"><img class="brand-mark-img" src="/icons/icon-192.png?v=0.11.4" alt=""></span>
+        <span class="brand-copy"><strong>Pluto</strong><small>gaming space</small></span>
+      </button>
+      <div class="top-actions">
+        <span class="connection-pill" id="connectionPill">Verbinden…</span>
+        <button class="ghost" id="lobbyBrowserButton" type="button">Lobby</button>
+        <button class="ghost" id="leaderboardButton" type="button">Leaderboard</button>
+        <button class="ghost sound-toggle" id="soundButton" type="button" aria-pressed="false" aria-label="Geluid uitzetten" title="Geluid uitzetten"></button>
+        <button class="ghost hidden" id="installButton" type="button">App</button>
+        <button class="ghost" id="accountButton" type="button">Inloggen</button>
+        <button class="ghost hidden" id="rulesButton" type="button">Spelregels</button>
+        <button class="ghost hidden" id="leaveButton" type="button">Verlaat room</button>
+      </div>
+    </header>
+
+    <main>
+      <section id="homeView" class="view">
+        <div id="homeGuestBar" class="home-guest-bar">
+          <div class="home-guest-field">
+            <span class="eyebrow">SPEEL ALS GUEST</span>
+            <input id="guestName" maxlength="18" autocomplete="nickname" placeholder="Guestnaam">
+          </div>
+          <button class="secondary" id="homeAccountButton" type="button">Account maken / inloggen</button>
+        </div>
+
+        <div id="inviteBox" class="invite-box hidden">
+          <div><span class="eyebrow">UITNODIGING</span><strong id="inviteText">Room</strong></div>
+          <button class="primary" id="joinInviteButton" type="button">Join room</button>
+        </div>
+
+        <section id="recentGamesSection" class="recent-games-section hidden">
+          <div class="section-heading compact-heading"><div><span class="eyebrow">RECENT</span><h2>Recent gespeeld</h2></div></div>
+          <div id="recentGames" class="recent-game-row"></div>
+        </section>
+
+        <div class="section-heading"><div><span class="eyebrow">GAMES</span><h2>Kies een minigame</h2></div></div>
+        <div class="game-grid" id="gameGrid">
+          <article class="game-card"><div class="game-icon">♛</div><div class="game-card-body"><div class="game-title-row"><h3>Hofslag</h3><span class="badge">2-4</span></div><p>Tactisch kaartspel rond 12 J/Q/K-kaarten.</p><button class="primary game-launch" data-game="hofslag" type="button">Nieuw spel</button></div></article>
+          <article class="game-card"><div class="game-icon">21</div><div class="game-card-body"><div class="game-title-row"><h3>Blackjack</h3><span class="badge">1-4</span></div><p>Versla de dealer zonder boven 21 te gaan.</p><button class="primary game-launch" data-game="blackjack" type="button">Nieuw spel</button></div></article>
+          <article class="game-card"><div class="game-icon">♠</div><div class="game-card-body"><div class="game-title-row"><h3>Solitaire</h3><span class="badge">Solo</span></div><p>Klondike draw-1. Bouw vier foundations op van Aas tot Koning.</p><button class="primary game-launch" data-game="solitaire" type="button">Spelen</button></div></article>
+          <article class="game-card"><div class="game-icon">👑</div><div class="game-card-body"><div class="game-title-row"><h3>Presidenten</h3><span class="badge">3-4</span></div><p>Leg hogere combinaties en raak als eerste je kaarten kwijt.</p><button class="primary game-launch" data-game="presidenten" type="button">Nieuw spel</button></div></article>
+          <article class="game-card"><div class="game-icon">↻</div><div class="game-card-body"><div class="game-title-row"><h3>Pesten</h3><span class="badge">2-4</span></div><p>Match kleur of waarde en gebruik pestkaarten slim.</p><button class="primary game-launch" data-game="pesten" type="button">Nieuw spel</button></div></article>
+          <article class="game-card"><div class="game-icon">⚡</div><div class="game-card-body"><div class="game-title-row"><h3>Zenuwen</h3><span class="badge">2</span></div><p>Realtime: speel zo snel mogelijk één hoger of lager.</p><button class="primary game-launch" data-game="zenuwen" type="button">Nieuw spel</button></div></article>
+          <article class="game-card"><div class="game-icon">♥</div><div class="game-card-body"><div class="game-title-row"><h3>Hartenjagen</h3><span class="badge">4</span></div><p>Vermijd harten en vooral de Schoppenvrouw.</p><button class="primary game-launch" data-game="hartenjagen" type="button">Nieuw spel</button></div></article>
+          <article class="game-card"><div class="game-icon">?</div><div class="game-card-body"><div class="game-title-row"><h3>Cluedo Lite</h3><span class="badge">2-6</span></div><p>Deduceer dader, wapen en kamer. Zonder speelbord, puur deductie.</p><button class="primary game-launch" data-game="cluedo" type="button">Nieuw spel</button></div></article>
+          <article class="game-card"><div class="game-icon">⛳</div><div class="game-card-body"><div class="game-title-row"><h3>Minigolf</h3><span class="badge">1-4</span></div><p>Elke match 5 slimme random maps met eigen route/gimmick + je custom maps.</p><div class="game-card-actions"><button class="primary game-launch" data-game="minigolf" type="button">Nieuw spel</button><button class="secondary" id="minigolfEditorButton" type="button">Map Editor</button></div></div></article>
+        </div>
+
+        <section class="join-section">
+          <div><span class="eyebrow">HEB JE AL EEN CODE?</span><h2>Join een room</h2></div>
+          <form id="joinCodeForm" class="join-form"><input id="joinCode" maxlength="8" placeholder="ABCDE" autocomplete="off"><button class="secondary" type="submit">Join</button></form>
+        </section>
+      </section>
+
+
+
+      <section id="minigolfEditorView" class="view hidden">
+        <div class="editor-heading">
+          <div>
+            <span class="eyebrow">MINIGOLF</span>
+            <h1>Map Editor</h1>
+            <p class="muted">Bouw een map, test de echte physics en voeg ze toe aan de gedeelde map pool.</p>
+          </div>
+          <div class="editor-heading-actions">
+            <button class="secondary" id="newGolfMapButton" type="button">Nieuwe map</button>
+            <button class="primary" id="saveGolfMapButton" type="button">Map opslaan</button>
+          </div>
+        </div>
+
+        <div class="map-editor-layout">
+          <aside class="panel map-library-panel">
+            <div class="panel-heading"><div><span class="eyebrow">MAP POOL</span><h2>Custom maps</h2></div><span class="badge" id="customMapCount">0</span></div>
+            <p class="muted editor-small">De 20 ingebouwde maps blijven altijd bestaan. Custom maps komen automatisch mee in de random pool.</p>
+            <div id="customMapList" class="custom-map-list"></div>
+          </aside>
+
+          <section class="map-editor-main">
+            <div class="panel map-meta-panel">
+              <div class="map-meta-grid">
+                <label>Naam<input id="mapNameInput" maxlength="40" value="Nieuwe map"></label>
+                <label>Moeilijkheid<select id="mapDifficultySelect"><option>Makkelijk</option><option selected>Normaal</option><option>Moeilijk</option><option>Expert</option></select></label>
+                <label>Max slagen<input id="mapMaxStrokesInput" type="number" min="3" max="10" value="5"></label>
+                <div class="map-meta-state"><span class="eyebrow">STATUS</span><strong id="mapSaveState">Niet opgeslagen</strong></div>
+              </div>
+            </div>
+
+            <div class="map-editor-workbench">
+              <div class="map-toolbox panel">
+                <span class="eyebrow">TOOLS</span>
+                <div class="tool-grid" id="mapToolGrid">
+                  <button class="map-tool active" data-tool="select" type="button">↖<span>Selecteer</span></button>
+                  <button class="map-tool" data-tool="start" type="button">▣<span>Startvak</span></button>
+                  <button class="map-tool" data-tool="cup" type="button">⚑<span>Hole</span></button>
+                  <button class="map-tool sand" data-tool="sand" type="button"><i></i><span>Zand</span></button>
+                  <button class="map-tool cement" data-tool="cement" type="button"><i></i><span>Cement</span></button>
+                  <button class="map-tool water" data-tool="water" type="button"><i></i><span>Water</span></button>
+                  <button class="map-tool wall" data-tool="wall" type="button"><i></i><span>Muur</span></button>
+                  <button class="map-tool boost" data-tool="boost" type="button">➜<span>Boost</span></button>
+                  <button class="map-tool asset" data-tool="tree" type="button"><img src="/assets/minigolf/tree.svg" alt=""><span>Boom</span></button>
+                  <button class="map-tool asset" data-tool="tractor" type="button"><img src="/assets/minigolf/tractor.svg" alt=""><span>Tractor</span></button>
+                  <button class="map-tool asset" data-tool="rock" type="button"><img src="/assets/minigolf/rock.svg" alt=""><span>Rots</span></button>
+                  <button class="map-tool asset" data-tool="hay" type="button"><img src="/assets/minigolf/hay.svg" alt=""><span>Hooibaal</span></button>
+                  <button class="map-tool asset" data-tool="windmill" type="button"><img src="/assets/minigolf/windmill.svg" alt=""><span>Molen</span></button>
+                </div>
+                <div class="tool-help" id="mapToolHelp">Klik een object om te selecteren en sleep om te verplaatsen.</div>
+                <button class="ghost danger-text hidden" id="deleteMapObjectButton" type="button">Geselecteerd object verwijderen</button>
+              </div>
+
+              <div class="map-canvas-column">
+                <div class="map-editor-canvas-wrap">
+                  <svg id="mapEditorCanvas" class="map-editor-canvas" viewBox="0 0 900 520" aria-label="Minigolf map canvas"></svg>
+                </div>
+                <div class="editor-testbar">
+                  <div><span class="eyebrow">TEST MODE</span><span id="mapTestHint">Klik Test en sleep eender waar op de map om richting en kracht te kiezen.</span></div>
+                  <div class="action-row"><button class="secondary" id="testGolfMapButton" type="button">Test map</button><button class="ghost hidden" id="resetGolfTestButton" type="button">Reset test</button></div>
+                </div>
+              </div>
+
+              <aside class="panel map-inspector">
+                <span class="eyebrow">INSPECTOR</span>
+                <div id="mapInspectorEmpty" class="muted editor-small">Selecteer een terrein, muur of object.</div>
+                <div id="mapInspectorFields" class="hidden"></div>
+              </aside>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section id="lobbyBrowserView" class="view hidden">
+        <div class="stats-heading lobby-browser-heading">
+          <div>
+            <span class="eyebrow">OPEN LOBBY</span>
+            <h1>Rooms</h1>
+            <p class="hero-copy">Join een open room zonder code. Rooms verdwijnen zodra het spel start.</p>
+          </div>
+          <button class="secondary" id="refreshRoomsButton" type="button">Vernieuwen</button>
+        </div>
+
+        <div id="lobbyIdentityBar" class="panel lobby-identity-bar">
+          <div>
+            <span class="eyebrow">SPEEL ALS</span>
+            <strong id="lobbyIdentityText">Guest</strong>
+          </div>
+          <div id="lobbyGuestWrap" class="lobby-guest-input">
+            <label for="lobbyGuestName">Guestnaam</label>
+            <input id="lobbyGuestName" maxlength="18" autocomplete="nickname" placeholder="Bijv. Jasper">
+          </div>
+        </div>
+
+        <div class="section-heading compact-heading">
+          <div><span class="eyebrow">NU OPEN</span><h2>Beschikbare rooms</h2></div>
+          <span class="badge" id="openRoomCount">0</span>
+        </div>
+
+        <div id="openRoomsContent" class="open-room-grid">
+          <div class="panel"><p class="muted">Rooms laden…</p></div>
+        </div>
+      </section>
+
+      <section id="leaderboardView" class="view hidden">
+        <div class="stats-heading">
+          <div>
+            <span class="eyebrow">STATS</span>
+            <h1>Leaderboard</h1>
+            <p class="hero-copy">Alleen resultaten van ingelogde accounts tellen mee.</p>
+          </div>
+          <div class="leaderboard-filter">
+            <label for="leaderboardGame">Game</label>
+            <select id="leaderboardGame">
+              <option value="">Overall</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div id="leaderboardContent" class="stats-table-wrap">
+            <p class="muted">Laden…</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="profileView" class="view hidden">
+        <div class="stats-heading">
+          <div>
+            <span class="eyebrow">PROFIEL</span>
+            <h1 id="profileUsername">Speler</h1>
+            <p class="hero-copy" id="profileSummary"></p>
+          </div>
+        </div>
+
+        <div class="profile-grid">
+          <section class="panel">
+            <div class="panel-heading"><h2>Per game</h2></div>
+            <div id="profileGames" class="stats-table-wrap"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-heading"><h2>Recente matches</h2></div>
+            <div id="profileRecent" class="recent-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="roomView" class="view hidden">
+        <div class="room-heading">
+          <div><span class="eyebrow" id="roomGameName">GAME</span><h1>Room <span id="roomCodeHeading"></span></h1></div>
+          <div class="share-box"><input id="shareLink" readonly aria-label="Deelbare roomlink"><button class="secondary" id="copyLinkButton" type="button">Kopieer link</button></div>
+        </div>
+
+        <div class="room-layout" id="roomLayout">
+          <div class="room-main">
+            <section id="lobbySection" class="panel">
+              <div class="panel-heading"><div><span class="eyebrow">LOBBY</span><h2>Spelers</h2></div><span class="badge" id="playerCountBadge">1/4</span></div>
+              <div id="lobbyPlayers" class="lobby-players"></div>
+              <div id="hostControls" class="host-controls hidden"><button class="secondary" id="addNpcButton" type="button">+ NPC</button><button class="primary" id="startGameButton" type="button">Start spel</button></div>
+              <p id="lobbyHint" class="muted"></p>
+            </section>
+
+            <section id="gameSection" class="hidden">
+              <div class="panel game-panel">
+                <div id="gameStage"></div>
+                <div id="gameResult" class="result-box hidden"></div>
+              </div>
+            </section>
+          </div>
+
+          <aside class="panel chat-panel" id="chatPanel">
+            <div class="panel-heading"><div><span class="eyebrow">ROOM</span><h2>Chat</h2></div></div>
+            <div id="chatMessages" class="chat-messages"></div>
+            <form id="chatForm" class="chat-form"><input id="chatInput" maxlength="300" placeholder="Bericht…" autocomplete="off"><button class="secondary" type="submit">Stuur</button></form>
+          </aside>
+        </div>
+      </section>
+    </main>
+  </div>
+
+
+  <div class="modal-backdrop hidden" id="accountModal" aria-hidden="true">
+    <div class="modal account-modal" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
+      <div class="modal-heading">
+        <div>
+          <span class="eyebrow">ACCOUNT</span>
+          <h2 id="accountTitle">Account</h2>
+        </div>
+        <button class="ghost" id="closeAccountButton" type="button">Sluiten</button>
+      </div>
+
+      <div id="loggedOutAccount">
+        <p class="muted account-intro">Een account is optioneel. Het enige verschil: je resultaten worden permanent bijgehouden.</p>
+        <div class="auth-grid">
+          <form id="loginForm" class="auth-form">
+            <h3>Inloggen</h3>
+            <label>Username<input id="loginUsername" autocomplete="username" maxlength="18"></label>
+            <label>Wachtwoord<input id="loginPassword" type="password" autocomplete="current-password" maxlength="128"></label>
+            <button class="primary" type="submit">Inloggen</button>
+          </form>
+
+          <form id="registerForm" class="auth-form">
+            <h3>Account maken</h3>
+            <label>Username<input id="registerUsername" autocomplete="username" maxlength="18"></label>
+            <label>Wachtwoord<input id="registerPassword" type="password" autocomplete="new-password" maxlength="128"></label>
+            <div class="input-hint">Username: 3-18 tekens. Wachtwoord: minstens 8.</div>
+            <button class="secondary" type="submit">Account maken</button>
+          </form>
+        </div>
+      </div>
+
+      <div id="loggedInAccount" class="hidden">
+        <div class="account-summary">
+          <span class="eyebrow">INGELOGD ALS</span>
+          <h2 id="accountUsername">Username</h2>
+          <div class="account-stat-row">
+            <div><span>Games</span><strong id="accountGames">0</strong></div>
+            <div><span>Wins</span><strong id="accountWins">0</strong></div>
+            <div><span>Winrate</span><strong id="accountWinRate">0%</strong></div>
+          </div>
+          <div class="action-row">
+            <button class="secondary" id="myProfileButton" type="button">Mijn profiel</button>
+            <button class="ghost" id="logoutButton" type="button">Uitloggen</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop hidden" id="rulesModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
+      <div class="modal-heading"><div><span class="eyebrow" id="rulesGameName">GAME</span><h2 id="rulesTitle">Spelregels</h2></div><button class="ghost" id="closeRulesButton" type="button">Sluiten</button></div>
+      <div class="rules-content" id="rulesContent"></div>
+    </div>
+  </div>
+
+  <nav class="mobile-nav" id="mobileNav" aria-label="Hoofdnavigatie">
+    <button class="mobile-nav-item active" id="mobilePlayButton" type="button" data-nav="play" aria-label="Play">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10-6.5z"/></svg><span>Play</span>
+    </button>
+    <button class="mobile-nav-item" id="mobileLobbyButton" type="button" data-nav="lobby" aria-label="Lobby">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="9" r="3"/><circle cx="16.5" cy="10" r="2.5"/><path d="M3 19c.5-3.6 2.2-5.5 5-5.5s4.5 1.9 5 5.5M13 18.5c.4-2.7 1.6-4.1 3.7-4.1 2.1 0 3.5 1.4 3.8 4.1"/></svg><span>Lobby</span>
+    </button>
+    <button class="mobile-nav-item" id="mobileLeaderboardButton" type="button" data-nav="leaderboard" aria-label="Leaderboard">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v3.5c0 3-1.5 5-4 5s-4-2-4-5zM8 6H4c0 3 1.4 4.5 4.1 4.5M16 6h4c0 3-1.4 4.5-4.1 4.5M12 12.5V17M8.5 20h7M9.5 17h5"/></svg><span>Leaderboard</span>
+    </button>
+    <button class="mobile-nav-item" id="mobileProfileButton" type="button" data-nav="profile" aria-label="Profile">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 20c.6-4.2 2.7-6.2 6.5-6.2s5.9 2 6.5 6.2"/></svg><span>Profile</span>
+    </button>
+  </nav>
+
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="module" src="/app.js?v=0.11.4"></script>
+</body>
+</html>
