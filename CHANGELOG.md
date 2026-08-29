@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.11.9 — Pesten-kaarten en scrollbars
+
+- Niet-speelbare kaarten blijven gedempt maar zijn volledig ondoorzichtig.
+- Kaarten rechts krijgen altijd voorrang in de waaier.
+- Native scrollbars zijn verborgen zonder het scrollgedrag uit te schakelen.
+
 ## v0.11.8 — Pesten-weergave
 
 - Mobiele spelkaart blijft binnen de toestelbreedte.
