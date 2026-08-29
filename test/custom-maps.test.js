@@ -1,5 +1,9 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+process.env.DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'pluto-custom-maps-'));
 const db = require('../src/db');
 
 test('custom minigolf map kan persistent worden opgeslagen, aangepast en verwijderd', () => {

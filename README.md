@@ -4,7 +4,7 @@ Private, self-hosted minigameplatform voor vrienden, met realtime rooms, account
 
 ## Games
 
-Hofslag, Blackjack, Solitaire, Presidenten, Pesten, Zenuwen, Hartenjagen, Cluedo Lite en Minigolf met een Map Editor.
+Hofslag, Blackjack, Solitaire, Presidenten, Pesten, Hartenjagen, Cluedo Lite en Minigolf met een Map Editor.
 
 ## Installeren
 

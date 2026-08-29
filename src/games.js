@@ -3,12 +3,11 @@ const blackjack = require('./blackjack');
 const solitaire = require('./solitaire');
 const presidenten = require('./presidenten');
 const pesten = require('./pesten');
-const zenuwen = require('./zenuwen');
 const hartenjagen = require('./hartenjagen');
 const cluedo = require('./cluedo');
 const minigolf = require('./minigolf');
 
-const modules = [hofslag, blackjack, solitaire, presidenten, pesten, zenuwen, hartenjagen, cluedo, minigolf];
+const modules = [hofslag, blackjack, solitaire, presidenten, pesten, hartenjagen, cluedo, minigolf];
 const byKey = new Map(modules.map((game) => [game.meta.key, game]));
 
 function getGame(key) {

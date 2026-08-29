@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.12.0 — Kaartspellen verfijnd
+
+- Hartenjagen heeft een stabiele mobiele tafel, compacte score- en handkaarten en logisch gesorteerde speelkaarten.
+- Presidenten en Pesten tonen speelbaarheid, tegenstanders en vorige kaarten duidelijker.
+- Solitaire en Blackjack kregen verbeterde bediening, statistieken en leaderboards.
+- Speltitels zijn compacter en Zenuwen is verwijderd.
+
 ## v0.11.9 — Pesten-kaarten en scrollbars
 
 - Niet-speelbare kaarten blijven gedempt maar zijn volledig ondoorzichtig.

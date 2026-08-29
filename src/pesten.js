@@ -16,7 +16,7 @@ function createGame(roomPlayers) {
   if (starterIndex < 0) starterIndex = deck.length - 1;
   const [starter] = deck.splice(starterIndex, 1);
   const game = {
-    gameKey: meta.key, players, drawPile: deck, discard: [starter], currentSuit: starter.suit,
+    gameKey: meta.key, players, drawPile: deck, discard: [starter], previousCard: null, currentSuit: starter.suit,
     turnIndex: 0, direction: 1, drawPenalty: 0, gameOver: false, resultText: '', log: [`Startkaart: ${cardLabel(starter)}.`],
     nextNpcAt: 0
   };
@@ -69,6 +69,7 @@ function playCard(game, player, cardId, chosenSuit) {
   const card = player.hand[index];
   if (!card || !canPlay(game, card)) throw new Error('Die kaart mag je niet spelen.');
   player.hand.splice(index, 1);
+  game.previousCard = game.discard[game.discard.length - 1] || null;
   game.discard.push(card);
   game.currentSuit = card.suit;
   game.log.unshift(`${player.name} speelt ${cardLabel(card)}.`);
@@ -151,7 +152,7 @@ function handleAction(game, playerId, action, payload = {}) {
 function serialize(game, requesterId, connected) {
   return {
     kind: meta.key, gameOver: game.gameOver, resultText: game.resultText,
-    topCard: game.discard[game.discard.length - 1], currentSuit: game.currentSuit,
+    topCard: game.discard[game.discard.length - 1], previousCard: game.previousCard, currentSuit: game.currentSuit,
     drawPileCount: game.drawPile.length, drawPenalty: game.drawPenalty, direction: game.direction,
     turnPlayerId: game.gameOver ? null : game.players[game.turnIndex]?.id, log: game.log,
     rulesNote: '2 = +2 (alleen stapelen met 2), 7 = nog eens, 8 = beurt overslaan, Boer = kleur kiezen, Aas = richting om.',

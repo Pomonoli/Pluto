@@ -7,7 +7,6 @@ function resultPresentation(room,game){
   else if(game.kind==='cluedo')winners=(game.players||[]).filter(player=>player.id===game.winnerId);
   else if(game.kind==='presidenten')winners=(game.players||[]).filter(player=>player.place===1);
   else if(game.kind==='pesten')winners=(game.players||[]).filter(player=>player.handCount===0);
-  else if(game.kind==='zenuwen')winners=(game.players||[]).filter(player=>player.stockCount+player.handCount===0);
   else if(game.kind==='hofslag'&&game.players?.length){const best=Math.max(...game.players.map(player=>player.score));winners=game.players.filter(player=>player.score===best)}
   else if(game.kind==='hartenjagen'&&game.players?.length){const best=Math.min(...game.players.map(player=>player.totalScore));winners=game.players.filter(player=>player.totalScore===best)}
   else if(game.kind==='minigolf'&&game.players?.length){const best=Math.max(...game.players.map(player=>player.totalPoints));winners=game.players.filter(player=>player.totalPoints===best)}
@@ -51,18 +50,17 @@ function renderGame(room) {
     return;
   }
 
-  if(!['minigolf','blackjack','pesten'].includes(game.kind))els.gameStage.append(renderGamePlayerStrip(room,game));
-  const renderer = { blackjack:renderBlackjack, solitaire:renderSolitaire, presidenten:renderPresidenten, pesten:renderPesten, zenuwen:renderZenuwen, hartenjagen:renderHartenjagen, cluedo:renderCluedo, minigolf:renderMinigolf }[game.kind];
+  if(!['minigolf','blackjack','pesten','presidenten'].includes(game.kind))els.gameStage.append(renderGamePlayerStrip(room,game));
+  const renderer = { blackjack:renderBlackjack, solitaire:renderSolitaire, presidenten:renderPresidenten, pesten:renderPesten, hartenjagen:renderHartenjagen, cluedo:renderCluedo, minigolf:renderMinigolf }[game.kind];
   if (renderer) renderer(room, game); else els.gameStage.textContent = 'Renderer ontbreekt.';
 }
 
 function gameMetric(game,p) {
   if(game.kind==='hofslag')return {text:`${p.score} pt`,score:Number(p.score||0)};
-  if(game.kind==='hartenjagen')return {text:`${p.totalScore} straf`,score:Number(p.totalScore||0)};
+  if(game.kind==='hartenjagen')return {text:String(p.totalScore),score:Number(p.totalScore||0)};
   if(game.kind==='blackjack')return {text:p.result||`${p.value ?? ''}`,score:null};
   if(game.kind==='presidenten')return {text:p.place?`#${p.place}`:`${p.handCount} kaarten`,score:null};
   if(game.kind==='pesten')return {text:`${p.handCount} kaarten`,score:null};
-  if(game.kind==='zenuwen')return {text:`${p.stockCount+p.handCount} over`,score:null};
   if(game.kind==='cluedo')return {text:p.canAccuse?`${p.handCount} kaarten`:'uit',score:null};
   if(game.kind==='minigolf')return {text:`${p.totalPoints} pt`,score:Number(p.totalPoints||0)};
   if(game.kind==='solitaire')return {text:'solo',score:null};
@@ -97,7 +95,7 @@ function renderGamePlayerStrip(room,game) {
 
 function normalizeSelection(sel, game) { if (!sel || sel.game !== game.kind) return null; return sel; }
 
-function titlebar(name, status, {hideEyebrow=false}={}) { const wrap=E('div','game-titlebar'); const left=E('div'); if(!hideEyebrow)left.append(E('span','eyebrow',name.toUpperCase())); left.append(E('h2','',name)); wrap.append(left,E('div','game-status',status)); return wrap; }
+function titlebar(name,status) {const wrap=E('div','game-titlebar');const left=E('div');left.append(E('span','eyebrow',name.toUpperCase()));wrap.append(left,E('div','game-status',status));return wrap}
 function logBox(lines) { const box=E('div','log-box'); (lines||[]).slice(0,18).forEach(line=>box.append(E('div','log-line',line))); return box; }
 
 function renderHofslag(room, game) {
@@ -219,8 +217,30 @@ function renderHofBoard(board,game,opts={}) {
 
 function scoreList(players, valueFn) { const box=E('div','score-list'); players.forEach(p=>{const r=E('div','score-row');r.append(E('span',`player-dot ${p.connected?'connected':''}`),E('div','player-name',`${p.name}${p.isNpc?' · NPC':''}`),E('strong','',valueFn(p)));box.append(r)});return box; }
 
+function renderCardOpponents(room,game){
+  const opponents=E('div','pesten-opponents');
+  game.players.filter(p=>p.id!==room.meId).forEach(p=>{
+    const seat=E('div',`pesten-opponent ${p.id===game.turnPlayerId?'active':''}`);
+    seat.append(E('strong','',`${p.name}${p.isNpc?' · NPC':''}`));
+    const backs=E('div','pesten-card-backs');
+    const visible=Math.min(p.handCount,12);
+    for(let i=0;i<visible;i+=1)backs.append(E('span','pesten-card-back'));
+    if(p.handCount>visible)backs.append(E('small','',`+${p.handCount-visible}`));
+    if(p.place)backs.append(E('small','',`#${p.place}`));
+    seat.append(backs);opponents.append(seat)
+  });
+  return opponents;
+}
+
+function renderDiscardStack(previousCards,currentCards){
+  const stack=E('div','discard-stack');
+  if(previousCards?.length){const previous=E('div','discard-layer previous');previousCards.forEach(c=>previous.append(cardNode(c,{button:false})));stack.append(previous)}
+  const current=E('div','discard-layer current');(currentCards||[]).forEach(c=>current.append(cardNode(c,{button:false})));stack.append(current);
+  return stack;
+}
+
 function renderBlackjack(room,game) {
-  const me=game.players.find(p=>p.id===room.meId); const turn=game.players.find(p=>p.id===game.turnPlayerId); const status=game.phase==='round_end'?'Ronde afgelopen':game.phase==='dealer'?'Dealer speelt stap voor stap…':turn?`${turn.name} is aan de beurt.`:'Dealer speelt.';const heading=titlebar(`Blackjack · ronde ${game.roundNumber??1}`,status,{hideEyebrow:true});heading.classList.add('blackjack-titlebar');els.gameStage.append(heading);
+  const me=game.players.find(p=>p.id===room.meId); const turn=game.players.find(p=>p.id===game.turnPlayerId); const status=game.phase==='round_end'?'Ronde afgelopen':game.phase==='dealer'?'Dealer speelt stap voor stap…':turn?`${turn.name} is aan de beurt.`:'Dealer speelt.';const heading=titlebar('Blackjack',status);heading.classList.add('blackjack-titlebar');els.gameStage.append(heading);
   if(me){const wallet=E('div','blackjack-wallet');wallet.append(E('span','','Jouw chips'),E('strong','',String(me.chips??100)),E('small','',`Inzet: ${me.bet??10}`));els.gameStage.append(wallet)}
   const table=E('div','blackjack-table'); const dealer=E('div','blackjack-player');dealer.append(E('div','blackjack-meta','Dealer'));const dealerHand=E('div','blackjack-hand');const cards=E('div','card-row');game.dealer.hand.forEach(c=>cards.append(cardNode(c,{button:false})));dealerHand.append(cards,E('strong','blackjack-total',game.dealer.value===null?'?':String(game.dealer.value)));dealer.append(dealerHand);table.append(dealer);
   const zone=E('div','players-zone'); game.players.forEach(p=>{const chips=p.chips??100;const b=E('div',`blackjack-player ${p.id===game.turnPlayerId?'active':''}`);const m=E('div','blackjack-meta');m.append(E('strong','',p.name),E('span','',`${chips} chips`));b.append(m);(p.hands||[{cards:p.hand,value:p.value,bet:p.bet,result:p.result,chipDelta:p.chipDelta}]).forEach((h,index)=>{const handBox=E('div',`blackjack-split-hand ${p.id===game.turnPlayerId&&index===p.activeHandIndex?'active':''}`);if((p.hands||[]).length>1)handBox.append(E('small','',`Hand ${index+1} · inzet ${h.bet}`));const hand=E('div','blackjack-hand');const row=E('div','card-row');h.cards.forEach(c=>row.append(cardNode(c,{button:false})));hand.append(row,E('strong','blackjack-total',String(h.value)));handBox.append(hand);b.append(handBox)});if(p.resetChips)b.append(E('div','player-note','Reset naar 100 chips'));zone.append(b)});table.append(zone);
@@ -233,9 +253,9 @@ function renderBlackjack(room,game) {
 function renderSolitaire(room,game) {
   els.gameStage.append(titlebar('Solitaire',`${game.moves} zetten`)); const board=E('div','solitaire-board table-surface'); const top=E('div','sol-top'); const left=E('div','sol-stock-zone');
   const stock=E('button','sol-pile');stock.type='button';stock.title='Trek kaart';if(game.stockCount)stock.append(cardNode({hidden:true},{button:false}));else stock.textContent='↻';stock.onclick=()=>{state.selection=null;action('draw')};left.append(stock);
-  const waste=E('div','sol-pile');const wc=game.waste[game.waste.length-1];if(wc){const n=cardNode(wc,{selected:state.selection?.type==='waste'});n.onclick=(e)=>{e.stopPropagation();state.selection={game:'solitaire',type:'waste'};renderGame(state.room)};waste.append(n)}left.append(waste);top.append(left);
+  const waste=E('div','sol-pile');const wc=game.waste[game.waste.length-1];if(wc){const n=cardNode(wc,{selected:state.selection?.type==='waste'});n.onclick=(e)=>{e.stopPropagation();if(e.detail>=2){state.selection=null;action('wasteToFoundation');return}state.selection={game:'solitaire',type:'waste'};renderGame(state.room)};waste.append(n)}left.append(waste);top.append(left);
   const foundations=E('div','sol-foundations');['♣','♦','♥','♠'].forEach(suit=>{const pile=E('div','sol-pile');pile.dataset.suit=suit;const fc=game.foundations[suit][game.foundations[suit].length-1];if(fc){const n=cardNode(fc,{selected:state.selection?.type==='foundation'&&state.selection.suit===suit});n.onclick=(e)=>{e.stopPropagation();if(state.selection&&state.selection.type!=='foundation'){moveSolitaireToFoundation(suit)}else{state.selection={game:'solitaire',type:'foundation',suit};renderGame(state.room)}};pile.append(n)}else pile.textContent=suit;pile.onclick=()=>moveSolitaireToFoundation(suit);foundations.append(pile)});top.append(foundations);board.append(top);
-  const tableau=E('div','sol-tableau');game.tableau.forEach((col,ci)=>{const c=E('div','sol-column');c.onclick=()=>moveSolitaireToTableau(ci);col.forEach((card,i)=>{const n=cardNode(card.faceUp?card:{hidden:true},{selected:state.selection?.type==='tableau'&&state.selection.src===ci&&state.selection.index===i});n.style.top=`${i*25}px`;n.style.zIndex=String(i+1);n.onclick=(e)=>{e.stopPropagation();if(!card.faceUp)return;if(state.selection&&!(state.selection.type==='tableau'&&state.selection.src===ci)){moveSolitaireToTableau(ci)}else{state.selection={game:'solitaire',type:'tableau',src:ci,index:i};renderGame(state.room)}};c.append(n)});tableau.append(c)});board.append(tableau);els.gameStage.append(board);
+  const tableau=E('div','sol-tableau');game.tableau.forEach((col,ci)=>{const c=E('div','sol-column');c.onclick=()=>moveSolitaireToTableau(ci);col.forEach((card,i)=>{const n=cardNode(card.faceUp?card:{hidden:true},{selected:state.selection?.type==='tableau'&&state.selection.src===ci&&state.selection.index===i});n.style.top=`${i*25}px`;n.style.zIndex=String(i+1);n.onclick=(e)=>{e.stopPropagation();if(!card.faceUp)return;if(e.detail>=2&&i===col.length-1){state.selection=null;action('tableauToFoundation',{src:ci});return}if(state.selection&&!(state.selection.type==='tableau'&&state.selection.src===ci)){moveSolitaireToTableau(ci)}else{state.selection={game:'solitaire',type:'tableau',src:ci,index:i};renderGame(state.room)}};c.append(n)});tableau.append(c)});board.append(tableau);els.gameStage.append(board);
 }
 function moveSolitaireToFoundation(suit) { const s=state.selection;if(!s)return;if(s.type==='waste')action('wasteToFoundation');else if(s.type==='tableau')action('tableauToFoundation',{src:s.src});else return;state.selection=null; }
 function moveSolitaireToTableau(dest) { const s=state.selection;if(!s)return;if(s.type==='waste')action('wasteToTableau',{dest});else if(s.type==='tableau'&&s.src!==dest)action('tableauMove',{src:s.src,index:s.index,dest});else if(s.type==='foundation')action('foundationToTableau',{suit:s.suit,dest});else return;state.selection=null; }
@@ -250,17 +270,28 @@ function renderPresidenten(room,game) {
   const banner=E('div',`turn-banner ${mine?'active':''}`,game.lead?`${game.lead.playerName}: ${game.lead.cards.map(c=>c.rank+c.suit).join(' ')} · speel ${game.lead.count} hoger`:'Vrij uitkomen');
   table.append(banner);
 
+  const opponents=renderCardOpponents(room,game);if(opponents.childElementCount)table.append(opponents);
+  const playArea=E('div','presidenten-play-area');
+  if(game.previousPlay?.cards?.length){const previous=E('div','previous-play-panel');const cards=E('div','card-row');game.previousPlay.cards.forEach(c=>cards.append(cardNode(c,{button:false})));previous.append(E('span','eyebrow','VORIGE'),cards);playArea.append(previous)}
   const center=E('div','center-combo presidenten-center');
   (game.lead?.cards||[]).forEach(c=>center.append(cardNode(c,{button:false})));
-  table.append(center,scoreList(game.players,p=>p.place?`#${p.place}`:`${p.handCount} kaarten`));
+  playArea.append(center);table.append(playArea);
 
   const hand=E('div','hand-area presidenten-hand');
   const row=E('div','card-fan presidenten-fan');
   const selected=new Set(state.selection?.game==='presidenten'?state.selection.ids||[]:[]);
-  (me?.hand||[]).forEach(c=>{
-    const n=cardNode(c,{selected:selected.has(c.id)});
-    n.disabled=!mine||game.gameOver;
+  const playable=new Set(game.playableIds||[]);
+  const selectedCards=(me?.hand||[]).filter(c=>selected.has(c.id));
+  const selectedRank=selectedCards[0]?.rank;
+  const requiredCount=game.lead?.count||null;
+  (me?.hand||[]).forEach((c,index)=>{
+    const canAdd=!selected.size||(c.rank===selectedRank&&(!requiredCount||selected.size<requiredCount)&&selected.size<4);
+    const legal=mine&&!game.gameOver&&playable.has(c.id)&&(selected.has(c.id)||canAdd);
+    const n=cardNode(c,{legal,selected:selected.has(c.id)});
+    n.style.setProperty('z-index',String(index+1),'important');
+    n.setAttribute('aria-disabled',legal?'false':'true');
     n.onclick=()=>{
+      if(!legal)return;
       selected.has(c.id)?selected.delete(c.id):selected.add(c.id);
       state.selection={game:'presidenten',ids:[...selected]};
       renderGame(state.room)
@@ -272,7 +303,9 @@ function renderPresidenten(room,game) {
   if(mine&&!game.gameOver){
     const ar=E('div','action-row presidenten-actions');
     const play=E('button','primary','Speel selectie');
-    play.disabled=!selected.size;
+    const sameRank=selectedCards.every(c=>c.rank===selectedRank);
+    const validCount=requiredCount?selected.size===requiredCount:selected.size>0;
+    play.disabled=!selected.size||!sameRank||!validCount||(game.firstLead&&!selected.has('3♣'));
     play.onclick=()=>{action('play',{ids:[...selected]});state.selection=null};
     const pass=E('button','secondary','Pas');
     pass.disabled=!game.canPass;
@@ -284,23 +317,18 @@ function renderPresidenten(room,game) {
 }
 
 function renderPesten(room,game) {
-  const me=game.players.find(p=>p.id===room.meId),turn=game.players.find(p=>p.id===game.turnPlayerId),mine=me?.id===game.turnPlayerId;els.gameStage.append(titlebar('Pesten',game.gameOver?'Spel afgelopen.':mine?'Jouw beurt.':`${turn?.name||''} is aan de beurt.`,{hideEyebrow:true}));const table=E('div','table-surface');table.append(E('div','turn-banner',`${game.rulesNote} ${game.drawPenalty?`Openstaande straf: +${game.drawPenalty}.`:''}`));
-  const opponents=E('div','pesten-opponents');game.players.filter(p=>p.id!==room.meId).forEach(p=>{const seat=E('div',`pesten-opponent ${p.id===game.turnPlayerId?'active':''}`);seat.append(E('strong','',`${p.name}${p.isNpc?' · NPC':''}`));const backs=E('div','pesten-card-backs');const visible=Math.min(p.handCount,12);for(let i=0;i<visible;i+=1)backs.append(E('span','pesten-card-back'));if(p.handCount>visible)backs.append(E('small','',`+${p.handCount-visible}`));seat.append(backs);opponents.append(seat)});if(opponents.childElementCount)table.append(opponents);
-  const top=E('div','pest-top');top.append(E('div','pest-direction',game.direction===1?'↻':'↺'));top.append(cardNode(game.topCard,{button:false}));const suit=E('div','pesten-current-suit',`Huidige suit: ${game.currentSuit}`);top.append(suit);table.append(top);
+  const me=game.players.find(p=>p.id===room.meId),turn=game.players.find(p=>p.id===game.turnPlayerId),mine=me?.id===game.turnPlayerId;els.gameStage.append(titlebar('Pesten',game.gameOver?'Spel afgelopen.':mine?'Jouw beurt.':`${turn?.name||''} is aan de beurt.`));const table=E('div','table-surface');table.append(E('div','turn-banner',`${game.rulesNote} ${game.drawPenalty?`Openstaande straf: +${game.drawPenalty}.`:''}`));
+  const opponents=renderCardOpponents(room,game);if(opponents.childElementCount)table.append(opponents);
+  const top=E('div','pest-top');top.append(E('div','pest-direction',game.direction===1?'↻':'↺'));top.append(renderDiscardStack(game.previousCard?[game.previousCard]:[],[game.topCard]));const suit=E('div','pesten-current-suit',`Huidige suit: ${game.currentSuit}`);top.append(suit);table.append(top);
   const hand=E('div','hand-area');const row=E('div','card-fan pesten-fan');const playable=new Set(game.playableIds||[]);(me?.hand||[]).forEach((c,index)=>{const legal=mine&&playable.has(c.id);const n=cardNode(c,{legal,selected:state.selection?.game==='pesten'&&state.selection.cardId===c.id});n.style.setProperty('z-index',String(index+1),'important');n.setAttribute('aria-disabled',legal?'false':'true');n.onclick=()=>{if(!legal)return;if(c.rank==='J'){state.selection={game:'pesten',cardId:c.id};renderGame(state.room)}else action('play',{cardId:c.id})};row.append(n)});hand.append(E('span','eyebrow','JOUW HAND'),row);
   if(mine&&!game.gameOver){const ar=E('div','action-row');const draw=E('button','secondary',game.drawPenalty?`Neem +${game.drawPenalty}`:'Trek kaart');draw.onclick=()=>action('draw');ar.append(draw);hand.append(ar)}
   if(state.selection?.game==='pesten'&&state.selection.cardId&&mine){const picker=E('div','suit-picker');['♣','♦','♥','♠'].forEach(s=>{const b=E('button','secondary',s);b.onclick=()=>{action('play',{cardId:state.selection.cardId,suit:s});state.selection=null};picker.append(b)});hand.append(E('div','player-note','Kies een suit voor de Boer:'),picker)}table.append(hand,logBox(game.log));els.gameStage.append(table);
 }
 
-function renderZenuwen(room,game) {
-  const me=game.players.find(p=>p.id===room.meId);els.gameStage.append(titlebar('Zenuwen',game.gameOver?'Spel afgelopen.':'Geen beurten. Speel zo snel mogelijk.'));const table=E('div','table-surface');const center=E('div','speed-center');center.append(E('div','speed-stock',`Reserve ${game.reserveCounts[0]}`));game.centers.forEach((c,i)=>{const pile=E('button',`speed-pile ${state.selection?.game==='zenuwen'&&state.selection.piles?.includes(i)?'target':''}`);pile.type='button';pile.append(cardNode(c,{button:false}));pile.onclick=()=>{if(state.selection?.game==='zenuwen'&&state.selection.cardId&&state.selection.piles.includes(i)){action('play',{cardId:state.selection.cardId,pile:i});state.selection=null}};center.append(pile);if(i===1)center.append(E('div','speed-stock',`Reserve ${game.reserveCounts[1]}`))});table.append(center,scoreList(game.players,p=>`${p.stockCount} stock · ${p.handCount} hand`));
-  const hand=E('div','speed-hand card-fan');Object.entries(game.legal||{});(me?.hand||[]).forEach(c=>{const piles=game.legal[c.id]||[];const n=cardNode(c,{legal:piles.length>0,selected:state.selection?.game==='zenuwen'&&state.selection.cardId===c.id});n.classList.add('zenuwen-card');n.disabled=game.gameOver;n.setAttribute('aria-disabled',piles.length?'false':'true');n.onclick=()=>{if(!piles.length)return;if(piles.length===1){action('play',{cardId:c.id,pile:piles[0]});state.selection=null}else{state.selection={game:'zenuwen',cardId:c.id,piles};renderGame(state.room)}};hand.append(n)});table.append(E('span','eyebrow','JOUW HAND'),hand,logBox(game.log));els.gameStage.append(table);
-}
-
 function renderHartenjagen(room,game) {
-  const me=game.players.find(p=>p.id===room.meId);let status='';if(game.phase==='passing')status=me?.passed?'Kaarten gekozen. Wachten op de anderen.':`Kies 3 kaarten om ${passDutch(game.passDirection)} te passen.`;else if(game.resolvingTrick)status='Slag compleet. Even kijken wie ze wint…';else{const turn=game.players.find(p=>p.id===game.turnPlayerId);status=me?.id===game.turnPlayerId?'Jij bent aan de beurt.':`${turn?.name||''} is aan de beurt.`}els.gameStage.append(titlebar('Hartenjagen',`Ronde ${game.roundNumber} · ${status}`));const grid=E('div','hearts-table');const table=E('div','table-surface');const banner=E('div','turn-banner',`Slag ${game.trickNumber}/13 · ${game.heartsBroken?'Harten is gebroken':'Harten nog niet gebroken'} · passen: ${passDutch(game.passDirection)}`);table.append(banner);const trick=E('div','hearts-trick');game.players.forEach(p=>{const seat=E('div','trick-seat');seat.append(E('strong','',p.name));const play=game.trick.find(x=>x.playerId===p.id);if(play)seat.append(cardNode(play.card,{button:false}));else seat.append(E('div','player-note',''));trick.append(seat)});table.append(trick);grid.append(table);
-  const side=E('div','table-surface');const tbl=E('table','score-table');const head=E('tr');['Speler','Ronde','Totaal'].forEach(x=>head.append(E('th','',x)));tbl.append(head);game.players.forEach(p=>{const r=E('tr');r.append(E('td','',p.name),E('td','',String(p.roundPoints)),E('td','',String(p.totalScore)));tbl.append(r)});side.append(tbl);if(game.lastRoundSummary)side.append(E('p','player-note',game.lastRoundSummary));grid.append(side);els.gameStage.append(grid);
-  const hand=E('div','hand-area');const row=E('div','card-fan');if(game.phase==='passing'){const selected=new Set(state.selection?.game==='hartenjagen'?state.selection.ids||[]:[]);(me?.hand||[]).forEach(c=>{const n=cardNode(c,{selected:selected.has(c.id)});n.disabled=me?.passed||game.gameOver;n.onclick=()=>{if(selected.has(c.id))selected.delete(c.id);else if(selected.size<3)selected.add(c.id);state.selection={game:'hartenjagen',ids:[...selected]};renderGame(state.room)};row.append(n)});hand.append(E('span','eyebrow','JOUW HAND'),row);if(!me?.passed){const b=E('button','primary','Pas 3 kaarten');b.disabled=selected.size!==3;b.onclick=()=>{action('pass',{ids:[...selected]});state.selection=null};hand.append(b)}}else{const legal=new Set(game.legalIds||[]);(me?.hand||[]).forEach(c=>{const n=cardNode(c,{legal:legal.has(c.id)});n.disabled=!legal.has(c.id)||game.gameOver;n.onclick=()=>action('play',{cardId:c.id});row.append(n)});hand.append(E('span','eyebrow','JOUW HAND'),row)}els.gameStage.append(hand,logBox(game.log));
+  const me=game.players.find(p=>p.id===room.meId);const suitOrder=new Map([['♣',0],['♦',1],['♠',2],['♥',3]]);const handCards=(me?.hand||[]).slice().sort((a,b)=>suitOrder.get(a.suit)-suitOrder.get(b.suit));let status='';if(game.phase==='passing')status=me?.passed?'Kaarten gekozen. Wachten op de anderen.':'Kies 3 kaarten.';else if(game.resolvingTrick)status='Slag compleet';else{const turn=game.players.find(p=>p.id===game.turnPlayerId);status=me?.id===game.turnPlayerId?'Jij bent aan de beurt.':`${turn?.name||''} is aan de beurt.`}els.gameStage.append(titlebar('Hartenjagen',`Ronde ${game.roundNumber} · ${status}`));const grid=E('div','hearts-table');const table=E('div','table-surface');const banner=E('div','turn-banner',`Slag ${game.trickNumber}/13 · ${game.heartsBroken?'Harten is gebroken':'Harten nog niet gebroken'} · passen: ${passDutch(game.passDirection)}`);table.append(banner);const trick=E('div','hearts-trick');const meIndex=Math.max(0,game.players.findIndex(p=>p.id===room.meId));const clockwise=game.players.map((_,i)=>game.players[(meIndex+i)%game.players.length]);const seats=clockwise.length===4?[clockwise[0],clockwise[1],clockwise[3],clockwise[2]]:clockwise;seats.forEach(p=>{const seat=E('div','trick-seat');seat.append(E('strong','',p.name));const play=game.trick.find(x=>x.playerId===p.id);if(play)seat.append(cardNode(play.card,{button:false}));else seat.append(E('div','player-note',''));trick.append(seat)});table.append(trick);grid.append(table);
+  const hand=E('div',`table-surface hearts-hand ${game.phase==='passing'?'passing':'compact'}`);const row=E('div','card-fan hearts-fan');if(game.phase==='passing'){const selected=new Set(state.selection?.game==='hartenjagen'?state.selection.ids||[]:[]);handCards.forEach((c,index)=>{const available=!me?.passed&&!game.gameOver;const n=cardNode(c,{selected:selected.has(c.id)});n.style.setProperty('z-index',String(index+1),'important');n.setAttribute('aria-disabled',available?'false':'true');n.onclick=()=>{if(!available)return;if(selected.has(c.id))selected.delete(c.id);else if(selected.size<3)selected.add(c.id);state.selection={game:'hartenjagen',ids:[...selected]};renderGame(state.room)};row.append(n)});hand.append(E('span','eyebrow','JOUW HAND'),row);if(!me?.passed){const b=E('button','primary','Pas 3 kaarten');b.disabled=selected.size!==3;b.onclick=()=>{action('pass',{ids:[...selected]});state.selection=null};hand.append(b)}}else{const legal=new Set(game.legalIds||[]);handCards.forEach((c,index)=>{const canPlay=legal.has(c.id)&&!game.gameOver;const n=cardNode(c,{legal:canPlay});n.style.setProperty('z-index',String(index+1),'important');n.setAttribute('aria-disabled',canPlay?'false':'true');n.onclick=()=>{if(canPlay)action('play',{cardId:c.id})};row.append(n)});hand.append(E('span','eyebrow','JOUW HAND'),row)}grid.append(hand);els.gameStage.append(grid);
+  const scores=E('div','table-surface hearts-scores');const tbl=E('table','score-table');const head=E('tr');['Speler','Ronde','Totaal'].forEach(x=>head.append(E('th','',x)));tbl.append(head);game.players.forEach(p=>{const r=E('tr');r.append(E('td','',p.name),E('td','',String(p.roundPoints)),E('td','',String(p.totalScore)));tbl.append(r)});scores.append(tbl);if(game.lastRoundSummary)scores.append(E('p','player-note',game.lastRoundSummary));els.gameStage.append(scores,logBox(game.log));
 }
 function passDutch(dir){return ({left:'links',right:'rechts',across:'tegenover',hold:'niet'})[dir]||dir}
 

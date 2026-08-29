@@ -1,11 +1,11 @@
-import { RULES } from './js/rules.js?v=0.11.9';
-import { createGameUi } from './js/game-ui.js?v=0.11.9';
-import { createMapEditor } from './js/map-editor.js?v=0.11.9';
+import { RULES } from './js/rules.js?v=0.12.0';
+import { createGameUi } from './js/game-ui.js?v=0.12.0';
+import { createMapEditor } from './js/map-editor.js?v=0.12.0';
 
 const socket = window.io();
   const $ = (id) => document.getElementById(id);
   const els = {};
-  ['brandButton','lobbyBrowserButton','leaderboardButton','soundButton','installButton','accountButton','mobileNav','mobilePlayButton','mobileLobbyButton','mobileLeaderboardButton','mobileProfileButton','rulesButton','leaveButton','homeView','minigolfEditorView','lobbyBrowserView','leaderboardView','profileView','roomView','homeGuestBar','guestName','homeAccountButton','inviteBox','inviteText','joinInviteButton','recentGamesSection','recentGames','gamesHeading','gameGrid','joinCodeForm','joinCode','refreshRoomsButton','lobbyIdentityBar','lobbyIdentityText','lobbyGuestWrap','lobbyGuestName','openRoomCount','openRoomsContent','leaderboardGame','leaderboardContent','profileUsername','profileSummary','profileGames','profileRecent','headToHeadCard','headToHeadGame','headToHeadContent','roomGameName','roomCodeHeading','shareLink','copyLinkButton','roomRematchButton','roomLeaveButton','roomLayout','lobbySection','gameSection','playerCountBadge','lobbyPlayers','hostControls','addNpcButton','startGameButton','lobbyHint','gameStage','gameResult','chatPanel','chatMessages','chatForm','chatInput','minigolfEditorButton','newGolfMapButton','saveGolfMapButton','customMapCount','customMapList','mapNameInput','mapDifficultySelect','mapMaxStrokesInput','mapSaveState','mapToolGrid','mapToolHelp','deleteMapObjectButton','mapEditorCanvas','mapInspectorEmpty','mapInspectorFields','testGolfMapButton','resetGolfTestButton','mapTestHint','accountModal','closeAccountButton','loggedOutAccount','loggedInAccount','loginForm','loginUsername','loginPassword','registerForm','registerUsername','registerPassword','accountUsername','accountGames','accountWins','accountWinRate','myProfileButton','logoutButton','rulesModal','rulesGameName','rulesContent','closeRulesButton','toast'].forEach((id) => els[id] = $(id));
+  ['brandButton','lobbyBrowserButton','leaderboardButton','soundButton','installButton','accountButton','mobileNav','mobilePlayButton','mobileLobbyButton','mobileLeaderboardButton','mobileProfileButton','rulesButton','leaveButton','homeView','minigolfEditorView','lobbyBrowserView','leaderboardView','profileView','roomView','homeGuestBar','guestName','homeAccountButton','inviteBox','inviteText','joinInviteButton','recentGamesSection','recentGames','gamesHeading','gameGrid','joinCodeForm','joinCode','refreshRoomsButton','lobbyIdentityBar','lobbyIdentityText','lobbyGuestWrap','lobbyGuestName','openRoomCount','openRoomsContent','leaderboardGame','leaderboardContent','profileUsername','profileSummary','profileGames','profileRecent','headToHeadCard','headToHeadGame','headToHeadContent','roomShareFooter','roomFooterMeta','roomShareBox','roomGameName','roomCodeHeading','shareLink','copyLinkButton','roomRematchButton','roomLeaveButton','roomLayout','lobbySection','gameSection','playerCountBadge','lobbyPlayers','hostControls','addNpcButton','startGameButton','lobbyHint','gameStage','gameResult','chatPanel','chatMessages','chatForm','chatInput','minigolfEditorButton','newGolfMapButton','saveGolfMapButton','customMapCount','customMapList','mapNameInput','mapDifficultySelect','mapMaxStrokesInput','mapSaveState','mapToolGrid','mapToolHelp','deleteMapObjectButton','mapEditorCanvas','mapInspectorEmpty','mapInspectorFields','testGolfMapButton','resetGolfTestButton','mapTestHint','accountModal','closeAccountButton','loggedOutAccount','loggedInAccount','loginForm','loginUsername','loginPassword','registerForm','registerUsername','registerPassword','accountUsername','accountGames','accountWins','accountWinRate','myProfileButton','logoutButton','rulesModal','rulesGameName','rulesContent','closeRulesButton','toast'].forEach((id) => els[id] = $(id));
 
   const state = {
     room: null,
@@ -66,6 +66,7 @@ const socket = window.io();
     const b = E(opts.button === false ? 'div' : 'button', `playing-card${opts.small ? ' small' : ''}${opts.selected ? ' selected' : ''}${opts.legal ? ' legal' : ''}${card?.hidden ? ' card-back' : ''}`);
     if (b.tagName === 'BUTTON') b.type = 'button';
     if (!card?.hidden) {
+      b.dataset.rank = card.rank;
       b.append(E('div', `rank ${isRed(card) ? 'red' : 'black'}`, card.rank));
       b.append(E('div', `suit ${isRed(card) ? 'red' : 'black'}`, card.suit));
     }
@@ -284,7 +285,6 @@ const socket = window.io();
     if(game.kind==='blackjack')return me.result==='Wint';
     if(game.kind==='presidenten')return me.place===1;
     if(game.kind==='pesten')return me.handCount===0;
-    if(game.kind==='zenuwen')return (me.stockCount+me.handCount)===0;
     if(game.kind==='cluedo')return game.winnerId===myId;
     if(game.kind==='hartenjagen'){const low=Math.min(...game.players.map(p=>p.totalScore));return me.totalScore===low}
     if(game.kind==='hofslag'){const high=Math.max(...game.players.map(p=>p.score));return me.score===high}
@@ -349,7 +349,7 @@ const socket = window.io();
   }
 
 
-  const GAME_NAMES = {hofslag:'Hofslag',blackjack:'Blackjack',solitaire:'Solitaire',presidenten:'Presidenten',pesten:'Pesten',zenuwen:'Zenuwen',hartenjagen:'Hartenjagen',cluedo:'Cluedo Lite',minigolf:'Minigolf'};
+  const GAME_NAMES = {hofslag:'Hofslag',blackjack:'Blackjack',solitaire:'Solitaire',presidenten:'Presidenten',pesten:'Pesten',hartenjagen:'Hartenjagen',cluedo:'Cluedo Lite',minigolf:'Minigolf'};
   function formatDuration(ms) {
     if (ms === null || ms === undefined) return '—';
     const total = Math.max(0, Math.round(Number(ms) / 1000));
@@ -360,15 +360,16 @@ const socket = window.io();
     els.leaderboardContent.replaceChildren();
     if (!rows.length) { els.leaderboardContent.append(E('p','muted','Nog geen resultaten.')); return; }
     const table=E('table','stats-table');
-    const head=E('tr'); ['#','Speler','Games','Wins','Winrate'].forEach(x=>head.append(E('th','',x)));
-    if(gameKey==='solitaire') head.append(E('th','','Beste tijd'));
+    const columns=gameKey==='blackjack'?['#','Speler','Chips']:gameKey==='solitaire'?['#','Speler','Wins','Beste']:['#','Speler','Games','Wins','Winrate'];
+    const head=E('tr');columns.forEach(x=>head.append(E('th','',x)));
     table.append(head);
     rows.forEach((row,index)=>{
       const tr=E('tr');
       tr.append(E('td','',String(index+1)));
       const td=E('td'); const link=E('button','profile-link',row.username); link.type='button'; link.onclick=()=>{setRoute(`/profile/${encodeURIComponent(row.username)}`);showProfile(row.username)};td.append(link);tr.append(td);
-      tr.append(E('td','',String(row.games)),E('td','',String(row.wins)),E('td','',`${row.winRate||0}%`));
-      if(gameKey==='solitaire') tr.append(E('td','',row.bestSolitaireMs?formatDuration(row.bestSolitaireMs):'—'));
+      if(gameKey==='blackjack')tr.append(E('td','',String(row.chips)));
+      else if(gameKey==='solitaire')tr.append(E('td','',String(row.wins)),E('td','',row.bestSolitaireMoves?`${row.bestSolitaireMoves} zetten`:'—'));
+      else tr.append(E('td','',String(row.games)),E('td','',String(row.wins)),E('td','',`${row.winRate||0}%`));
       table.append(tr);
     });
     els.leaderboardContent.append(table);
@@ -437,6 +438,8 @@ const socket = window.io();
     state.room = room; state.previousRoom=room; rememberRecentGame(room.gameKey); showRoom();
     document.body.classList.toggle('minigolf-mode', room.gameKey==='minigolf' && room.status!=='lobby');
     els.roomGameName.textContent = room.gameMeta.name.toUpperCase(); els.roomCodeHeading.textContent = room.id; els.shareLink.value = `${location.origin}/room/${room.id}`;
+    const solitaireRoom=room.gameKey==='solitaire';
+    els.roomFooterMeta.classList.toggle('hidden',solitaireRoom);els.roomShareBox.classList.toggle('hidden',solitaireRoom);els.roomShareFooter.classList.toggle('solo-footer',solitaireRoom);
     const canRematch = room.gameKey !== 'blackjack' && room.status !== 'lobby' && room.gameState?.gameOver && room.isHost;
     els.roomRematchButton.classList.toggle('hidden', !canRematch);
     if(!canRematch){els.roomRematchButton.disabled=false;els.roomRematchButton.textContent='Rematch'}
@@ -596,7 +599,7 @@ const socket = window.io();
   if('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const registration = await navigator.serviceWorker.register('/service-worker.js?v=0.11.9', {
+        const registration = await navigator.serviceWorker.register('/service-worker.js?v=0.12.0', {
           updateViaCache:'none'
         });
         await registration.update();

@@ -2,13 +2,12 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const blackjack = require('../src/blackjack');
 const { handValue } = blackjack;
-const { adjacent } = require('../src/zenuwen');
-const { presidentRank } = require('../src/presidenten');
+const { presidentRank, playableCardIds } = require('../src/presidenten');
 const { cardPoints } = require('../src/hartenjagen');
 const { getGame, listGames } = require('../src/games');
 
-test('alle 9 games zijn geregistreerd', () => {
-  assert.deepEqual(listGames().map(g => g.key).sort(), ['blackjack','cluedo','hartenjagen','hofslag','minigolf','pesten','presidenten','solitaire','zenuwen'].sort());
+test('alle 8 games zijn geregistreerd', () => {
+  assert.deepEqual(listGames().map(g => g.key).sort(), ['blackjack','cluedo','hartenjagen','hofslag','minigolf','pesten','presidenten','solitaire'].sort());
 });
 
 test('Blackjack Aas telt als 1 wanneer nodig', () => {
@@ -45,12 +44,6 @@ test('Blackjack Double verdubbelt inzet en geeft exact één kaart', () => {
   assert.equal(game.phase,'dealer');
 });
 
-test('Zenuwen vereist exact één rang verschil', () => {
-  assert.equal(adjacent({value:7},{value:8}), true);
-  assert.equal(adjacent({value:7},{value:9}), false);
-  assert.equal(adjacent({value:1},{value:13}), false);
-});
-
 test('Blackjack kan twee heren splitsen', () => {
   const player={id:'a',name:'A',isNpc:false,hand:[{rank:'K'},{rank:'K'}],chips:100,bet:10,status:'playing'};
   const game={players:[player],dealer:{hand:[{rank:'10'},{rank:'8'}]},deck:[{rank:'9'},{rank:'Q'}],phase:'players',turnIndex:0,nextNpcAt:0,log:[],lastRoundText:'',pendingChipUpdates:[]};
@@ -70,6 +63,12 @@ test('Blackjack wacht na afrekening op Opnieuw', () => {
 
 test('Presidenten: 2 is hoger dan Aas', () => {
   assert.ok(presidentRank({rank:'2',value:2}) > presidentRank({rank:'A',value:1}));
+});
+
+test('Presidenten markeert alleen voldoende hoge en complete combinaties als speelbaar', () => {
+  const player={place:null,hand:[{id:'5♣',rank:'5',value:5},{id:'8♣',rank:'8',value:8},{id:'8♦',rank:'8',value:8},{id:'K♣',rank:'K',value:13}]};
+  const game={firstLead:false,lead:{rank:7,count:2}};
+  assert.deepEqual(playableCardIds(game,player),['8♣','8♦']);
 });
 
 test('Hartenjagen puntentelling', () => {

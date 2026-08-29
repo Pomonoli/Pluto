@@ -300,6 +300,37 @@ function recordMatch({ gameKey, roomId, startedAt, endedAt = Date.now(), players
 
 function leaderboard(gameKey = null, limit = 100) {
   const safeLimit = Math.max(1, Math.min(100, Number(limit) || 100));
+  if (gameKey === 'blackjack') {
+    return db.prepare(`
+      SELECT username, blackjack_chips AS chips
+      FROM users
+      ORDER BY blackjack_chips DESC, username COLLATE NOCASE ASC
+      LIMIT ${safeLimit}
+    `).all();
+  }
+  if (gameKey === 'solitaire') {
+    return db.prepare(`
+      SELECT
+        u.username,
+        COALESCE(s.games,0) AS games,
+        COALESCE(s.wins,0) AS wins,
+        CASE WHEN COALESCE(s.games,0) = 0 THEN 0 ELSE ROUND(100.0 * s.wins / s.games,1) END AS winRate,
+        s.bestSolitaireMs,
+        s.bestSolitaireMoves
+      FROM users u
+      LEFT JOIN (
+        SELECT mp.user_id,COUNT(*) AS games,COALESCE(SUM(mp.won),0) AS wins,
+          MIN(CASE WHEN mp.won = 1 THEN mp.duration_ms END) AS bestSolitaireMs,
+          MIN(CASE WHEN mp.won = 1 THEN mp.moves END) AS bestSolitaireMoves
+        FROM match_players mp
+        JOIN matches m ON m.id = mp.match_id
+        WHERE m.game_key = 'solitaire'
+        GROUP BY mp.user_id
+      ) s ON s.user_id = u.id
+      ORDER BY wins DESC, bestSolitaireMoves ASC, u.username COLLATE NOCASE ASC
+      LIMIT ${safeLimit}
+    `).all();
+  }
   const params = [];
   let where = 'mp.user_id IS NOT NULL';
   if (gameKey) {

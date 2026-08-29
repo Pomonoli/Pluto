@@ -63,18 +63,6 @@ function resultsForGame(gameKey, game, durationMs) {
     }));
   }
 
-  if (gameKey === 'zenuwen') {
-    const winner = game.players.find((p) => p.stock.length === 0 && p.hand.length === 0);
-    return game.players.map((p) => ({
-      playerId: p.id,
-      placement: winner?.id === p.id ? 1 : 2,
-      score: p.stock.length + p.hand.length,
-      won: winner?.id === p.id,
-      outcome: winner?.id === p.id ? 'Wint' : 'Verliest',
-      durationMs
-    }));
-  }
-
   if (gameKey === 'hartenjagen') {
     const placements = competitionPlacements(game.players, (p) => p.totalScore, false);
     const low = Math.min(...game.players.map((p) => p.totalScore));

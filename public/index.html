@@ -8,15 +8,15 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Pluto">
   <title>Pluto</title>
-  <link rel="manifest" href="/manifest.webmanifest?v=0.11.9">
-  <link rel="apple-touch-icon" href="/icons/icon-192-v2.png?v=0.11.9">
-  <link rel="stylesheet" href="/styles.css?v=0.11.9">
+  <link rel="manifest" href="/manifest.webmanifest?v=0.12.0">
+  <link rel="apple-touch-icon" href="/icons/icon-192-v2.png?v=0.12.0">
+  <link rel="stylesheet" href="/styles.css?v=0.12.0">
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
       <button class="brand-button" id="brandButton" type="button" aria-label="Naar Pluto home">
-        <span class="brand-mark" aria-hidden="true"><img class="brand-mark-img" src="/assets/pluto-logo-v2.png?v=0.11.9" alt=""></span>
+        <span class="brand-mark" aria-hidden="true"><img class="brand-mark-img" src="/assets/pluto-logo-v2.png?v=0.12.0" alt=""></span>
         <span class="brand-copy"><strong>Pluto</strong><small>gaming space</small></span>
       </button>
       <div class="top-actions">
@@ -57,7 +57,6 @@
           <article class="game-card"><div class="game-icon">♠</div><div class="game-card-body"><div class="game-title-row"><h3>Solitaire</h3><span class="badge">Solo</span></div><details class="game-info"><summary aria-label="Meer informatie over Solitaire">i</summary><p>Klondike draw-1. Bouw vier foundations op van Aas tot Koning.</p></details><button class="primary game-launch" data-game="solitaire" type="button">Spelen</button></div></article>
           <article class="game-card"><div class="game-icon">👑</div><div class="game-card-body"><div class="game-title-row"><h3>Presidenten</h3><span class="badge">3-4</span></div><details class="game-info"><summary aria-label="Meer informatie over Presidenten">i</summary><p>Leg hogere combinaties en raak als eerste je kaarten kwijt.</p></details><button class="primary game-launch" data-game="presidenten" type="button">Nieuw spel</button></div></article>
           <article class="game-card"><div class="game-icon">↻</div><div class="game-card-body"><div class="game-title-row"><h3>Pesten</h3><span class="badge">2-4</span></div><details class="game-info"><summary aria-label="Meer informatie over Pesten">i</summary><p>Match kleur of waarde en gebruik pestkaarten slim.</p></details><button class="primary game-launch" data-game="pesten" type="button">Nieuw spel</button></div></article>
-          <article class="game-card"><div class="game-icon">⚡</div><div class="game-card-body"><div class="game-title-row"><h3>Zenuwen</h3><span class="badge">2</span></div><details class="game-info"><summary aria-label="Meer informatie over Zenuwen">i</summary><p>Realtime: speel zo snel mogelijk één hoger of lager.</p></details><button class="primary game-launch" data-game="zenuwen" type="button">Nieuw spel</button></div></article>
           <article class="game-card"><div class="game-icon">♥</div><div class="game-card-body"><div class="game-title-row"><h3>Hartenjagen</h3><span class="badge">4</span></div><details class="game-info"><summary aria-label="Meer informatie over Hartenjagen">i</summary><p>Vermijd harten en vooral de Schoppenvrouw.</p></details><button class="primary game-launch" data-game="hartenjagen" type="button">Nieuw spel</button></div></article>
           <article class="game-card"><div class="game-icon">?</div><div class="game-card-body"><div class="game-title-row"><h3>Cluedo Lite</h3><span class="badge">2-6</span></div><details class="game-info"><summary aria-label="Meer informatie over Cluedo Lite">i</summary><p>Deduceer dader, wapen en kamer. Zonder speelbord, puur deductie.</p></details><button class="primary game-launch" data-game="cluedo" type="button">Nieuw spel</button></div></article>
           <article class="game-card"><div class="game-icon">⛳</div><div class="game-card-body"><div class="game-title-row"><h3>Minigolf</h3><span class="badge">1-4</span></div><details class="game-info"><summary aria-label="Meer informatie over Minigolf">i</summary><p>Elke match 5 slimme random maps met eigen route/gimmick + je custom maps.</p></details><div class="game-card-actions"><button class="primary game-launch" data-game="minigolf" type="button">Nieuw spel</button><button class="secondary" id="minigolfEditorButton" type="button">Map Editor</button></div></div></article>
@@ -237,9 +236,9 @@
           </aside>
         </div>
 
-        <footer class="room-share-footer">
-          <div><span class="eyebrow" id="roomGameName">GAME</span><strong>Room <span id="roomCodeHeading"></span></strong></div>
-          <div class="share-box"><input id="shareLink" readonly aria-label="Deelbare roomlink"><button class="secondary" id="copyLinkButton" type="button">Kopieer link</button></div>
+        <footer class="room-share-footer" id="roomShareFooter">
+          <div id="roomFooterMeta"><span class="eyebrow" id="roomGameName">GAME</span><strong>Room <span id="roomCodeHeading"></span></strong></div>
+          <div class="share-box" id="roomShareBox"><input id="shareLink" readonly aria-label="Deelbare roomlink"><button class="secondary" id="copyLinkButton" type="button">Kopieer link</button></div>
           <div class="room-footer-actions"><button class="primary hidden" id="roomRematchButton" type="button">Rematch</button><button class="ghost danger-text" id="roomLeaveButton" type="button">Verlaat room</button></div>
         </footer>
       </section>
@@ -319,6 +318,6 @@
 
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
   <script src="/socket.io/socket.io.js"></script>
-  <script type="module" src="/app.js?v=0.11.9"></script>
+  <script type="module" src="/app.js?v=0.12.0"></script>
 </body>
 </html>

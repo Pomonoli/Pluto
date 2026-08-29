@@ -40,7 +40,7 @@ function createGame(roomPlayers) {
   players.forEach((p) => { p.hand = sortPresidentCards(p.hand); });
   const starter = players.findIndex((p) => p.hand.some((c) => c.id === '3♣'));
   const game = {
-    gameKey: meta.key, players, turnIndex: starter >= 0 ? starter : 0, lead: null, lastPlayerId: null,
+    gameKey: meta.key, players, turnIndex: starter >= 0 ? starter : 0, lead: null, lastPlay: null, previousPlay: null, lastPlayerId: null,
     finished: [], firstLead: true, gameOver: false, resultText: '', log: ['De speler met 3♣ begint.'],
     nextNpcAt: 0
   };
@@ -77,6 +77,18 @@ function canPlayAnything(game, player) {
     if (cards.length >= game.lead.count && rank > game.lead.rank) return true;
   }
   return false;
+}
+
+function playableCardIds(game, player) {
+  if (!player || player.place !== null) return [];
+  const groups = groupByRank(player.hand);
+  if (game.firstLead) return (groups.get(3) || []).map((card) => card.id);
+  if (!game.lead) return player.hand.map((card) => card.id);
+  const ids = [];
+  for (const [rank, cards] of groups) {
+    if (rank > game.lead.rank && cards.length >= game.lead.count) ids.push(...cards.map((card) => card.id));
+  }
+  return ids;
 }
 
 function finishPlayerIfNeeded(game, player) {
@@ -132,7 +144,9 @@ function playCards(game, player, ids) {
   const rank = presidentRank(cards[0]);
   player.hand = player.hand.filter((c) => !ids.includes(c.id));
   player.passed = false;
-  game.lead = { count: cards.length, rank, cards, playerId: player.id, playerName: player.name };
+  game.previousPlay = game.lastPlay;
+  game.lastPlay = { count: cards.length, rank, cards, playerId: player.id, playerName: player.name };
+  game.lead = game.lastPlay;
   game.lastPlayerId = player.id;
   game.firstLead = false;
   game.log.unshift(`${player.name}: ${cards.map(cardLabel).join(' ')}.`);
@@ -210,17 +224,18 @@ function serialize(game, requesterId, connected) {
   return {
     kind: meta.key, gameOver: game.gameOver, resultText: game.resultText,
     turnPlayerId: game.gameOver ? null : currentPlayer(game)?.id,
-    lead: game.lead, firstLead: game.firstLead, log: game.log,
+    lead: game.lead, previousPlay: game.previousPlay, firstLead: game.firstLead, log: game.log,
     players: game.players.map((p) => ({
       id: p.id, name: p.name, isNpc: p.isNpc, connected: p.isNpc || connected.get(p.id),
       hand: p.id === requesterId ? p.hand : undefined, handCount: p.hand.length,
       place: p.place, passed: p.passed
     })),
+    playableIds: currentPlayer(game)?.id === requesterId ? playableCardIds(game, me) : [],
     canPass: Boolean(me && currentPlayer(game)?.id === requesterId && game.lead),
     mustInclude3Clubs: Boolean(game.firstLead && currentPlayer(game)?.id === requesterId)
   };
 }
 
 module.exports = {
-  meta, createGame, handleAction, serialize, tick, presidentRank, sortPresidentCards, isValidSelection, canPlayAnything
+  meta, createGame, handleAction, serialize, tick, presidentRank, sortPresidentCards, isValidSelection, canPlayAnything, playableCardIds
 };
