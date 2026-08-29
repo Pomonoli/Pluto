@@ -1,5 +1,5 @@
 export function createGameUi(ctx) {
-  const { state, els, E, action, profileButton, sound, socket, handleAck, cardNode, valueLabel } = ctx;
+  const { state, els, E, action, profileButton, sound, socket, handleAck, cardNode, valueLabel, requestRematch } = ctx;
 
 function renderGame(room) {
   const game = room.gameState; if (!game) return; state.selection = normalizeSelection(state.selection, game);
@@ -7,19 +7,20 @@ function renderGame(room) {
   els.gameStage.replaceChildren(); els.gameResult.replaceChildren(); els.gameResult.classList.toggle('hidden', !game.gameOver); els.gameResult.classList.remove('result-pop');
   if (game.gameOver) {
     els.gameResult.classList.add('result-pop');
-    els.gameResult.append(document.createTextNode(game.resultText || 'Spel afgelopen.'));
+    const resultCard = E('div','result-modal-card');
+    resultCard.append(E('span','eyebrow','SPEL AFGELOPEN'));
+    resultCard.append(E('h2','result-modal-title','De winnaar'));
+    resultCard.append(E('p','result-modal-copy',game.resultText || 'Spel afgelopen.'));
+    const actions = E('div','result-modal-actions');
     if (room.isHost) {
-      const rematch = E('button','primary','Speel opnieuw');
-      rematch.style.marginLeft='10px';
-      rematch.onclick=() => {
-        rematch.disabled=true; rematch.textContent='Starten…';
-        socket.emit('room:rematch',{},(response)=>{
-          if(!response?.ok){rematch.disabled=false;rematch.textContent='Speel opnieuw';return handleAck(response)}
-          state.selection=null; state.hofAnimation=null; state.hofAnimatedRound=0; state.minigolfShotAnimation=null; state.renderedGameRevision=-1;
-        });
-      };
-      els.gameResult.append(rematch);
+      const rematch = E('button','primary','Rematch');
+      rematch.onclick=()=>requestRematch(rematch);
+      actions.append(rematch);
     }
+    const close = E('button','secondary','Sluiten');
+    close.onclick=()=>{els.gameResult.classList.add('hidden');els.gameResult.setAttribute('aria-hidden','true')};
+    actions.append(close);resultCard.append(actions);els.gameResult.append(resultCard);
+    els.gameResult.setAttribute('aria-hidden','false');
   }
   // Hofslag gebruikt bewust opnieuw zijn eigen v0.4 renderpad.
   // Geen generieke player-strip of andere wrapper vóór de Hofslag-renderer.

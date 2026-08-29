@@ -103,6 +103,19 @@ function configureHttp(app, runtime) {
     res.json({ ok:true, profile });
   });
 
+  app.get('/api/profile/:username/head-to-head', (req, res) => {
+    const viewer = requireUser(req, res); if (!viewer) return;
+    const gameKey = req.query.game ? String(req.query.game).toLowerCase() : null;
+    if (gameKey && !getGame(gameKey)) return res.status(400).json({ ok:false, error:'Onbekend spel.' });
+    const comparison = authDb.headToHead(viewer.id, req.params.username, gameKey);
+    if (!comparison) return res.status(404).json({ ok:false, error:'Profiel niet gevonden.' });
+    res.json({
+      ok:true,
+      comparison,
+      games:listGames().map((game) => ({ key:game.key, name:game.name }))
+    });
+  });
+
   app.get('/api/minigolf/maps', (req, res) => {
     try {
       const viewer = authDb.getUserFromCookieHeader(req.headers.cookie);

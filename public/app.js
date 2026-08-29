@@ -1,11 +1,11 @@
-import { RULES } from './js/rules.js?v=0.11.4';
-import { createGameUi } from './js/game-ui.js?v=0.11.4';
-import { createMapEditor } from './js/map-editor.js?v=0.11.4';
+import { RULES } from './js/rules.js?v=0.11.5';
+import { createGameUi } from './js/game-ui.js?v=0.11.5';
+import { createMapEditor } from './js/map-editor.js?v=0.11.5';
 
 const socket = window.io();
   const $ = (id) => document.getElementById(id);
   const els = {};
-  ['brandButton','connectionPill','lobbyBrowserButton','leaderboardButton','soundButton','installButton','accountButton','mobileNav','mobilePlayButton','mobileLobbyButton','mobileLeaderboardButton','mobileProfileButton','rulesButton','leaveButton','homeView','minigolfEditorView','lobbyBrowserView','leaderboardView','profileView','roomView','homeGuestBar','guestName','homeAccountButton','inviteBox','inviteText','joinInviteButton','recentGamesSection','recentGames','gameGrid','joinCodeForm','joinCode','refreshRoomsButton','lobbyIdentityBar','lobbyIdentityText','lobbyGuestWrap','lobbyGuestName','openRoomCount','openRoomsContent','leaderboardGame','leaderboardContent','profileUsername','profileSummary','profileGames','profileRecent','roomGameName','roomCodeHeading','shareLink','copyLinkButton','roomLayout','lobbySection','gameSection','playerCountBadge','lobbyPlayers','hostControls','addNpcButton','startGameButton','lobbyHint','gameStage','gameResult','chatPanel','chatMessages','chatForm','chatInput','minigolfEditorButton','newGolfMapButton','saveGolfMapButton','customMapCount','customMapList','mapNameInput','mapDifficultySelect','mapMaxStrokesInput','mapSaveState','mapToolGrid','mapToolHelp','deleteMapObjectButton','mapEditorCanvas','mapInspectorEmpty','mapInspectorFields','testGolfMapButton','resetGolfTestButton','mapTestHint','accountModal','closeAccountButton','loggedOutAccount','loggedInAccount','loginForm','loginUsername','loginPassword','registerForm','registerUsername','registerPassword','accountUsername','accountGames','accountWins','accountWinRate','myProfileButton','logoutButton','rulesModal','rulesGameName','rulesContent','closeRulesButton','toast'].forEach((id) => els[id] = $(id));
+  ['brandButton','lobbyBrowserButton','leaderboardButton','soundButton','installButton','accountButton','mobileNav','mobilePlayButton','mobileLobbyButton','mobileLeaderboardButton','mobileProfileButton','rulesButton','leaveButton','homeView','minigolfEditorView','lobbyBrowserView','leaderboardView','profileView','roomView','homeGuestBar','guestName','homeAccountButton','inviteBox','inviteText','joinInviteButton','recentGamesSection','recentGames','gamesHeading','gameGrid','joinCodeForm','joinCode','refreshRoomsButton','lobbyIdentityBar','lobbyIdentityText','lobbyGuestWrap','lobbyGuestName','openRoomCount','openRoomsContent','leaderboardGame','leaderboardContent','profileUsername','profileSummary','profileGames','profileRecent','headToHeadCard','headToHeadGame','headToHeadContent','roomGameName','roomCodeHeading','shareLink','copyLinkButton','roomRematchButton','roomLeaveButton','roomLayout','lobbySection','gameSection','playerCountBadge','lobbyPlayers','hostControls','addNpcButton','startGameButton','lobbyHint','gameStage','gameResult','chatPanel','chatMessages','chatForm','chatInput','minigolfEditorButton','newGolfMapButton','saveGolfMapButton','customMapCount','customMapList','mapNameInput','mapDifficultySelect','mapMaxStrokesInput','mapSaveState','mapToolGrid','mapToolHelp','deleteMapObjectButton','mapEditorCanvas','mapInspectorEmpty','mapInspectorFields','testGolfMapButton','resetGolfTestButton','mapTestHint','accountModal','closeAccountButton','loggedOutAccount','loggedInAccount','loginForm','loginUsername','loginPassword','registerForm','registerUsername','registerPassword','accountUsername','accountGames','accountWins','accountWinRate','myProfileButton','logoutButton','rulesModal','rulesGameName','rulesContent','closeRulesButton','toast'].forEach((id) => els[id] = $(id));
 
   const state = {
     room: null,
@@ -24,6 +24,7 @@ const socket = window.io();
     deferredInstallPrompt: null,
     renderedRoomId: null,
     renderedGameRevision: -1,
+    viewedProfileUsername: null,
     previousRoom: null,
     scoreMemory: {},
     lobbyRefreshTimer: null,
@@ -158,10 +159,14 @@ const socket = window.io();
     els.profileUsername.textContent = username;
     els.profileSummary.textContent = 'Laden…';
     els.profileGames.replaceChildren(); els.profileRecent.replaceChildren();
+    state.viewedProfileUsername=username;els.headToHeadCard.classList.add('hidden');els.headToHeadContent.replaceChildren();els.headToHeadGame.value='';
     const response = await fetch(`/api/profile/${encodeURIComponent(username)}`);
     const data = await response.json();
     if (!data.ok) { els.profileSummary.textContent = data.error || 'Profiel niet gevonden.'; return; }
     renderProfile(data.profile);
+    if(state.authUser&&state.authUser.username.toLocaleLowerCase('nl-BE')!==data.profile.user.username.toLocaleLowerCase('nl-BE')){
+      els.headToHeadCard.classList.remove('hidden');await loadHeadToHead(data.profile.user.username);
+    }
   }
 
   function recentGamesList() {
@@ -177,6 +182,7 @@ const socket = window.io();
   function renderRecentGames() {
     const list = recentGamesList();
     els.recentGamesSection.classList.toggle('hidden', !list.length);
+    els.gamesHeading.classList.toggle('hidden', !list.length);
     els.recentGames.replaceChildren();
     list.forEach(gameKey=>{
       const b=E('button','recent-game-button');
@@ -307,7 +313,7 @@ const socket = window.io();
   }
 
   const gameUi = createGameUi({
-    state, els, E, action, profileButton, sound, socket, handleAck, cardNode, valueLabel
+    state, els, E, action, profileButton, sound, socket, handleAck, cardNode, valueLabel, requestRematch
   });
 
   const mapEditor = createMapEditor({
@@ -384,6 +390,26 @@ const socket = window.io();
     if(!recent.length) els.profileRecent.append(E('p','muted','Nog geen match history.'));
     recent.forEach(m=>{const item=E('div','recent-match');const d=new Date(Number(m.endedAt));item.append(E('strong','',GAME_NAMES[m.gameKey]||m.gameKey),E('span','',m.won?'Winst':m.outcome||'Match'),E('small','',`${d.toLocaleDateString('nl-BE')} ${d.toLocaleTimeString('nl-BE',{hour:'2-digit',minute:'2-digit'})}${m.durationMs?` · ${formatDuration(m.durationMs)}`:''}`));els.profileRecent.append(item)});
   }
+  async function loadHeadToHead(username,gameKey=''){
+    els.headToHeadContent.replaceChildren(E('p','muted','Laden…'));
+    try{
+      const response=await fetch(`/api/profile/${encodeURIComponent(username)}/head-to-head${gameKey?`?game=${encodeURIComponent(gameKey)}`:''}`,{cache:'no-store'});
+      const data=await response.json();
+      if(!data.ok)throw new Error(data.error||'Vergelijking kon niet geladen worden.');
+      if(state.viewedProfileUsername!==username)return;
+      if(!els.headToHeadGame.dataset.loaded){
+        data.games.forEach(game=>{const option=document.createElement('option');option.value=game.key;option.textContent=game.name;els.headToHeadGame.append(option)});
+        els.headToHeadGame.dataset.loaded='1';
+      }
+      const comparison=data.comparison;els.headToHeadContent.replaceChildren();
+      if(!comparison.games){els.headToHeadContent.append(E('p','muted','Jullie hebben nog geen onderlinge matches gespeeld.'));return}
+      const score=E('div','head-to-head-score');
+      const mine=E('div','head-to-head-side');mine.append(E('strong','',String(comparison.viewerWins)),E('span','',state.authUser.username));
+      const middle=E('div','head-to-head-middle');middle.append(E('span','','—'),E('small','',`${comparison.games} matches${comparison.draws?` · ${comparison.draws} gelijk`:''}`));
+      const theirs=E('div','head-to-head-side');theirs.append(E('strong','',String(comparison.opponentWins)),E('span','',comparison.opponent.username));
+      score.append(mine,middle,theirs);els.headToHeadContent.append(score);
+    }catch(error){els.headToHeadContent.replaceChildren(E('p','muted',error.message))}
+  }
   async function loadAuth() {
     try {
       const response=await fetch('/api/auth/me',{cache:'no-store'});
@@ -413,6 +439,9 @@ const socket = window.io();
     state.room = room; state.previousRoom=room; rememberRecentGame(room.gameKey); showRoom();
     document.body.classList.toggle('minigolf-mode', room.gameKey==='minigolf' && room.status!=='lobby');
     els.roomGameName.textContent = room.gameMeta.name.toUpperCase(); els.roomCodeHeading.textContent = room.id; els.shareLink.value = `${location.origin}/room/${room.id}`;
+    const canRematch = room.status !== 'lobby' && room.gameState?.gameOver && room.isHost;
+    els.roomRematchButton.classList.toggle('hidden', !canRematch);
+    if(!canRematch){els.roomRematchButton.disabled=false;els.roomRematchButton.textContent='Rematch'}
     els.roomLayout.classList.toggle('solo', room.gameMeta.solo); els.chatPanel.classList.toggle('hidden', room.gameMeta.solo);
     renderChat(room.messages || []);
     if (room.status === 'lobby') {
@@ -462,10 +491,16 @@ const socket = window.io();
     history.replaceState({},'', '/');showHome();
     socket.emit('room:leave',{},()=>{state.roomStateBlocked=false});
   }
+  function requestRematch(button){
+    if(button){button.disabled=true;button.textContent='Starten…'}
+    socket.emit('room:rematch',{},(response)=>{
+      if(!response?.ok){if(button){button.disabled=false;button.textContent='Rematch'}return handleAck(response)}
+      state.selection=null;state.hofAnimation=null;state.hofAnimatedRound=0;state.minigolfShotAnimation=null;state.renderedGameRevision=-1;
+    });
+  }
   function copyLink(){const v=els.shareLink.value;if(navigator.clipboard&&isSecureContext)navigator.clipboard.writeText(v).then(()=>toast('Roomlink gekopieerd.')).catch(()=>toast(v));else{els.shareLink.select();toast('Selecteer en kopieer de link.')}}
 
   socket.on('connect',()=>{
-    els.connectionPill.textContent='Online';els.connectionPill.classList.add('online');
     const target=getRoomFromPath();
     if(target){state.expectedRoomId=target;state.roomStateBlocked=false;}
     if(target&&(state.authUser||state.guestName)) joinRoom(target);
@@ -474,7 +509,6 @@ const socket = window.io();
     else if(isLeaderboardPath()) showLeaderboard(els.leaderboardGame.value||'');
     else { const profile=getProfileFromPath(); if(profile) showProfile(profile); else showHome(); }
   });
-  socket.on('disconnect',()=>{els.connectionPill.textContent='Offline';els.connectionPill.classList.remove('online')});
   socket.on('room:state',(room)=>renderRoom(room));
   socket.on('session:replaced',()=>toast('Deze speler is in een andere tab opnieuw verbonden.'));
 
@@ -494,6 +528,9 @@ const socket = window.io();
   els.startGameButton.onclick=()=>socket.emit('room:start',{},handleAck);
   els.chatForm.onsubmit=(e)=>{e.preventDefault();const text=els.chatInput.value.trim();if(!text)return;socket.emit('chat:send',{text},(r)=>{if(!r?.ok)return handleAck(r);els.chatInput.value=''})};
   els.copyLinkButton.onclick=copyLink;
+  els.headToHeadGame.onchange=()=>{if(state.viewedProfileUsername)loadHeadToHead(state.viewedProfileUsername,els.headToHeadGame.value)};
+  els.roomRematchButton.onclick=()=>requestRematch(els.roomRematchButton);
+  els.roomLeaveButton.onclick=leaveRoom;
   els.rulesButton.onclick=openRules;
   els.closeRulesButton.onclick=closeRules;
   els.leaveButton.onclick=leaveRoom;
@@ -561,7 +598,7 @@ const socket = window.io();
   if('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const registration = await navigator.serviceWorker.register('/service-worker.js?v=0.11.4', {
+        const registration = await navigator.serviceWorker.register('/service-worker.js?v=0.11.5', {
           updateViaCache:'none'
         });
         await registration.update();

@@ -395,6 +395,50 @@ function getOwnStats(userId) {
   return { games, wins, winRate: games ? Math.round((wins / games) * 1000) / 10 : 0 };
 }
 
+function headToHead(viewerUserId, opponentUsername, gameKey = null) {
+  const key = normalizeUsername(opponentUsername).toLocaleLowerCase('nl-BE');
+  const opponent = db.prepare(
+    'SELECT id,username FROM users WHERE username_key = ?'
+  ).get(key);
+  if (!opponent) return null;
+
+  const params = [viewerUserId, opponent.id];
+  let gameFilter = '';
+  if (gameKey) {
+    gameFilter = 'AND m.game_key = ?';
+    params.push(gameKey);
+  }
+
+  const row = db.prepare(`
+    SELECT
+      COUNT(*) AS games,
+      COALESCE(SUM(CASE
+        WHEN mine.placement IS NOT NULL AND theirs.placement IS NOT NULL AND mine.placement < theirs.placement THEN 1
+        WHEN mine.placement IS NULL AND mine.won = 1 AND theirs.won = 0 THEN 1
+        ELSE 0 END),0) AS viewerWins,
+      COALESCE(SUM(CASE
+        WHEN mine.placement IS NOT NULL AND theirs.placement IS NOT NULL AND mine.placement > theirs.placement THEN 1
+        WHEN mine.placement IS NULL AND theirs.won = 1 AND mine.won = 0 THEN 1
+        ELSE 0 END),0) AS opponentWins
+    FROM match_players mine
+    JOIN match_players theirs ON theirs.match_id = mine.match_id AND theirs.user_id = ?
+    JOIN matches m ON m.id = mine.match_id
+    WHERE mine.user_id = ? ${gameFilter}
+  `).get(params[1], params[0], ...params.slice(2));
+
+  const games = Number(row.games || 0);
+  const viewerWins = Number(row.viewerWins || 0);
+  const opponentWins = Number(row.opponentWins || 0);
+  return {
+    opponent:{ id:Number(opponent.id), username:opponent.username },
+    gameKey:gameKey || null,
+    games,
+    viewerWins,
+    opponentWins,
+    draws:Math.max(0, games - viewerWins - opponentWins)
+  };
+}
+
 
 function listMinigolfMaps() {
   return db.prepare(`
@@ -515,6 +559,7 @@ module.exports = {
   leaderboard,
   getProfile,
   getOwnStats,
+  headToHead,
   validateUsername,
   listMinigolfMaps,
   listMinigolfMapsForGame,

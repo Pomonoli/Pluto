@@ -1,4 +1,4 @@
-# Pluto v0.11.4
+# Pluto v0.11.5
 
 Pluto is de nieuwe naam van de private custom-minigames app.
 

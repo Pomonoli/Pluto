@@ -15,7 +15,7 @@ test('Pluto branding staat in HTML en manifest',()=>{
 
 test('mobile nav bevat exact de vier gevraagde hoofdbestemmingen',()=>{
   const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
-  for(const label of ['Play','Lobby','Leaderboard','Profile']) assert.match(html,new RegExp(`>${label}<`));
+  for(const label of ['Speel','Lobby','Leaderboard','Profiel']) assert.match(html,new RegExp(`>${label}<`));
   assert.match(html,/id="mobileNav"/);
 });
 
