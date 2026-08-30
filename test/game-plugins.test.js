@@ -33,3 +33,22 @@ test('frontend heeft een dynamische pluginloader en rendererregistratie',()=>{
   assert.match(app,/gameUi\.registerPlugin\(game\.key,plugin\)/);
   assert.match(ui,/registerPlugin\(key,plugin\)/);
 });
+
+test('elke game-client koppelt render() aan zijn echte hoofdrenderer',()=>{
+  const expected={
+    blackjack:'renderBlackjack',
+    carcassonne:'renderCarcassonne',
+    cluedo:'renderCluedo',
+    hartenjagen:'renderHartenjagen',
+    hofslag:'renderHofslag',
+    minigolf:'renderMinigolf',
+    pesten:'renderPesten',
+    presidenten:'renderPresidenten',
+    solitaire:'renderSolitaire'
+  };
+  for(const [key,renderer] of Object.entries(expected)){
+    const client=fs.readFileSync(path.join(__dirname,'..','games',key,'client.js'),'utf8');
+    const escaped=renderer.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    assert.match(client,new RegExp(`export\\s+function\\s+render\\s*\\([^)]*\\)\\s*\\{[^}]*\\b${escaped}\\s*\\(`,'s'),`${key} render() roept ${renderer} niet aan`);
+  }
+});
