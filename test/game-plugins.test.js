@@ -22,7 +22,7 @@ test('game-plugin loader ontdekt een zelfstandige gamemap',()=>{
 
 test('alle bestaande games zijn plugins en de template wordt overgeslagen',()=>{
   const plugins=listGamePlugins();
-  assert.equal(plugins.length,11);
+  assert.equal(plugins.length,13);
   assert.ok(plugins.every((plugin)=>plugin.key!=='_template'&&plugin.clientUrl));
 });
 
@@ -44,6 +44,7 @@ test('elke game-client koppelt render() aan zijn echte hoofdrenderer',()=>{
     minigolf:'renderMinigolf',
     pesten:'renderPesten',
     presidenten:'renderPresidenten',
+    quoridor:'renderQuoridor',
     santorini:'renderSantorini',
     solitaire:'renderSolitaire',
     stratego:'renderStratego',

@@ -1,0 +1,14 @@
+{
+  "key": "quoridor",
+  "name": "Quoridor",
+  "description": "Race naar de overkant en dwing omwegen af met slim geplaatste muren.",
+  "version": "1",
+  "icon": "🚧",
+  "badge": "2-4",
+  "actionLabel": "Nieuw spel",
+  "minPlayers": 2,
+  "maxPlayers": 4,
+  "supportsNpc": false,
+  "realtime": false,
+  "solo": false
+}
