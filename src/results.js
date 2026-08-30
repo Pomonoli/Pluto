@@ -90,6 +90,19 @@ function resultsForGame(gameKey, game, durationMs) {
     }));
   }
 
+  if (gameKey === 'carcassonne') {
+    const placements = competitionPlacements(game.players, (p) => p.score, true);
+    const high = Math.max(...game.players.map((p) => p.score));
+    const leaders = game.players.filter((p) => p.score === high);
+    return game.players.map((p) => ({
+      playerId: p.id,
+      placement: placements.get(p.id),
+      score: p.score,
+      won: leaders.length === 1 && leaders[0].id === p.id,
+      outcome: leaders.length > 1 && p.score === high ? 'Gelijkspel' : p.score === high ? 'Wint' : 'Verliest'
+    }));
+  }
+
   if (gameKey === 'cluedo') {
     return game.players.map((p) => ({
       playerId: p.id,

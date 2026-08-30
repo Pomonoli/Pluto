@@ -61,3 +61,11 @@ test('Minigolf gelijk hoogste punten geeft geen leaderboard-win', () => {
   assert.equal(result[0].won, false);
   assert.equal(result[1].won, false);
 });
+
+test('Carcassonne hoogste unieke score wint', () => {
+  const { resultsForGame } = require('../src/results');
+  const results=resultsForGame('carcassonne',{gameOver:true,players:[{id:'a',score:42},{id:'b',score:31}]},1000);
+  assert.equal(results.find(x=>x.playerId==='a').won,true);
+  assert.equal(results.find(x=>x.playerId==='a').placement,1);
+  assert.equal(results.find(x=>x.playerId==='b').placement,2);
+});

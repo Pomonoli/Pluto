@@ -8,15 +8,15 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Pluto">
   <title>Pluto</title>
-  <link rel="manifest" href="/manifest.webmanifest?v=0.12.2">
-  <link rel="apple-touch-icon" href="/icons/icon-192-v2.png?v=0.12.2">
-  <link rel="stylesheet" href="/styles.css?v=0.12.2">
+  <link rel="manifest" href="/manifest.webmanifest?v=0.13.0">
+  <link rel="apple-touch-icon" href="/icons/icon-192-v2.png?v=0.13.0">
+  <link rel="stylesheet" href="/styles.css?v=0.13.0">
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
       <button class="brand-button" id="brandButton" type="button" aria-label="Naar Pluto home">
-        <span class="brand-mark" aria-hidden="true"><img class="brand-mark-img" src="/assets/pluto-logo-v2.png?v=0.12.2" alt=""></span>
+        <span class="brand-mark" aria-hidden="true"><img class="brand-mark-img" src="/assets/pluto-logo-v2.png?v=0.13.0" alt=""></span>
         <span class="brand-copy"><strong>Pluto</strong><small>gaming space</small></span>
       </button>
       <div class="top-actions">
@@ -59,6 +59,7 @@
           <article class="game-card"><div class="game-icon">↻</div><div class="game-card-body"><div class="game-title-row"><h3>Pesten</h3><span class="badge">2-4</span></div><button class="game-info" data-rules-game="pesten" aria-label="Spelregels van Pesten" type="button">i</button><button class="primary game-launch" data-game="pesten" type="button">Nieuw spel</button></div></article>
           <article class="game-card"><div class="game-icon">♥</div><div class="game-card-body"><div class="game-title-row"><h3>Hartenjagen</h3><span class="badge">4</span></div><button class="game-info" data-rules-game="hartenjagen" aria-label="Spelregels van Hartenjagen" type="button">i</button><button class="primary game-launch" data-game="hartenjagen" type="button">Nieuw spel</button></div></article>
           <article class="game-card"><div class="game-icon">?</div><div class="game-card-body"><div class="game-title-row"><h3>Cluedo</h3><span class="badge">2-6</span></div><button class="game-info" data-rules-game="cluedo" aria-label="Spelregels van Cluedo" type="button">i</button><button class="primary game-launch" data-game="cluedo" type="button">Nieuw spel</button></div></article>
+          <article class="game-card"><div class="game-icon">🏰</div><div class="game-card-body"><div class="game-title-row"><h3>Carcassonne</h3><span class="badge">2-5</span></div><button class="game-info" data-rules-game="carcassonne" aria-label="Spelregels van Carcassonne" type="button">i</button><button class="primary game-launch" data-game="carcassonne" type="button">Nieuw spel</button></div></article>
           <article class="game-card"><div class="game-icon">⛳</div><div class="game-card-body"><div class="game-title-row"><h3>Minigolf</h3><span class="badge">1-4</span></div><button class="game-info" data-rules-game="minigolf" aria-label="Spelregels van Minigolf" type="button">i</button><div class="game-card-actions"><button class="primary game-launch" data-game="minigolf" type="button">Nieuw spel</button><button class="secondary" id="minigolfEditorButton" type="button">Map Editor</button></div></div></article>
         </div>
 
@@ -318,6 +319,6 @@
 
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
   <script src="/socket.io/socket.io.js"></script>
-  <script type="module" src="/app.js?v=0.12.2"></script>
+  <script type="module" src="/app.js?v=0.13.0"></script>
 </body>
 </html>

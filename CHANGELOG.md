@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.13.0 — Carcassonne
+
+- Carcassonne toegevoegd voor 2 tot 5 spelers, inclusief NPCs.
+- Server-gevalideerde tegelplaatsing, rotatie, verbonden projecten, horigen en volledige puntentelling.
+- Mobiel landschap met legale plaatsingsvelden, pannen, pinch-zoom en een compacte spelerstatus.
+- Carcassonne-resultaten werken mee in profielen, matchgeschiedenis en leaderboards.
+
 ## v0.12.2 — Cluedo-notitieblok
 
 - Cluedo Lite heet voortaan Cluedo.

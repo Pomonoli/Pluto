@@ -5,10 +5,11 @@ const { handValue } = blackjack;
 const solitaire = require('../src/solitaire');
 const { presidentRank, playableCardIds } = require('../src/presidenten');
 const { cardPoints } = require('../src/hartenjagen');
+const carcassonne = require('../src/carcassonne');
 const { getGame, listGames } = require('../src/games');
 
-test('alle 8 games zijn geregistreerd', () => {
-  assert.deepEqual(listGames().map(g => g.key).sort(), ['blackjack','cluedo','hartenjagen','hofslag','minigolf','pesten','presidenten','solitaire'].sort());
+test('alle 9 games zijn geregistreerd', () => {
+  assert.deepEqual(listGames().map(g => g.key).sort(), ['blackjack','carcassonne','cluedo','hartenjagen','hofslag','minigolf','pesten','presidenten','solitaire'].sort());
 });
 
 test('Blackjack Aas telt als 1 wanneer nodig', () => {
@@ -116,6 +117,34 @@ test('Cluedo verdeelt 15 kaarten bij twee spelers als 8 en 7', () => {
   const { createGame } = require('../src/cluedo');
   const game=createGame([{id:'a',name:'A'},{id:'b',name:'B'}]);
   assert.deepEqual(game.players.map(player=>player.hand.length).sort((a,b)=>a-b),[7,8]);
+});
+
+test('Carcassonne start met 72 landschapstegels en 7 horigen', () => {
+  const game=carcassonne.createGame([{id:'a',name:'A'},{id:'b',name:'B'}]);
+  assert.equal(game.board.size,1);
+  assert.equal(game.deck.length,70);
+  assert.ok(game.currentTile);
+  assert.deepEqual(game.players.map(player=>player.meeples),[7,7]);
+});
+
+test('Carcassonne roteert alle tegelranden met de klok mee', () => {
+  const tile={edges:['C','R','F','F'],cities:[[0]],roads:[[1]],rotation:0};
+  const rotated=carcassonne.rotateTile(tile,1);
+  assert.deepEqual(rotated.edges,['F','C','R','F']);
+  assert.deepEqual(rotated.cities,[[1]]);
+  assert.deepEqual(rotated.roads,[[2]]);
+});
+
+test('Carcassonne doorloopt leggen en horige overslaan', () => {
+  const game=carcassonne.createGame([{id:'a',name:'A'},{id:'b',name:'B'}]);
+  for(let i=0;i<4&&!game.validPlacements.length;i+=1)carcassonne.handleAction(game,'a','rotate');
+  const placement=game.validPlacements[0];
+  assert.ok(placement);
+  carcassonne.handleAction(game,'a','place',placement);
+  assert.equal(game.phase,'meeple');
+  carcassonne.handleAction(game,'a','skipMeeple');
+  assert.equal(game.turnIndex,1);
+  assert.equal(game.board.size,2);
 });
 
 

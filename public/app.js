@@ -1,6 +1,6 @@
-import { RULES } from './js/rules.js?v=0.12.2';
-import { createGameUi } from './js/game-ui.js?v=0.12.2';
-import { createMapEditor } from './js/map-editor.js?v=0.12.2';
+import { RULES } from './js/rules.js?v=0.13.0';
+import { createGameUi } from './js/game-ui.js?v=0.13.0';
+import { createMapEditor } from './js/map-editor.js?v=0.13.0';
 
 const socket = window.io();
   const $ = (id) => document.getElementById(id);
@@ -20,6 +20,7 @@ const socket = window.io();
     hofAnimatedRound: 0,
     cluedoNotes: {},
     cluedoSelections: {},
+    carcassonneViews: {},
     soundMuted: localStorage.getItem('minigames.soundMuted') === '1',
     audioContext: null,
     deferredInstallPrompt: null,
@@ -287,6 +288,7 @@ const socket = window.io();
     if(game.kind==='presidenten')return me.place===1;
     if(game.kind==='pesten')return me.handCount===0;
     if(game.kind==='cluedo')return game.winnerId===myId;
+    if(game.kind==='carcassonne'){const high=Math.max(...game.players.map(p=>p.score));return me.score===high&&game.players.filter(p=>p.score===high).length===1}
     if(game.kind==='hartenjagen'){const low=Math.min(...game.players.map(p=>p.totalScore));return me.totalScore===low}
     if(game.kind==='hofslag'){const high=Math.max(...game.players.map(p=>p.score));return me.score===high}
     return String(game.resultText||'').includes(me.name);
@@ -350,7 +352,7 @@ const socket = window.io();
   }
 
 
-  const GAME_NAMES = {hofslag:'Hofslag',blackjack:'Blackjack',solitaire:'Solitaire',presidenten:'Presidenten',pesten:'Pesten',hartenjagen:'Hartenjagen',cluedo:'Cluedo',minigolf:'Minigolf'};
+  const GAME_NAMES = {hofslag:'Hofslag',blackjack:'Blackjack',solitaire:'Solitaire',presidenten:'Presidenten',pesten:'Pesten',hartenjagen:'Hartenjagen',cluedo:'Cluedo',carcassonne:'Carcassonne',minigolf:'Minigolf'};
   function formatDuration(ms) {
     if (ms === null || ms === undefined) return '—';
     const total = Math.max(0, Math.round(Number(ms) / 1000));
@@ -600,7 +602,7 @@ const socket = window.io();
   if('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const registration = await navigator.serviceWorker.register('/service-worker.js?v=0.12.2', {
+        const registration = await navigator.serviceWorker.register('/service-worker.js?v=0.13.0', {
           updateViaCache:'none'
         });
         await registration.update();

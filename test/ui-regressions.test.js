@@ -7,7 +7,7 @@ test('informatieknoppen op home openen de volledige spelregels',()=>{
  const html=fs.readFileSync(path.join(__dirname,'../public/index.html'),'utf8');
  const app=fs.readFileSync(path.join(__dirname,'../public/app.js'),'utf8');
  assert.doesNotMatch(html,/<details class="game-info">/);
- assert.equal((html.match(/data-rules-game=/g)||[]).length,8);
+ assert.equal((html.match(/data-rules-game=/g)||[]).length,9);
  assert.match(app,/openRules\(info\.dataset\.rulesGame\)/);
 });
 
