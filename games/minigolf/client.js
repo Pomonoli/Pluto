@@ -21,7 +21,7 @@ export const roomOptions={bodyClass:'minigolf-mode'};
 let state,els,E,action,profileButton,sound,socket,handleAck,cardNode,valueLabel,titlebar,logBox,renderGame,renderCardOpponents,renderDiscardStack,scoreList;
 let shotAnimation=null;
 function bind(api){({state,els,E,action,profileButton,sound,socket,handleAck,cardNode,valueLabel,titlebar,logBox,renderGame,renderCardOpponents,renderDiscardStack,scoreList}=api)}
-export function render(api){bind(api);svgEl(api.room,api.game)}
+export function render(api){bind(api);renderMinigolf(api.room,api.game)}
 
 function svgEl(tag, attrs={}) {
   const node=document.createElementNS('http://www.w3.org/2000/svg',tag);
