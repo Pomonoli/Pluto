@@ -70,7 +70,7 @@ function createRealtime(io) {
     return [...rooms.values()]
       .filter((room) => {
         const meta = gameModule(room).meta;
-        return room.status === 'lobby' &&
+        return ['lobby','playing','finished'].includes(room.status) &&
           !meta.solo &&
           room.players.some((p) => !p.isNpc && p.connected);
       })
@@ -89,7 +89,9 @@ function createRealtime(io) {
           playerCount: room.players.length,
           humanCount: humans.length,
           npcCount: npcs.length,
-          joinable: humans.length < meta.maxPlayers,
+          status: room.status,
+          joinable: room.status === 'lobby' && humans.length < meta.maxPlayers,
+          resumable: room.status !== 'lobby',
           hostName: host?.name || connectedHumans[0]?.name || 'Onbekend',
           playerNames: room.players.map((p) => p.name),
           createdAt: room.createdAt,
@@ -185,6 +187,8 @@ function createRealtime(io) {
     if (explicit && room.status === 'lobby') {
       const deleted = removeLobbyHuman(room, player);
       if (!deleted) broadcastRoom(room);
+    } else if (explicit && !room.players.some((p) => !p.isNpc && p.connected)) {
+      rooms.delete(room.id);
     } else {
       broadcastRoom(room);
     }

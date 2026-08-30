@@ -56,9 +56,10 @@ test('homescreen toont alleen beschikbare open lobbykaarten',()=>{
   const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
   assert.match(html,/id="homeOpenLobbiesSection" class="recent-games-section hidden"/);
   assert.match(html,/id="homeOpenLobbies" class="recent-game-row"/);
-  assert.match(app,/renderHomeOpenLobbies\(\(data\.rooms\|\|\[\]\)\.filter\(room=>room\.joinable\)\)/);
+  assert.match(app,/room\.joinable\|\|\(room\.resumable&&room\.playerNames\.some/);
   assert.match(app,/homeOpenLobbiesSection\.classList\.toggle\('hidden',!rooms\.length\)/);
   assert.match(app,/button\.onclick=\(\)=>joinRoom\(room\.id\)/);
+  assert.match(app,/canResume\?'Ga terug':room\.resumable\?'Lopend'/);
 });
 
 test('sound button is icon-only en app knop heet App',()=>{

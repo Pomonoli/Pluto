@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.6.1 — Lopende spellen hervatten
+
+- Lopende en afgelopen rooms blijven zichtbaar in het lobbyoverzicht zolang minstens één menselijke speler verbonden is.
+- Bestaande deelnemers krijgen bij een lopend spel de actie `Ga terug` en hervatten hun oorspronkelijke speler via hun token of account.
+- Niet-deelnemers zien dat een room loopt, maar kunnen niet halverwege toetreden.
+- Op Home verschijnen lopende rooms alleen voor een bij naam herkende deelnemer.
+- Een expliciet verlaten room wordt pas verwijderd wanneer de laatste verbonden menselijke speler vertrekt.
+- Netwerkonderbrekingen behouden de bestaande herstelperiode, zodat een tijdelijke verbindingsfout de room niet wist.
+- Nieuwe lifecycle-tests bewaken zichtbaarheid, hervatten en cleanup na het laatste vertrek.
+
 ## v1.6.0 — Schermvullende games en Carcassonne-hoekakkers
 
 - Actieve spellen gebruiken de viewporthoogte en beperken scrollen tot een interne fallback wanneer inhoud echt niet binnen het scherm past.

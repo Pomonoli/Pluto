@@ -2,6 +2,10 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
+## Nieuw in versie 1.6.1
+
+Lopende spellen blijven in het lobbyoverzicht staan zolang minstens één speler aanwezig is. Deelnemers die per ongeluk naar Home gaan, kunnen via `Ga terug` onmiddellijk hun bestaande plaats en spel hervatten.
+
 ## Nieuw in versie 1.6.0
 
 Spellen gebruiken voortaan zoveel mogelijk de volledige schermhoogte zonder paginascroll. De ongebruikte chat en aparte vertrekknoppen zijn verwijderd; het Pluto-logo brengt je rechtstreeks terug naar Home.

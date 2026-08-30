@@ -1,4 +1,4 @@
-import { createGameUi } from './js/game-ui.js?v=1.6.0';
+import { createGameUi } from './js/game-ui.js?v=1.6.1';
 
 const socket = window.io();
   const $ = (id) => document.getElementById(id);
@@ -205,7 +205,8 @@ const socket = window.io();
       const response=await fetch('/api/rooms',{cache:'no-store'});
       const data=await response.json();
       if(!data.ok)throw new Error(data.error||'Kon rooms niet laden.');
-      renderHomeOpenLobbies((data.rooms||[]).filter(room=>room.joinable));
+      const identity=(state.authUser?.username||state.guestName||els.guestName.value||'').toLocaleLowerCase('nl-BE');
+      renderHomeOpenLobbies((data.rooms||[]).filter(room=>room.joinable||(room.resumable&&room.playerNames.some(name=>name.toLocaleLowerCase('nl-BE')===identity))));
     } catch {
       renderHomeOpenLobbies([]);
     }
@@ -216,7 +217,7 @@ const socket = window.io();
     rooms.forEach(room=>{
       const button=E('button','recent-game-button home-open-lobby-button');
       button.type='button';
-      button.append(E('strong','',room.gameName),E('span','',`${room.playerCount}/${room.maxPlayers} spelers · ${room.hostName}`));
+      button.append(E('strong','',room.gameName),E('span','',`${room.resumable?'Lopend · ':''}${room.playerCount}/${room.maxPlayers} spelers · ${room.hostName}`));
       button.onclick=()=>joinRoom(room.id);
       els.homeOpenLobbies.append(button);
     });
@@ -261,14 +262,17 @@ const socket = window.io();
       const card=E('article','open-room-card');
       const head=E('div','open-room-head');
       const left=E('div');
-      left.append(E('span','eyebrow',room.gameName.toUpperCase()),E('h3','',`Room ${room.id}`));
+      left.append(E('span','eyebrow',room.gameName.toUpperCase()),E('h3','',`${room.resumable?'Lopend · ':''}Room ${room.id}`));
       head.append(left,E('span','badge',`${room.playerCount}/${room.maxPlayers}`));
       const players=E('div','open-room-players');
       room.playerNames.forEach(name=>players.append(E('span','open-room-player',name)));
       const meta=E('div','open-room-meta');
       meta.append(E('span','',`Host: ${room.hostName}`),E('span','',relativeAge(room.createdAt)));
-      const join=E('button',room.joinable?'primary':'secondary',room.joinable?'Join room':'Vol');
-      join.type='button';join.disabled=!room.joinable;
+      const identity=(state.authUser?.username||state.guestName||els.lobbyGuestName.value||'').toLocaleLowerCase('nl-BE');
+      const canResume=Boolean(room.resumable&&room.playerNames.some(name=>name.toLocaleLowerCase('nl-BE')===identity));
+      const canEnter=room.joinable||canResume;
+      const join=E('button',canEnter?'primary':'secondary',canResume?'Ga terug':room.resumable?'Lopend':room.joinable?'Join room':'Vol');
+      join.type='button';join.disabled=!canEnter;
       join.onclick=()=>{if(!syncLobbyGuestName())return;joinRoom(room.id)};
       card.append(head,players,meta,join);
       els.openRoomsContent.append(card);
@@ -613,7 +617,7 @@ const socket = window.io();
   if('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.6.0', {
+        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.6.1', {
           updateViaCache:'none'
         });
         await registration.update();
