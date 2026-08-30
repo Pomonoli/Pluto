@@ -1,0 +1,14 @@
+{
+  "key": "santorini",
+  "name": "Santorini",
+  "version": "1",
+  "description": "Bouw torens, klim naar niveau 3 en blokkeer je tegenstanders.",
+  "icon": "🏛️",
+  "badge": "2-4",
+  "actionLabel": "Nieuw spel",
+  "minPlayers": 2,
+  "maxPlayers": 4,
+  "supportsNpc": false,
+  "realtime": false,
+  "solo": false
+}
