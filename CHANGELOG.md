@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.3.0 — Carcassonne-akkers en mobiele Minigolf-card
+
+- Carcassonne behandelt afzonderlijke groene gebieden op één tegel als afzonderlijke, verbonden akkersegmenten.
+- Wegen en steden scheiden akkers; kloosters laten het omliggende akkergebied verbonden.
+- Landbouwerkeuzes tonen waar het segment ligt en de pion staat in het juiste kwart, langs de juiste zijde of in het midden van de tegel.
+- Een bestaande landbouwer blokkeert alleen het werkelijk verbonden akkersegment en de eindscore gebruikt dezelfde segmentgraph.
+- Tijdens de burgerkeuze kan een speler teruggaan en dezelfde tegel op een andere geldige locatie leggen.
+- De laatst gespeelde Carcassonne-tegel blijft zichtbaar met een rode omlijning.
+- De knoppen `Nieuw spel` en `Map Editor` staan op de mobiele Minigolf-card naast elkaar, zoals op desktop.
+- Nieuwe regressietests bewaken akkers, kloosters, terugplaatsen en de blijvende tegelmarkering.
+
 ## v1.2.1 — Quoridor NPC's en stabiele layout
 
 - Quoridor ondersteunt nu NPC-spelers die doelgericht bewegen en geldige strategische muren kunnen plaatsen.

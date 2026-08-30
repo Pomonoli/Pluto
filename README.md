@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.2.1
+## Nieuw in versie 1.3.0
 
-Stratego, Santorini, Ticket to Ride en Quoridor zijn toegevoegd. Alle vier ondersteunen oefenpotjes tegen NPC's. Stratego toont verborgen vijandelijke stukken duidelijk zonder hun rang prijs te geven, Ticket to Ride markeert onmiskenbaar welke routes van jou zijn en Quoridor houdt het bord stabiel tussen beurten.
+Carcassonne gebruikt nu afzonderlijke akkersegmenten: wegen en steden scheiden akkers, kloosters niet. Landbouwers verschijnen op het juiste deel van de tegel, spelers kunnen tijdens de burgerkeuze teruggaan om hun tegel anders te leggen en de laatst gespeelde tegel heeft een rode markering. Op mobiel staan de twee Minigolf-acties voortaan naast elkaar.
 
 Pluto bevat nu dertien spellen met realtime rooms, accounts, blijvende statistieken, leaderboards en een installeerbare mobiele PWA in één self-hosted omgeving.
 

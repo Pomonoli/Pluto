@@ -16,6 +16,32 @@ function featurePositionClass(group){
   }
   return 'center';
 }
+function fieldPositionClass(ports){
+  const set=new Set(ports||[]);
+  const quarters=[
+    {name:'top-left',ports:[7,0]},
+    {name:'top-right',ports:[1,2]},
+    {name:'bottom-right',ports:[3,4]},
+    {name:'bottom-left',ports:[5,6]}
+  ].filter(quarter=>quarter.ports.some(port=>set.has(port)));
+  if(quarters.length===4||quarters.length===0)return'center';
+  if(quarters.length===3){
+    const present=new Set(quarters.map(quarter=>quarter.name));
+    const opposite={
+      'top-left':'bottom-right','top-right':'bottom-left',
+      'bottom-right':'top-left','bottom-left':'top-right'
+    };
+    const missing=['top-left','top-right','bottom-right','bottom-left'].find(name=>!present.has(name));
+    return opposite[missing];
+  }
+  if(quarters.length===1)return quarters[0].name;
+  const names=new Set(quarters.map(quarter=>quarter.name));
+  if(names.has('top-left')&&names.has('top-right'))return'top';
+  if(names.has('bottom-left')&&names.has('bottom-right'))return'bottom';
+  if(names.has('top-left')&&names.has('bottom-left'))return'left';
+  if(names.has('top-right')&&names.has('bottom-right'))return'right';
+  return'center';
+}
 function meepleVisual(kind){
   if(kind==='city')return {text:'♞',role:'Ridder'};
   if(kind==='road')return {text:'●',role:'Struikrover'};
@@ -39,7 +65,7 @@ function meepleChoiceLabel(choice,tile){
     return 'Ridder';
   }
   if(choice.kind==='monastery')return 'Monnik';
-  if(choice.kind==='field')return 'Landbouwer';
+  if(choice.kind==='field')return choice.label||'Landbouwer';
   return choice.label||'Burger';
 }
 function cityHallPosition(group){
@@ -98,6 +124,7 @@ function renderBurgerPopup(game,placedTile,me){
     button.onclick=()=>action('meeple',{choice:choice.key});choices.append(button)
   });
   const skip=E('button','ghost carc-burger-skip',me?.meeples>0?'Geen burger':'Verder');skip.type='button';skip.onclick=()=>action('skipMeeple');choices.append(skip);
+  const back=E('button','ghost carc-burger-back','← Tegel anders leggen');back.type='button';back.onclick=()=>action('undoPlace');choices.append(back);
   modal.append(choices);backdrop.append(modal);return backdrop
 }
 
@@ -120,11 +147,12 @@ function renderCarcassonne(room,game){
   els.gameStage.append(controls);
   const viewport=E('div','carc-viewport');const board=E('div','carc-board');const size=72,world=160,origin=(world-1)/2;board.style.width=`${world*size}px`;board.style.height=`${world*size}px`;
   (game.board||[]).forEach(entry=>{
-    const tile=carcassonneTileNode(entry.tile);tile.style.left=`${(entry.x+origin)*size}px`;tile.style.top=`${(entry.y+origin)*size}px`;if(game.lastPlaced?.x===entry.x&&game.lastPlaced?.y===entry.y)tile.classList.add('last-placed');
+    const tile=carcassonneTileNode(entry.tile);tile.style.left=`${(entry.x+origin)*size}px`;tile.style.top=`${(entry.y+origin)*size}px`;const marker=game.lastPlaced||game.lastPlayed;if(marker?.x===entry.x&&marker?.y===entry.y)tile.classList.add('last-placed');
     (game.meeples||[]).filter(m=>m.x===entry.x&&m.y===entry.y).forEach(m=>{
       const player=game.players.find(p=>p.id===m.playerId),visual=meepleVisual(m.kind);
       const group=m.kind==='city'?entry.tile.cities?.[m.group]:m.kind==='road'?entry.tile.roads?.[m.group]:null;
-      const position=group?featurePositionClass(group):'';
+      const fieldPosition=m.kind==='field'?`field-${fieldPositionClass(entry.tile.fields?.[m.group]||[])}`:'';
+      const position=group?featurePositionClass(group):fieldPosition;
       const meeple=E('span',`carc-meeple ${m.kind} ${position}`.trim(),visual.text);meeple.style.background=player?.color||'#fff';meeple.title=`${player?.name||''} · ${visual.role}`;tile.append(meeple)
     });
     board.append(tile)

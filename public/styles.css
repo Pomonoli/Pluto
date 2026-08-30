@@ -378,7 +378,7 @@ body{padding-bottom:env(safe-area-inset-bottom)}
 .game-card-actions .primary{margin-top:0}
 .danger-text{color:#df858d!important}
 @media(max-width:760px){
-.game-card-actions{grid-template-columns:1fr}
+.game-card-actions{grid-template-columns:minmax(0,1fr) auto}
 }
 /* v0.8 Minigolf game screen */
 /* Map editor v0.8 */
