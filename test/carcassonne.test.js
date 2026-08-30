@@ -76,3 +76,25 @@ test('laatst afgeronde tegel blijft gemarkeerd tijdens de volgende beurt',()=>{
   assert.deepEqual(game.lastPlayed,{x:placement.x,y:placement.y});
   assert.equal(game.turnIndex,1);
 });
+
+test('eindtelling bewaart punten per categorie en correct totaal',()=>{
+  const road=tileOfType('roadStraight'),monastery=tileOfType('monastery');
+  const game={
+    players:[{id:'a',name:'A',score:5},{id:'b',name:'B',score:2}],
+    board:new Map([
+      ['0,0',{x:0,y:0,tile:road}],
+      ['3,3',{x:3,y:3,tile:monastery}]
+    ]),
+    meeples:[
+      {playerId:'a',x:0,y:0,kind:'road',group:0},
+      {playerId:'a',x:0,y:0,kind:'field',group:0},
+      {playerId:'b',x:3,y:3,kind:'monastery',group:0}
+    ],
+    scored:new Set(),log:[]
+  };
+  carcassonne.scoreEnd(game);
+  const a=game.finalScoreBreakdown.find(row=>row.playerId==='a');
+  const b=game.finalScoreBreakdown.find(row=>row.playerId==='b');
+  assert.deepEqual(a,{playerId:'a',points:5,farmers:0,incompleteRoads:1,incompleteCities:0,incompleteMonasteries:0,total:6});
+  assert.deepEqual(b,{playerId:'b',points:2,farmers:0,incompleteRoads:0,incompleteCities:0,incompleteMonasteries:1,total:3});
+});

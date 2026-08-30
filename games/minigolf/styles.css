@@ -151,7 +151,6 @@
 .minigolf-mode #lobbyBrowserButton,.minigolf-mode #leaderboardButton,.minigolf-mode #installButton,.minigolf-mode #accountButton{display:none}
 .minigolf-mode .room-heading{padding:8px 12px;margin-bottom:6px;border-radius:10px}
 .minigolf-mode .room-heading h1{font-size:16px}
-.minigolf-mode .room-heading .share-box{display:none}
 .minigolf-mode .room-layout{grid-template-columns:minmax(0,1fr) 250px;gap:8px}
 .minigolf-mode .game-panel{padding:5px}
 .minigolf-mode .chat-panel{padding:8px}

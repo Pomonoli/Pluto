@@ -2,7 +2,7 @@
   "key": "carcassonne",
   "name": "Carcassonne",
   "description": "Bouw een landschap en scoor met steden, wegen, kloosters en weilanden.",
-  "version": "11",
+  "version": "12",
   "icon": "🏰",
   "badge": "2-5",
   "actionLabel": "Nieuw spel",

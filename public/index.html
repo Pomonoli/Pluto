@@ -8,15 +8,15 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Pluto">
   <title>Pluto</title>
-  <link rel="manifest" href="/manifest.webmanifest?v=1.3.0">
-  <link rel="apple-touch-icon" href="/icons/icon-192-v2.png?v=1.3.0">
-  <link rel="stylesheet" href="/styles.css?v=1.3.0">
+  <link rel="manifest" href="/manifest.webmanifest?v=1.4.0">
+  <link rel="apple-touch-icon" href="/icons/icon-192-v2.png?v=1.4.0">
+  <link rel="stylesheet" href="/styles.css?v=1.4.0">
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
       <button class="brand-button" id="brandButton" type="button" aria-label="Naar Pluto home">
-        <span class="brand-mark" aria-hidden="true"><img class="brand-mark-img" src="/assets/pluto-logo-v2.png?v=1.3.0" alt=""></span>
+        <span class="brand-mark" aria-hidden="true"><img class="brand-mark-img" src="/assets/pluto-logo-v2.png?v=1.4.0" alt=""></span>
         <span class="brand-copy"><strong>Pluto</strong><small>gaming space</small></span>
       </button>
       <div class="top-actions">
@@ -26,7 +26,7 @@
         <button class="ghost hidden" id="installButton" type="button">App</button>
         <button class="ghost" id="accountButton" type="button">Inloggen</button>
         <button class="ghost hidden" id="rulesButton" type="button">Spelregels</button>
-        <button class="ghost hidden" id="leaveButton" type="button">Verlaat room</button>
+        <button class="ghost hidden" id="leaveButton" type="button">Verlaat spel</button>
       </div>
     </header>
 
@@ -50,14 +50,15 @@
           <div id="recentGames" class="recent-game-row"></div>
         </section>
 
+        <section id="homeOpenLobbiesSection" class="recent-games-section hidden">
+          <div class="section-heading compact-heading"><div><span class="eyebrow">OPEN LOBBY'S</span></div></div>
+          <div id="homeOpenLobbies" class="recent-game-row"></div>
+        </section>
+
         <div class="section-heading games-heading hidden" id="gamesHeading"><div><span class="eyebrow">GAMES</span></div></div>
         <div class="game-grid" id="gameGrid">
         </div>
 
-        <section class="join-section">
-          <div><span class="eyebrow">HEB JE AL EEN CODE?</span><h2>Join een room</h2></div>
-          <form id="joinCodeForm" class="join-form"><input id="joinCode" maxlength="8" placeholder="ABCDE" autocomplete="off"><button class="secondary" type="submit">Join</button></form>
-        </section>
       </section>
 
 
@@ -156,10 +157,8 @@
           </aside>
         </div>
 
-        <footer class="room-share-footer" id="roomShareFooter">
-          <div id="roomFooterMeta"><span class="eyebrow" id="roomGameName">GAME</span><strong>Room <span id="roomCodeHeading"></span></strong></div>
-          <div class="share-box" id="roomShareBox"><input id="shareLink" readonly aria-label="Deelbare roomlink"><button class="secondary" id="copyLinkButton" type="button">Kopieer link</button></div>
-          <div class="room-footer-actions"><button class="primary hidden" id="roomRematchButton" type="button">Rematch</button><button class="ghost danger-text" id="roomLeaveButton" type="button">Verlaat room</button></div>
+        <footer class="room-leave-footer">
+          <div class="room-footer-actions"><button class="ghost danger-text" id="roomLeaveButton" type="button">Verlaat spel</button></div>
         </footer>
       </section>
     </main>
@@ -238,6 +237,6 @@
 
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
   <script src="/socket.io/socket.io.js"></script>
-  <script type="module" src="/app.js?v=1.3.0"></script>
+  <script type="module" src="/app.js?v=1.4.0"></script>
 </body>
 </html>

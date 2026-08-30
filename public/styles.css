@@ -26,7 +26,7 @@ h1,h2,h3,p{margin-top:0}
 h1{margin-bottom:12px;font-size:clamp(30px,5vw,52px);line-height:1.02}
 h2{margin-bottom:0;font-size:22px}
 .hero-copy{margin:0;color:var(--muted);font-size:16px;line-height:1.55}
-.guest-card,.panel,.game-card,.invite-box,.join-section,.room-heading{border:1px solid var(--border);background:var(--panel);border-radius:16px}
+.guest-card,.panel,.game-card,.invite-box,.room-heading{border:1px solid var(--border);background:var(--panel);border-radius:16px}
 .guest-card{padding:16px}
 .guest-card label{display:block;margin-bottom:7px;font-size:12px;font-weight:800}
 .input-hint{color:var(--muted);font-size:10px;margin-top:6px}
@@ -38,12 +38,9 @@ h2{margin-bottom:0;font-size:22px}
 .game-card-body{display:flex;flex-direction:column;flex:1}
 .game-title-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .game-card p{color:var(--muted);font-size:13px;line-height:1.5;flex:1}
-.join-section{margin-top:14px;padding:18px;display:grid;grid-template-columns:1fr minmax(260px,420px);gap:18px;align-items:center}
-.join-form,.share-box,.chat-form,.action-row{display:flex;gap:8px}
-.join-form input{text-transform:uppercase;letter-spacing:.15em;font-weight:900}
+.chat-form,.action-row{display:flex;gap:8px}
 .room-heading{padding:17px 18px;display:flex;justify-content:space-between;gap:18px;align-items:center;margin-bottom:14px}
 .room-heading h1{font-size:26px;margin:0}
-.share-box{width:min(520px,55%)}
 .room-layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:14px;align-items:start}
 .room-layout.solo{grid-template-columns:1fr}
 .panel{padding:16px}
@@ -122,15 +119,14 @@ h2{margin-bottom:0;font-size:22px}
 .brand-button small,.connection-pill{display:none}
 .hero{grid-template-columns:1fr;min-height:0}
 .game-grid{grid-template-columns:1fr}
-.join-section,.room-heading{grid-template-columns:1fr;display:grid}
-.share-box{width:100%}
+.room-heading{grid-template-columns:1fr;display:grid}
 }
 @media(max-width:480px){
 .top-actions{gap:5px}
 .top-actions button{min-height:38px;padding:7px 9px;font-size:11px}
 h1{font-size:31px}
 .hero{padding:20px}
-.invite-box,.join-form,.share-box{flex-direction:column}
+.invite-box{flex-direction:column}
 .invite-box{align-items:stretch}
 .host-controls{flex-direction:column-reverse}
 .playing-card{width:56px;height:80px}
@@ -242,6 +238,7 @@ body{padding-bottom:env(safe-area-inset-bottom)}
   background:#151a21
 }
 .recent-game-button span{color:var(--muted);font-size:10px}
+.recent-game-button.home-open-lobby-button::before{background:linear-gradient(90deg,#63d8a8,#9be7ca)}
 .lobby-browser-heading{align-items:center}
 .lobby-identity-bar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:14px}
 .lobby-identity-bar strong{font-size:16px}
@@ -409,6 +406,7 @@ body{padding-bottom:env(safe-area-inset-bottom)}
 .mobile-nav{display:none}
 @media(max-width:760px){
 body{padding-bottom:calc(66px + env(safe-area-inset-bottom))}
+body.room-active{padding-bottom:env(safe-area-inset-bottom)}
 .app-shell{padding-bottom:14px}
 .topbar{
     min-height:58px;
@@ -442,6 +440,7 @@ body{padding-bottom:calc(66px + env(safe-area-inset-bottom))}
     backdrop-filter:blur(16px);
     box-shadow:0 10px 30px rgba(0,0,0,.38)
   }
+body.room-active .mobile-nav{display:none}
 .mobile-nav-item{
     min-width:0;
     min-height:46px;
@@ -463,6 +462,8 @@ body{padding-bottom:calc(66px + env(safe-area-inset-bottom))}
 .mobile-nav-item{position:relative}
 .toast{bottom:calc(76px + env(safe-area-inset-bottom))}
 .modal-backdrop{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+body.room-active .toast{bottom:max(20px,env(safe-area-inset-bottom))}
+body.room-active .modal-backdrop{padding-bottom:env(safe-area-inset-bottom)}
 }
 @media(max-width:480px){
 .topbar{margin-left:-7px;margin-right:-7px;padding-left:7px;padding-right:7px}
@@ -709,7 +710,7 @@ body::after{
   border-color:rgba(195,204,255,.14);
   color:#e9edff;
 }
-.home-guest-bar,.game-card,.join-section,.panel,.invite-box,.room-heading,.chat-panel,.game-panel,.leaderboard-card,.profile-card,.modal,.guest-card{
+.home-guest-bar,.game-card,.panel,.invite-box,.room-heading,.chat-panel,.game-panel,.leaderboard-card,.profile-card,.modal,.guest-card{
   background:linear-gradient(180deg, rgba(25,33,70,.84), rgba(17,23,48,.90));
   border-color:rgba(199,210,255,.13);
   box-shadow:0 18px 36px rgba(8,10,28,.16);
@@ -817,7 +818,7 @@ body::after{
   box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
 }
 .brand-mark-img{display:block;width:76%;height:76%;object-fit:contain;}
-.home-guest-bar,.join-section,.invite-box,.panel,.room-heading,.chat-panel,.game-panel,.leaderboard-card,.profile-card,.modal,.open-room-card,.recent-game-button,.game-card{
+.home-guest-bar,.invite-box,.panel,.room-heading,.chat-panel,.game-panel,.leaderboard-card,.profile-card,.modal,.open-room-card,.recent-game-button,.game-card{
   background:linear-gradient(180deg, rgba(22,28,62,.80), rgba(19,24,54,.88));
   border:1px solid rgba(198,210,255,.13);
   box-shadow:0 18px 36px rgba(8,10,28,.16);
@@ -987,7 +988,7 @@ body::after{background:linear-gradient(180deg,rgba(4,5,10,.04),transparent 55%,r
   border-color:rgba(228,147,114,.35);
   color:#ffc2a8;
 }
-.home-guest-bar,.join-section,.invite-box,.panel,.room-heading,.chat-panel,.game-panel,.leaderboard-card,.profile-card,.modal,.open-room-card,.recent-game-button,.game-card,.stats-heading{
+.home-guest-bar,.invite-box,.panel,.room-heading,.chat-panel,.game-panel,.leaderboard-card,.profile-card,.modal,.open-room-card,.recent-game-button,.game-card,.stats-heading{
   background:linear-gradient(145deg,rgba(23,25,39,.93),rgba(14,16,27,.94));
   border-color:rgba(220,216,225,.12);
   box-shadow:0 18px 48px rgba(0,0,0,.24),inset 0 1px rgba(255,255,255,.025);
@@ -1172,22 +1173,18 @@ input:focus,select:focus,textarea:focus{border-color:rgba(226,163,134,.48);box-s
 .lobby-rooms-heading{margin-top:8px}
 .lobby-rooms-heading h1{font-size:25px}
 }
-.room-share-footer{
+.room-leave-footer{
   margin-top:14px;
   padding:14px 16px;
   display:flex;
   align-items:center;
-  justify-content:space-between;
+  justify-content:flex-end;
   gap:18px;
   border-top:1px solid rgba(238,216,205,.11);
   color:#d9cfca;
 }
-.room-share-footer .eyebrow{margin-bottom:3px}
-.room-share-footer strong{font-size:14px;letter-spacing:.02em}
-.room-share-footer .share-box{margin-left:auto}
 .room-footer-actions{display:flex;gap:8px;align-items:center}
 .room-footer-actions button{white-space:nowrap}
-.room-share-footer.solo-footer{justify-content:flex-end}
 .result-box.result-pop{
   position:fixed;
   z-index:1050;
@@ -1209,16 +1206,15 @@ input:focus,select:focus,textarea:focus{border-color:rgba(226,163,134,.48);box-s
   background:linear-gradient(145deg,#181722,#10111a);
   box-shadow:0 28px 80px rgba(0,0,0,.52),inset 0 1px rgba(255,255,255,.035);
 }
+.result-modal-card.has-details{width:min(860px,100%)}
 .result-modal-card .eyebrow{color:#d98a6f;margin-bottom:8px}
 .result-modal-title{font-size:28px;margin:0 0 8px}
 .result-modal-copy{margin:0;color:#c9c0bc;font-size:15px;line-height:1.55}
 .result-modal-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:22px}
 .result-modal-actions:has(:only-child){grid-template-columns:1fr}
 @media(max-width:760px){
-.room-share-footer{align-items:stretch;flex-direction:column;padding:14px 4px 4px}
-.room-share-footer .share-box{width:100%;margin:0}
-.room-footer-actions{display:grid;grid-template-columns:1fr 1fr;width:100%}
-.room-footer-actions .hidden+button{grid-column:1/-1}
+.room-leave-footer{align-items:stretch;padding:14px 4px 4px}
+.room-footer-actions{display:grid;grid-template-columns:1fr;width:100%}
 .result-modal-card{padding:24px 20px;border-radius:22px}
 }
 .leaderboard-compact-heading{

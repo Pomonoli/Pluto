@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.4.0 — Lobbygerichte interface en Carcassonne-eindtelling
+
+- Open lobby's verschijnen op Home als compacte kaartjes onder de recent gespeelde games en verdwijnen automatisch wanneer er geen beschikbare lobby's zijn.
+- De oude code-invoer op Home en de deelbare roomlink in spellen zijn verwijderd; spelers vinden en joinen games via de centrale lobby.
+- De onderste mobiele navigatie is verborgen in lobby's en actieve spellen, zodat niet-beschikbare acties geen ruimte meer innemen.
+- De vaste spelkaart bevat alleen nog `Verlaat spel`; rematches blijven beschikbaar via het eindscherm.
+- Het Carcassonne-eindscherm toont per speler de punten tijdens het spel, landbouwers en onafgewerkte wegen, steden en kloosters, plus het eindtotaal.
+- Nieuwe regressietests bewaken de lobbykaarten, vereenvoudigde spelinterface, mobiele navigatie en Carcassonne-puntencategorieën.
+
 ## v1.3.0 — Carcassonne-akkers en mobiele Minigolf-card
 
 - Carcassonne behandelt afzonderlijke groene gebieden op één tegel als afzonderlijke, verbonden akkersegmenten.

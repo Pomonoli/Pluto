@@ -2,6 +2,12 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
+## Nieuw in versie 1.4.0
+
+Pluto werkt voortaan volledig via de centrale lobby: open lobby's verschijnen als compacte kaartjes op Home, terwijl oude roomlinks en code-invoer uit de interface zijn verwijderd. Tijdens een spel verdwijnt de mobiele ondernavigatie en blijft alleen een duidelijke knop `Verlaat spel` over.
+
+Carcassonne toont op het eindscherm nu een volledige puntentabel met de punten tijdens het spel en de eindpunten voor landbouwers, onafgewerkte wegen, steden en kloosters.
+
 ## Nieuw in versie 1.3.0
 
 Carcassonne gebruikt nu afzonderlijke akkersegmenten: wegen en steden scheiden akkers, kloosters niet. Landbouwers verschijnen op het juiste deel van de tegel, spelers kunnen tijdens de burgerkeuze teruggaan om hun tegel anders te leggen en de laatst gespeelde tegel heeft een rode markering. Op mobiel staan de twee Minigolf-acties voortaan naast elkaar.

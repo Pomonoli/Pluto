@@ -164,4 +164,21 @@ function renderCarcassonne(room,game){
 
 export function metric({player}){return {text:`${player.score} pt · ${burgerLabel(player.meeples)}`,score:Number(player.score||0)}}
 export function presentResult({game}){const high=Math.max(...game.players.map(p=>p.score)),w=game.players.filter(p=>p.score===high);return w.length===1?{title:w[0].name,copy:'is de winnaar.'}:{title:'Gelijkspel',copy:'Er is geen unieke winnaar.'}}
+export function renderResultDetails({game,E}){
+  const playerById=new Map(game.players.map(player=>[player.id,player]));
+  const rows=[...(game.finalScoreBreakdown||[])].sort((a,b)=>b.total-a.total);
+  if(!rows.length)return null;
+  const wrap=E('div','carc-final-score-wrap'),table=E('table','carc-final-score');
+  const head=E('thead'),headRow=E('tr');
+  ['Speler','Punten tijdens spel','Landbouwers','Onafgewerkte wegen','Onafgewerkte steden','Onafgewerkte kloosters','Totaal'].forEach(label=>headRow.append(E('th','',label)));
+  head.append(headRow);table.append(head);
+  const body=E('tbody');
+  rows.forEach((score,index)=>{
+    const player=playerById.get(score.playerId),row=E('tr',index===0?'leader':'');
+    row.append(E('th','',`${index+1}. ${player?.name||'Speler'}`));
+    [score.points,score.farmers,score.incompleteRoads,score.incompleteCities,score.incompleteMonasteries,score.total].forEach((value,column)=>row.append(E('td',column===5?'total':'',String(value||0))));
+    body.append(row);
+  });
+  table.append(body);wrap.append(E('div','carc-final-score-title','Puntenverdeling'),table);return wrap;
+}
 export function isWinner({game,myId}){const high=Math.max(...game.players.map(p=>p.score));return game.players.filter(p=>p.score===high).length===1&&game.players.find(p=>p.id===myId)?.score===high}

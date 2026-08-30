@@ -2,7 +2,7 @@
   "key": "solitaire",
   "name": "Solitaire",
   "description": "Klondike draw-3.",
-  "version": "2",
+  "version": "3",
   "icon": "♠",
   "badge": "Solo",
   "actionLabel": "Spelen",

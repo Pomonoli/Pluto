@@ -76,6 +76,7 @@
 .carc-choice-icon{width:26px;height:26px;flex:0 0 26px;display:grid;place-items:center;border-radius:8px;background:rgba(255,255,255,.08);font-size:15px;font-weight:900}
 .carc-burger-skip{grid-column:1/-1;min-height:44px}
 .carc-burger-back{grid-column:1/-1;min-height:40px}
+.carc-final-score-wrap{margin-top:18px;overflow-x:auto;border:1px solid rgba(238,216,205,.13);border-radius:13px;background:rgba(7,9,17,.45);text-align:left}.carc-final-score-title{position:sticky;left:0;padding:10px 12px 4px;color:#d9c3b8;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}.carc-final-score{width:100%;min-width:720px;border-collapse:collapse;font-size:12px}.carc-final-score th,.carc-final-score td{padding:8px 9px;border-top:1px solid rgba(238,216,205,.09);text-align:right;white-space:nowrap}.carc-final-score thead th{color:#aaa5ad;font-size:10px;vertical-align:bottom;white-space:normal}.carc-final-score th:first-child{text-align:left}.carc-final-score tbody tr.leader{background:rgba(226,163,134,.08)}.carc-final-score td.total{color:#f0b99f;font-size:14px;font-weight:900}
 @media(max-width:600px){
 .carc-controls{min-height:120px;align-items:flex-start;justify-content:flex-start;flex-direction:column}
 .carc-controls.waiting-choice::after{margin-top:16px}

@@ -23,6 +23,7 @@ function renderGame(room) {
   if(showGameResult){
     els.gameResult.classList.add('result-pop');const presentation=resultPresentation(room,game),resultCard=E('div','result-modal-card');
     resultCard.append(E('span','eyebrow','SPEL AFGELOPEN'),E('h2','result-modal-title',presentation.title),E('p','result-modal-copy',presentation.copy));
+    const details=plugin?.renderResultDetails?.({room,game,E});if(details){resultCard.classList.add('has-details');resultCard.append(details)}
     const actions=E('div','result-modal-actions');if(room.isHost){const rematch=E('button','primary','Rematch');rematch.onclick=()=>requestRematch(rematch);actions.append(rematch)}
     const close=E('button','secondary','Sluiten');close.onclick=()=>{els.gameResult.classList.add('hidden');els.gameResult.setAttribute('aria-hidden','true')};actions.append(close);resultCard.append(actions);els.gameResult.append(resultCard);els.gameResult.setAttribute('aria-hidden','false');
   }

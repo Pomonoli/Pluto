@@ -19,6 +19,41 @@ test('mobile nav bevat exact de vier gevraagde hoofdbestemmingen',()=>{
   assert.match(html,/id="mobileNav"/);
 });
 
+test('mobile nav wordt in een actieve room verborgen',()=>{
+  const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
+  const css=fs.readFileSync(path.join(root,'public/styles.css'),'utf8');
+  assert.match(app,/function setRoomChrome\(active\)/);
+  assert.match(app,/function showRoom\(\) \{\s*setRoomChrome\(true\)/);
+  assert.match(app,/function showHome\(\) \{\s*setRoomChrome\(false\)/);
+  assert.match(css,/body\.room-active \.mobile-nav\{display:none\}/);
+  assert.match(css,/body\.room-active\{padding-bottom:env\(safe-area-inset-bottom\)\}/);
+});
+
+test('spelruimte toont alleen Verlaat spel en geen deelkaart',()=>{
+  const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
+  const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
+  assert.doesNotMatch(html,/Kopieer link|id="roomShareBox"|id="shareLink"|id="roomFooterMeta"/);
+  assert.match(html,/id="roomLeaveButton"[^>]*>Verlaat spel<\/button>/);
+  assert.doesNotMatch(app,/function copyLink|Roomlink gekopieerd|els\.shareLink/);
+});
+
+test('homescreen bevat geen kaart meer om via een code te joinen',()=>{
+  const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
+  const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
+  assert.doesNotMatch(html,/HEB JE AL EEN CODE|id="joinCodeForm"|id="joinCode"/);
+  assert.doesNotMatch(app,/els\.joinCodeForm|els\.joinCode\.value/);
+});
+
+test('homescreen toont alleen beschikbare open lobbykaarten',()=>{
+  const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
+  const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
+  assert.match(html,/id="homeOpenLobbiesSection" class="recent-games-section hidden"/);
+  assert.match(html,/id="homeOpenLobbies" class="recent-game-row"/);
+  assert.match(app,/renderHomeOpenLobbies\(\(data\.rooms\|\|\[\]\)\.filter\(room=>room\.joinable\)\)/);
+  assert.match(app,/homeOpenLobbiesSection\.classList\.toggle\('hidden',!rooms\.length\)/);
+  assert.match(app,/button\.onclick=\(\)=>joinRoom\(room\.id\)/);
+});
+
 test('sound button is icon-only en app knop heet App',()=>{
   const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
   const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');

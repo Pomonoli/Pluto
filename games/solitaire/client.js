@@ -2,7 +2,7 @@ let state,els,E,action,profileButton,sound,socket,handleAck,cardNode,valueLabel,
 function bind(api){({state,els,E,action,profileButton,sound,socket,handleAck,cardNode,valueLabel,titlebar,logBox,renderGame,renderCardOpponents,renderDiscardStack,scoreList}=api)}
 export function render(api){bind(api);renderSolitaire(api.room,api.game)}
 export const playerStrip=true;
-export const roomOptions={hideShare:true};
+export const roomOptions={};
 export const leaderboardColumns=['#','Speler','Wins','Beste'];
 export function renderLeaderboardCells({row,E}){return [E('td','',String(row.wins)),E('td','',row.bestSolitaireMoves?`${row.bestSolitaireMoves} zetten`:'—')]}
 export function profileExtra({stat,formatDuration}){return stat.bestTimeMs?`Beste: ${formatDuration(stat.bestTimeMs)} · ${stat.bestMoves} zetten`:'—'}
