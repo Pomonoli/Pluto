@@ -5,7 +5,43 @@ function bind(api){({state,els,E,action,profileButton,sound,socket,handleAck,car
 export function render(api){bind(api);renderCarcassonne(api.room,api.game)}
 
 const SIDE_NAMES=['north','east','south','west'];
+const SIDE_WORDS=['boven','rechts','onder','links'];
 function burgerLabel(count){return `${count} ${count===1?'burger':'burgers'}`}
+function featurePositionClass(group){
+  const sides=[...new Set(group||[])].sort((a,b)=>a-b);
+  if(sides.length===1)return `side-${SIDE_NAMES[sides[0]]}`;
+  if(sides.length===2){
+    const corners={'0,1':'corner-ne','1,2':'corner-se','2,3':'corner-sw','0,3':'corner-nw'};
+    return corners[sides.join(',')]||'center';
+  }
+  return 'center';
+}
+function meepleVisual(kind){
+  if(kind==='city')return {text:'♞',role:'Ridder'};
+  if(kind==='road')return {text:'●',role:'Struikrover'};
+  if(kind==='field')return {text:'♟',role:'Landbouwer'};
+  if(kind==='monastery')return {text:'†',role:'Monnik'};
+  return {text:'●',role:'Burger'};
+}
+function meepleChoiceLabel(choice,tile){
+  if(choice.kind==='road'){
+    const roads=tile?.roads||[];
+    if(roads.length<=1)return 'Struikrover';
+    const sides=roads[choice.group]||[];
+    if(sides.length===1)return `Struikrover ${SIDE_WORDS[sides[0]]}`;
+    return 'Struikrover';
+  }
+  if(choice.kind==='city'){
+    const cities=tile?.cities||[];
+    if(cities.length<=1)return 'Ridder';
+    const sides=cities[choice.group]||[];
+    if(sides.length===1)return `Ridder ${SIDE_WORDS[sides[0]]}`;
+    return 'Ridder';
+  }
+  if(choice.kind==='monastery')return 'Monnik';
+  if(choice.kind==='field')return 'Landbouwer';
+  return choice.label||'Burger';
+}
 function cityHallPosition(group){
   const sides=[...new Set(group)].sort((a,b)=>a-b);
   if(sides.length===1)return `side-${SIDE_NAMES[sides[0]]}`;
@@ -65,9 +101,23 @@ function renderCarcassonne(room,game){
   const dashboard=E('div','carc-dashboard');game.players.forEach(p=>{const item=E('div',`carc-player ${p.id===game.turnPlayerId?'active':''}`);item.style.setProperty('--player-color',p.color);item.append(E('span','carc-player-dot'),E('strong','',p.name),E('b','',String(p.score)),E('small','',burgerLabel(p.meeples)));dashboard.append(item)});els.gameStage.append(dashboard);
   const controls=E('div','carc-controls');controls.append(E('span','eyebrow',`${game.tilesRemaining} TEGELS OVER`));
   if(mine&&game.phase==='place'&&game.currentTile){const drawn=E('div','carc-drawn');drawn.append(carcassonneTileNode(game.currentTile,{preview:true}));const rotate=E('button','secondary','↻ Roteer');rotate.onclick=()=>action('rotate');drawn.append(rotate);controls.append(drawn);if(!game.validPlacements.length)controls.append(E('div','player-note','Geen plek in deze stand — roteer de tegel.'))}
-  if(mine&&game.phase==='meeple'){const picker=E('div','carc-meeple-picker');picker.append(E('strong','','Burger plaatsen?'));(game.meepleChoices||[]).forEach(choice=>{const b=E('button','secondary',choice.label);b.onclick=()=>action('meeple',{choice:choice.key});picker.append(b)});const skip=E('button','ghost','Geen burger');skip.onclick=()=>action('skipMeeple');picker.append(skip);controls.append(picker)}els.gameStage.append(controls);
+  if(mine&&game.phase==='meeple'){
+    const picker=E('div','carc-meeple-picker'),placedTile=game.lastPlaced?(game.board||[]).find(entry=>entry.x===game.lastPlaced.x&&entry.y===game.lastPlaced.y)?.tile:null;
+    picker.append(E('strong','','Burger plaatsen?'));
+    (game.meepleChoices||[]).forEach(choice=>{const b=E('button','secondary',meepleChoiceLabel(choice,placedTile));b.onclick=()=>action('meeple',{choice:choice.key});picker.append(b)});
+    const skip=E('button','ghost','Geen burger');skip.onclick=()=>action('skipMeeple');picker.append(skip);controls.append(picker)
+  }els.gameStage.append(controls);
   const viewport=E('div','carc-viewport');const board=E('div','carc-board');const size=72,world=160,origin=(world-1)/2;board.style.width=`${world*size}px`;board.style.height=`${world*size}px`;
-  (game.board||[]).forEach(entry=>{const tile=carcassonneTileNode(entry.tile);tile.style.left=`${(entry.x+origin)*size}px`;tile.style.top=`${(entry.y+origin)*size}px`;if(game.lastPlaced?.x===entry.x&&game.lastPlaced?.y===entry.y)tile.classList.add('last-placed');(game.meeples||[]).filter(m=>m.x===entry.x&&m.y===entry.y).forEach(m=>{const player=game.players.find(p=>p.id===m.playerId),meeple=E('span',`carc-meeple ${m.kind}`,m.kind==='field'?'♟':'●');meeple.style.background=player?.color||'#fff';meeple.title=`${player?.name||''} · ${m.kind}`;tile.append(meeple)});board.append(tile)});
+  (game.board||[]).forEach(entry=>{
+    const tile=carcassonneTileNode(entry.tile);tile.style.left=`${(entry.x+origin)*size}px`;tile.style.top=`${(entry.y+origin)*size}px`;if(game.lastPlaced?.x===entry.x&&game.lastPlaced?.y===entry.y)tile.classList.add('last-placed');
+    (game.meeples||[]).filter(m=>m.x===entry.x&&m.y===entry.y).forEach(m=>{
+      const player=game.players.find(p=>p.id===m.playerId),visual=meepleVisual(m.kind);
+      const group=m.kind==='city'?entry.tile.cities?.[m.group]:m.kind==='road'?entry.tile.roads?.[m.group]:null;
+      const position=group?featurePositionClass(group):'';
+      const meeple=E('span',`carc-meeple ${m.kind} ${position}`.trim(),visual.text);meeple.style.background=player?.color||'#fff';meeple.title=`${player?.name||''} · ${visual.role}`;tile.append(meeple)
+    });
+    board.append(tile)
+  });
   if(mine&&game.phase==='place')(game.validPlacements||[]).forEach(place=>{const spot=E('button','carc-valid','+');spot.type='button';spot.style.left=`${(place.x+origin)*size}px`;spot.style.top=`${(place.y+origin)*size}px`;spot.setAttribute('aria-label',`Leg tegel op ${place.x}, ${place.y}`);spot.onclick=()=>{sound('card');action('place',{x:place.x,y:place.y})};board.append(spot)});
   viewport.append(board);els.gameStage.append(viewport);const view=views[room.id]||(views[room.id]={x:0,y:0,scale:.9});attachCarcassonneViewport(viewport,board,view);els.gameStage.append(logBox(game.log));
 }
