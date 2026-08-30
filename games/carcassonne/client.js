@@ -3,11 +3,46 @@ const views={};
 function bind(api){({state,els,E,action,profileButton,sound,socket,handleAck,cardNode,valueLabel,titlebar,logBox,renderGame,renderCardOpponents,renderDiscardStack,scoreList}=api)}
 export function render(api){bind(api);renderCarcassonne(api.room,api.game)}
 
+const SIDE_NAMES=['north','east','south','west'];
+function cityHallPosition(group){
+  const sides=[...new Set(group)].sort((a,b)=>a-b);
+  if(sides.length===1)return `side-${SIDE_NAMES[sides[0]]}`;
+  if(sides.length===2){
+    const corners={'0,1':'corner-ne','1,2':'corner-se','2,3':'corner-sw','0,3':'corner-nw'};
+    return corners[sides.join(',')]||'center';
+  }
+  return 'center';
+}
+function cityConnector(group){
+  const sides=[...new Set(group)].sort((a,b)=>a-b);
+  if(sides.length>=3)return 'center';
+  if(sides.join(',')==='0,2')return 'vertical';
+  if(sides.join(',')==='1,3')return 'horizontal';
+  return '';
+}
+
 function carcassonneTileNode(tile,{preview=false}={}){
-  const node=E('div',`carc-tile ${preview?'preview':''}`);node.setAttribute('aria-label',`Landschapstegel ${tile.type||''}`);
-  ['north','east','south','west'].forEach((side,index)=>{const edge=E('span',`carc-edge ${side} type-${tile.edges[index]}`);node.append(edge)});
-  if((tile.roads||[]).length)node.append(E('span','carc-road-center'));
-  if(tile.monastery)node.append(E('span','carc-monastery','⌂'));
+  const node=E('div',`carc-tile tile-${tile.type||'unknown'} ${preview?'preview':''}`.trim());
+  node.setAttribute('aria-label',`Landschapstegel ${tile.type||''}`);
+  SIDE_NAMES.forEach((side,index)=>{const edge=E('span',`carc-edge ${side} type-${tile.edges[index]}`);node.append(edge)});
+
+  const roads=tile.roads||[];
+  if(roads.length){
+    const hasThroughRoad=roads.some(group=>group.length>1);
+    if(hasThroughRoad)node.append(E('span','carc-road-center connected'));
+    if(!hasThroughRoad&&!tile.monastery){
+      const stopType=(tile.cities||[]).length?'city-gate':'village';
+      node.append(E('span',`carc-road-stop ${stopType}`));
+    }
+  }
+
+  (tile.cities||[]).forEach(group=>{
+    const connector=cityConnector(group);
+    if(connector)node.append(E('span',`carc-city-link ${connector}`));
+    node.append(E('span',`carc-city-hall ${cityHallPosition(group)}`));
+  });
+
+  if(tile.monastery)node.append(E('span','carc-monastery','†'));
   if(tile.shield)node.append(E('span','carc-shield','◆'));
   return node
 }
