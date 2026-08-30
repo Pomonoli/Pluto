@@ -20,10 +20,9 @@ function adjacent(row,col){
 
 function createGame(roomPlayers){
   if(roomPlayers.length<2||roomPlayers.length>4)throw new Error('Santorini is voor 2 tot 4 spelers.');
-  if(roomPlayers.some(player=>player.isNpc))throw new Error('Santorini ondersteunt nog geen NPC-spelers.');
   const required=workersPerPlayer(roomPlayers.length);
   const players=roomPlayers.map((player,index)=>({
-    id:player.id,name:player.name,isNpc:false,index,active:true,workersPlaced:0
+    id:player.id,name:player.name,isNpc:player.isNpc,index,active:true,workersPlaced:0
   }));
   return {
     gameKey:'santorini',
@@ -174,6 +173,31 @@ function build(game,playerId,payload={}){
   advanceTurn(game);
 }
 
+function npcTurn(game,player){
+  if(game.phase==='setup'){
+    const free=[];for(let row=0;row<BOARD_SIZE;row++)for(let col=0;col<BOARD_SIZE;col++)if(!workerAt(game,row,col))free.push({row,col});
+    return place(game,player.id,free[Math.floor(Math.random()*free.length)]);
+  }
+  if(game.phase==='move'){
+    const options=[];
+    for(const worker of game.workers.filter(item=>item.ownerId===player.id))for(const target of legalMoves(game,worker))options.push({worker,target,height:cellHeight(game,target.row,target.col)});
+    options.sort((a,b)=>b.height-a.height);
+    const best=options.filter(option=>option.height===options[0]?.height);
+    const choice=best[Math.floor(Math.random()*best.length)];
+    if(choice)return move(game,player.id,{workerId:choice.worker.id,...choice.target});
+    removePlayer(game,player);advanceTurn(game);return;
+  }
+  const worker=workerById(game,game.movedWorkerId),options=legalBuilds(game,worker);
+  const choice=options[Math.floor(Math.random()*options.length)];
+  if(choice)build(game,player.id,choice);
+}
+function scheduleNpc(game,delay=650){const player=currentPlayer(game);game.nextNpcAt=!game.gameOver&&player?.isNpc?Date.now()+delay:0}
+function tick(game,now=Date.now()){
+  if(game.gameOver)return false;const player=currentPlayer(game);
+  if(!player?.isNpc){game.nextNpcAt=0;return false}if(!game.nextNpcAt)game.nextNpcAt=now+650;if(now<game.nextNpcAt)return false;
+  npcTurn(game,player);scheduleNpc(game);return true;
+}
+
 function handleAction(game,playerId,action,payload){
   if(game.gameOver)throw new Error('Het spel is afgelopen.');
   if(action==='place')return place(game,playerId,payload);
@@ -197,9 +221,9 @@ function serialize(game,requesterId,connected){
     turnPlayerId:game.gameOver?null:currentPlayer(game)?.id,
     movedWorkerId:game.movedWorkerId,
     players:game.players.map(player=>({
-      id:player.id,name:player.name,isNpc:false,index:player.index,active:player.active,
+      id:player.id,name:player.name,isNpc:player.isNpc,index:player.index,active:player.active,
       workersPlaced:player.workersPlaced,
-      connected:connected?.get?Boolean(connected.get(player.id)):true
+      connected:player.isNpc||(connected?.get?Boolean(connected.get(player.id)):true)
     })),
     workers:game.workers.filter(worker=>worker.row!==null).map(worker=>({...worker})),
     canPlace:game.phase==='setup'&&currentPlayer(game)?.id===requesterId,
@@ -219,4 +243,4 @@ function results(game){
   }));
 }
 
-module.exports={createGame,handleAction,serialize,results,legalMoves,legalBuilds};
+module.exports={createGame,handleAction,serialize,results,legalMoves,legalBuilds,tick};

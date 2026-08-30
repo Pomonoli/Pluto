@@ -8,7 +8,7 @@
   "actionLabel": "Nieuw spel",
   "minPlayers": 2,
   "maxPlayers": 4,
-  "supportsNpc": false,
+  "supportsNpc": true,
   "realtime": false,
   "solo": false
 }

@@ -66,3 +66,15 @@ test('Vlag veroveren beëindigt het spel',()=>{
   assert.equal(game.gameOver,true);
   assert.equal(game.winnerId,'a');
 });
+
+test('Stratego NPC maakt een opstelling en speelt een beurt',()=>{
+  const game=stratego.createGame([roomPlayers[0],{...roomPlayers[1],isNpc:true}]);
+  stratego.handleAction(game,'a','ready');
+  game.nextNpcAt=1;
+  assert.equal(stratego.tick(game,Date.now()+1000),true);
+  assert.equal(game.players[1].ready,true);
+  game.turnIndex=1;
+  game.nextNpcAt=1;
+  assert.equal(stratego.tick(game,Date.now()+1000),true);
+  assert.equal(game.turnIndex,0);
+});

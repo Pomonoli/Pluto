@@ -78,3 +78,24 @@ test('serialize toont 5x5 bord en juiste actie voor de huidige speler',()=>{
   assert.equal(view.canMove,true);
   assert.equal(view.workers.length,4);
 });
+
+test('Santorini NPC plaatst, verplaatst en bouwt',()=>{
+  const game=santorini.createGame([{id:'p0',name:'Mens',isNpc:false},{id:'bot',name:'NPC 1',isNpc:true}]);
+  santorini.handleAction(game,'p0','place',{row:0,col:0});
+  game.nextNpcAt=1;
+  assert.equal(santorini.tick(game,Date.now()),true);
+  const secondHumanCell=[[0,1],[0,2],[1,0],[1,1]].find(([row,col])=>!game.workers.some(worker=>worker.row===row&&worker.col===col));
+  santorini.handleAction(game,'p0','place',{row:secondHumanCell[0],col:secondHumanCell[1]});
+  game.nextNpcAt=1;
+  santorini.tick(game,Date.now());
+  assert.equal(game.phase,'move');
+  const human=game.workers.find(worker=>worker.ownerId==='p0');
+  const target=santorini.legalMoves(game,human)[0];
+  santorini.handleAction(game,'p0','move',{workerId:human.id,...target});
+  santorini.handleAction(game,'p0','build',santorini.legalBuilds(game,human)[0]);
+  game.nextNpcAt=1;santorini.tick(game,Date.now());
+  assert.equal(game.phase,'build');
+  game.nextNpcAt=1;santorini.tick(game,Date.now());
+  assert.equal(game.turnIndex,0);
+  assert.equal(game.phase,'move');
+});

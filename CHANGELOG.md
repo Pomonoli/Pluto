@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.2.0 — Vier nieuwe bordspellen
+
+- Stratego toegevoegd als compact duel met geheime rangen, vrije beginopstelling, gevechten en NPC-tegenstander.
+- Santorini toegevoegd voor 2 tot 4 spelers met workerplaatsing, bouwen, niveau-3-overwinning, blokkeren en NPC's.
+- Ticket to Ride toegevoegd voor 2 tot 5 spelers met treinkaarten, routes, bestemmingen, eindtelling en NPC's.
+- Quoridor toegevoegd voor 2 tot 4 spelers met padvalidatie, pionzetten en strategische muren.
+- Stratego toont vijandelijke stukken als herkenbare verborgen pionnen en houdt alle bordcellen even groot.
+- Ticket to Ride markeert eigen routes met een duidelijke `JIJ`-badge, spelerskleur en contrastrijke omlijning.
+- De pluginregistry, productie-assets en regressietests zijn bijgewerkt voor alle dertien spellen.
+- De README en installatie-informatie beschrijven weer de volledige actuele inhoud van Pluto.
+
 ## v1.1.0 — Self-contained game-plugins
 
 - Iedere game beheert voortaan zijn eigen browserrenderer, helpers, styling, spelregels en optionele assets.

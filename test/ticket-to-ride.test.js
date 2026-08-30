@@ -31,3 +31,16 @@ test('Ticket to Ride houdt tickets geheim voor andere spelers',()=>{
   assert.equal(state.players.find(player=>player.id==='a').tickets.length,2);
   assert.equal(state.players.find(player=>player.id==='b').tickets,undefined);
 });
+
+test('Ticket to Ride NPC rondt zelfstandig een beurt af',()=>{
+  const game=gameModule.createGame([{id:'a',name:'A',isNpc:false},{id:'bot',name:'NPC 1',isNpc:true}]);
+  game.turnIndex=1;
+  game.players[1].hand=[];
+  game.nextNpcAt=1;
+  assert.equal(gameModule.tick(game,Date.now()),true);
+  assert.equal(game.drawCount,1);
+  game.nextNpcAt=1;
+  assert.equal(gameModule.tick(game,Date.now()),true);
+  assert.equal(game.turnIndex,0);
+  assert.equal(game.players[1].hand.length,2);
+});

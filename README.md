@@ -2,9 +2,11 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.0.0
+## Nieuw in versie 1.2.0
 
-Pluto 1 vormt de eerste stabiele hoofdversie van het platform. De app combineert negen minigames met realtime rooms, NPCs, accounts, blijvende statistieken, leaderboards en een installeerbare mobiele PWA in één self-hosted omgeving.
+Stratego, Santorini, Ticket to Ride en Quoridor zijn toegevoegd. De eerste drie ondersteunen oefenpotjes tegen NPC's. Stratego toont verborgen vijandelijke stukken duidelijk zonder hun rang prijs te geven, en Ticket to Ride markeert onmiskenbaar welke routes van jou zijn.
+
+Pluto bevat nu dertien spellen met realtime rooms, accounts, blijvende statistieken, leaderboards en een installeerbare mobiele PWA in één self-hosted omgeving.
 
 Games zijn zelfstandige modules onder `games/`. Elke game beheert daar zijn serverlogica, client-entrypoint, metadata, spelregels en resultaten. De server ontdekt deze mappen automatisch, waardoor nieuwe games vanuit de meegeleverde template kunnen worden toegevoegd zonder de centrale registry aan te passen.
 
@@ -14,7 +16,25 @@ Games zijn nu werkelijk self-contained: hun renderer, helpers, CSS, spelregels, 
 
 ## Games
 
-Hofslag, Blackjack, Solitaire, Presidenten, Pesten, Hartenjagen, Cluedo, Carcassonne en Minigolf met een Map Editor.
+| Spel | Spelers | NPC's |
+| --- | ---: | :---: |
+| Blackjack | 1-4 | Ja |
+| Carcassonne | 2-5 | Ja |
+| Cluedo | 2-6 | Ja |
+| Hartenjagen | 4 | Ja |
+| Hofslag | 2-4 | Ja |
+| Minigolf | 1-4 | Ja |
+| Pesten | 2-4 | Ja |
+| Presidenten | 3-4 | Ja |
+| Quoridor | 2-4 | Nee |
+| Santorini | 2-4 | Ja |
+| Solitaire | 1 | Niet van toepassing |
+| Stratego | 2 | Ja |
+| Ticket to Ride | 2-5 | Ja |
+
+Minigolf bevat daarnaast een Map Editor voor eigen banen.
+
+De volledige versiegeschiedenis staat in de [changelog](CHANGELOG.md).
 
 ## Installeren
 

@@ -11,7 +11,7 @@ test('productieserver levert alle pluginclients, CSS, views en assets',async(t)=
  t.after(()=>new Promise(resolve=>server.close(resolve)));
  const base=`http://127.0.0.1:${server.address().port}`;
  const home=await fetch(base);assert.equal(home.status,200);assert.match(await home.text(),/id="gameGrid"/);
- const registry=await (await fetch(`${base}/api/game-plugins`)).json();assert.equal(registry.games.length,9);
+ const registry=await (await fetch(`${base}/api/game-plugins`)).json();assert.equal(registry.games.length,13);
  for(const plugin of registry.games){
   const client=await fetch(base+plugin.clientUrl);assert.equal(client.status,200,plugin.clientUrl);assert.match(client.headers.get('content-type'),/javascript/);
   const style=await fetch(base+plugin.styleUrl);assert.equal(style.status,200,plugin.styleUrl);assert.match(style.headers.get('content-type'),/css/);

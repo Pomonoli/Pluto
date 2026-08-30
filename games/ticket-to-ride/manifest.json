@@ -1,14 +1,14 @@
 {
   "key": "ticket-to-ride",
   "name": "Ticket to Ride",
-  "version": "1",
+  "version": "2",
   "description": "Versimpelde Ticket to Ride voor 2 tot 5 spelers: verzamel kaarten, claim routes en verbind bestemmingen.",
   "icon": "🚂",
   "badge": "2-5",
   "actionLabel": "Nieuw spel",
   "minPlayers": 2,
   "maxPlayers": 5,
-  "supportsNpc": false,
+  "supportsNpc": true,
   "realtime": false,
   "solo": false
 }

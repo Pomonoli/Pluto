@@ -90,6 +90,17 @@ function ready(game,playerId){
   }
 }
 
+function npcReady(game,player){
+  const own=game.pieces.filter(piece=>piece.ownerId===player.id);
+  const cells=[];
+  for(const row of homeRows(player.index))for(let col=0;col<BOARD_SIZE;col++)cells.push([row,col]);
+  for(let i=cells.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[cells[i],cells[j]]=[cells[j],cells[i]]}
+  own.forEach((piece,index)=>{piece.row=cells[index][0];piece.col=cells[index][1]});
+  player.ready=true;
+  game.log.unshift(`${player.name} is klaar.`);
+  if(game.players.every(item=>item.ready)){game.phase='play';game.log.unshift(`${currentPlayer(game).name} begint.`)}
+}
+
 function legalTargets(game,piece){
   if(!piece?.alive||!piece.movable)return[];
   const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
@@ -180,6 +191,37 @@ function move(game,playerId,payload={}){
   }
 }
 
+function npcMove(game,player){
+  const options=[];
+  for(const piece of game.pieces.filter(item=>item.ownerId===player.id&&item.alive&&item.movable)){
+    for(const target of legalTargets(game,piece))options.push({piece,target,attack:Boolean(pieceAt(game,target.row,target.col))});
+  }
+  if(!options.length)return;
+  const attacks=options.filter(option=>option.attack);
+  const choice=(attacks.length?attacks:options)[Math.floor(Math.random()*(attacks.length||options.length))];
+  const defender=pieceAt(game,choice.target.row,choice.target.col);
+  if(defender)resolveCombat(game,choice.piece,defender);
+  else{choice.piece.row=choice.target.row;choice.piece.col=choice.target.col;game.log.unshift(`${player.name} verplaatst een stuk.`)}
+  if(game.gameOver)return;
+  game.turnIndex=(game.turnIndex+1)%game.players.length;
+  const next=currentPlayer(game);
+  if(!hasMove(game,next.id)){game.gameOver=true;game.phase='over';game.winnerId=player.id;game.resultText=`${player.name} wint: ${next.name} kan niet meer bewegen.`}
+}
+
+function scheduleNpc(game,delay=700){
+  const npc=game.phase==='setup'?game.players.find(player=>player.isNpc&&!player.ready):currentPlayer(game);
+  game.nextNpcAt=!game.gameOver&&npc?.isNpc?Date.now()+delay:0;
+}
+function tick(game,now=Date.now()){
+  if(game.gameOver)return false;
+  const npc=game.phase==='setup'?game.players.find(player=>player.isNpc&&!player.ready):currentPlayer(game);
+  if(!npc?.isNpc){game.nextNpcAt=0;return false}
+  if(!game.nextNpcAt)game.nextNpcAt=now+700;
+  if(now<game.nextNpcAt)return false;
+  if(game.phase==='setup')npcReady(game,npc);else npcMove(game,npc);
+  scheduleNpc(game);return true;
+}
+
 function handleAction(game,playerId,action,payload){
   if(game.gameOver)throw new Error('Het spel is afgelopen.');
   if(action==='setupMove')return setupMove(game,playerId,payload);
@@ -235,4 +277,4 @@ function results(game){
   }));
 }
 
-module.exports={createGame,handleAction,serialize,results,legalTargets};
+module.exports={createGame,handleAction,serialize,results,legalTargets,tick};

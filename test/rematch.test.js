@@ -7,7 +7,7 @@ function playersFor(meta) {
   return Array.from({ length: count }, (_, i) => ({
     id: `p${i + 1}`,
     name: `Speler ${i + 1}`,
-    isNpc: i > 0
+    isNpc: meta.supportsNpc && i > 0
   }));
 }
 

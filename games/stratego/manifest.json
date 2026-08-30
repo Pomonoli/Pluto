@@ -1,14 +1,14 @@
 {
   "key": "stratego",
   "name": "Stratego",
-  "version": "1",
+  "version": "2",
   "description": "Snelle 1v1-versie van Stratego met 8 stukken per speler.",
   "icon": "⚔️",
   "badge": "2",
   "actionLabel": "Nieuw spel",
   "minPlayers": 2,
   "maxPlayers": 2,
-  "supportsNpc": false,
+  "supportsNpc": true,
   "realtime": false,
   "solo": false
 }

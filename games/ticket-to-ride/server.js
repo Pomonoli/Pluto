@@ -88,10 +88,10 @@ function createGame(roomPlayers){
   return game;
 }
 
-function assertCurrentPlayer(game,playerId){
+function assertCurrentPlayer(game,playerId,allowNpc=false){
   if(game.gameOver)throw new Error('Het spel is afgelopen.');
   const player=currentPlayer(game);
-  if(!player||player.id!==playerId||player.isNpc)throw new Error('Je bent niet aan de beurt.');
+  if(!player||player.id!==playerId||(!allowNpc&&player.isNpc))throw new Error('Je bent niet aan de beurt.');
   return player;
 }
 function hasPendingTickets(game,playerId){return Array.isArray(game.pendingTickets[playerId])&&game.pendingTickets[playerId].length>0}
@@ -126,8 +126,8 @@ function endTurn(game){
   game.turnIndex=(game.turnIndex+1)%game.players.length;
 }
 
-function drawTrain(game,playerId,payload={}){
-  const player=assertCurrentPlayer(game,playerId);
+function drawTrain(game,playerId,payload={},allowNpc=false){
+  const player=assertCurrentPlayer(game,playerId,allowNpc);
   if(hasPendingTickets(game,playerId))throw new Error('Kies eerst welke bestemmingen je houdt.');
   if(game.drawCount>=2)throw new Error('Je hebt al twee kaarten getrokken.');
   let card=null;
@@ -145,8 +145,8 @@ function drawTrain(game,playerId,payload={}){
   if(game.drawCount>=2){addLog(game,`${player.name} trekt twee treinkaarten.`);endTurn(game)}
 }
 
-function claimRoute(game,playerId,payload={}){
-  const player=assertCurrentPlayer(game,playerId);
+function claimRoute(game,playerId,payload={},allowNpc=false){
+  const player=assertCurrentPlayer(game,playerId,allowNpc);
   if(game.drawCount>0)throw new Error('Je bent al kaarten aan het trekken.');
   if(hasPendingTickets(game,playerId))throw new Error('Kies eerst welke bestemmingen je houdt.');
   const route=game.routes.find(item=>item.id===payload.routeId);
@@ -173,8 +173,8 @@ function claimRoute(game,playerId,payload={}){
   endTurn(game);
 }
 
-function drawTickets(game,playerId){
-  const player=assertCurrentPlayer(game,playerId);
+function drawTickets(game,playerId,allowNpc=false){
+  const player=assertCurrentPlayer(game,playerId,allowNpc);
   if(game.drawCount>0)throw new Error('Je bent al treinkaarten aan het trekken.');
   if(hasPendingTickets(game,playerId))throw new Error('Je hebt al bestemmingen getrokken.');
   const drawn=drawTicketsFromDeck(game,3);
@@ -183,8 +183,8 @@ function drawTickets(game,playerId){
   addLog(game,`${player.name} bekijkt nieuwe bestemmingen.`);
 }
 
-function keepTickets(game,playerId,payload={}){
-  const player=assertCurrentPlayer(game,playerId);
+function keepTickets(game,playerId,payload={},allowNpc=false){
+  const player=assertCurrentPlayer(game,playerId,allowNpc);
   const pending=game.pendingTickets[playerId]||[];
   if(!pending.length)throw new Error('Je hebt geen bestemmingen om te kiezen.');
   const keepIds=new Set(Array.isArray(payload.ticketIds)?payload.ticketIds.map(String):[]);
@@ -208,6 +208,21 @@ function ticketConnected(game,playerId,ticket){
     for(const next of adjacency.get(city)||[])if(!seen.has(next)){seen.add(next);queue.push(next)}
   }
   return false;
+}
+
+function npcTurn(game,player){
+  const pending=game.pendingTickets[player.id]||[];
+  if(pending.length)return keepTickets(game,player.id,{ticketIds:[pending[0].id]},true);
+  if(game.drawCount>0)return drawTrain(game,player.id,{source:'deck'},true);
+  const affordable=game.routes.filter(route=>!route.ownerId&&player.trains>=route.length&&((trainCounts(player.hand)[route.color]||0)+(trainCounts(player.hand)[WILD]||0)>=route.length));
+  if(affordable.length){affordable.sort((a,b)=>b.length-a.length);return claimRoute(game,player.id,{routeId:affordable[0].id},true)}
+  return drawTrain(game,player.id,{source:'deck'},true);
+}
+function scheduleNpc(game,delay=650){const player=currentPlayer(game);game.nextNpcAt=!game.gameOver&&player?.isNpc?Date.now()+delay:0}
+function tick(game,now=Date.now()){
+  if(game.gameOver)return false;const player=currentPlayer(game);
+  if(!player?.isNpc){game.nextNpcAt=0;return false}if(!game.nextNpcAt)game.nextNpcAt=now+650;if(now<game.nextNpcAt)return false;
+  npcTurn(game,player);scheduleNpc(game);return true;
 }
 
 function handleAction(game,playerId,action,payload){
@@ -249,4 +264,4 @@ function results(game){
   }));
 }
 
-module.exports={createGame,handleAction,serialize,results,ticketConnected,CITIES,ROUTES,TICKETS};
+module.exports={createGame,handleAction,serialize,results,ticketConnected,CITIES,ROUTES,TICKETS,tick};

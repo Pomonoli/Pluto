@@ -30,7 +30,7 @@ function legalTargets(game,piece){
 }
 
 function renderPiece(E,piece,isMine,selected){
-  const node=E('span',`stratego-piece ${isMine?'mine':'enemy'} ${selected?'selected':''} ${piece.known?'known':'hidden'}`);
+  const node=E('span',`stratego-piece ${isMine?'mine':'enemy'} ${selected?'selected':''} ${piece.known?'known':'concealed'}`);
   node.append(E('b','stratego-piece-rank',pieceLabel(piece)));
   node.title=piece.known?pieceName(piece):'Verborgen vijandelijk stuk';
   return node;

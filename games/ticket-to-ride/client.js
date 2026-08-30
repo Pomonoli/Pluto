@@ -27,7 +27,7 @@ function renderTicketToRide({room,game,els,E,action,titlebar,logBox,renderGame})
   const scores=E('div','ttr-scoreboard');
   game.players.forEach(player=>{
     const row=E('div',`ttr-player p${player.index} ${player.id===game.turnPlayerId?'active':''}`);
-    row.append(E('strong','',player.name),E('span','','🚂 '+player.trains),E('b','',`${player.totalScore} p`));
+    row.append(E('strong','',`${player.name}${player.id===room.meId?' · jij':''}`),E('span','','🚂 '+player.trains),E('b','',`${player.totalScore} p`));
     if(game.gameOver)row.append(E('small','',`${player.completedTickets}/${player.ticketCount} tickets`));
     scores.append(row);
   });
@@ -46,16 +46,17 @@ function renderTicketToRide({room,game,els,E,action,titlebar,logBox,renderGame})
 
   for(const route of game.routes){
     const a=cities.get(route.a),b=cities.get(route.b);if(!a||!b)continue;
-    const group=svg('g',{class:`ttr-route ${route.ownerId?'owned':'free'} ${route.ownerId?`owner-${game.players.find(p=>p.id===route.ownerId)?.index??0}`:`color-${route.color}`} ${selectedRouteId===route.id?'selected':''}`});
+    const owner=game.players.find(player=>player.id===route.ownerId);
+    const isMine=route.ownerId===room.meId;
+    const group=svg('g',{class:`ttr-route ${route.ownerId?'owned':'free'} ${isMine?'mine':''} ${route.ownerId?`owner-${owner?.index??0}`:`color-${route.color}`} ${selectedRouteId===route.id?'selected':''}`});
     const hit=svg('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,class:'ttr-route-hit'});
     const line=svg('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,class:'ttr-route-line'});
     const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
     const badge=svg('g',{class:'ttr-route-badge'});
-    badge.append(svg('circle',{cx:mx,cy:my,r:13}),svg('text',{x:mx,y:my+5,'text-anchor':'middle'}));
-    badge.lastChild.textContent=String(route.length);
+    badge.append(svg('circle',{cx:mx,cy:my,r:route.ownerId?18:13}),svg('text',{x:mx,y:my+(route.ownerId?4:5),'text-anchor':'middle'}));
+    badge.lastChild.textContent=route.ownerId?(isMine?'JIJ':String(owner?.name||'?').trim().charAt(0).toUpperCase()):String(route.length);
     group.append(hit,line,badge);
-    const owner=game.players.find(player=>player.id===route.ownerId);
-    const title=svg('title');title.textContent=route.ownerId?`${routeName(cities,route)} · ${owner?.name||'bezet'}`:`${routeName(cities,route)} · ${route.length} ${COLOR_LABELS[route.color]}`;group.append(title);
+    const title=svg('title');title.textContent=route.ownerId?`${routeName(cities,route)} · ${isMine?'jouw route':owner?.name||'bezet'}`:`${routeName(cities,route)} · ${route.length} ${COLOR_LABELS[route.color]}`;group.append(title);
     if(!route.ownerId){group.style.cursor='pointer';group.onclick=()=>{selectedRouteId=route.id;renderGame(room)}}
     board.append(group);
   }
