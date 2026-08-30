@@ -9,10 +9,12 @@
 .carc-controls>.eyebrow{margin:0;white-space:nowrap}
 .carc-controls.waiting-choice::after{content:'Tegel geplaatst';color:var(--muted);font-size:11px;font-weight:700}
 .carc-mobile-rules{display:none}
+.carcassonne-active .log-box{display:none}
 .carc-drawn{display:flex;align-items:center;gap:9px}
 .carc-drawn .preview{width:72px;height:72px;position:relative;left:auto;top:auto;flex:0 0 72px;transform:scale(.75);transform-origin:center;margin:-9px}
 .carc-drawn button{min-height:38px}
-.carc-viewport{position:relative;width:100%;height:min(58vh,590px);min-height:390px;overflow:hidden;touch-action:none;border:1px solid rgba(238,216,205,.14);border-radius:15px;background-color:#10151a;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:24px 24px;cursor:grab}
+.carc-next-drawn{margin-left:auto}.carc-next-label{max-width:72px;color:var(--muted);font-size:9px;font-weight:900;line-height:1.25;text-align:right}
+.carc-viewport{position:relative;width:100%;height:clamp(240px,calc(100dvh - 330px),590px);min-height:240px;overflow:hidden;touch-action:none;border:1px solid rgba(238,216,205,.14);border-radius:15px;background-color:#10151a;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:24px 24px;cursor:grab}
 .carc-viewport:active{cursor:grabbing}
 .carc-board{position:absolute;left:50%;top:50%;transform-origin:center;will-change:transform}
 .carc-tile,.carc-valid{position:absolute;width:72px;height:72px;border-radius:7px;box-sizing:border-box}
@@ -76,12 +78,12 @@
 .carc-choice-icon{width:26px;height:26px;flex:0 0 26px;display:grid;place-items:center;border-radius:8px;background:rgba(255,255,255,.08);font-size:15px;font-weight:900}
 .carc-burger-skip{grid-column:1/-1;min-height:44px}
 .carc-burger-back{grid-column:1/-1;min-height:40px}
-.carc-final-score-wrap{margin-top:18px;overflow-x:auto;border:1px solid rgba(238,216,205,.13);border-radius:13px;background:rgba(7,9,17,.45);text-align:left}.carc-final-score-title{position:sticky;left:0;padding:10px 12px 4px;color:#d9c3b8;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}.carc-final-score{width:100%;min-width:720px;border-collapse:collapse;font-size:12px}.carc-final-score th,.carc-final-score td{padding:8px 9px;border-top:1px solid rgba(238,216,205,.09);text-align:right;white-space:nowrap}.carc-final-score thead th{color:#aaa5ad;font-size:10px;vertical-align:bottom;white-space:normal}.carc-final-score th:first-child{text-align:left}.carc-final-score tbody tr.leader{background:rgba(226,163,134,.08)}.carc-final-score td.total{color:#f0b99f;font-size:14px;font-weight:900}
+.carc-final-score-wrap{margin-top:14px;overflow:hidden;border:1px solid rgba(238,216,205,.13);border-radius:13px;background:rgba(7,9,17,.45);text-align:left}.carc-final-score-title{padding:8px 10px 3px;color:#d9c3b8;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}.carc-final-score{width:100%;table-layout:fixed;border-collapse:collapse;font-size:clamp(9px,2.5vw,12px)}.carc-final-score th,.carc-final-score td{padding:7px 3px;border-top:1px solid rgba(238,216,205,.09);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.carc-final-score th:first-child{width:30%;padding-left:7px;text-align:left}.carc-final-score thead th{color:#d5c8c1;font-size:15px}.carc-final-score thead th:first-child{font-size:10px}.carc-final-score tbody tr.leader{background:rgba(226,163,134,.08)}.carc-final-score td.total{color:#f0b99f;font-size:14px;font-weight:900}
 @media(max-width:600px){
 .carc-controls{min-height:120px;align-items:flex-start;justify-content:flex-start;flex-direction:column}
 .carc-controls.waiting-choice::after{margin-top:16px}
 .carc-drawn{width:100%}
-.carc-viewport{height:55vh;min-height:430px}
+.carc-viewport{height:clamp(220px,calc(100dvh - 300px),430px);min-height:220px}
 .carc-player{flex-basis:98px}
 .carc-burger-choices{grid-template-columns:1fr}
 .carc-burger-skip{grid-column:auto}

@@ -98,3 +98,37 @@ test('eindtelling bewaart punten per categorie en correct totaal',()=>{
   assert.deepEqual(a,{playerId:'a',points:5,farmers:0,incompleteRoads:1,incompleteCities:0,incompleteMonasteries:0,total:6});
   assert.deepEqual(b,{playerId:'b',points:2,farmers:0,incompleteRoads:0,incompleteCities:0,incompleteMonasteries:1,total:3});
 });
+
+test('een kruispunt heeft vier afzonderlijke hoekakkers',()=>{
+  const tile=tileOfType('roadCross');
+  assert.deepEqual(tile.fields,[[7,0],[1,2],[3,4],[5,6]]);
+  assert.deepEqual(tile.fields.map(carcassonne.fieldPosition),['top-left','top-right','bottom-right','bottom-left']);
+  const game={board:new Map([['0,0',{x:0,y:0,tile}]]),meeples:[]};
+  assert.deepEqual(carcassonne.meepleChoices(game,{x:0,y:0,tile}).filter(choice=>choice.kind==='field').map(choice=>choice.label),[
+    'Landbouwer linksboven','Landbouwer rechtsboven','Landbouwer rechtsonder','Landbouwer linksonder'
+  ]);
+});
+
+test('een T-kruispunt benoemt de open akker en twee hoekakkers duidelijk',()=>{
+  const tile=tileOfType('roadT'),game={board:new Map([['0,0',{x:0,y:0,tile}]]),meeples:[]};
+  const fields=carcassonne.meepleChoices(game,{x:0,y:0,tile}).filter(choice=>choice.kind==='field');
+  assert.deepEqual(fields.map(choice=>choice.position),['top','bottom-right','bottom-left']);
+  assert.deepEqual(fields.map(choice=>choice.label),['Landbouwer midden-boven','Landbouwer rechtsonder','Landbouwer linksonder']);
+});
+
+test('volgende speler ziet vooraf de tegel bovenaan de stapel',()=>{
+  const game=carcassonne.createGame([{id:'a',name:'A',isNpc:false},{id:'b',name:'B',isNpc:false}]);
+  const expected=game.deck.at(-1).id,connected=new Map([['a',true],['b',true]]);
+  assert.equal(carcassonne.serialize(game,'a',connected).nextTile,null);
+  assert.equal(carcassonne.serialize(game,'b',connected).nextTile.id,expected);
+});
+
+test('Carcassonne eindtabel gebruikt compacte pictogramkolommen zonder minimumbreedte',()=>{
+  const fs=require('node:fs'),path=require('node:path');
+  const client=fs.readFileSync(path.join(__dirname,'../games/carcassonne/client.js'),'utf8');
+  const css=fs.readFileSync(path.join(__dirname,'../games/carcassonne/styles.css'),'utf8');
+  assert.match(client,/\['♟','Landbouwers'\]/);
+  assert.match(client,/\['═','Onafgewerkte wegen'\]/);
+  assert.match(css,/\.carc-final-score\{[^}]*table-layout:fixed/);
+  assert.doesNotMatch(css,/\.carc-final-score\{[^}]*min-width/);
+});

@@ -179,7 +179,7 @@ async function saveEditorMap(){
   try{const response=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify({map:ed.map})}),data=await response.json();if(!data.ok)throw new Error(data.error||'Opslaan mislukt.');ed.id=data.map.id;ed.canEdit=true;ed.map=ensureEditorV8Map(cloneJson(data.map.map));ed.dirty=false;syncEditorMetaFromMap();renderMapEditorCanvas();await loadCustomMapLibrary();toast('Map opgeslagen en toegevoegd aan de map pool.')}catch(error){toast(error.message)}finally{els.saveGolfMapButton.disabled=false;els.saveGolfMapButton.textContent='Map opslaan'}
 }
 async function showMinigolfEditor(){
-  if(session.room)return toast('Verlaat eerst de room.');hideMainViews();els.minigolfEditorView.classList.remove('hidden');els.rulesButton.classList.add('hidden');els.leaveButton.classList.add('hidden');const ed=ensureMapEditor();syncEditorMetaFromMap();renderMapEditorCanvas();renderMapInspector();await loadCustomMapLibrary();
+  if(session.room)return toast('Verlaat eerst de room.');hideMainViews();els.minigolfEditorView.classList.remove('hidden');els.rulesButton.classList.add('hidden');const ed=ensureMapEditor();syncEditorMetaFromMap();renderMapEditorCanvas();renderMapInspector();await loadCustomMapLibrary();
 }
 
 

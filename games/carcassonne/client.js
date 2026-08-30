@@ -144,6 +144,7 @@ function renderCarcassonne(room,game){
   const dashboard=E('div','carc-dashboard');game.players.forEach(p=>{const item=E('div',`carc-player ${p.id===game.turnPlayerId?'active':''}`);item.style.setProperty('--player-color',p.color);item.append(E('span','carc-player-dot'),E('strong','',p.name),E('b','',String(p.score)),E('small','',burgerLabel(p.meeples)));dashboard.append(item)});els.gameStage.append(dashboard);
   const controls=E('div',`carc-controls ${mine&&game.phase==='meeple'?'waiting-choice':''}`);controls.append(E('span','eyebrow',`${game.tilesRemaining} TEGELS OVER`));
   if(mine&&game.phase==='place'&&game.currentTile){const drawn=E('div','carc-drawn');drawn.append(carcassonneTileNode(game.currentTile,{preview:true}));const rotate=E('button','secondary','↻ Roteer');rotate.onclick=()=>action('rotate');drawn.append(rotate);controls.append(drawn);if(!game.validPlacements.length)controls.append(E('div','player-note','Geen plek in deze stand — roteer de tegel.'))}
+  else if(game.nextTile){const drawn=E('div','carc-drawn carc-next-drawn');drawn.append(E('span','carc-next-label','JOUW VOLGENDE TEGEL'),carcassonneTileNode(game.nextTile,{preview:true}));controls.append(drawn)}
   els.gameStage.append(controls);
   const viewport=E('div','carc-viewport');const board=E('div','carc-board');const size=72,world=160,origin=(world-1)/2;board.style.width=`${world*size}px`;board.style.height=`${world*size}px`;
   (game.board||[]).forEach(entry=>{
@@ -151,7 +152,7 @@ function renderCarcassonne(room,game){
     (game.meeples||[]).filter(m=>m.x===entry.x&&m.y===entry.y).forEach(m=>{
       const player=game.players.find(p=>p.id===m.playerId),visual=meepleVisual(m.kind);
       const group=m.kind==='city'?entry.tile.cities?.[m.group]:m.kind==='road'?entry.tile.roads?.[m.group]:null;
-      const fieldPosition=m.kind==='field'?`field-${fieldPositionClass(entry.tile.fields?.[m.group]||[])}`:'';
+      const fieldPosition=m.kind==='field'?`field-${m.position||fieldPositionClass(entry.tile.fields?.[m.group]||[])}`:'';
       const position=group?featurePositionClass(group):fieldPosition;
       const meeple=E('span',`carc-meeple ${m.kind} ${position}`.trim(),visual.text);meeple.style.background=player?.color||'#fff';meeple.title=`${player?.name||''} · ${visual.role}`;tile.append(meeple)
     });
@@ -170,7 +171,8 @@ export function renderResultDetails({game,E}){
   if(!rows.length)return null;
   const wrap=E('div','carc-final-score-wrap'),table=E('table','carc-final-score');
   const head=E('thead'),headRow=E('tr');
-  ['Speler','Punten tijdens spel','Landbouwers','Onafgewerkte wegen','Onafgewerkte steden','Onafgewerkte kloosters','Totaal'].forEach(label=>headRow.append(E('th','',label)));
+  const headings=[['Speler','Speler'],['●','Punten tijdens het spel'],['♟','Landbouwers'],['═','Onafgewerkte wegen'],['♜','Onafgewerkte steden'],['†','Onafgewerkte kloosters'],['Σ','Totaal']];
+  headings.forEach(([icon,label],index)=>{const cell=E('th',index?'carc-score-icon':'',icon);cell.title=label;cell.setAttribute('aria-label',label);headRow.append(cell)});
   head.append(headRow);table.append(head);
   const body=E('tbody');
   rows.forEach((score,index)=>{

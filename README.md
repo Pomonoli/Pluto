@@ -2,6 +2,12 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
+## Nieuw in versie 1.6.0
+
+Spellen gebruiken voortaan zoveel mogelijk de volledige schermhoogte zonder paginascroll. De ongebruikte chat en aparte vertrekknoppen zijn verwijderd; het Pluto-logo brengt je rechtstreeks terug naar Home.
+
+Carcassonne toont de eindscore in een compacte tabel met pictogrammen, laat de volgende speler alvast zijn tegel bekijken en plaatst landbouwers correct in afzonderlijke hoekakkers rond kruispunten.
+
 ## Nieuw in versie 1.5.0
 
 Age of Civilization is toegevoegd als veertiende spel. Twee spelers bouwen gedurende zeven tijdperken een beschaving met militaire, economische en culturele kaarten, verdedigen hun toren tegen steeds sterkere aanvalsgolven en strijden om de hoogste eindscore. Het spel ondersteunt ook een NPC-tegenstander.

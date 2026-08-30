@@ -2,7 +2,7 @@
   "key": "minigolf",
   "name": "Minigolf",
   "description": "Speel vijf slimme holes met elk een eigen route of gimmick.",
-  "version": "3",
+  "version": "4",
   "icon": "⛳",
   "badge": "1-4",
   "actionLabel": "Nieuw spel",

@@ -29,12 +29,19 @@ test('mobile nav wordt in een actieve room verborgen',()=>{
   assert.match(css,/body\.room-active\{padding-bottom:env\(safe-area-inset-bottom\)\}/);
 });
 
-test('spelruimte toont alleen Verlaat spel en geen deelkaart',()=>{
+test('spelruimte bevat geen chat, vertrekknop of deelkaart',()=>{
   const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
   const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
-  assert.doesNotMatch(html,/Kopieer link|id="roomShareBox"|id="shareLink"|id="roomFooterMeta"/);
-  assert.match(html,/id="roomLeaveButton"[^>]*>Verlaat spel<\/button>/);
-  assert.doesNotMatch(app,/function copyLink|Roomlink gekopieerd|els\.shareLink/);
+  assert.doesNotMatch(html,/Kopieer link|id="roomShareBox"|id="shareLink"|id="roomFooterMeta"|id="roomLeaveButton"|id="leaveButton"|id="chatPanel"|id="chatForm"/);
+  assert.doesNotMatch(app,/function copyLink|Roomlink gekopieerd|els\.shareLink|renderChat|els\.chatForm|els\.roomLeaveButton/);
+});
+
+test('actieve spellen gebruiken een viewporthoge layout met interne fallback',()=>{
+  const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
+  const css=fs.readFileSync(path.join(root,'public/styles.css'),'utf8');
+  assert.match(app,/classList\.toggle\('game-active',room\.status!=='lobby'\)/);
+  assert.match(css,/body\.game-active\{height:100dvh;min-height:100dvh;overflow:hidden\}/);
+  assert.match(css,/body\.game-active \.game-panel\{[^}]*overflow:auto/);
 });
 
 test('homescreen bevat geen kaart meer om via een code te joinen',()=>{

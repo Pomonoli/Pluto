@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.6.0 — Schermvullende games en Carcassonne-hoekakkers
+
+- Actieve spellen gebruiken de viewporthoogte en beperken scrollen tot een interne fallback wanneer inhoud echt niet binnen het scherm past.
+- De chat, vaste vertrekkaart en overige `Verlaat spel`-knoppen zijn verwijderd; Home via het Pluto-logo verlaat de ruimte.
+- Carcassonne-kruispunten behandelen de vier hoeken als afzonderlijke akkers, zonder verbinding over een weg heen.
+- Landbouwerkeuzes benoemen exacte posities zoals `linksboven`, `rechtsonder` en `midden-boven`, en bewaren die positie bij de pion.
+- De volgende Carcassonne-speler ziet tijdens de huidige beurt alvast de tegel bovenaan de stapel.
+- De Carcassonne-eindtabel gebruikt compacte pictogramkolommen en past zonder horizontale scroll binnen één schermbreedte.
+- Nieuwe regressietests bewaken kruispuntakkers, duidelijke labels, tegelpreview, eindtabel en de chatloze viewportinterface.
+
 ## v1.5.0 — Age of Civilization
 
 - Age of Civilization toegevoegd als veertiende Pluto-game voor exact twee spelers.
