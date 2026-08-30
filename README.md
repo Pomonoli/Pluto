@@ -2,6 +2,10 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
+## Nieuw in versie 1.5.0
+
+Age of Civilization is toegevoegd als veertiende spel. Twee spelers bouwen gedurende zeven tijdperken een beschaving met militaire, economische en culturele kaarten, verdedigen hun toren tegen steeds sterkere aanvalsgolven en strijden om de hoogste eindscore. Het spel ondersteunt ook een NPC-tegenstander.
+
 ## Nieuw in versie 1.4.0
 
 Pluto werkt voortaan volledig via de centrale lobby: open lobby's verschijnen als compacte kaartjes op Home, terwijl oude roomlinks en code-invoer uit de interface zijn verwijderd. Tijdens een spel verdwijnt de mobiele ondernavigatie en blijft alleen een duidelijke knop `Verlaat spel` over.
@@ -12,7 +16,7 @@ Carcassonne toont op het eindscherm nu een volledige puntentabel met de punten t
 
 Carcassonne gebruikt nu afzonderlijke akkersegmenten: wegen en steden scheiden akkers, kloosters niet. Landbouwers verschijnen op het juiste deel van de tegel, spelers kunnen tijdens de burgerkeuze teruggaan om hun tegel anders te leggen en de laatst gespeelde tegel heeft een rode markering. Op mobiel staan de twee Minigolf-acties voortaan naast elkaar.
 
-Pluto bevat nu dertien spellen met realtime rooms, accounts, blijvende statistieken, leaderboards en een installeerbare mobiele PWA in één self-hosted omgeving.
+Pluto bevat nu veertien spellen met realtime rooms, accounts, blijvende statistieken, leaderboards en een installeerbare mobiele PWA in één self-hosted omgeving.
 
 Games zijn zelfstandige modules onder `games/`. Elke game beheert daar zijn serverlogica, client-entrypoint, metadata, spelregels en resultaten. De server ontdekt deze mappen automatisch, waardoor nieuwe games vanuit de meegeleverde template kunnen worden toegevoegd zonder de centrale registry aan te passen.
 
@@ -24,6 +28,7 @@ Games zijn nu werkelijk self-contained: hun renderer, helpers, CSS, spelregels, 
 
 | Spel | Spelers | NPC's |
 | --- | ---: | :---: |
+| Age of Civilization | 2 | Ja |
 | Blackjack | 1-4 | Ja |
 | Carcassonne | 2-5 | Ja |
 | Cluedo | 2-6 | Ja |

@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.5.0 — Age of Civilization
+
+- Age of Civilization toegevoegd als veertiende Pluto-game voor exact twee spelers.
+- Bouw gedurende zeven tijdperken militaire, economische en culturele kaarten of unieke wonderen in een 3×3-stad.
+- Iedere aanvalsgolf wordt volledig op de server verwerkt en kan een onvoldoende verdedigde toren beschadigen of doen instorten.
+- Geheime handen worden uitsluitend aan de betreffende speler verstuurd en alle bouw-, goud- en scoreacties worden server-side gevalideerd.
+- Een zelfstandige NPC kan draften, bouwen en volledige wedstrijden spelen.
+- Eindresultaten werken mee in profielen, wedstrijdgeschiedenis en leaderboards.
+- Nieuwe integratie- en regressietests bewaken pluginregistratie, geheime informatie, acties, NPC-beurten en plotselinge winst door een ingestorte toren.
+
 ## v1.4.0 — Lobbygerichte interface en Carcassonne-eindtelling
 
 - Open lobby's verschijnen op Home als compacte kaartjes onder de recent gespeelde games en verdwijnen automatisch wanneer er geen beschikbare lobby's zijn.

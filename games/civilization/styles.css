@@ -1,0 +1,126 @@
+/* Age of Civilization — scoped entirely under .civ-root so it can't leak
+   into the rest of the Pluto shell or other game plugins. */
+
+.civ-root {
+  --civ-accent: #B8895A;
+  --civ-bg-panel: #211c17;
+  --civ-bg-panel-2: #2a231c;
+  --civ-text: #eee5d8;
+  --civ-text-dim: #93897c;
+  --civ-danger: #c1444a;
+  --civ-good: #6faf7a;
+
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--civ-text);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0 12px;
+}
+
+.civ-root h2 { font-family: inherit; margin: 0; }
+
+/* ---- monument track ---- */
+.civ-monument { display: flex; gap: 4px; }
+.civ-tablet {
+  flex: 1; aspect-ratio: 1 / 1.2; border-radius: 4px;
+  background: var(--civ-bg-panel); border: 1px solid var(--civ-bg-panel-2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; color: var(--civ-text-dim); position: relative;
+  transition: all 0.4s ease;
+}
+.civ-tablet.done { background: var(--civ-bg-panel-2); }
+.civ-tablet.current {
+  background: var(--civ-accent); color: #161310; font-weight: 700;
+  box-shadow: 0 0 12px var(--civ-accent);
+}
+
+/* ---- era banner ---- */
+.civ-era-banner { text-align: center; }
+.civ-era-num { font-size: 0.65rem; color: var(--civ-text-dim); letter-spacing: 2px; }
+.civ-era-name { color: var(--civ-accent); font-size: 1rem; margin-top: 2px; }
+
+/* ---- stats ---- */
+.civ-stats-row {
+  background: var(--civ-bg-panel); border: 1px solid var(--civ-bg-panel-2);
+  border-radius: 8px; padding: 8px 10px;
+}
+.civ-you { border-color: var(--civ-accent); }
+.civ-stat-name { font-size: 0.75rem; margin-bottom: 6px; }
+.civ-stat-boxes { display: flex; gap: 6px; }
+.civ-stat-box { flex: 1; text-align: center; }
+.civ-stat-label { font-size: 0.55rem; color: var(--civ-text-dim); text-transform: uppercase; }
+.civ-stat-value { font-size: 1rem; font-weight: 600; }
+.civ-hp-track { height: 5px; background: var(--civ-bg-panel-2); border-radius: 4px; margin-top: 4px; overflow: hidden; }
+.civ-hp-fill { height: 100%; background: var(--civ-good); transition: width 0.7s ease; }
+
+/* ---- grid ---- */
+.civ-grid-label { font-size: 0.65rem; color: var(--civ-text-dim); text-transform: uppercase; margin-bottom: 4px; }
+.civ-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.civ-tile {
+  aspect-ratio: 1; background: var(--civ-bg-panel); border: 1px solid var(--civ-bg-panel-2);
+  border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; font-size: 0.5rem; text-align: center; padding: 3px;
+}
+.civ-tile.filled { border-color: var(--civ-accent); }
+.civ-tile-icon { font-size: 1rem; }
+.civ-tile-name { font-size: 0.45rem; line-height: 1.1; }
+
+/* ---- draft ---- */
+.civ-draft-label { font-size: 0.65rem; color: var(--civ-text-dim); text-transform: uppercase; text-align: center; margin-bottom: 4px; }
+.civ-hand { display: flex; gap: 6px; }
+.civ-card {
+  flex: 1; background: var(--civ-bg-panel); border: 1.5px solid var(--civ-bg-panel-2);
+  border-radius: 8px; padding: 8px 4px; display: flex; flex-direction: column; align-items: center;
+  gap: 3px; text-align: center; cursor: pointer;
+}
+.civ-card.selected { border-color: var(--civ-accent); background: var(--civ-bg-panel-2); }
+.civ-card.wonder { border-color: #8B5CF6; }
+.civ-card-icon { font-size: 1.3rem; }
+.civ-card-name { font-size: 0.6rem; line-height: 1.15; min-height: 2.1em; }
+.civ-card-cost { font-size: 0.6rem; color: var(--civ-accent); }
+
+.civ-detail {
+  background: var(--civ-bg-panel); border: 1px solid var(--civ-accent);
+  border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px;
+}
+.civ-detail-name { color: var(--civ-accent); font-weight: 700; }
+.civ-detail-desc { font-size: 0.72rem; color: var(--civ-text-dim); }
+.civ-detail-actions { display: flex; gap: 8px; }
+
+.civ-btn {
+  flex: 1; font-family: inherit; border: none; border-radius: 8px;
+  padding: 9px; font-size: 0.78rem; font-weight: 600; cursor: pointer;
+}
+.civ-btn-primary { background: var(--civ-accent); color: #161310; }
+.civ-btn-ghost { background: var(--civ-bg-panel-2); color: var(--civ-text); }
+.civ-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.civ-waiting { text-align: center; color: var(--civ-text-dim); font-size: 0.8rem; padding: 10px; }
+
+/* ---- wave ---- */
+.civ-wave-title { text-align: center; color: var(--civ-accent); font-size: 0.9rem; }
+.civ-wave-cols { display: flex; gap: 10px; margin-top: 8px; }
+.civ-wave-col {
+  flex: 1; background: var(--civ-bg-panel); border: 1px solid var(--civ-bg-panel-2);
+  border-radius: 8px; padding: 10px; text-align: center;
+}
+.civ-wave-name { font-size: 0.75rem; margin-bottom: 4px; }
+.civ-wave-numbers { font-size: 0.65rem; color: var(--civ-text-dim); }
+.civ-wave-result { font-size: 0.72rem; font-weight: 600; margin-top: 6px; }
+.civ-wave-result.ok { color: var(--civ-good); }
+.civ-wave-result.hit { color: var(--civ-danger); }
+
+/* ---- game over ---- */
+.civ-gameover { text-align: center; }
+.civ-go-headline { color: var(--civ-accent); font-size: 1.2rem; margin-bottom: 10px; }
+.civ-final-table { display: flex; flex-direction: column; gap: 6px; }
+.civ-final-row {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--civ-bg-panel); border: 1px solid var(--civ-bg-panel-2);
+  border-radius: 8px; padding: 8px 12px; text-align: left;
+}
+.civ-final-row.winner { border-color: var(--civ-accent); }
+.civ-fname { font-weight: 600; font-size: 0.85rem; }
+.civ-breakdown { font-size: 0.6rem; color: var(--civ-text-dim); }
+.civ-fscore { color: var(--civ-accent); font-weight: 700; font-size: 1.1rem; }
