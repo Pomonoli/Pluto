@@ -18,7 +18,7 @@ const TEMPLATES = {
   cityCornerRoad:{edges:'CCRF',cities:[[0,1]],roads:[[2]]}, cityThree:{edges:'CCCF',cities:[[0,1,2]],shield:1},
   cityThreeRoad:{edges:'CCCR',cities:[[0,1,2]],roads:[[3]],shield:1}, cityFull:{edges:'CCCC',cities:[[0,1,2,3]],shield:1},
   roadStraight:{edges:'FRFR',roads:[[1,3]]}, roadCurve:{edges:'FRRF',roads:[[1,2]]},
-  roadT:{edges:'FRRR',roads:[[1,2,3]]}, roadCross:{edges:'RRRR',roads:[[0,1,2,3]]},
+  roadT:{edges:'FRRR',roads:[[1],[2],[3]]}, roadCross:{edges:'RRRR',roads:[[0],[1],[2],[3]]},
   roadEnd:{edges:'RFFF',roads:[[0]]}, field:{edges:'FFFF'}
 };
 
