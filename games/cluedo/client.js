@@ -1,7 +1,7 @@
 let state,els,E,action,profileButton,sound,socket,handleAck,cardNode,valueLabel,titlebar,logBox,renderGame,renderCardOpponents,renderDiscardStack,scoreList;
 const notes={},selections={};
 function bind(api){({state,els,E,action,profileButton,sound,socket,handleAck,cardNode,valueLabel,titlebar,logBox,renderGame,renderCardOpponents,renderDiscardStack,scoreList}=api)}
-export function render(api){bind(api);cluedoNoteKey(api.room,api.game)}
+export function render(api){bind(api);renderCluedo(api.room,api.game)}
 export const playerStrip=true;
 
 function cluedoNoteKey(roomId, cardId){return `${roomId}|${cardId}`}
