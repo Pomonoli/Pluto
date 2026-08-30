@@ -8,9 +8,9 @@ Pluto 1 vormt de eerste stabiele hoofdversie van het platform. De app combineert
 
 Games zijn zelfstandige modules onder `games/`. Elke game beheert daar zijn serverlogica, client-entrypoint, metadata, spelregels en resultaten. De server ontdekt deze mappen automatisch, waardoor nieuwe games vanuit de meegeleverde template kunnen worden toegevoegd zonder de centrale registry aan te passen.
 
-## Nieuw in versie 1.0.1
+## Nieuw in versie 1.1.0
 
-De Docker-deployment bevat nu ook de volledige `games/`-map. Daarmee is de opstartcrash uit 1.0.0 opgelost en zijn alle negen games beschikbaar in een gebouwde container. Een regressietest bewaakt dat deze map in toekomstige images aanwezig blijft.
+Games zijn nu werkelijk self-contained: hun renderer, helpers, CSS, spelregels, assets en eventuele extra views of modules leven samen in één pluginmap. Pluto ontdekt en laadt die onderdelen dynamisch, terwijl een defecte plugin alleen de betreffende game uitschakelt. De Minigolf Map Editor is eveneens volledig naar zijn plugin verhuisd en nieuwe productiechecks bewaken alle browser- en Docker-paden.
 
 ## Games
 

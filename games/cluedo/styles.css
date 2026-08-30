@@ -1,0 +1,32 @@
+.cluedo-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px}
+.cluedo-last,.cluedo-reveal,.cluedo-eliminated{
+  border:1px solid var(--border);border-radius:11px;background:#12161c;padding:11px;margin-bottom:12px
+}
+.cluedo-reveal{border-color:rgba(112,212,155,.45);background:rgba(112,212,155,.07)}
+.cluedo-reveal strong,.cluedo-last strong{display:block;font-size:13px;margin-bottom:3px}
+.cluedo-eliminated{color:#e3b0b5;border-color:#6c3e44}
+.cluedo-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;border:1px solid #252b34;border-radius:12px;background:#101319;padding:12px}
+.cluedo-field{display:grid;gap:5px;color:var(--muted);font-size:10px;font-weight:800}
+.cluedo-field select{
+  width:100%;min-height:42px;border:1px solid var(--border);border-radius:9px;background:#171c24;color:var(--text);padding:8px
+}
+.cluedo-field option.cluedo-option-owned,.cluedo-field option.cluedo-option-excluded{color:#e97575}
+.cluedo-field option.cluedo-option-suspect{color:#efc866}
+.cluedo-form .action-row{grid-column:1/-1}
+.cluedo-notes{border:1px solid var(--border);border-radius:14px;background:#11151b;padding:13px;align-self:start}
+.cluedo-note-section+.cluedo-note-section{margin-top:14px}
+.cluedo-note-section h3{font-size:12px;margin:0 0 6px}
+.cluedo-note{width:100%;min-height:35px;border:0;border-bottom:1px solid #252b34;border-radius:0;background:transparent;padding:6px 2px;display:flex;justify-content:space-between;gap:8px;text-align:left;font-size:11px}
+.cluedo-note strong{color:var(--muted)}
+.cluedo-note.owned{opacity:.65}
+.cluedo-note.owned strong{color:#e97575;font-size:9px}
+.cluedo-note.note-excluded strong{color:#e97575}
+.cluedo-note.note-suspect strong{color:#efc866}
+@media(max-width:850px){
+.cluedo-layout{grid-template-columns:1fr}
+.cluedo-notes{order:2}
+}
+@media(max-width:600px){
+.cluedo-form{grid-template-columns:1fr}
+.cluedo-form .action-row{grid-column:1}
+}

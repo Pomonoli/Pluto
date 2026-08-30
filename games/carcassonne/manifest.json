@@ -1,1 +1,14 @@
-{"key":"carcassonne","name":"Carcassonne","description":"Bouw een landschap en scoor met steden, wegen, kloosters en weilanden.","version":"1","icon":"🏰","badge":"2-5","actionLabel":"Nieuw spel","minPlayers":2,"maxPlayers":5,"supportsNpc":true,"realtime":false,"solo":false,"styles":false}
+{
+  "key": "carcassonne",
+  "name": "Carcassonne",
+  "description": "Bouw een landschap en scoor met steden, wegen, kloosters en weilanden.",
+  "version": "2",
+  "icon": "🏰",
+  "badge": "2-5",
+  "actionLabel": "Nieuw spel",
+  "minPlayers": 2,
+  "maxPlayers": 5,
+  "supportsNpc": true,
+  "realtime": false,
+  "solo": false
+}

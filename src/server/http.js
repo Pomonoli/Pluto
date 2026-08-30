@@ -3,8 +3,7 @@
 const path = require('node:path');
 const fs = require('node:fs');
 const express = require('express');
-const { getGame, listGames, listGamePlugins, getGamePlugin } = require('../games');
-const minigolf = require('../../games/minigolf/server');
+const { getGame, listGames, listGamePlugins, getGamePlugin, modules } = require('../games');
 const authDb = require('../db');
 
 function isSecureRequest(req) {
@@ -24,28 +23,6 @@ function requireUser(req, res) {
   return user;
 }
 
-function publicCustomMap(row, viewerUserId = null) {
-  let validation;
-  try {
-    const map = minigolf.sanitizeMapDefinition(row.map, { validate:false });
-    validation = minigolf.validateMapPlayability(map);
-  } catch (error) {
-    validation = { ok:false, errors:[error.message || 'Ongeldige map.'] };
-  }
-
-  return {
-    id:row.id,
-    name:row.name,
-    ownerName:row.ownerName,
-    ownerUserId:row.ownerUserId,
-    createdAt:row.createdAt,
-    updatedAt:row.updatedAt,
-    map:row.map,
-    canEdit:Boolean(viewerUserId && Number(viewerUserId) === Number(row.ownerUserId)),
-    validation
-  };
-}
-
 function configureHttp(app, runtime) {
   app.set('trust proxy', true);
   app.disable('x-powered-by');
@@ -56,16 +33,30 @@ function configureHttp(app, runtime) {
     res.json({ ok:true, games:listGamePlugins() });
   });
 
+  for (const game of modules) game.configureHttp?.({ app, db:authDb, requireUser });
+
   app.get('/game-plugins/:key/:asset', (req, res, next) => {
     const plugin=getGamePlugin(req.params.key);
-    const allowed=req.params.asset==='client.js'?'client.js':req.params.asset==='styles.css'?'styles.css':null;
+    const requested=String(req.params.asset||'');
+    const allowed=/^[a-z0-9_-]+\.js$/i.test(requested)||requested==='styles.css'||requested==='view.html'?requested:null;
     if (!plugin || !allowed) return next();
     const filePath=path.join(plugin.directory,allowed);
     if (!fs.existsSync(filePath)) return next();
     res.setHeader('Cache-Control','no-store');
-    res.type(allowed.endsWith('.js')?'text/javascript':'text/css');
+    res.type(allowed.endsWith('.js')?'text/javascript':allowed.endsWith('.css')?'text/css':'text/html');
     res.sendFile(filePath);
   });
+
+  app.get('/game-plugins/:key/assets/:asset', (req,res,next)=>{
+    const plugin=getGamePlugin(req.params.key),asset=String(req.params.asset||'');
+    if(!plugin||!/^[a-z0-9_-]+\.(?:svg|png|webp)$/i.test(asset))return next();
+    const filePath=path.join(plugin.directory,'assets',asset);
+    if(!fs.existsSync(filePath))return next();
+    res.setHeader('Cache-Control','public, max-age=3600');
+    res.sendFile(filePath);
+  });
+
+  app.use('/game-plugins',(_req,res)=>res.status(404).json({ok:false,error:'Game-pluginbestand niet gevonden.'}));
 
   app.get('/api/auth/me', (req, res) => {
     const user = authDb.getUserFromCookieHeader(req.headers.cookie);
@@ -133,69 +124,6 @@ function configureHttp(app, runtime) {
     });
   });
 
-  app.get('/api/minigolf/maps', (req, res) => {
-    try {
-      const viewer = authDb.getUserFromCookieHeader(req.headers.cookie);
-      res.json({
-        ok:true,
-        maps:authDb.listMinigolfMaps().map((row) => publicCustomMap(row, viewer?.id))
-      });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ ok:false, error:'Maps konden niet geladen worden.' });
-    }
-  });
-
-  app.post('/api/minigolf/maps', (req, res) => {
-    try {
-      const user = requireUser(req, res); if (!user) return;
-      const map = minigolf.sanitizeMapDefinition(req.body?.map || req.body || {});
-      const row = authDb.createMinigolfMap(user.id, map.name, map);
-      res.json({ ok:true, map:publicCustomMap(row, user.id) });
-    } catch (error) {
-      res.status(400).json({ ok:false, error:error.message || 'Map kon niet opgeslagen worden.' });
-    }
-  });
-
-  app.put('/api/minigolf/maps/:id', (req, res) => {
-    try {
-      const user = requireUser(req, res); if (!user) return;
-      const map = minigolf.sanitizeMapDefinition(req.body?.map || req.body || {});
-      const row = authDb.updateMinigolfMap(Number(req.params.id), user.id, map.name, map);
-      if (!row) return res.status(404).json({ ok:false, error:'Map niet gevonden of niet van jou.' });
-      res.json({ ok:true, map:publicCustomMap(row, user.id) });
-    } catch (error) {
-      res.status(400).json({ ok:false, error:error.message || 'Map kon niet aangepast worden.' });
-    }
-  });
-
-  app.delete('/api/minigolf/maps/:id', (req, res) => {
-    const user = requireUser(req, res); if (!user) return;
-    const deleted = authDb.deleteMinigolfMap(Number(req.params.id), user.id);
-    if (!deleted) return res.status(404).json({ ok:false, error:'Map niet gevonden of niet van jou.' });
-    res.json({ ok:true });
-  });
-
-  app.post('/api/minigolf/test-shot', (req, res) => {
-    try {
-      const map = minigolf.sanitizeMapDefinition(req.body?.map || {}, {validate:false});
-      const start = {
-        x:Number(req.body?.ball?.x ?? map.start.x),
-        y:Number(req.body?.ball?.y ?? map.start.y)
-      };
-      const result = minigolf.simulateShot(
-        map,
-        start,
-        Number(req.body?.angle),
-        Number(req.body?.power),
-        Array.isArray(req.body?.removedPropIds) ? req.body.removedPropIds.map(String) : []
-      );
-      res.json({ ok:true, result });
-    } catch (error) {
-      res.status(400).json({ ok:false, error:error.message || 'Testslag mislukt.' });
-    }
-  });
-
   app.get('/api/rooms', (_req, res) => {
     res.setHeader('Cache-Control','no-store');
     res.json({ ok:true, rooms:runtime.openRoomSummaries() });
@@ -226,7 +154,7 @@ function configureHttp(app, runtime) {
     }
   }));
 
-  app.get(['/room/:roomId','/lobby','/leaderboard','/profile/:username','/minigolf/editor'], (_req, res) => {
+  app.get(['/room/:roomId','/lobby','/leaderboard','/profile/:username'], (_req, res) => {
     res.setHeader('Cache-Control','no-store, no-cache, must-revalidate, proxy-revalidate');
     res.sendFile(path.join(publicDir,'index.html'));
   });
@@ -237,4 +165,4 @@ function configureHttp(app, runtime) {
   });
 }
 
-module.exports = { configureHttp, publicCustomMap };
+module.exports = { configureHttp };

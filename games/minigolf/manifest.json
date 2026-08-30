@@ -1,1 +1,15 @@
-{"key":"minigolf","name":"Minigolf","description":"Speel vijf slimme holes met elk een eigen route of gimmick.","version":"1","icon":"⛳","badge":"1-4","actionLabel":"Nieuw spel","minPlayers":1,"maxPlayers":4,"supportsNpc":true,"realtime":false,"solo":false,"styles":false}
+{
+  "key": "minigolf",
+  "name": "Minigolf",
+  "description": "Speel vijf slimme holes met elk een eigen route of gimmick.",
+  "version": "2",
+  "icon": "⛳",
+  "badge": "1-4",
+  "actionLabel": "Nieuw spel",
+  "toolLabel": "Map Editor",
+  "minPlayers": 1,
+  "maxPlayers": 4,
+  "supportsNpc": true,
+  "realtime": false,
+  "solo": false
+}

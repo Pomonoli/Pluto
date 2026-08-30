@@ -8,15 +8,15 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Pluto">
   <title>Pluto</title>
-  <link rel="manifest" href="/manifest.webmanifest?v=1.0.1">
-  <link rel="apple-touch-icon" href="/icons/icon-192-v2.png?v=1.0.1">
-  <link rel="stylesheet" href="/styles.css?v=1.0.1">
+  <link rel="manifest" href="/manifest.webmanifest?v=1.1.0">
+  <link rel="apple-touch-icon" href="/icons/icon-192-v2.png?v=1.1.0">
+  <link rel="stylesheet" href="/styles.css?v=1.1.0">
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
       <button class="brand-button" id="brandButton" type="button" aria-label="Naar Pluto home">
-        <span class="brand-mark" aria-hidden="true"><img class="brand-mark-img" src="/assets/pluto-logo-v2.png?v=1.0.1" alt=""></span>
+        <span class="brand-mark" aria-hidden="true"><img class="brand-mark-img" src="/assets/pluto-logo-v2.png?v=1.1.0" alt=""></span>
         <span class="brand-copy"><strong>Pluto</strong><small>gaming space</small></span>
       </button>
       <div class="top-actions">
@@ -52,15 +52,6 @@
 
         <div class="section-heading games-heading hidden" id="gamesHeading"><div><span class="eyebrow">GAMES</span></div></div>
         <div class="game-grid" id="gameGrid">
-          <article class="game-card"><div class="game-icon">♛</div><div class="game-card-body"><div class="game-title-row"><h3>Hofslag</h3><span class="badge">2-4</span></div><button class="game-info" data-rules-game="hofslag" aria-label="Spelregels van Hofslag" type="button">i</button><button class="primary game-launch" data-game="hofslag" type="button">Nieuw spel</button></div></article>
-          <article class="game-card"><div class="game-icon">21</div><div class="game-card-body"><div class="game-title-row"><h3>Blackjack</h3><span class="badge">1-4</span></div><button class="game-info" data-rules-game="blackjack" aria-label="Spelregels van Blackjack" type="button">i</button><button class="primary game-launch" data-game="blackjack" type="button">Nieuw spel</button></div></article>
-          <article class="game-card"><div class="game-icon">♠</div><div class="game-card-body"><div class="game-title-row"><h3>Solitaire</h3><span class="badge">Solo</span></div><button class="game-info" data-rules-game="solitaire" aria-label="Spelregels van Solitaire" type="button">i</button><button class="primary game-launch" data-game="solitaire" type="button">Spelen</button></div></article>
-          <article class="game-card"><div class="game-icon">👑</div><div class="game-card-body"><div class="game-title-row"><h3>Presidenten</h3><span class="badge">3-4</span></div><button class="game-info" data-rules-game="presidenten" aria-label="Spelregels van Presidenten" type="button">i</button><button class="primary game-launch" data-game="presidenten" type="button">Nieuw spel</button></div></article>
-          <article class="game-card"><div class="game-icon">↻</div><div class="game-card-body"><div class="game-title-row"><h3>Pesten</h3><span class="badge">2-4</span></div><button class="game-info" data-rules-game="pesten" aria-label="Spelregels van Pesten" type="button">i</button><button class="primary game-launch" data-game="pesten" type="button">Nieuw spel</button></div></article>
-          <article class="game-card"><div class="game-icon">♥</div><div class="game-card-body"><div class="game-title-row"><h3>Hartenjagen</h3><span class="badge">4</span></div><button class="game-info" data-rules-game="hartenjagen" aria-label="Spelregels van Hartenjagen" type="button">i</button><button class="primary game-launch" data-game="hartenjagen" type="button">Nieuw spel</button></div></article>
-          <article class="game-card"><div class="game-icon">?</div><div class="game-card-body"><div class="game-title-row"><h3>Cluedo</h3><span class="badge">2-6</span></div><button class="game-info" data-rules-game="cluedo" aria-label="Spelregels van Cluedo" type="button">i</button><button class="primary game-launch" data-game="cluedo" type="button">Nieuw spel</button></div></article>
-          <article class="game-card"><div class="game-icon">🏰</div><div class="game-card-body"><div class="game-title-row"><h3>Carcassonne</h3><span class="badge">2-5</span></div><button class="game-info" data-rules-game="carcassonne" aria-label="Spelregels van Carcassonne" type="button">i</button><button class="primary game-launch" data-game="carcassonne" type="button">Nieuw spel</button></div></article>
-          <article class="game-card"><div class="game-icon">⛳</div><div class="game-card-body"><div class="game-title-row"><h3>Minigolf</h3><span class="badge">1-4</span></div><button class="game-info" data-rules-game="minigolf" aria-label="Spelregels van Minigolf" type="button">i</button><div class="game-card-actions"><button class="primary game-launch" data-game="minigolf" type="button">Nieuw spel</button><button class="secondary" id="minigolfEditorButton" type="button">Map Editor</button></div></div></article>
         </div>
 
         <section class="join-section">
@@ -70,78 +61,6 @@
       </section>
 
 
-
-      <section id="minigolfEditorView" class="view hidden">
-        <div class="editor-heading">
-          <div>
-            <span class="eyebrow">MINIGOLF</span>
-            <h1>Map Editor</h1>
-            <p class="muted">Bouw een map, test de echte physics en voeg ze toe aan de gedeelde map pool.</p>
-          </div>
-          <div class="editor-heading-actions">
-            <button class="secondary" id="newGolfMapButton" type="button">Nieuwe map</button>
-            <button class="primary" id="saveGolfMapButton" type="button">Map opslaan</button>
-          </div>
-        </div>
-
-        <div class="map-editor-layout">
-          <aside class="panel map-library-panel">
-            <div class="panel-heading"><div><span class="eyebrow">MAP POOL</span><h2>Custom maps</h2></div><span class="badge" id="customMapCount">0</span></div>
-            <p class="muted editor-small">De 20 ingebouwde maps blijven altijd bestaan. Custom maps komen automatisch mee in de random pool.</p>
-            <div id="customMapList" class="custom-map-list"></div>
-          </aside>
-
-          <section class="map-editor-main">
-            <div class="panel map-meta-panel">
-              <div class="map-meta-grid">
-                <label>Naam<input id="mapNameInput" maxlength="40" value="Nieuwe map"></label>
-                <label>Moeilijkheid<select id="mapDifficultySelect"><option>Makkelijk</option><option selected>Normaal</option><option>Moeilijk</option><option>Expert</option></select></label>
-                <label>Max slagen<input id="mapMaxStrokesInput" type="number" min="3" max="10" value="5"></label>
-                <div class="map-meta-state"><span class="eyebrow">STATUS</span><strong id="mapSaveState">Niet opgeslagen</strong></div>
-              </div>
-            </div>
-
-            <div class="map-editor-workbench">
-              <div class="map-toolbox panel">
-                <span class="eyebrow">TOOLS</span>
-                <div class="tool-grid" id="mapToolGrid">
-                  <button class="map-tool active" data-tool="select" type="button">↖<span>Selecteer</span></button>
-                  <button class="map-tool" data-tool="start" type="button">▣<span>Startvak</span></button>
-                  <button class="map-tool" data-tool="cup" type="button">⚑<span>Hole</span></button>
-                  <button class="map-tool sand" data-tool="sand" type="button"><i></i><span>Zand</span></button>
-                  <button class="map-tool cement" data-tool="cement" type="button"><i></i><span>Cement</span></button>
-                  <button class="map-tool water" data-tool="water" type="button"><i></i><span>Water</span></button>
-                  <button class="map-tool wall" data-tool="wall" type="button"><i></i><span>Muur</span></button>
-                  <button class="map-tool boost" data-tool="boost" type="button">➜<span>Boost</span></button>
-                  <button class="map-tool asset" data-tool="tree" type="button"><img src="/assets/minigolf/tree.svg" alt=""><span>Boom</span></button>
-                  <button class="map-tool asset" data-tool="tractor" type="button"><img src="/assets/minigolf/tractor.svg" alt=""><span>Tractor</span></button>
-                  <button class="map-tool asset" data-tool="rock" type="button"><img src="/assets/minigolf/rock.svg" alt=""><span>Rots</span></button>
-                  <button class="map-tool asset" data-tool="hay" type="button"><img src="/assets/minigolf/hay.svg" alt=""><span>Hooibaal</span></button>
-                  <button class="map-tool asset" data-tool="windmill" type="button"><img src="/assets/minigolf/windmill.svg" alt=""><span>Molen</span></button>
-                </div>
-                <div class="tool-help" id="mapToolHelp">Klik een object om te selecteren en sleep om te verplaatsen.</div>
-                <button class="ghost danger-text hidden" id="deleteMapObjectButton" type="button">Geselecteerd object verwijderen</button>
-              </div>
-
-              <div class="map-canvas-column">
-                <div class="map-editor-canvas-wrap">
-                  <svg id="mapEditorCanvas" class="map-editor-canvas" viewBox="0 0 900 520" aria-label="Minigolf map canvas"></svg>
-                </div>
-                <div class="editor-testbar">
-                  <div><span class="eyebrow">TEST MODE</span><span id="mapTestHint">Klik Test en sleep eender waar op de map om richting en kracht te kiezen.</span></div>
-                  <div class="action-row"><button class="secondary" id="testGolfMapButton" type="button">Test map</button><button class="ghost hidden" id="resetGolfTestButton" type="button">Reset test</button></div>
-                </div>
-              </div>
-
-              <aside class="panel map-inspector">
-                <span class="eyebrow">INSPECTOR</span>
-                <div id="mapInspectorEmpty" class="muted editor-small">Selecteer een terrein, muur of object.</div>
-                <div id="mapInspectorFields" class="hidden"></div>
-              </aside>
-            </div>
-          </section>
-        </div>
-      </section>
 
       <section id="lobbyBrowserView" class="view hidden">
         <div id="lobbyIdentityBar" class="panel lobby-identity-bar hidden" aria-hidden="true">
@@ -319,6 +238,6 @@
 
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
   <script src="/socket.io/socket.io.js"></script>
-  <script type="module" src="/app.js?v=1.0.1"></script>
+  <script type="module" src="/app.js?v=1.1.0"></script>
 </body>
 </html>

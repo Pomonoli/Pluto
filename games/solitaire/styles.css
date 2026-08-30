@@ -1,0 +1,16 @@
+.solitaire-board{width:100%;max-width:100%;overflow:hidden}
+.sol-top{display:flex;justify-content:space-between;gap:clamp(6px,2vw,18px);min-width:0;margin-bottom:22px}
+.sol-stock-zone,.sol-foundations{display:flex;gap:clamp(4px,1.4vw,10px);min-width:0}
+.sol-pile{width:clamp(34px,11vw,64px);height:auto;aspect-ratio:64/90;border:1px dashed #56606f;border-radius:9px;display:grid;place-items:center;position:relative;flex:0 1 64px;min-width:0}
+.sol-pile>.playing-card{width:100%;height:100%}
+.sol-pile .playing-card .rank,.sol-column .playing-card .rank{position:absolute;top:6px;left:6px;font-size:clamp(13px,4vw,22px)}
+.sol-pile .playing-card .suit,.sol-column .playing-card .suit{position:absolute;top:6px;left:calc(6px + .9em);font-size:clamp(13px,4vw,22px)}
+.sol-pile .playing-card[data-rank="10"] .suit,.sol-column .playing-card[data-rank="10"] .suit{left:calc(6px + 1.5em)}
+.sol-pile.active-target{outline:2px solid var(--accent)}
+.sol-tableau{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:clamp(3px,1.5vw,14px);min-width:0;width:100%;align-items:start}
+.sol-column{min-width:0;min-height:250px;border-radius:8px;position:relative}
+.sol-column .playing-card{position:absolute;left:0;width:100%;max-width:64px;height:auto;aspect-ratio:64/90}
+.sol-info{margin-bottom:12px}
+@media(max-width:760px){
+.solitaire-board{margin:0 -8px;padding:0 8px}
+}

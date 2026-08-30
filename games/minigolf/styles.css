@@ -1,0 +1,217 @@
+.minigolf-layout{display:grid;grid-template-columns:minmax(0,1fr) 285px;gap:14px;align-items:start}
+.minigolf-main{min-width:0}
+.minigolf-course-wrap{border:1px solid var(--border);border-radius:16px;background:#172317;padding:8px;overflow:hidden}
+.minigolf-course{display:block;width:100%;height:auto;aspect-ratio:900/520;touch-action:none;user-select:none;-webkit-user-select:none}
+.golf-world{fill:#56a543}
+.golf-border{fill:none;stroke:#9b6b3d;stroke-width:18;stroke-dasharray:8 4}
+.golf-start{fill:rgba(255,255,255,.04);stroke:rgba(255,255,255,.36);stroke-width:3;stroke-dasharray:5 5}
+.golf-terrain{stroke-width:4}
+.golf-grass{fill:#56a543}
+.golf-cement{fill:#d78fb9;stroke:#a65f89}
+.golf-sand{fill:#e3c878;stroke:#b89c52}
+.golf-water{fill:#3d9bd6;stroke:#2577ad}
+.golf-wall{fill:#8d613b;stroke:#654228;stroke-width:4}
+.golf-cup-shadow{fill:rgba(0,0,0,.18)}
+.golf-cup{fill:#111619;stroke:#050708;stroke-width:3}
+.golf-flag line{stroke:#f1f1e8;stroke-width:4}
+.golf-flag path{fill:#efc742;stroke:#6d5a26;stroke-width:2}
+.golf-ball-shadow{fill:rgba(0,0,0,.28)}
+.golf-ball{stroke:#f5f6f7;stroke-width:3}
+.golf-ball-group.me .golf-ball{stroke-width:5}
+.golf-ball-mark{fill:#11151b;font-size:10px;font-weight:900;text-anchor:middle;pointer-events:none}
+.golf-aim-line{stroke:#fff;stroke-width:5;stroke-linecap:round;stroke-dasharray:12 8;opacity:.9}
+.golf-aim-head{fill:#fff}
+.golf-pull-line{stroke:rgba(255,255,255,.38);stroke-width:3;stroke-linecap:round}
+.golf-aim.hidden{display:none}
+.golf-tree-trunk{fill:#7b5131}
+.golf-tree-crown{fill:#2e7336;stroke:#225b2a;stroke-width:3}
+.golf-tree-crown-2{fill:#3e8b43}
+.golf-tractor-body{fill:#e5a326;stroke:#985f18;stroke-width:3}
+.golf-tractor-cab{fill:#d65e40;stroke:#883727;stroke-width:3}
+.golf-tractor-wheel{fill:#25282c;stroke:#0e1012;stroke-width:3}
+.golf-prop-generic{fill:#78624e}
+.golf-prop{transition:opacity .28s ease,transform .28s ease;transform-box:fill-box;transform-origin:center}
+.golf-prop-disappearing{opacity:.08;transform:scale(.4)}
+.golf-material-legend{display:flex;gap:9px;flex-wrap:wrap;margin-top:8px}
+.golf-material-key{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:9px;font-weight:800}
+.golf-material-key i{display:block;width:13px;height:13px;border-radius:4px;border:1px solid rgba(255,255,255,.18)}
+.golf-key-grass{background:#56a543}
+.golf-key-cement{background:#d78fb9}
+.golf-key-sand{background:#e3c878}
+.golf-key-water{background:#3d9bd6}
+.minigolf-hint{margin-top:8px;border:1px solid #2d3641;border-radius:10px;background:#11161c;padding:9px 11px;color:var(--muted);font-size:11px}
+.minigolf-hole-summary{margin-top:8px;border:1px solid rgba(231,198,111,.3);border-radius:10px;background:rgba(231,198,111,.06);padding:9px 11px;font-size:11px}
+.minigolf-scorecard{border:1px solid var(--border);border-radius:14px;background:#11151b;padding:13px;position:sticky;top:84px}
+.minigolf-scorecard h3{font-size:16px;margin:3px 0 10px}
+.minigolf-hole-row{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin:12px 0}
+.minigolf-hole-row span{border:1px solid #303743;border-radius:6px;background:#151a21;padding:6px 0;text-align:center;font-size:10px;font-weight:900}
+.minigolf-hole-row span.current{border-color:var(--accent);background:rgba(231,198,111,.1)}
+@media(max-width:900px){
+.minigolf-layout{grid-template-columns:1fr}
+.minigolf-scorecard{position:static}
+.minigolf-course-wrap{padding:5px}
+}
+@media(max-width:520px){
+.minigolf-course-wrap{margin-left:-5px;margin-right:-5px}
+.minigolf-scorecard{padding:10px}
+.minigolf-hint{font-size:10px}
+.golf-ball-mark{font-size:12px}
+}
+@media(prefers-reduced-motion:reduce){
+.golf-prop{transition:none}
+}
+.editor-heading{display:flex;justify-content:space-between;align-items:end;gap:16px;margin:14px 0}
+.editor-heading h1{font-size:34px;margin:2px 0 5px}
+.editor-heading-actions{display:flex;gap:8px;flex-wrap:wrap}
+.map-editor-layout{display:grid;grid-template-columns:240px minmax(0,1fr);gap:14px;align-items:start}
+.map-library-panel{position:sticky;top:82px}
+.editor-small{font-size:10px;line-height:1.45}
+.custom-map-list{display:grid;gap:7px;margin-top:10px;max-height:620px;overflow:auto}
+.custom-map-item{border:1px solid #29313b;border-radius:10px;background:#11161c;padding:9px}
+.custom-map-item>div:first-child{display:grid;gap:2px}
+.custom-map-item strong{font-size:11px}
+.custom-map-item span{font-size:9px;color:var(--muted)}
+.custom-map-actions{display:flex;gap:4px;margin-top:7px;flex-wrap:wrap}
+.custom-map-actions button{min-height:32px;padding:5px 8px;font-size:9px}
+.map-editor-main{min-width:0}
+.map-meta-panel{padding:10px;margin-bottom:10px}
+.map-meta-grid{display:grid;grid-template-columns:2fr 1fr .7fr 1fr;gap:9px;align-items:end}
+.map-meta-grid label{display:grid;gap:4px;color:var(--muted);font-size:9px;font-weight:800}
+.map-meta-grid input,.map-meta-grid select{min-height:38px}
+.map-meta-state{min-height:38px;border:1px solid #2b333d;border-radius:9px;padding:6px 9px;background:#101419}
+.map-meta-state strong{display:block;font-size:10px;margin-top:1px}
+.map-editor-workbench{display:grid;grid-template-columns:150px minmax(0,1fr) 180px;gap:10px;align-items:start}
+.map-toolbox,.map-inspector{padding:10px;position:sticky;top:82px}
+.tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:7px}
+.map-tool{min-height:58px;border:1px solid #303945;border-radius:8px;background:#141920;color:var(--text);padding:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:15px}
+.map-tool span{font-size:8px;font-weight:800;color:var(--muted)}
+.map-tool.active{border-color:var(--accent);background:rgba(231,198,111,.08)}
+.map-tool i{display:block;width:23px;height:15px;border-radius:4px}
+.map-tool.sand i{background:#e3c878}
+.map-tool.cement i{background:#d78fb9}
+.map-tool.water i{background:#3d9bd6}
+.map-tool.wall i{background:#8d613b}
+.map-tool.asset img{width:34px;height:30px;object-fit:contain}
+.tool-grid.disabled{opacity:.38;pointer-events:none}
+.tool-help{font-size:9px;color:var(--muted);line-height:1.4;margin:9px 0}
+.map-editor-canvas-wrap{border:1px solid var(--border);border-radius:14px;background:#172317;padding:6px;overflow:hidden}
+.map-editor-canvas{display:block;width:100%;height:auto;aspect-ratio:900/520;touch-action:none;user-select:none}
+.editor-world{fill:#56a543}
+.editor-object{cursor:grab}
+.editor-object:active{cursor:grabbing}
+.editor-hitbox{fill:transparent;stroke:transparent;pointer-events:all}
+.editor-start{fill:#f0c94d;stroke:#fff;stroke-width:4;cursor:grab}
+.editor-flag-line{stroke:#f1f1e8;stroke-width:4}
+.editor-flag{fill:#efc742;stroke:#6d5a26;stroke-width:2}
+.editor-selection{fill:none;stroke:#fff;stroke-width:3;stroke-dasharray:9 6;pointer-events:none}
+.editor-draft{fill:rgba(255,255,255,.12);stroke:#fff;stroke-width:2;stroke-dasharray:6 5;pointer-events:none}
+.draft-sand{fill:rgba(227,200,120,.45)}
+.draft-cement{fill:rgba(215,143,185,.45)}
+.draft-water{fill:rgba(61,155,214,.45)}
+.draft-wall{fill:rgba(141,97,59,.65)}
+.map-inspector h3{font-size:12px;margin:7px 0}
+.inspector-field{display:grid;grid-template-columns:1fr 70px;gap:6px;align-items:center;margin-top:6px;color:var(--muted);font-size:9px}
+.inspector-field input{min-height:34px;padding:5px}
+.inspector-note{font-size:9px;color:var(--muted);line-height:1.4;margin-top:9px}
+.editor-testbar{border:1px solid #2d3641;border-radius:10px;background:#11161c;margin-top:7px;padding:8px 10px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.editor-testbar>div:first-child{display:grid;gap:2px}
+.editor-testbar span:last-child{font-size:9px;color:var(--muted)}
+.editor-test-ball{stroke-width:4}
+.map-canvas-column{min-width:0}
+@media(max-width:1100px){
+.map-editor-layout{grid-template-columns:1fr}
+.map-library-panel{position:static}
+.custom-map-list{grid-template-columns:repeat(2,minmax(0,1fr));max-height:none}
+.map-editor-workbench{grid-template-columns:140px minmax(0,1fr)}
+.map-inspector{position:static;grid-column:1/-1}
+.map-toolbox{position:sticky}
+}
+@media(max-width:760px){
+.editor-heading{align-items:stretch;flex-direction:column}
+.editor-heading-actions>*{flex:1}
+.map-meta-grid{grid-template-columns:1fr 1fr}
+.map-editor-workbench{grid-template-columns:1fr}
+.map-toolbox{position:static}
+.tool-grid{grid-template-columns:repeat(4,1fr)}
+.map-tool{min-height:54px}
+.map-inspector{grid-column:auto}
+.custom-map-list{grid-template-columns:1fr}
+.editor-testbar{align-items:stretch;flex-direction:column}
+}
+@media(max-width:460px){
+.tool-grid{grid-template-columns:repeat(3,1fr)}
+.map-meta-grid{grid-template-columns:1fr}
+.map-editor-canvas-wrap{margin-left:-5px;margin-right:-5px;padding:3px}
+.editor-heading h1{font-size:28px}
+}
+.inspector-field select{min-height:34px;border:1px solid var(--border);border-radius:8px;background:#12171d;color:var(--text);padding:5px}
+.minigolf-mode .app-shell{width:100%;max-width:none;padding:0 8px 18px}
+.minigolf-mode .topbar{min-height:52px;margin-bottom:6px;padding-left:4px;padding-right:4px}
+.minigolf-mode .brand-button small{display:none}
+.minigolf-mode #lobbyBrowserButton,.minigolf-mode #leaderboardButton,.minigolf-mode #installButton,.minigolf-mode #accountButton{display:none}
+.minigolf-mode .room-heading{padding:8px 12px;margin-bottom:6px;border-radius:10px}
+.minigolf-mode .room-heading h1{font-size:16px}
+.minigolf-mode .room-heading .share-box{display:none}
+.minigolf-mode .room-layout{grid-template-columns:minmax(0,1fr) 250px;gap:8px}
+.minigolf-mode .game-panel{padding:5px}
+.minigolf-mode .chat-panel{padding:8px}
+.minigolf-mode .chat-messages{min-height:180px;max-height:390px}
+.golf-game-screen{border:1px solid #284318;border-radius:14px;overflow:hidden;background:#4f951b}
+.golf-hud{background:#4c970d;border-bottom:2px solid rgba(20,65,4,.35);padding:8px 10px 7px;display:grid;gap:7px}
+.golf-player-hud{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.golf-player-hud::-webkit-scrollbar{display:none}
+.golf-player-card{flex:1 0 132px;min-width:0;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:rgba(40,104,7,.42);padding:6px 7px;display:grid;grid-template-columns:34px minmax(0,1fr) 24px;gap:7px;align-items:center;color:#fff}
+.golf-player-card.active{outline:2px solid rgba(255,255,255,.75);background:rgba(79,133,13,.8)}
+.golf-player-card.me{box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+.golf-avatar{width:34px;height:34px;border:2px solid rgba(255,255,255,.8);border-radius:50%;display:grid;place-items:center;color:#16220d;font-weight:1000}
+.golf-player-info{min-width:0;display:grid}
+.golf-player-info strong{font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.golf-player-info small{font-size:9px;font-weight:900}
+.golf-point-badge{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#e84b62;color:#fff;font-size:10px}
+.golf-hole-hud{display:flex;justify-content:center;gap:10px;align-items:center;color:#fff;font-size:10px;font-weight:900}
+.golf-hole-hud b{border-radius:999px;background:rgba(255,255,255,.2);padding:3px 9px}
+.golf-full-course-wrap{background:#60aa12;padding:6px}
+.golf-full-course{display:block;width:100%;height:auto;aspect-ratio:900/520;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:9px}
+.golf-start-zone{fill:rgba(255,255,255,.10);stroke:rgba(255,255,255,.68);stroke-width:3;stroke-dasharray:8 5}
+.golf-start-zone.placing{fill:rgba(255,255,255,.17);stroke-width:4}
+.golf-start-label{fill:rgba(255,255,255,.78);font-size:10px;text-anchor:middle;font-weight:1000;letter-spacing:.12em;pointer-events:none}
+.golf-placement-mode{cursor:crosshair}
+.golf-boost-bg{fill:#4e8615;stroke:#85c844;stroke-width:2}
+.golf-boost-arrow{fill:none;stroke:#d8f2ba;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.golf-power-label-bg{fill:rgba(14,25,10,.86);stroke:rgba(255,255,255,.48);stroke-width:1}
+.golf-power-label{fill:#fff;text-anchor:middle;font-size:13px;font-weight:1000}
+.golf-game-footer{background:#294d10;color:#eaf8df;padding:8px 10px;display:grid;gap:5px}
+.golf-status-line{font-size:11px;font-weight:900;text-align:center}
+.golf-mini-scores{display:flex;justify-content:center;gap:7px;flex-wrap:wrap}
+.golf-mini-scores span{font-size:9px;border-radius:999px;background:rgba(255,255,255,.09);padding:3px 7px}
+.map-tool.boost{color:#d8f2ba}
+.editor-start-zone{fill:rgba(255,255,255,.12);stroke:#fff;stroke-width:3;stroke-dasharray:8 5;cursor:grab}
+.draft-start{fill:rgba(255,255,255,.16)}
+.draft-boost{fill:rgba(94,145,25,.5)}
+@media(max-width:980px){
+.minigolf-mode .room-layout{grid-template-columns:1fr}
+.minigolf-mode .chat-panel{position:static}
+}
+@media(max-width:600px){
+.minigolf-mode .app-shell{padding-left:0;padding-right:0}
+.minigolf-mode .topbar{padding-left:7px;padding-right:7px}
+.minigolf-mode .room-heading{margin:0 6px 5px}
+.minigolf-mode .game-panel{border-left:0;border-right:0;border-radius:0;padding:0}
+.golf-game-screen{border-left:0;border-right:0;border-radius:0}
+.golf-hud{padding:6px}
+.golf-player-card{flex-basis:105px;grid-template-columns:29px minmax(0,1fr) 21px;padding:5px;gap:5px}
+.golf-avatar{width:29px;height:29px;font-size:10px}
+.golf-point-badge{width:21px;height:21px;font-size:9px}
+.golf-player-info strong{font-size:9px}
+.golf-player-info small{font-size:8px}
+.golf-hole-hud{font-size:9px;gap:5px}
+.golf-full-course-wrap{padding:2px}
+.golf-game-footer{padding:7px}
+.minigolf-mode .chat-panel{margin:6px}
+}
+.golf-world{fill:#66b831}
+.golf-border{stroke:#82552f;stroke-width:20;filter:drop-shadow(0 2px 1px rgba(0,0,0,.18))}
+.golf-sand{filter:drop-shadow(inset 0 0 4px rgba(0,0,0,.15))}
+.golf-water{stroke-width:5}
+.golf-wall{filter:drop-shadow(0 3px 2px rgba(0,0,0,.25))}
+.golf-boost-bg{filter:drop-shadow(0 2px 2px rgba(0,0,0,.22))}

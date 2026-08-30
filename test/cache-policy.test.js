@@ -9,8 +9,9 @@ const version=require(path.join(root,'package.json')).version;
 test('frontend versioneert ook ES module imports',()=>{
   const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
   assert.ok(app.includes(`game-ui.js?v=${version}`));
-  assert.ok(app.includes(`map-editor.js?v=${version}`));
   assert.match(app,/import\(game\.clientUrl\)/);
+  const plugins=require('../src/games').listGamePlugins();
+  assert.ok(plugins.every(plugin=>plugin.clientUrl.includes(`v=${plugin.version}`)&&plugin.styleUrl.includes(`v=${plugin.version}`)));
 });
 
 test('service worker forceert updates buiten browsercache',()=>{

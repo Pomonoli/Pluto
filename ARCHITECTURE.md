@@ -1,63 +1,40 @@
 # Architectuur
 
-v0.9 is een structurele refactor. Er zijn bewust geen nieuwe spelregels of features toegevoegd.
+Pluto gebruikt een lichte pluginarchitectuur zonder buildstap of frontendframework.
 
-## Backend
+## Game-plugins
 
-```text
-server.js
-└── bootstrap / dependency wiring
-
-src/
-├── server/
-│   ├── http.js          Express routes + static app
-│   ├── realtime.js      rooms + Socket.IO lifecycle
-│   └── maintenance.js   database backups
-├── minigolf.js          Minigolf game engine
-├── minigolf/
-│   └── generator.js     smart procedural map archetypes
-├── db.js                persistence
-├── results.js           match → leaderboard result conversion
-└── <game>.js            one server-authoritative engine per game
-```
-
-### Regels
-
-- `server.js` bevat geen businesslogica.
-- HTTP kent geen Socket.IO eventimplementaties.
-- Realtime roombeheer kent geen Express routes.
-- Minigolf mapgeneratie staat los van de physics/game-engine.
-- Iedere game blijft server-authoritative.
-
-## Frontend
+Elke game staat volledig onder `games/<game>/`:
 
 ```text
-public/
-├── app.js
-└── js/
-    ├── rules.js         statische spelregels
-    ├── game-ui.js       game renderers + game-specific UI
-    └── map-editor.js    Minigolf Map Editor
+client.js       browserrenderer en client-hooks
+server.js       server-authoritatieve spelregels
+manifest.json   metadata en cacheversie
+rules.html      spelregels-popup
+styles.css      uitsluitend game-specifieke styling
+assets/         optionele eigen afbeeldingen
 ```
 
-`app.js` is de platform-controller: routing, auth, lobby, room lifecycle, chat en event wiring.
+Extra modules en views mogen in dezelfde map staan. Minigolf gebruikt zo ook `map-editor.js`, `view.html`, `http.js`, `generator.js` en `assets/`.
 
-Game-specifieke rendering zit niet meer tussen account/lobby/router-code.
-De Map Editor heeft een eigen module.
+`src/games.js` ontdekt plugins bij het starten. Express serveert browserbestanden veilig onder `/game-plugins/<game>/`. De frontend haalt de registry op via `/api/game-plugins` en laadt clients, CSS en eventuele views dynamisch. Een defecte clientmodule schakelt alleen de betreffende game uit.
 
-## Waarom geen framework/build step?
+## Gedeeld platform
 
-Voor deze homelab-app is een React/Vite/Webpack-stack niet nodig. ES modules in de browser en CommonJS in Node houden deployment op:
+- `server.js`: bootstrap en generieke dependency-wiring.
+- `src/server/http.js`: gedeelde Express-routes en veilige plugin-serving.
+- `src/server/realtime.js`: generieke room- en Socket.IO-lifecycle met optionele game-hooks.
+- `src/db.js`: accounts, sessies, statistieken en persistente opslag.
+- `public/app.js`: routing, auth, lobby, rooms en dynamische pluginloader.
+- `public/js/game-ui.js`: rendererregistratie en werkelijk gedeelde UI-helpers.
+- `public/styles.css`: Pluto-shell en gedeelde componenten.
+
+Een game toevoegen of verwijderen vereist geen centrale registrywijziging. Alles wat maar door één game wordt gebruikt hoort in zijn pluginmap.
+
+## Deployment
+
+De Dockerfile kopieert zowel `src/`, `public/` als de volledige `games/`-map naar `/app`. Browsercode heeft geen compilatiestap; lokaal en in Docker worden dus exact dezelfde bestanden en URL's gebruikt.
 
 ```bash
 docker compose up -d --build
 ```
-
-Er is dus nog steeds:
-- één container
-- geen frontend build pipeline
-- geen extra database-server
-- geen Redis
-- geen package-manager tooling op de client
-
-Dat is bewust: modulair waar het regressies voorkomt, simpel waar extra infrastructuur niets oplevert.

@@ -1,0 +1,20 @@
+.pest-top{display:flex;gap:18px;align-items:center;justify-content:center;min-height:170px}
+.pest-direction{font-size:32px;color:var(--muted)}
+.pesten-fan .playing-card{margin-right:-17px}
+.pesten-fan .playing-card:last-child{margin-right:0}
+.pesten-fan .playing-card[aria-disabled="true"]{cursor:default;filter:saturate(.38) brightness(.84);opacity:1}
+.pesten-fan .playing-card .rank{position:absolute;top:8px;left:8px;font-size:19px}
+.pesten-fan .playing-card .suit{position:absolute;top:29px;left:8px;font-size:15px}
+.pest-top .playing-card{
+  animation:cardArrive .18s ease-out
+}
+@media(prefers-reduced-motion:reduce){
+.pest-top .playing-card{animation:none!important}
+}
+.pest-top{max-width:100%}
+.pest-top{flex-wrap:wrap}
+.pesten-current-suit{font-size:clamp(17px,5vw,24px);white-space:nowrap}
+@media(max-width:480px){
+.pesten-fan{padding-left:4px;padding-right:18px}
+.pesten-fan .playing-card{margin-right:-13px}
+}

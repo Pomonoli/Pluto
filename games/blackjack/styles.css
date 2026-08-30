@@ -1,0 +1,43 @@
+.blackjack-table{display:grid;gap:18px}
+.blackjack-player{border:1px solid var(--border);border-radius:12px;background:#12161c;padding:12px}
+.blackjack-player.active{border-color:var(--accent)}
+.blackjack-meta{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px}
+.blackjack-actions{margin-top:12px;display:flex;gap:8px}
+@media(max-width:480px){
+.blackjack-actions{flex-wrap:wrap}
+}
+.blackjack-table .playing-card{
+  animation:cardArrive .18s ease-out
+}
+.blackjack-player.active{transition:border-color .15s ease,background .15s ease}
+@media(prefers-reduced-motion:reduce){
+.blackjack-table .playing-card{animation:none!important}
+}
+.blackjack-player{
+  background:rgba(7,9,17,.64);
+  border-color:rgba(222,219,230,.12);
+}
+.blackjack-wallet{margin-bottom:12px;padding:12px 14px;display:grid;grid-template-columns:auto 1fr auto;align-items:baseline;gap:10px;border:1px solid rgba(238,216,205,.13);border-radius:13px;background:rgba(228,147,114,.055)}
+.blackjack-wallet span{color:#aaa5ad;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+.blackjack-wallet strong{font-size:24px;color:#efb89d}
+.blackjack-wallet small{color:#b9b2b2}
+.blackjack-settlement{margin-bottom:12px;padding:13px 14px;display:grid;gap:4px;border:1px solid rgba(226,163,134,.28);border-radius:13px;background:rgba(226,163,134,.08)}
+.blackjack-settlement strong{color:#f0c0a8}
+.blackjack-settlement span{font-size:12px;line-height:1.45;color:#e8dfda}
+.blackjack-settlement small{color:#aaa5ad}
+.blackjack-hand{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.blackjack-hand .card-row{min-width:0;flex:1}
+.blackjack-total{flex:0 0 auto;min-width:46px;text-align:center;font-size:32px;line-height:1;color:#f4eee9}
+.blackjack-split-hand+.blackjack-split-hand{margin-top:10px;padding-top:10px;border-top:1px solid rgba(238,216,205,.12)}
+.blackjack-split-hand>small{display:block;margin-bottom:7px;color:#b9b2b2;font-weight:700}
+.blackjack-titlebar>div:first-child,.blackjack-titlebar h2{white-space:nowrap}
+.blackjack-titlebar .game-status{margin-left:auto;text-align:right;max-width:150px}
+.blackjack-round-result{text-align:center;color:#f0c0a8;font-size:17px;font-weight:850;line-height:1.35}
+@media(max-width:480px){
+.blackjack-titlebar{gap:8px}
+.blackjack-titlebar h2{font-size:19px}
+.blackjack-titlebar .game-status{font-size:11px}
+.blackjack-wallet{grid-template-columns:auto 1fr auto}
+.blackjack-wallet small{grid-column:auto}
+.blackjack-actions>*{flex:1}
+}

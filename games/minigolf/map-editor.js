@@ -1,8 +1,9 @@
 export function createMapEditor(ctx) {
   const {
-    state, els, E, toast, openAccount, hideMainViews,
+    state:session, els, E, toast, openAccount, hideMainViews,
     svgEl, minigolfPathPoint, minigolfTerrainNode, minigolfBoostNode
   } = ctx;
+  let editorState=null;
 
 function newEditorMap() {
   return {
@@ -13,12 +14,12 @@ function newEditorMap() {
 }
 
 function ensureMapEditor() {
-  if(state.mapEditor){state.mapEditor.map=ensureEditorV8Map(state.mapEditor.map);return state.mapEditor}
-  state.mapEditor={
+  if(editorState){editorState.map=ensureEditorV8Map(editorState.map);return editorState}
+  editorState={
     id:null, canEdit:false, map:ensureEditorV8Map(newEditorMap()), maps:[], tool:'select', selected:null,
     dirty:false, testMode:false, testBall:null, testRemovedPropIds:[], testAnimation:null, drawDraft:null
   };
-  return state.mapEditor;
+  return editorState;
 }
 
 function cloneJson(value){return JSON.parse(JSON.stringify(value))}
@@ -67,7 +68,7 @@ function editorDeleteSelection(){
   const list=s.kind==='terrain'?ed.map.terrain:s.kind==='wall'?ed.map.walls:s.kind==='boost'?ed.map.boosts:ed.map.props;
   list.splice(s.index,1);ed.selected=null;editorMarkDirty();renderMapEditorCanvas();renderMapInspector();
 }
-function editorAssetHref(kind){return `/assets/minigolf/${kind}.svg`}
+function editorAssetHref(kind){return `/game-plugins/minigolf/assets/${kind}.svg`}
 function renderEditorProp(prop,index){
   const g=svgEl('g',{'data-editor-key':`prop:${index}`,class:'editor-object editor-prop'});
   if(prop.shape==='circle'){
@@ -174,11 +175,11 @@ function openCustomMap(row){const ed=ensureMapEditor();ed.map=ensureEditorV8Map(
 async function deleteCustomMap(row){if(!confirm(`Map “${row.name}” verwijderen?`))return;const response=await fetch(`/api/minigolf/maps/${row.id}`,{method:'DELETE'}),data=await response.json();if(!data.ok)return toast(data.error||'Verwijderen mislukt.');if(ensureMapEditor().id===row.id)resetEditorMap();await loadCustomMapLibrary();toast('Map verwijderd.')}
 function resetEditorMap(){const ed=ensureMapEditor();ed.id=null;ed.canEdit=false;ed.map=newEditorMap();ed.selected=null;ed.dirty=false;ed.testMode=false;ed.testBall=null;ed.testRemovedPropIds=[];syncEditorMetaFromMap();selectEditorTool('select');renderMapInspector()}
 async function saveEditorMap(){
-  if(!state.authUser){openAccount();toast('Log in om custom maps op te slaan.');return}const ed=ensureMapEditor();syncEditorMetaToMap();const method=ed.id&&ed.canEdit?'PUT':'POST',url=method==='PUT'?`/api/minigolf/maps/${ed.id}`:'/api/minigolf/maps';els.saveGolfMapButton.disabled=true;els.saveGolfMapButton.textContent='Opslaan…';
+  if(!session.authUser){openAccount();toast('Log in om custom maps op te slaan.');return}const ed=ensureMapEditor();syncEditorMetaToMap();const method=ed.id&&ed.canEdit?'PUT':'POST',url=method==='PUT'?`/api/minigolf/maps/${ed.id}`:'/api/minigolf/maps';els.saveGolfMapButton.disabled=true;els.saveGolfMapButton.textContent='Opslaan…';
   try{const response=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify({map:ed.map})}),data=await response.json();if(!data.ok)throw new Error(data.error||'Opslaan mislukt.');ed.id=data.map.id;ed.canEdit=true;ed.map=ensureEditorV8Map(cloneJson(data.map.map));ed.dirty=false;syncEditorMetaFromMap();renderMapEditorCanvas();await loadCustomMapLibrary();toast('Map opgeslagen en toegevoegd aan de map pool.')}catch(error){toast(error.message)}finally{els.saveGolfMapButton.disabled=false;els.saveGolfMapButton.textContent='Map opslaan'}
 }
 async function showMinigolfEditor(){
-  if(state.room)return toast('Verlaat eerst de room.');hideMainViews();els.minigolfEditorView.classList.remove('hidden');els.rulesButton.classList.add('hidden');els.leaveButton.classList.add('hidden');const ed=ensureMapEditor();syncEditorMetaFromMap();renderMapEditorCanvas();renderMapInspector();await loadCustomMapLibrary();
+  if(session.room)return toast('Verlaat eerst de room.');hideMainViews();els.minigolfEditorView.classList.remove('hidden');els.rulesButton.classList.add('hidden');els.leaveButton.classList.add('hidden');const ed=ensureMapEditor();syncEditorMetaFromMap();renderMapEditorCanvas();renderMapInspector();await loadCustomMapLibrary();
 }
 
 

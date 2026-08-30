@@ -1,0 +1,71 @@
+<section id="minigolfEditorView" class="view hidden">
+        <div class="editor-heading">
+          <div>
+            <span class="eyebrow">MINIGOLF</span>
+            <h1>Map Editor</h1>
+            <p class="muted">Bouw een map, test de echte physics en voeg ze toe aan de gedeelde map pool.</p>
+          </div>
+          <div class="editor-heading-actions">
+            <button class="secondary" id="newGolfMapButton" type="button">Nieuwe map</button>
+            <button class="primary" id="saveGolfMapButton" type="button">Map opslaan</button>
+          </div>
+        </div>
+
+        <div class="map-editor-layout">
+          <aside class="panel map-library-panel">
+            <div class="panel-heading"><div><span class="eyebrow">MAP POOL</span><h2>Custom maps</h2></div><span class="badge" id="customMapCount">0</span></div>
+            <p class="muted editor-small">De 20 ingebouwde maps blijven altijd bestaan. Custom maps komen automatisch mee in de random pool.</p>
+            <div id="customMapList" class="custom-map-list"></div>
+          </aside>
+
+          <section class="map-editor-main">
+            <div class="panel map-meta-panel">
+              <div class="map-meta-grid">
+                <label>Naam<input id="mapNameInput" maxlength="40" value="Nieuwe map"></label>
+                <label>Moeilijkheid<select id="mapDifficultySelect"><option>Makkelijk</option><option selected>Normaal</option><option>Moeilijk</option><option>Expert</option></select></label>
+                <label>Max slagen<input id="mapMaxStrokesInput" type="number" min="3" max="10" value="5"></label>
+                <div class="map-meta-state"><span class="eyebrow">STATUS</span><strong id="mapSaveState">Niet opgeslagen</strong></div>
+              </div>
+            </div>
+
+            <div class="map-editor-workbench">
+              <div class="map-toolbox panel">
+                <span class="eyebrow">TOOLS</span>
+                <div class="tool-grid" id="mapToolGrid">
+                  <button class="map-tool active" data-tool="select" type="button">↖<span>Selecteer</span></button>
+                  <button class="map-tool" data-tool="start" type="button">▣<span>Startvak</span></button>
+                  <button class="map-tool" data-tool="cup" type="button">⚑<span>Hole</span></button>
+                  <button class="map-tool sand" data-tool="sand" type="button"><i></i><span>Zand</span></button>
+                  <button class="map-tool cement" data-tool="cement" type="button"><i></i><span>Cement</span></button>
+                  <button class="map-tool water" data-tool="water" type="button"><i></i><span>Water</span></button>
+                  <button class="map-tool wall" data-tool="wall" type="button"><i></i><span>Muur</span></button>
+                  <button class="map-tool boost" data-tool="boost" type="button">➜<span>Boost</span></button>
+                  <button class="map-tool asset" data-tool="tree" type="button"><img src="/game-plugins/minigolf/assets/tree.svg" alt=""><span>Boom</span></button>
+                  <button class="map-tool asset" data-tool="tractor" type="button"><img src="/game-plugins/minigolf/assets/tractor.svg" alt=""><span>Tractor</span></button>
+                  <button class="map-tool asset" data-tool="rock" type="button"><img src="/game-plugins/minigolf/assets/rock.svg" alt=""><span>Rots</span></button>
+                  <button class="map-tool asset" data-tool="hay" type="button"><img src="/game-plugins/minigolf/assets/hay.svg" alt=""><span>Hooibaal</span></button>
+                  <button class="map-tool asset" data-tool="windmill" type="button"><img src="/game-plugins/minigolf/assets/windmill.svg" alt=""><span>Molen</span></button>
+                </div>
+                <div class="tool-help" id="mapToolHelp">Klik een object om te selecteren en sleep om te verplaatsen.</div>
+                <button class="ghost danger-text hidden" id="deleteMapObjectButton" type="button">Geselecteerd object verwijderen</button>
+              </div>
+
+              <div class="map-canvas-column">
+                <div class="map-editor-canvas-wrap">
+                  <svg id="mapEditorCanvas" class="map-editor-canvas" viewBox="0 0 900 520" aria-label="Minigolf map canvas"></svg>
+                </div>
+                <div class="editor-testbar">
+                  <div><span class="eyebrow">TEST MODE</span><span id="mapTestHint">Klik Test en sleep eender waar op de map om richting en kracht te kiezen.</span></div>
+                  <div class="action-row"><button class="secondary" id="testGolfMapButton" type="button">Test map</button><button class="ghost hidden" id="resetGolfTestButton" type="button">Reset test</button></div>
+                </div>
+              </div>
+
+              <aside class="panel map-inspector">
+                <span class="eyebrow">INSPECTOR</span>
+                <div id="mapInspectorEmpty" class="muted editor-small">Selecteer een terrein, muur of object.</div>
+                <div id="mapInspectorFields" class="hidden"></div>
+              </aside>
+            </div>
+          </section>
+        </div>
+      </section>

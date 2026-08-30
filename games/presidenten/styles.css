@@ -1,0 +1,31 @@
+.presidenten-fan .playing-card[aria-disabled="true"]{cursor:default;filter:saturate(.38) brightness(.84);opacity:1}
+.presidenten-fan .playing-card .rank{position:absolute;top:8px;left:8px;font-size:19px}
+.presidenten-fan .playing-card .suit{position:absolute;top:29px;left:8px;font-size:15px}
+@media(max-width:700px){
+.presidenten-surface{padding:10px;min-height:0}
+.presidenten-center{min-height:88px}
+.presidenten-surface .score-list{gap:5px}
+.presidenten-surface .score-row{padding:7px 8px}
+.presidenten-hand{margin-top:12px;padding-top:10px}
+.presidenten-fan{
+    min-height:118px;
+    padding:12px 18px 22px 5px;
+    scroll-snap-type:x proximity;
+    overscroll-behavior-x:contain
+  }
+.presidenten-fan .playing-card{
+    width:60px;
+    height:86px;
+    margin-right:-15px;
+    scroll-snap-align:start
+  }
+.presidenten-fan .playing-card.selected{transform:translateY(-13px)}
+.presidenten-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:5px}
+.presidenten-actions button{width:100%;min-height:46px}
+}
+@media(max-width:430px){
+.presidenten-fan .playing-card{width:58px;height:82px;margin-right:-12px}
+.presidenten-fan{padding-right:12px}
+}
+.presidenten-play-area{display:grid;grid-template-columns:minmax(92px,118px) minmax(0,1fr);align-items:center;gap:10px;margin:10px 0}
+.presidenten-play-area>.presidenten-center:only-child{grid-column:1/-1}

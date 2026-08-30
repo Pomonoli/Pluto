@@ -126,6 +126,14 @@ function setCustomMapProvider(provider) {
   customMapProvider = typeof provider === 'function' ? provider : () => [];
 }
 
+function configure({db}){
+  setCustomMapProvider(()=>db.listMinigolfMaps().map(row=>({id:`custom-${row.id}`,...row.map,ownerName:row.ownerName})));
+}
+
+function configureHttp(context){
+  require('./http').configureHttp(module.exports,context);
+}
+
 function terrainAt(hole, point) {
   for (const zone of hole.terrain || []) {
     if (zone.type === 'water' && insideZone(point, zone, -BALL_RADIUS * 0.2)) return 'water';
@@ -974,7 +982,7 @@ function serialize(game,requesterId,connected){
 }
 
 module.exports={
-  meta,MATERIALS,selectCourse,combinedMapPool,buildSmartPool,customMapPool,setCustomMapProvider,
+  meta,MATERIALS,selectCourse,combinedMapPool,buildSmartPool,customMapPool,setCustomMapProvider,configure,configureHttp,
   sanitizeMapDefinition,validateMapPlayability,normalizeRuntimeMap,
   createGame,handleAction,serialize,tick,simulateShot,chooseNpcShot,scoreHole,terrainAt,
   isPlacementValid,activateLastPlayerRule,

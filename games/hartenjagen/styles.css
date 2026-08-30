@@ -1,0 +1,39 @@
+.hearts-table{display:grid;grid-template-columns:1fr minmax(220px,340px);gap:14px;align-items:start}
+.hearts-trick{min-height:260px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;align-items:center}
+.trick-seat{border:1px solid var(--border);border-radius:10px;background:#12161c;padding:10px;height:142px;min-height:142px;overflow:hidden}
+.trick-seat .playing-card{margin:8px auto 0}
+.hearts-hand{min-width:0;min-height:0;overflow:hidden}
+.hearts-hand.compact{padding-bottom:8px}
+.hearts-hand.compact .hearts-fan{padding-bottom:4px}
+.hearts-fan{padding:14px 18px 18px 4px}
+.hearts-fan .playing-card{margin-right:-49px}
+.hearts-fan .playing-card:last-child{margin-right:0}
+.hearts-fan .playing-card[aria-disabled="true"]{cursor:default;filter:saturate(.38) brightness(.84);opacity:1}
+.hearts-fan .playing-card[aria-disabled="true"]:hover{transform:none}
+.hearts-fan .playing-card .rank{position:absolute;top:8px;left:8px;font-size:19px}
+.hearts-fan .playing-card .suit{position:absolute;top:29px;left:8px;font-size:15px}
+.hearts-scores{margin-top:14px;min-height:0}
+.score-table{width:100%;border-collapse:collapse;font-size:12px}
+.score-table th,.score-table td{padding:7px 5px;border-bottom:1px solid #252b34;text-align:left}
+.score-table td:last-child,.score-table th:last-child{text-align:right}
+@media(max-width:980px){
+.hearts-table{grid-template-columns:1fr}
+}
+@media(max-width:480px){
+.hearts-trick{grid-template-columns:1fr 1fr}
+}
+@media(max-width:480px){
+.hearts-fan .playing-card{margin-right:-34px}
+.hearts-fan{padding-right:8px}
+}
+.hearts-trick .playing-card{
+  animation:cardArrive .18s ease-out
+}
+.trick-seat:has(.playing-card){transition:border-color .15s ease,background .15s ease}
+@media(prefers-reduced-motion:reduce){
+.hearts-trick .playing-card{animation:none!important}
+}
+.trick-seat{
+  background:rgba(7,9,17,.64);
+  border-color:rgba(222,219,230,.12);
+}

@@ -1,21 +1,15 @@
-const CACHE = 'pluto-v1.0.1';
+const CACHE = 'pluto-v1.1.0';
 
 const OFFLINE_SHELL = [
   '/',
-  '/styles.css?v=1.0.1',
-  '/app.js?v=1.0.1',
-  '/js/game-ui.js?v=1.0.1',
-  '/js/map-editor.js?v=1.0.1',
-  '/manifest.webmanifest?v=1.0.1',
+  '/styles.css?v=1.1.0',
+  '/app.js?v=1.1.0',
+  '/js/game-ui.js?v=1.1.0',
+  '/manifest.webmanifest?v=1.1.0',
   '/icons/icon-192-v2.png',
   '/icons/icon-512-v2.png',
   '/icons/maskable-192-v2.png',
   '/icons/maskable-512-v2.png',
-  '/assets/minigolf/tree.svg',
-  '/assets/minigolf/tractor.svg',
-  '/assets/minigolf/rock.svg',
-  '/assets/minigolf/hay.svg',
-  '/assets/minigolf/windmill.svg',
   '/assets/pluto-wallpaper.svg',
   '/assets/pluto-logo-v2.png'
 ];

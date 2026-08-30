@@ -1,1 +1,14 @@
-{"key":"presidenten","name":"Presidenten","description":"Speel hogere combinaties en raak als eerste je kaarten kwijt.","version":"1","icon":"👑","badge":"3-4","actionLabel":"Nieuw spel","minPlayers":3,"maxPlayers":4,"supportsNpc":true,"realtime":false,"solo":false,"styles":false}
+{
+  "key": "presidenten",
+  "name": "Presidenten",
+  "description": "Speel hogere combinaties en raak als eerste je kaarten kwijt.",
+  "version": "2",
+  "icon": "👑",
+  "badge": "3-4",
+  "actionLabel": "Nieuw spel",
+  "minPlayers": 3,
+  "maxPlayers": 4,
+  "supportsNpc": true,
+  "realtime": false,
+  "solo": false
+}

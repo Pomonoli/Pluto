@@ -18,6 +18,7 @@ games/mijnspel/
   client.js      # renderer en optionele resultaathelpers
   styles.css     # alleen CSS van dit spel
   rules.html     # inhoud van de spelregels-popup
+  assets/        # optionele game-specifieke afbeeldingen
 ```
 
 ## Servercontract
@@ -42,7 +43,9 @@ Vertrouw nooit op de client voor beurten, scores, kaartgeheimen of geldige zette
 - `titlebar(name, status)` en `logBox(lines)`;
 - `sound(kind)`.
 
-Optioneel kan het bestand `metric`, `presentResult` en `isWinner` exporteren.
+Optioneel kan het bestand onder meer `metric`, `presentResult`, `isWinner`, `mount`, `openTool` en `handleRoute` exporteren. Een extra `view.html` wordt automatisch geladen. Extra lokale ES-modules kunnen relatief vanuit `client.js` worden geïmporteerd.
+
+Houd helpers en styling in de plugin zolang slechts deze game ze gebruikt. Alleen aantoonbaar gedeelde componenten horen in `public/js/game-ui.js` of `public/styles.css`.
 
 ## Publiceren
 

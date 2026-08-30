@@ -3,28 +3,24 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 
-const gameUiPath=path.join(__dirname,'../public/js/game-ui.js');
+const read=(game)=>fs.readFileSync(path.join(__dirname,'..','games',game,'client.js'),'utf8');
+const shared=()=>fs.readFileSync(path.join(__dirname,'../public/js/game-ui.js'),'utf8');
 
 test('Hofslag-plugin gebruikt zijn eigen renderpad zonder player-strip',()=>{
- const app=fs.readFileSync(gameUiPath,'utf8');
- const client=fs.readFileSync(path.join(__dirname,'../games/hofslag/client.js'),'utf8');
- assert.match(client,/renderBuiltin\('hofslag'/);
- assert.match(app,/if\(kind==='hofslag'\)\{renderHofslag\(room,game\);return\}/);
+ assert.match(read('hofslag'),/function renderHofslag\(room, game\)/);
+ assert.doesNotMatch(shared(),/renderHofslag/);
+ assert.doesNotMatch(read('hofslag'),/export const playerStrip=true/);
 });
 
 test('Blackjack, Pesten en Presidenten verbergen de generieke player-strip',()=>{
- const app=fs.readFileSync(gameUiPath,'utf8');
- for(const game of ['blackjack','pesten','presidenten']){
-  const client=fs.readFileSync(path.join(__dirname,'..','games',game,'client.js'),'utf8');
-  assert.match(client,/playerStrip:false/);
- }
- assert.match(app,/if\(playerStrip\)els\.gameStage\.append\(renderGamePlayerStrip/);
- assert.match(app,/titlebar\('Blackjack',status\)/);
- assert.doesNotMatch(app,/Blackjack · ronde/);
+ for(const game of ['blackjack','pesten','presidenten'])assert.doesNotMatch(read(game),/export const playerStrip=true/);
+ assert.match(shared(),/if\(plugin\.playerStrip\)els\.gameStage\.append\(renderGamePlayerStrip/);
+ assert.match(read('blackjack'),/titlebar\('Blackjack',status\)/);
+ assert.doesNotMatch(shared(),/Blackjack/);
 });
 
 test('Hofslag eerste render dereferencet geen null animation',()=>{
- const app=fs.readFileSync(gameUiPath,'utf8');
- assert.doesNotMatch(app,/state\.hofAnimation\?\.round === game\.lastRound\?\.round && state\.hofAnimation\.active/);
- assert.match(app,/state\.hofAnimation\?\.active && state\.hofAnimation\.round === game\.lastRound\?\.round/);
+ const client=read('hofslag');
+ assert.match(client,/uiState\.animation\?\.active&&uiState\.animation\.round===game\.lastRound\?\.round/);
+ assert.doesNotMatch(client,/state\.hofAnimation/);
 });

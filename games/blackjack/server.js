@@ -208,4 +208,14 @@ function serialize(game,requesterId,connected){
 
 function results(game){return game.players.map(p=>({playerId:p.id,placement:p.result==='Wint'?1:p.result==='Push'?2:3,score:p.score,won:p.result==='Wint',outcome:p.result}))}
 
-module.exports={meta,createGame,handleAction,serialize,tick,handValue,isNatural,settleFinal,BASE_BET,results};
+function preparePlayers(players,{db}){return players.map(player=>({...player,blackjackChips:player.userId?db.getBlackjackChips(player.userId):100}))}
+function afterStateChange(room,{db}){
+  const updates=room.gameState?.pendingChipUpdates?.splice(0)||[];
+  for(const update of updates){const roomPlayer=room.players.find(player=>player.id===update.playerId);if(!roomPlayer?.userId)continue;const persisted=db.setBlackjackChips(roomPlayer.userId,update.chips),gamePlayer=room.gameState.players.find(player=>player.id===update.playerId);if(gamePlayer){gamePlayer.chips=persisted.chips;gamePlayer.resetChips=persisted.reset}}
+  const round=room.gameState?.pendingRoundRecord;if(!round)return;room.gameState.pendingRoundRecord=null;
+  if(room.players.filter(player=>!player.isNpc).length<2)return;
+  const resultByPlayer=new Map(round.players.map(result=>[result.playerId,result]));
+  db.recordMatch({gameKey:meta.key,roomId:room.id,startedAt:round.startedAt,endedAt:round.endedAt,players:room.players.map(player=>{const result=resultByPlayer.get(player.id)||{};return{userId:player.userId||null,displayName:player.name,placement:result.placement??null,score:result.score??null,won:Boolean(result.won),outcome:result.outcome||null,durationMs:Math.max(0,round.endedAt-round.startedAt),moves:null}})});
+}
+
+module.exports={meta,createGame,handleAction,serialize,tick,handValue,isNatural,settleFinal,BASE_BET,results,preparePlayers,afterStateChange};

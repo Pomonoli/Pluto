@@ -47,13 +47,16 @@ function listGames() {
 function listGamePlugins() {
   return pluginModules.map((game) => {
     const m=game.plugin.manifest;
+    const clientAvailable=m.client!==false&&fs.existsSync(path.join(game.plugin.directory,'client.js'));
     return {
       key:m.key,name:game.meta.name,description:game.meta.description,minPlayers:game.meta.minPlayers,maxPlayers:game.meta.maxPlayers,
       supportsNpc:game.meta.supportsNpc,realtime:game.meta.realtime,solo:game.meta.solo,
       icon:String(m.icon||'🎮'),badge:String(m.badge||`${game.meta.minPlayers}-${game.meta.maxPlayers}`),actionLabel:String(m.actionLabel||'Nieuw spel'),
-      rules:String(m.rules||''),version:game.plugin.version,
-      clientUrl:m.client===false?null:`/game-plugins/${encodeURIComponent(m.key)}/client.js?v=${encodeURIComponent(game.plugin.version)}`,
-      styleUrl:m.styles===false?null:`/game-plugins/${encodeURIComponent(m.key)}/styles.css?v=${encodeURIComponent(game.plugin.version)}`
+      toolLabel:m.toolLabel?String(m.toolLabel):null,rules:String(m.rules||''),version:game.plugin.version,
+      loadError:clientAvailable?null:'Frontendmodule ontbreekt.',
+      clientUrl:clientAvailable?`/game-plugins/${encodeURIComponent(m.key)}/client.js?v=${encodeURIComponent(game.plugin.version)}`:null,
+      styleUrl:m.styles===false||!fs.existsSync(path.join(game.plugin.directory,'styles.css'))?null:`/game-plugins/${encodeURIComponent(m.key)}/styles.css?v=${encodeURIComponent(game.plugin.version)}`,
+      viewUrl:fs.existsSync(path.join(game.plugin.directory,'view.html'))?`/game-plugins/${encodeURIComponent(m.key)}/view.html?v=${encodeURIComponent(game.plugin.version)}`:null
     };
   });
 }

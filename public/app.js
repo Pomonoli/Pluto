@@ -1,10 +1,9 @@
-import { createGameUi } from './js/game-ui.js?v=1.0.1';
-import { createMapEditor } from './js/map-editor.js?v=1.0.1';
+import { createGameUi } from './js/game-ui.js?v=1.1.0';
 
 const socket = window.io();
   const $ = (id) => document.getElementById(id);
   const els = {};
-  ['brandButton','lobbyBrowserButton','leaderboardButton','soundButton','installButton','accountButton','mobileNav','mobilePlayButton','mobileLobbyButton','mobileLeaderboardButton','mobileProfileButton','rulesButton','leaveButton','homeView','minigolfEditorView','lobbyBrowserView','leaderboardView','profileView','roomView','homeGuestBar','guestName','homeAccountButton','inviteBox','inviteText','joinInviteButton','recentGamesSection','recentGames','gamesHeading','gameGrid','joinCodeForm','joinCode','refreshRoomsButton','lobbyIdentityBar','lobbyIdentityText','lobbyGuestWrap','lobbyGuestName','openRoomCount','openRoomsContent','leaderboardGame','leaderboardContent','profileUsername','profileSummary','profileGames','profileRecent','headToHeadCard','headToHeadGame','headToHeadContent','roomShareFooter','roomFooterMeta','roomShareBox','roomGameName','roomCodeHeading','shareLink','copyLinkButton','roomRematchButton','roomLeaveButton','roomLayout','lobbySection','gameSection','playerCountBadge','lobbyPlayers','hostControls','addNpcButton','startGameButton','lobbyHint','gameStage','gameResult','chatPanel','chatMessages','chatForm','chatInput','minigolfEditorButton','newGolfMapButton','saveGolfMapButton','customMapCount','customMapList','mapNameInput','mapDifficultySelect','mapMaxStrokesInput','mapSaveState','mapToolGrid','mapToolHelp','deleteMapObjectButton','mapEditorCanvas','mapInspectorEmpty','mapInspectorFields','testGolfMapButton','resetGolfTestButton','mapTestHint','accountModal','closeAccountButton','loggedOutAccount','loggedInAccount','loginForm','loginUsername','loginPassword','registerForm','registerUsername','registerPassword','accountUsername','accountGames','accountWins','accountWinRate','myProfileButton','logoutButton','rulesModal','rulesGameName','rulesContent','closeRulesButton','toast'].forEach((id) => els[id] = $(id));
+  ['brandButton','lobbyBrowserButton','leaderboardButton','soundButton','installButton','accountButton','mobileNav','mobilePlayButton','mobileLobbyButton','mobileLeaderboardButton','mobileProfileButton','rulesButton','leaveButton','homeView','lobbyBrowserView','leaderboardView','profileView','roomView','homeGuestBar','guestName','homeAccountButton','inviteBox','inviteText','joinInviteButton','recentGamesSection','recentGames','gamesHeading','gameGrid','joinCodeForm','joinCode','refreshRoomsButton','lobbyIdentityBar','lobbyIdentityText','lobbyGuestWrap','lobbyGuestName','openRoomCount','openRoomsContent','leaderboardGame','leaderboardContent','profileUsername','profileSummary','profileGames','profileRecent','headToHeadCard','headToHeadGame','headToHeadContent','roomShareFooter','roomFooterMeta','roomShareBox','roomGameName','roomCodeHeading','shareLink','copyLinkButton','roomRematchButton','roomLeaveButton','roomLayout','lobbySection','gameSection','playerCountBadge','lobbyPlayers','hostControls','addNpcButton','startGameButton','lobbyHint','gameStage','gameResult','chatPanel','chatMessages','chatForm','chatInput','accountModal','closeAccountButton','loggedOutAccount','loggedInAccount','loginForm','loginUsername','loginPassword','registerForm','registerUsername','registerPassword','accountUsername','accountGames','accountWins','accountWinRate','myProfileButton','logoutButton','rulesModal','rulesGameName','rulesContent','closeRulesButton','toast'].forEach((id) => els[id] = $(id));
 
   const state = {
     room: null,
@@ -15,11 +14,6 @@ const socket = window.io();
     selection: null,
     authUser: null,
     authStats: null,
-    hofAnimation: null,
-    hofAnimatedRound: 0,
-    cluedoNotes: {},
-    cluedoSelections: {},
-    carcassonneViews: {},
     gamePlugins: {},
     soundMuted: localStorage.getItem('minigames.soundMuted') === '1',
     audioContext: null,
@@ -30,10 +24,9 @@ const socket = window.io();
     previousRoom: null,
     scoreMemory: {},
     lobbyRefreshTimer: null,
-    minigolfShotAnimation: null,
-    mapEditor: null,
     expectedRoomId: getRoomFromPath(),
-    roomStateBlocked: false
+    roomStateBlocked: false,
+    activeGameBodyClass: null
   };
   els.guestName.value = state.guestName;
 
@@ -44,7 +37,6 @@ const socket = window.io();
   function getProfileFromPath() { const m = location.pathname.match(/^\/profile\/([^/]+)\/?$/); return m ? decodeURIComponent(m[1]) : null; }
   function isLeaderboardPath() { return /^\/leaderboard\/?$/.test(location.pathname); }
   function isLobbyPath() { return /^\/lobby\/?$/.test(location.pathname); }
-  function isMinigolfEditorPath() { return /^\/minigolf\/editor\/?$/.test(location.pathname); }
   function setRoute(path) { history.pushState({},'',path); }
   function getOrCreateToken() {
     let token = localStorage.getItem('minigames.token');
@@ -97,7 +89,7 @@ const socket = window.io();
   }
 
   function hideMainViews() {
-    [els.homeView,els.minigolfEditorView,els.lobbyBrowserView,els.leaderboardView,els.profileView,els.roomView].forEach(v=>v.classList.add('hidden'));
+    document.querySelectorAll('main > .view').forEach(view=>view.classList.add('hidden'));
     if (state.lobbyRefreshTimer) { clearInterval(state.lobbyRefreshTimer); state.lobbyRefreshTimer = null; }
   }
   function updateIdentityUi() {
@@ -310,13 +302,7 @@ const socket = window.io();
     state, els, E, action, profileButton, sound, socket, handleAck, cardNode, valueLabel, requestRematch
   });
 
-  const mapEditor = createMapEditor({
-    state, els, E, toast, openAccount, hideMainViews,
-    svgEl:gameUi.svgEl,
-    minigolfPathPoint:gameUi.minigolfPathPoint,
-    minigolfTerrainNode:gameUi.minigolfTerrainNode,
-    minigolfBoostNode:gameUi.minigolfBoostNode
-  });
+  function handlePluginRoute(){return Object.values(state.gamePlugins).some(plugin=>plugin.handleRoute?.({path:location.pathname,state,setRoute,toast})===true)}
 
 
   function createRoom(gameKey) {
@@ -348,20 +334,25 @@ const socket = window.io();
   const GAME_NAMES = {}, RULES = {};
   async function loadGamePlugins(){
     try{
-      const response=await fetch('/api/game-plugins',{cache:'no-store'}),data=await response.json();
+      const response=await fetch('/api/game-plugins',{cache:'no-store'});if(!response.ok)throw new Error(`HTTP ${response.status}`);const data=await response.json();
       if(!data.ok)throw new Error(data.error||'Game-plugins konden niet laden.');
       for(const game of data.games||[]){
+        let loadError=game.loadError?new Error(game.loadError):null;
         GAME_NAMES[game.key]=game.name;if(game.rules)RULES[game.key]=game.rules;
         if(game.styleUrl&&!document.querySelector(`link[data-game-plugin="${game.key}"]`)){const link=document.createElement('link');link.rel='stylesheet';link.href=game.styleUrl;link.dataset.gamePlugin=game.key;document.head.append(link)}
-        if(game.clientUrl){try{const plugin=await import(game.clientUrl);gameUi.registerPlugin(game.key,plugin);state.gamePlugins[game.key]=plugin}catch(error){console.error(`Game-plugin ${game.key} kon niet laden:`,error)}}
+        if(game.viewUrl){try{const viewResponse=await fetch(game.viewUrl);if(!viewResponse.ok)throw new Error(`HTTP ${viewResponse.status}`);const template=document.createElement('template');template.innerHTML=await viewResponse.text();document.querySelector('main').insertBefore(template.content,els.lobbyBrowserView)}catch(error){console.error(`Extra view van ${game.key} kon niet laden:`,error)}}
+        if(game.clientUrl){try{const plugin=await import(game.clientUrl);gameUi.registerPlugin(game.key,plugin);state.gamePlugins[game.key]=plugin;plugin.mount?.({state,els,E,toast,openAccount,hideMainViews})}catch(error){loadError=error;console.error(`Game-plugin ${game.key} kon niet laden:`,error)}}
         if(!els.gameGrid.querySelector(`[data-game="${game.key}"]`)){
           const card=E('article','game-card'),icon=E('div','game-icon',game.icon),body=E('div','game-card-body'),titleRow=E('div','game-title-row');titleRow.append(E('h3','',game.name),E('span','badge',game.badge));
           const info=E('button','game-info','i');info.type='button';info.dataset.rulesGame=game.key;info.setAttribute('aria-label',`Spelregels van ${game.name}`);
-          const launch=E('button','primary game-launch',game.actionLabel);launch.type='button';launch.dataset.game=game.key;body.append(titleRow,info,launch);card.append(icon,body);els.gameGrid.append(card)
+          const launch=E('button','primary game-launch',game.actionLabel);launch.type='button';launch.dataset.game=game.key;
+          if(loadError){launch.disabled=true;launch.textContent='Niet beschikbaar';card.classList.add('plugin-load-error');card.title=`${game.name} kon niet laden.`}
+          if(game.toolLabel&&state.gamePlugins[game.key]?.openTool){const actions=E('div','game-card-actions'),tool=E('button','secondary',game.toolLabel);tool.type='button';tool.onclick=()=>state.gamePlugins[game.key].openTool({state,setRoute,toast});actions.append(launch,tool);body.append(titleRow,info,actions)}else body.append(titleRow,info,launch);
+          card.append(icon,body);els.gameGrid.append(card)
         }
       }
       if(state.room?.gameState&&state.gamePlugins[state.room.gameKey]){state.renderedGameRevision=-1;gameUi.renderGame(state.room)}
-    }catch(error){console.error('Game-plugins laden mislukt:',error)}
+    }catch(error){console.error('Game-plugins laden mislukt:',error);els.gameGrid.replaceChildren(E('div','plugin-error','Games konden niet geladen worden. Herlaad de pagina om opnieuw te proberen.'))}
   }
   function formatDuration(ms) {
     if (ms === null || ms === undefined) return '—';
@@ -373,16 +364,14 @@ const socket = window.io();
     els.leaderboardContent.replaceChildren();
     if (!rows.length) { els.leaderboardContent.append(E('p','muted','Nog geen resultaten.')); return; }
     const table=E('table','stats-table');
-    const columns=gameKey==='blackjack'?['#','Speler','Chips']:gameKey==='solitaire'?['#','Speler','Wins','Beste']:['#','Speler','Games','Wins','Winrate'];
+    const plugin=state.gamePlugins[gameKey],columns=plugin?.leaderboardColumns||['#','Speler','Games','Wins','Winrate'];
     const head=E('tr');columns.forEach(x=>head.append(E('th','',x)));
     table.append(head);
     rows.forEach((row,index)=>{
       const tr=E('tr');
       tr.append(E('td','',String(index+1)));
       const td=E('td'); const link=E('button','profile-link',row.username); link.type='button'; link.onclick=()=>{setRoute(`/profile/${encodeURIComponent(row.username)}`);showProfile(row.username)};td.append(link);tr.append(td);
-      if(gameKey==='blackjack')tr.append(E('td','',String(row.chips)));
-      else if(gameKey==='solitaire')tr.append(E('td','',String(row.wins)),E('td','',row.bestSolitaireMoves?`${row.bestSolitaireMoves} zetten`:'—'));
-      else tr.append(E('td','',String(row.games)),E('td','',String(row.wins)),E('td','',`${row.winRate||0}%`));
+      const cells=plugin?.renderLeaderboardCells?.({row,E})||[E('td','',String(row.games)),E('td','',String(row.wins)),E('td','',`${row.winRate||0}%`)];tr.append(...cells);
       table.append(tr);
     });
     els.leaderboardContent.append(table);
@@ -395,7 +384,7 @@ const socket = window.io();
     if(!perGame.length) els.profileGames.append(E('p','muted','Nog geen gespeelde matches.'));
     else {
       const table=E('table','stats-table'); const head=E('tr'); ['Game','Games','Wins','Winrate','Extra'].forEach(x=>head.append(E('th','',x)));table.append(head);
-      perGame.forEach(g=>{const tr=E('tr');let extra='—';if(g.gameKey==='solitaire'&&g.bestTimeMs)extra=`Beste: ${formatDuration(g.bestTimeMs)} · ${g.bestMoves} zetten`;tr.append(E('td','',GAME_NAMES[g.gameKey]||g.gameKey),E('td','',String(g.games)),E('td','',String(g.wins)),E('td','',`${g.winRate||0}%`),E('td','',extra));table.append(tr)});
+      perGame.forEach(g=>{const tr=E('tr'),extra=state.gamePlugins[g.gameKey]?.profileExtra?.({stat:g,formatDuration})||'—';tr.append(E('td','',GAME_NAMES[g.gameKey]||g.gameKey),E('td','',String(g.games)),E('td','',String(g.wins)),E('td','',`${g.winRate||0}%`),E('td','',extra));table.append(tr)});
       els.profileGames.append(table);
     }
     els.profileRecent.replaceChildren();
@@ -449,11 +438,11 @@ const socket = window.io();
     handleRoomEffects(previous,room);
     if(state.renderedRoomId!==room.id){state.renderedRoomId=room.id;state.renderedGameRevision=-1;state.scoreMemory={};}
     state.room = room; state.previousRoom=room; rememberRecentGame(room.gameKey); showRoom();
-    document.body.classList.toggle('minigolf-mode', room.gameKey==='minigolf' && room.status!=='lobby');
+    const roomOptions=state.gamePlugins[room.gameKey]?.roomOptions||{};if(state.activeGameBodyClass&&state.activeGameBodyClass!==roomOptions.bodyClass)document.body.classList.remove(state.activeGameBodyClass);state.activeGameBodyClass=room.status!=='lobby'?roomOptions.bodyClass||null:null;if(state.activeGameBodyClass)document.body.classList.add(state.activeGameBodyClass);
     els.roomGameName.textContent = room.gameMeta.name.toUpperCase(); els.roomCodeHeading.textContent = room.id; els.shareLink.value = `${location.origin}/room/${room.id}`;
-    const solitaireRoom=room.gameKey==='solitaire';
-    els.roomFooterMeta.classList.toggle('hidden',solitaireRoom);els.roomShareBox.classList.toggle('hidden',solitaireRoom);els.roomShareFooter.classList.toggle('solo-footer',solitaireRoom);
-    const canRematch = room.gameKey !== 'blackjack' && room.status !== 'lobby' && room.gameState?.gameOver && room.isHost;
+    const hideShare=Boolean(roomOptions.hideShare);
+    els.roomFooterMeta.classList.toggle('hidden',hideShare);els.roomShareBox.classList.toggle('hidden',hideShare);els.roomShareFooter.classList.toggle('solo-footer',hideShare);
+    const canRematch = roomOptions.allowRematch!==false && room.status !== 'lobby' && room.gameState?.gameOver && room.isHost;
     els.roomRematchButton.classList.toggle('hidden', !canRematch);
     if(!canRematch){els.roomRematchButton.disabled=false;els.roomRematchButton.textContent='Rematch'}
     els.roomLayout.classList.toggle('solo', room.gameMeta.solo); els.chatPanel.classList.toggle('hidden', room.gameMeta.solo);
@@ -501,7 +490,7 @@ const socket = window.io();
   function closeRules(){els.rulesModal.classList.add('hidden');els.rulesModal.setAttribute('aria-hidden','true')}
   function leaveRoom(){
     state.roomStateBlocked=true;state.expectedRoomId=null;state.directRoomId=null;
-    document.body.classList.remove('minigolf-mode');state.room=null;state.previousRoom=null;state.selection=null;state.renderedRoomId=null;state.renderedGameRevision=-1;
+    if(state.activeGameBodyClass)document.body.classList.remove(state.activeGameBodyClass);state.activeGameBodyClass=null;state.room=null;state.previousRoom=null;state.selection=null;state.renderedRoomId=null;state.renderedGameRevision=-1;
     history.replaceState({},'', '/');showHome();
     socket.emit('room:leave',{},()=>{state.roomStateBlocked=false});
   }
@@ -509,7 +498,7 @@ const socket = window.io();
     if(button){button.disabled=true;button.textContent='Starten…'}
     socket.emit('room:rematch',{},(response)=>{
       if(!response?.ok){if(button){button.disabled=false;button.textContent='Rematch'}return handleAck(response)}
-      state.selection=null;state.hofAnimation=null;state.hofAnimatedRound=0;state.minigolfShotAnimation=null;state.renderedGameRevision=-1;
+      state.selection=null;gameUi.resetRoom();state.renderedGameRevision=-1;
     });
   }
   function copyLink(){const v=els.shareLink.value;if(navigator.clipboard&&isSecureContext)navigator.clipboard.writeText(v).then(()=>toast('Roomlink gekopieerd.')).catch(()=>toast(v));else{els.shareLink.select();toast('Selecteer en kopieer de link.')}}
@@ -518,7 +507,7 @@ const socket = window.io();
     const target=getRoomFromPath();
     if(target){state.expectedRoomId=target;state.roomStateBlocked=false;}
     if(target&&(state.authUser||state.guestName)) joinRoom(target);
-    else if(isMinigolfEditorPath()) mapEditor.showMinigolfEditor();
+    else if(handlePluginRoute()) return;
     else if(isLobbyPath()) showOpenLobby();
     else if(isLeaderboardPath()) showLeaderboard(els.leaderboardGame.value||'');
     else { const profile=getProfileFromPath(); if(profile) showProfile(profile); else showHome(); }
@@ -527,15 +516,6 @@ const socket = window.io();
   socket.on('session:replaced',()=>toast('Deze speler is in een andere tab opnieuw verbonden.'));
 
   els.gameGrid.addEventListener('click',(e)=>{const info=e.target.closest('[data-rules-game]');if(info){openRules(info.dataset.rulesGame);return}const b=e.target.closest('.game-launch');if(b)createRoom(b.dataset.game)});
-  els.minigolfEditorButton.onclick=()=>{if(state.room)return toast('Verlaat eerst de room.');setRoute('/minigolf/editor');mapEditor.showMinigolfEditor()};
-  els.mapToolGrid.addEventListener('click',(e)=>{const b=e.target.closest('.map-tool');if(b&&!mapEditor.ensureMapEditor().testMode)mapEditor.selectEditorTool(b.dataset.tool)});
-  els.newGolfMapButton.onclick=()=>{if(mapEditor.ensureMapEditor().dirty&&!confirm('Niet-opgeslagen wijzigingen wissen?'))return;mapEditor.resetEditorMap()};
-  els.saveGolfMapButton.onclick=mapEditor.saveEditorMap;
-  els.deleteMapObjectButton.onclick=mapEditor.editorDeleteSelection;
-  els.testGolfMapButton.onclick=mapEditor.toggleEditorTest;
-  els.resetGolfTestButton.onclick=mapEditor.resetEditorTest;
-  [els.mapNameInput,els.mapDifficultySelect,els.mapMaxStrokesInput].forEach(input=>input.addEventListener('change',()=>{mapEditor.syncEditorMetaToMap();mapEditor.editorMarkDirty()}));
-  mapEditor.bindMapCanvasEvents();
   els.joinInviteButton.onclick=()=>joinRoom(state.directRoomId);
   els.joinCodeForm.onsubmit=(e)=>{e.preventDefault();joinRoom(els.joinCode.value)};
   els.addNpcButton.onclick=()=>socket.emit('room:addNpc',{},handleAck);
@@ -612,7 +592,7 @@ const socket = window.io();
   if('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.0.1', {
+        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.1.0', {
           updateViaCache:'none'
         });
         await registration.update();
@@ -635,12 +615,12 @@ const socket = window.io();
     if(state.room)return leaveRoom();
     setRoute('/');showHome();
   };
-  addEventListener('resize',()=>{if(state.room?.gameState?.kind==='hofslag'&&!state.hofAnimation?.active){const b=document.querySelector('.hof-board');if(b)gameUi.renderHofBoard(b,state.room.gameState)}});
+  addEventListener('resize',()=>gameUi.onResize());
   addEventListener('popstate',()=>{
     const target=getRoomFromPath();
     if(!target&&state.room)return leaveRoom();
     if(target&&(!state.room||state.room.id!==target)){state.directRoomId=target;state.expectedRoomId=target;state.roomStateBlocked=false;if(state.authUser||state.guestName)joinRoom(target);else showHome();return}
-    if(isMinigolfEditorPath()){mapEditor.showMinigolfEditor();return}
+    if(handlePluginRoute())return;
     if(isLobbyPath()){showOpenLobby();return}
     if(isLeaderboardPath()){showLeaderboard(els.leaderboardGame.value||'');return}
     const profile=getProfileFromPath();if(profile){showProfile(profile);return}
@@ -652,7 +632,7 @@ const socket = window.io();
     const target=getRoomFromPath();
     if(target){state.expectedRoomId=target;state.roomStateBlocked=false;}
     if(target&&(state.authUser||state.guestName)) joinRoom(target);
-    else if(isMinigolfEditorPath()) mapEditor.showMinigolfEditor();
+    else if(handlePluginRoute()) return;
     else if(isLobbyPath()) showOpenLobby();
     else if(isLeaderboardPath()) showLeaderboard('');
     else {const profile=getProfileFromPath();if(profile)showProfile(profile);else showHome()}

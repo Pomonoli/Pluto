@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.1.0 — Self-contained game-plugins
+
+- Iedere game beheert voortaan zijn eigen browserrenderer, helpers, styling, spelregels en optionele assets.
+- De centrale frontend bevat alleen nog gedeelde Pluto-infrastructuur en bouwt het gameoverzicht dynamisch uit de pluginmanifests op.
+- Minigolf bevat nu ook zijn Map Editor, extra view, HTTP-hooks en assets volledig in de eigen pluginmap.
+- Pluginclients, CSS, views en assets worden lokaal en in Docker via expliciete, veilige Express-routes geladen.
+- Een ontbrekende of defecte frontendplugin schakelt alleen die game uit en haalt niet langer de volledige Pluto-frontend onderuit.
+- Architectuur- en productieroutetests bewaken alle pluginbestanden en Docker-paden.
+
 ## v1.0.1 — Docker deployment fix
 
 - De volledige `games/`-map wordt voortaan naar `/app/games` in de Docker-image gekopieerd.
