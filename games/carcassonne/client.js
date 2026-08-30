@@ -85,6 +85,22 @@ function carcassonneTileNode(tile,{preview=false}={}){
   return node
 }
 
+function renderBurgerPopup(game,placedTile,me){
+  const backdrop=E('div','carc-burger-backdrop');
+  const modal=E('div','carc-burger-modal');
+  modal.append(E('span','eyebrow','BURGER PLAATSEN'),E('h3','','Kies een rol'));
+  const copy=me?.meeples>0?'Je mag één burger op de zojuist gelegde tegel plaatsen.':'Je hebt geen burgers meer beschikbaar.';
+  modal.append(E('p','carc-burger-copy',copy));
+  const choices=E('div','carc-burger-choices');
+  if(me?.meeples>0)(game.meepleChoices||[]).forEach(choice=>{
+    const visual=meepleVisual(choice.kind),button=E('button','secondary carc-burger-choice');
+    button.type='button';button.append(E('span','carc-choice-icon',visual.text),E('span','',meepleChoiceLabel(choice,placedTile)));
+    button.onclick=()=>action('meeple',{choice:choice.key});choices.append(button)
+  });
+  const skip=E('button','ghost carc-burger-skip',me?.meeples>0?'Geen burger':'Verder');skip.type='button';skip.onclick=()=>action('skipMeeple');choices.append(skip);
+  modal.append(choices);backdrop.append(modal);return backdrop
+}
+
 function attachCarcassonneViewport(viewport,board,view){
   const pointers=new Map();let drag=null,pinch=null;
   const apply=()=>{board.style.transform=`translate(calc(-50% + ${view.x}px),calc(-50% + ${view.y}px)) scale(${view.scale})`};apply();
@@ -99,14 +115,9 @@ function renderCarcassonne(room,game){
   const status=game.gameOver?'Landschap voltooid.':mine?(game.phase==='place'?'Leg je tegel.':'Plaats eventueel een burger.'):`${turn?.name||''} is aan de beurt.`;
   els.gameStage.append(titlebar('Carcassonne',status));
   const dashboard=E('div','carc-dashboard');game.players.forEach(p=>{const item=E('div',`carc-player ${p.id===game.turnPlayerId?'active':''}`);item.style.setProperty('--player-color',p.color);item.append(E('span','carc-player-dot'),E('strong','',p.name),E('b','',String(p.score)),E('small','',burgerLabel(p.meeples)));dashboard.append(item)});els.gameStage.append(dashboard);
-  const controls=E('div','carc-controls');controls.append(E('span','eyebrow',`${game.tilesRemaining} TEGELS OVER`));
+  const controls=E('div',`carc-controls ${mine&&game.phase==='meeple'?'waiting-choice':''}`);controls.append(E('span','eyebrow',`${game.tilesRemaining} TEGELS OVER`));
   if(mine&&game.phase==='place'&&game.currentTile){const drawn=E('div','carc-drawn');drawn.append(carcassonneTileNode(game.currentTile,{preview:true}));const rotate=E('button','secondary','↻ Roteer');rotate.onclick=()=>action('rotate');drawn.append(rotate);controls.append(drawn);if(!game.validPlacements.length)controls.append(E('div','player-note','Geen plek in deze stand — roteer de tegel.'))}
-  if(mine&&game.phase==='meeple'){
-    const picker=E('div','carc-meeple-picker'),placedTile=game.lastPlaced?(game.board||[]).find(entry=>entry.x===game.lastPlaced.x&&entry.y===game.lastPlaced.y)?.tile:null;
-    picker.append(E('strong','','Burger plaatsen?'));
-    (game.meepleChoices||[]).forEach(choice=>{const b=E('button','secondary',meepleChoiceLabel(choice,placedTile));b.onclick=()=>action('meeple',{choice:choice.key});picker.append(b)});
-    const skip=E('button','ghost','Geen burger');skip.onclick=()=>action('skipMeeple');picker.append(skip);controls.append(picker)
-  }els.gameStage.append(controls);
+  els.gameStage.append(controls);
   const viewport=E('div','carc-viewport');const board=E('div','carc-board');const size=72,world=160,origin=(world-1)/2;board.style.width=`${world*size}px`;board.style.height=`${world*size}px`;
   (game.board||[]).forEach(entry=>{
     const tile=carcassonneTileNode(entry.tile);tile.style.left=`${(entry.x+origin)*size}px`;tile.style.top=`${(entry.y+origin)*size}px`;if(game.lastPlaced?.x===entry.x&&game.lastPlaced?.y===entry.y)tile.classList.add('last-placed');
@@ -120,6 +131,7 @@ function renderCarcassonne(room,game){
   });
   if(mine&&game.phase==='place')(game.validPlacements||[]).forEach(place=>{const spot=E('button','carc-valid','+');spot.type='button';spot.style.left=`${(place.x+origin)*size}px`;spot.style.top=`${(place.y+origin)*size}px`;spot.setAttribute('aria-label',`Leg tegel op ${place.x}, ${place.y}`);spot.onclick=()=>{sound('card');action('place',{x:place.x,y:place.y})};board.append(spot)});
   viewport.append(board);els.gameStage.append(viewport);const view=views[room.id]||(views[room.id]={x:0,y:0,scale:.9});attachCarcassonneViewport(viewport,board,view);els.gameStage.append(logBox(game.log));
+  if(mine&&game.phase==='meeple'&&game.lastPlaced){const placedTile=(game.board||[]).find(entry=>entry.x===game.lastPlaced.x&&entry.y===game.lastPlaced.y)?.tile;els.gameStage.append(renderBurgerPopup(game,placedTile,me))}
 }
 
 export function metric({player}){return {text:`${player.score} pt · ${burgerLabel(player.meeples)}`,score:Number(player.score||0)}}
