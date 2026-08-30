@@ -1,7 +1,7 @@
 let state,els,E,action,profileButton,sound,socket,handleAck,cardNode,valueLabel,titlebar,logBox,renderGame,renderCardOpponents,renderDiscardStack,scoreList;
 const views={};
 function bind(api){({state,els,E,action,profileButton,sound,socket,handleAck,cardNode,valueLabel,titlebar,logBox,renderGame,renderCardOpponents,renderDiscardStack,scoreList}=api)}
-export function render(api){bind(api);carcassonneTileNode(api.room,api.game)}
+export function render(api){bind(api);renderCarcassonne(api.room,api.game)}
 
 function carcassonneTileNode(tile,{preview=false}={}){
   const node=E('div',`carc-tile ${preview?'preview':''}`);node.setAttribute('aria-label',`Landschapstegel ${tile.type||''}`);
