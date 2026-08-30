@@ -7,6 +7,7 @@ RUN npm install --omit=dev
 
 COPY server.js ./
 COPY src ./src
+COPY games ./games
 COPY public ./public
 
 ENV NODE_ENV=production

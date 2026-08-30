@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.1 — Docker deployment fix
+
+- De volledige `games/`-map wordt voortaan naar `/app/games` in de Docker-image gekopieerd.
+- Een regressietest voorkomt dat modulaire games opnieuw uit toekomstige images verdwijnen.
+
 ## v1.0.0 — Modulaire games
 
 - Alle bestaande games staan als zelfstandige modules onder `games/`.

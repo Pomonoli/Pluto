@@ -29,3 +29,8 @@ test('Minigolf mapgeneratie staat los van de engine',()=>{
  assert.ok(fs.existsSync(path.join(__dirname,'../games/minigolf/generator.js')));
  assert.ok(lines('games/minigolf/server.js') < 1100);
 });
+
+test('Docker-image bevat de volledige games-map',()=>{
+ const dockerfile=fs.readFileSync(path.join(__dirname,'../Dockerfile'),'utf8');
+ assert.match(dockerfile,/^COPY games \.\/games$/m);
+});
