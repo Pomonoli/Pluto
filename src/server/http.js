@@ -1,8 +1,9 @@
 'use strict';
 
 const path = require('node:path');
+const fs = require('node:fs');
 const express = require('express');
-const { getGame, listGames } = require('../games');
+const { getGame, listGames, listGamePlugins, getGamePlugin } = require('../games');
 const minigolf = require('../minigolf');
 const authDb = require('../db');
 
@@ -49,6 +50,22 @@ function configureHttp(app, runtime) {
   app.set('trust proxy', true);
   app.disable('x-powered-by');
   app.use(express.json({ limit:'128kb' }));
+
+  app.get('/api/game-plugins', (_req, res) => {
+    res.setHeader('Cache-Control','no-store');
+    res.json({ ok:true, games:listGamePlugins() });
+  });
+
+  app.get('/game-plugins/:key/:asset', (req, res, next) => {
+    const plugin=getGamePlugin(req.params.key);
+    const allowed=req.params.asset==='client.js'?'client.js':req.params.asset==='styles.css'?'styles.css':null;
+    if (!plugin || !allowed) return next();
+    const filePath=path.join(plugin.directory,allowed);
+    if (!fs.existsSync(filePath)) return next();
+    res.setHeader('Cache-Control','no-store');
+    res.type(allowed.endsWith('.js')?'text/javascript':'text/css');
+    res.sendFile(filePath);
+  });
 
   app.get('/api/auth/me', (req, res) => {
     const user = authDb.getUserFromCookieHeader(req.headers.cookie);

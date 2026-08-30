@@ -1,6 +1,6 @@
-import { RULES } from './js/rules.js?v=0.13.0';
-import { createGameUi } from './js/game-ui.js?v=0.13.0';
-import { createMapEditor } from './js/map-editor.js?v=0.13.0';
+import { RULES } from './js/rules.js?v=0.13.1';
+import { createGameUi } from './js/game-ui.js?v=0.13.1';
+import { createMapEditor } from './js/map-editor.js?v=0.13.1';
 
 const socket = window.io();
   const $ = (id) => document.getElementById(id);
@@ -21,6 +21,7 @@ const socket = window.io();
     cluedoNotes: {},
     cluedoSelections: {},
     carcassonneViews: {},
+    gamePlugins: {},
     soundMuted: localStorage.getItem('minigames.soundMuted') === '1',
     audioContext: null,
     deferredInstallPrompt: null,
@@ -283,6 +284,7 @@ const socket = window.io();
   }
   function didMeWin(game,myId) {
     const me=game.players?.find(p=>p.id===myId); if(!me)return false;
+    const pluginWinner=state.gamePlugins[game.kind]?.isWinner;if(pluginWinner)return Boolean(pluginWinner({game,myId,player:me}));
     if(game.kind==='solitaire')return Boolean(game.gameOver);
     if(game.kind==='blackjack')return me.result==='Wint';
     if(game.kind==='presidenten')return me.place===1;
@@ -353,6 +355,23 @@ const socket = window.io();
 
 
   const GAME_NAMES = {hofslag:'Hofslag',blackjack:'Blackjack',solitaire:'Solitaire',presidenten:'Presidenten',pesten:'Pesten',hartenjagen:'Hartenjagen',cluedo:'Cluedo',carcassonne:'Carcassonne',minigolf:'Minigolf'};
+  async function loadGamePlugins(){
+    try{
+      const response=await fetch('/api/game-plugins',{cache:'no-store'}),data=await response.json();
+      if(!data.ok)throw new Error(data.error||'Game-plugins konden niet laden.');
+      for(const game of data.games||[]){
+        GAME_NAMES[game.key]=game.name;RULES[game.key]=game.rules||'<p>Geen regels beschikbaar.</p>';
+        if(game.styleUrl&&!document.querySelector(`link[data-game-plugin="${game.key}"]`)){const link=document.createElement('link');link.rel='stylesheet';link.href=game.styleUrl;link.dataset.gamePlugin=game.key;document.head.append(link)}
+        if(game.clientUrl){const plugin=await import(game.clientUrl);gameUi.registerPlugin(game.key,plugin);state.gamePlugins[game.key]=plugin}
+        if(!els.gameGrid.querySelector(`[data-game="${game.key}"]`)){
+          const card=E('article','game-card'),icon=E('div','game-icon',game.icon),body=E('div','game-card-body'),titleRow=E('div','game-title-row');titleRow.append(E('h3','',game.name),E('span','badge',game.badge));
+          const info=E('button','game-info','i');info.type='button';info.dataset.rulesGame=game.key;info.setAttribute('aria-label',`Spelregels van ${game.name}`);
+          const launch=E('button','primary game-launch',game.actionLabel);launch.type='button';launch.dataset.game=game.key;body.append(titleRow,info,launch);card.append(icon,body);els.gameGrid.append(card)
+        }
+      }
+      if(state.room?.gameState&&state.gamePlugins[state.room.gameKey]){state.renderedGameRevision=-1;gameUi.renderGame(state.room)}
+    }catch(error){console.error('Game-plugins laden mislukt:',error)}
+  }
   function formatDuration(ms) {
     if (ms === null || ms === undefined) return '—';
     const total = Math.max(0, Math.round(Number(ms) / 1000));
@@ -602,7 +621,7 @@ const socket = window.io();
   if('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const registration = await navigator.serviceWorker.register('/service-worker.js?v=0.13.0', {
+        const registration = await navigator.serviceWorker.register('/service-worker.js?v=0.13.1', {
           updateViaCache:'none'
         });
         await registration.update();
@@ -637,6 +656,7 @@ const socket = window.io();
     showHome();
   });
 
+  loadGamePlugins();
   loadAuth().then(()=>{
     if(!socket.connected) return;
     const target=getRoomFromPath();

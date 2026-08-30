@@ -7,6 +7,9 @@ function competitionPlacements(items, valueSelector, descending = true) {
 function resultsForGame(gameKey, game, durationMs) {
   if (!game?.gameOver) return [];
 
+  const pluginGame = require('./games').getGame(gameKey);
+  if (pluginGame?.plugin && typeof pluginGame.results === 'function') return pluginGame.results(game, durationMs);
+
   if (gameKey === 'hofslag') {
     const placements = competitionPlacements(game.players, (p) => p.score, true);
     const top = Math.max(...game.players.map((p) => p.score));

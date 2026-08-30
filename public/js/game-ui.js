@@ -1,7 +1,9 @@
 export function createGameUi(ctx) {
   const { state, els, E, action, profileButton, sound, socket, handleAck, cardNode, valueLabel, requestRematch } = ctx;
+  const pluginRenderers=new Map();
 
 function resultPresentation(room,game){
+  const plugin=pluginRenderers.get(game.kind);if(plugin?.presentResult){const result=plugin.presentResult({room,game});if(result)return result}
   let winners=[];
   if(game.kind==='blackjack')winners=(game.players||[]).filter(player=>['Wint','Blackjack'].includes(player.result));
   else if(game.kind==='cluedo')winners=(game.players||[]).filter(player=>player.id===game.winnerId);
@@ -53,10 +55,11 @@ function renderGame(room) {
 
   if(!['minigolf','blackjack','pesten','presidenten','carcassonne'].includes(game.kind))els.gameStage.append(renderGamePlayerStrip(room,game));
   const renderer = { blackjack:renderBlackjack, solitaire:renderSolitaire, presidenten:renderPresidenten, pesten:renderPesten, hartenjagen:renderHartenjagen, cluedo:renderCluedo, carcassonne:renderCarcassonne, minigolf:renderMinigolf }[game.kind];
-  if (renderer) renderer(room, game); else els.gameStage.textContent = 'Renderer ontbreekt.';
+  if (renderer) renderer(room, game); else {const plugin=pluginRenderers.get(game.kind);if(plugin?.render)plugin.render({room,game,state,els,E,action,profileButton,sound,socket,handleAck,cardNode,valueLabel,titlebar,logBox,renderGame});else els.gameStage.textContent = 'Renderer ontbreekt.'}
 }
 
 function gameMetric(game,p) {
+  const plugin=pluginRenderers.get(game.kind);if(plugin?.metric){const metric=plugin.metric({game,player:p});if(metric)return metric}
   if(game.kind==='hofslag')return {text:`${p.score} pt`,score:Number(p.score||0)};
   if(game.kind==='hartenjagen')return {text:String(p.totalScore),score:Number(p.totalScore||0)};
   if(game.kind==='blackjack')return {text:p.result||`${p.value ?? ''}`,score:null};
@@ -730,6 +733,7 @@ function renderMinigolf(room,game) {
   return {
     renderGame,
     gameMetric,
+    registerPlugin(key,plugin){if(!key||typeof plugin?.render!=='function')throw new Error('Game-plugin mist render().');pluginRenderers.set(key,plugin)},
     renderHofBoard,
     svgEl,
     minigolfPathPoint,

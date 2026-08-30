@@ -1,0 +1,15 @@
+{
+  "key": "_template",
+  "name": "Mijn spel",
+  "version": "1",
+  "description": "Een korte beschrijving voor metadata en lobby's.",
+  "icon": "🎲",
+  "badge": "2-4",
+  "actionLabel": "Nieuw spel",
+  "minPlayers": 2,
+  "maxPlayers": 4,
+  "supportsNpc": true,
+  "realtime": false,
+  "solo": false,
+  "rules": "<section><h3>Doel</h3><p>Bereik als eerste 10 punten.</p></section><section><h3>Beurt</h3><p>Klik op Scoor punt. Daarna is de volgende speler aan de beurt.</p></section>"
+}

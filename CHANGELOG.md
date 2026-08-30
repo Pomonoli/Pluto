@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.13.1 — Uitbreidbare game-architectuur
+
+- Nieuwe games kunnen als zelfstandige map onder `games/` worden toegevoegd.
+- Serverlogica, frontendweergave, styling, metadata en spelregels worden automatisch geladen.
+- Een kopieerbare template en Nederlandstalige handleiding maken handmatig toevoegen eenvoudiger.
+- De bestaande games blijven volledig compatibel.
+
 ## v0.13.0 — Carcassonne
 
 - Carcassonne toegevoegd voor 2 tot 5 spelers, inclusief NPCs.
