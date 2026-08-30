@@ -1,6 +1,6 @@
-import { RULES } from './js/rules.js?v=0.12.1';
-import { createGameUi } from './js/game-ui.js?v=0.12.1';
-import { createMapEditor } from './js/map-editor.js?v=0.12.1';
+import { RULES } from './js/rules.js?v=0.12.2';
+import { createGameUi } from './js/game-ui.js?v=0.12.2';
+import { createMapEditor } from './js/map-editor.js?v=0.12.2';
 
 const socket = window.io();
   const $ = (id) => document.getElementById(id);
@@ -19,6 +19,7 @@ const socket = window.io();
     hofAnimation: null,
     hofAnimatedRound: 0,
     cluedoNotes: {},
+    cluedoSelections: {},
     soundMuted: localStorage.getItem('minigames.soundMuted') === '1',
     audioContext: null,
     deferredInstallPrompt: null,
@@ -349,7 +350,7 @@ const socket = window.io();
   }
 
 
-  const GAME_NAMES = {hofslag:'Hofslag',blackjack:'Blackjack',solitaire:'Solitaire',presidenten:'Presidenten',pesten:'Pesten',hartenjagen:'Hartenjagen',cluedo:'Cluedo Lite',minigolf:'Minigolf'};
+  const GAME_NAMES = {hofslag:'Hofslag',blackjack:'Blackjack',solitaire:'Solitaire',presidenten:'Presidenten',pesten:'Pesten',hartenjagen:'Hartenjagen',cluedo:'Cluedo',minigolf:'Minigolf'};
   function formatDuration(ms) {
     if (ms === null || ms === undefined) return '—';
     const total = Math.max(0, Math.round(Number(ms) / 1000));
@@ -599,7 +600,7 @@ const socket = window.io();
   if('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const registration = await navigator.serviceWorker.register('/service-worker.js?v=0.12.1', {
+        const registration = await navigator.serviceWorker.register('/service-worker.js?v=0.12.2', {
           updateViaCache:'none'
         });
         await registration.update();

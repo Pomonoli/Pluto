@@ -23,7 +23,7 @@
 @media(max-width:760px){.stats-heading{align-items:stretch;flex-direction:column}.leaderboard-filter{min-width:0;width:100%}.profile-grid,.auth-grid{grid-template-columns:1fr}}
 
 
-/* v0.4: readable hands, paced actions, Cluedo Lite */
+/* v0.4: readable hands, paced actions, Cluedo */
 .card-fan{
   display:flex;
   flex-wrap:nowrap;
@@ -74,6 +74,8 @@
 .cluedo-field select{
   width:100%;min-height:42px;border:1px solid var(--border);border-radius:9px;background:#171c24;color:var(--text);padding:8px
 }
+.cluedo-field option.cluedo-option-owned,.cluedo-field option.cluedo-option-excluded{color:#e97575}
+.cluedo-field option.cluedo-option-suspect{color:#efc866}
 .cluedo-form .action-row{grid-column:1/-1}
 .clue-hand{display:flex;flex-wrap:wrap;gap:7px;margin-top:7px}
 .clue-card{min-width:125px;max-width:180px;border:1px solid var(--border);border-radius:10px;background:#171c24;padding:9px}
@@ -86,7 +88,9 @@
 .cluedo-note{width:100%;min-height:35px;border:0;border-bottom:1px solid #252b34;border-radius:0;background:transparent;padding:6px 2px;display:flex;justify-content:space-between;gap:8px;text-align:left;font-size:11px}
 .cluedo-note strong{color:var(--muted)}
 .cluedo-note.owned{opacity:.65}
-.cluedo-note.owned strong{color:var(--success);font-size:9px}
+.cluedo-note.owned strong{color:#e97575;font-size:9px}
+.cluedo-note.note-excluded strong{color:#e97575}
+.cluedo-note.note-suspect strong{color:#efc866}
 @media(max-width:850px){
   .cluedo-layout{grid-template-columns:1fr}
   .cluedo-notes{order:2}

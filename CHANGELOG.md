@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.12.2 — Cluedo-notitieblok
+
+- Cluedo Lite heet voortaan Cluedo.
+- Het notitieblok wisselt correct tussen onbekend, uitgesloten en verdacht zonder dat de pagina verspringt.
+- Suggestiekeuzes blijven behouden en tonen de notities en eigen kaarten met duidelijke kleurcodes.
+- Bekende kaarten zijn per soort gegroepeerd en de spelweergave is compacter.
+
 ## v0.12.1 — Spelregels en Solitaire draw-3
 
 - Infoknoppen op het startscherm openen voortaan de volledige spelregels.

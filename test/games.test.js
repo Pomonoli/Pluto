@@ -102,7 +102,7 @@ test('game registry geeft metadata terug', () => {
 });
 
 
-test('Cluedo Lite valideert een geldige suggestie', () => {
+test('Cluedo valideert een geldige suggestie', () => {
   const { validateTriplet, CATEGORIES } = require('../src/cluedo');
   const triplet = validateTriplet({
     suspect: CATEGORIES.suspect[0],
@@ -110,6 +110,12 @@ test('Cluedo Lite valideert een geldige suggestie', () => {
     room: CATEGORIES.room[0]
   });
   assert.equal(triplet.suspect, CATEGORIES.suspect[0]);
+});
+
+test('Cluedo verdeelt 15 kaarten bij twee spelers als 8 en 7', () => {
+  const { createGame } = require('../src/cluedo');
+  const game=createGame([{id:'a',name:'A'},{id:'b',name:'B'}]);
+  assert.deepEqual(game.players.map(player=>player.hand.length).sort((a,b)=>a-b),[7,8]);
 });
 
 

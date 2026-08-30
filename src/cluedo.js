@@ -2,7 +2,7 @@ const { shuffle } = require('./cards');
 
 const meta = {
   key: 'cluedo',
-  name: 'Cluedo Lite',
+  name: 'Cluedo',
   description: 'Deduceer de dader, het wapen en de kamer zonder speelbord.',
   minPlayers: 2,
   maxPlayers: 6,
@@ -78,7 +78,7 @@ function createGame(roomPlayers) {
     winnerId: null,
     gameOver: false,
     resultText: '',
-    log: ['Vind de dader, het wapen en de kamer. Er is geen speelbord in deze Lite-versie.']
+    log: []
   };
 
   scheduleNpc(game, 700);
