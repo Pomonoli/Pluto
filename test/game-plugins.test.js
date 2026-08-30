@@ -44,6 +44,7 @@ test('elke game-client koppelt render() aan zijn echte hoofdrenderer',()=>{
     minigolf:'renderMinigolf',
     pesten:'renderPesten',
     presidenten:'renderPresidenten',
+    santorini:'renderSantorini',
     solitaire:'renderSolitaire',
     stratego:'renderStratego',
     'ticket-to-ride':'renderTicketToRide'
