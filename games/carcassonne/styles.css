@@ -72,3 +72,7 @@
 .carc-viewport{height:55vh;min-height:430px}
 .carc-player{flex-basis:98px}
 }
+@media(max-width:760px){
+body.carcassonne-active .top-actions>#rulesButton{display:inline-flex!important;align-items:center;justify-content:center;order:-1;min-height:39px;padding:8px 11px;font-size:12px;border-radius:12px}
+body.carcassonne-active .top-actions>#soundButton{order:0}
+}
