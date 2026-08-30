@@ -56,7 +56,8 @@
 .carc-city-hall.center{left:26px;top:29px}
 .carc-monastery{position:absolute;z-index:6;left:21px;top:24px;width:30px;height:28px;display:grid;place-items:center;box-sizing:border-box;border:2px solid #5c3a2b;border-radius:4px;background:#ead2a2;color:#4a2e23;font-size:14px;font-weight:900;box-shadow:0 1px 3px rgba(0,0,0,.32)}
 .carc-monastery::before{content:'';position:absolute;left:4px;top:-9px;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:9px solid #6f4330}
-.carc-shield{position:absolute;z-index:7;right:5px;top:4px;color:#d7e6f8;text-shadow:0 1px 2px #1e3349;font-size:14px}
+.carc-shield{position:absolute;z-index:7;right:5px;top:4px;width:16px;height:19px;display:block;font-size:0;background:linear-gradient(180deg,#f4f7fb,#aebac7);border:2px solid #44515d;clip-path:polygon(50% 0,92% 14%,88% 57%,70% 82%,50% 100%,30% 82%,12% 57%,8% 14%);filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))}
+.carc-shield::after{content:'';position:absolute;left:6px;top:3px;width:2px;height:10px;background:#596875;box-shadow:-3px 4px 0 -1px #596875,3px 4px 0 -1px #596875}
 .carc-valid{display:grid;place-items:center;padding:0;border:2px dashed #8edbb6;background:rgba(86,198,143,.18);color:#b9f1d4;font-size:25px;font-weight:900;animation:carc-pulse 1.25s ease-in-out infinite}
 @keyframes carc-pulse{50%{background:rgba(86,198,143,.34);transform:scale(.94)}}
 .carc-meeple{position:absolute;z-index:8;left:27px;top:27px;width:17px;height:17px;display:grid;place-items:center;border:2px solid rgba(255,255,255,.88);border-radius:50%;color:#1a1112;font-size:10px;font-weight:900;box-shadow:0 2px 4px rgba(0,0,0,.5)}
