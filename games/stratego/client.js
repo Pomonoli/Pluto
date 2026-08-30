@@ -36,7 +36,9 @@ function renderPiece(E,piece,isMine,selected){
   return node;
 }
 
-export function render({room,game,els,E,action,titlebar,logBox,renderGame}){
+export function render(api){renderStratego(api)}
+
+function renderStratego({room,game,els,E,action,titlebar,logBox,renderGame}){
   const me=game.players.find(player=>player.id===room.meId);
   const turn=game.players.find(player=>player.id===game.turnPlayerId);
   game.meId=room.meId;
