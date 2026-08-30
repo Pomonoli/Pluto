@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.6.2 — Vaste spelweergave
+
+- De volledige spelpagina blijft binnen de viewport en kan niet meer als geheel scrollen.
+- Alleen de centrale spelinhoud behoudt een interne scrollfallback wanneer een spel aantoonbaar niet binnen het scherm past.
+- Spellogs zijn tijdens actieve spellen overal verborgen, zodat ze geen onnodige schermruimte innemen.
+- Santorini bouwt zijn spellog niet langer op en schaalt het bord dynamisch op basis van de beschikbare schermhoogte.
+- Op bijzonder lage schermen verbergt Santorini secundaire uitleg en compacte spelersdetails om het bord speelbaar te houden.
+- Nieuwe regressiechecks bewaken de vaste spelkaart, interne fallback en verborgen spellogs.
+
 ## v1.6.1 — Lopende spellen hervatten
 
 - Lopende en afgelopen rooms blijven zichtbaar in het lobbyoverzicht zolang minstens één menselijke speler verbonden is.

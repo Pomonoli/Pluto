@@ -40,7 +40,7 @@ function workerNode(E,worker,player,selected,moved){
 
 export function render(api){renderSantorini(api)}
 
-function renderSantorini({room,game,els,E,action,titlebar,logBox,renderGame}){
+function renderSantorini({room,game,els,E,action,titlebar,renderGame}){
   const turn=game.players.find(player=>player.id===game.turnPlayerId);
   const status=game.gameOver?game.resultText:
     game.phase==='setup'?(game.canPlace?'Plaats je volgende worker.':`${turn?.name||''} plaatst een worker.`):
@@ -94,7 +94,7 @@ function renderSantorini({room,game,els,E,action,titlebar,logBox,renderGame}){
   const help=E('div','santorini-help');
   if(game.phase==='setup')help.textContent=`${game.players.length===4?'Iedere speler heeft 1 worker.':'Iedere speler heeft 2 workers.'} Plaats ze om beurten op vrije vakken.`;
   else help.textContent='Beweeg maximaal één niveau omhoog. Na je zet bouw je op een aangrenzend vrij vak. Niveau 4 is een koepel en is geblokkeerd.';
-  els.gameStage.append(help,logBox(game.log));
+  els.gameStage.append(help);
 }
 
 export function metric({player,game}){

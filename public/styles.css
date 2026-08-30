@@ -459,7 +459,9 @@ body.game-active .app-shell{height:100dvh;min-height:0;padding-bottom:0;display:
 body.game-active .topbar{flex:0 0 auto}
 body.game-active main,body.game-active #roomView,body.game-active .room-layout,body.game-active .room-main,body.game-active #gameSection{flex:1;min-height:0;height:100%}
 body.game-active .room-layout,body.game-active .room-main,body.game-active #gameSection{display:flex;flex-direction:column}
-body.game-active .game-panel{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
+body.game-active .game-panel{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+body.game-active #gameStage{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
+body.game-active .log-box{display:none!important}
 @media(max-width:480px){
 .topbar{margin-left:-7px;margin-right:-7px;padding-left:7px;padding-right:7px}
 .brand-button{max-width:calc(100% - 50px)}

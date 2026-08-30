@@ -41,7 +41,9 @@ test('actieve spellen gebruiken een viewporthoge layout met interne fallback',()
   const css=fs.readFileSync(path.join(root,'public/styles.css'),'utf8');
   assert.match(app,/classList\.toggle\('game-active',room\.status!=='lobby'\)/);
   assert.match(css,/body\.game-active\{height:100dvh;min-height:100dvh;overflow:hidden\}/);
-  assert.match(css,/body\.game-active \.game-panel\{[^}]*overflow:auto/);
+  assert.match(css,/body\.game-active \.game-panel\{[^}]*overflow:hidden/);
+  assert.match(css,/body\.game-active #gameStage\{[^}]*overflow:auto/);
+  assert.match(css,/body\.game-active \.log-box\{display:none!important\}/);
 });
 
 test('homescreen bevat geen kaart meer om via een code te joinen',()=>{

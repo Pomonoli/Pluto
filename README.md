@@ -2,6 +2,10 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
+## Nieuw in versie 1.6.2
+
+Actieve spellen blijven nu als volledige pagina vast binnen de schermhoogte. Spellogs zijn verwijderd uit de spelweergave en alleen spellen die echt meer ruimte nodig hebben, gebruiken nog een interne scrollfallback. Santorini schaalt zijn bord bovendien mee met de beschikbare schermhoogte en verbergt op lage schermen overbodige uitleg.
+
 ## Nieuw in versie 1.6.1
 
 Lopende spellen blijven in het lobbyoverzicht staan zolang minstens één speler aanwezig is. Deelnemers die per ongeluk naar Home gaan, kunnen via `Ga terug` onmiddellijk hun bestaande plaats en spel hervatten.
