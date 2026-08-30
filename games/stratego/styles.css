@@ -1,0 +1,19 @@
+.stratego-score{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:10px 0}
+.stratego-player{display:grid;gap:2px;padding:10px 12px;border:1px solid var(--line,#334155);border-radius:14px;background:rgba(15,23,42,.45)}
+.stratego-player.active{outline:2px solid var(--accent,#8b5cf6)}
+.stratego-player span,.stratego-player small{font-size:.78rem;opacity:.75}.stratego-player b{font-size:.82rem}.stratego-player small.ready{opacity:1;font-weight:800}
+.stratego-help{margin:8px 0 12px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.06);font-size:.86rem;line-height:1.35}
+.stratego-board{--board-size:6;display:grid;grid-template-columns:repeat(var(--board-size),1fr);width:min(100%,520px);aspect-ratio:1;margin:12px auto;border:2px solid rgba(255,255,255,.2);border-radius:16px;overflow:hidden;background:#263a2c}
+.stratego-cell{position:relative;display:grid;place-items:center;min-width:0;min-height:0;padding:3px;border:0;border-right:1px solid rgba(255,255,255,.12);border-bottom:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.035);color:inherit}
+.stratego-cell:nth-child(12n+1),.stratego-cell:nth-child(12n+2),.stratego-cell:nth-child(12n+3),.stratego-cell:nth-child(12n+4),.stratego-cell:nth-child(12n+5),.stratego-cell:nth-child(12n+6){background:rgba(255,255,255,.07)}
+.stratego-cell.target:after{content:"";position:absolute;width:22%;aspect-ratio:1;border-radius:999px;background:rgba(255,255,255,.72)}
+.stratego-piece{width:78%;aspect-ratio:1;display:grid;place-items:center;border-radius:13px;border:2px solid rgba(255,255,255,.35);font-weight:900;box-shadow:0 4px 10px rgba(0,0,0,.28)}
+.stratego-piece.mine{background:linear-gradient(145deg,#2563eb,#1e3a8a)}
+.stratego-piece.enemy{background:linear-gradient(145deg,#dc2626,#7f1d1d)}
+.stratego-piece.hidden{background:linear-gradient(145deg,#991b1b,#450a0a)}
+.stratego-piece.selected{outline:3px solid #f8fafc;outline-offset:2px}
+.stratego-piece-rank{font-size:clamp(.72rem,3.4vw,1.15rem);line-height:1}
+.stratego-ready{display:block;width:min(100%,520px);margin:10px auto 14px}
+.stratego-legend{display:flex;flex-wrap:wrap;gap:7px 12px;width:min(100%,520px);margin:0 auto 14px;font-size:.76rem;opacity:.85}
+.stratego-legend span{white-space:nowrap}.stratego-legend b{display:inline-grid;place-items:center;min-width:20px;padding:2px 5px;border-radius:6px;background:rgba(255,255,255,.09)}
+@media(max-width:430px){.stratego-score{gap:7px}.stratego-player{padding:8px}.stratego-board{border-radius:12px}.stratego-piece{width:82%;border-radius:9px}}
