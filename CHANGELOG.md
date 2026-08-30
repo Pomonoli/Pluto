@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.2.1 — Quoridor NPC's en stabiele layout
+
+- Quoridor ondersteunt nu NPC-spelers die doelgericht bewegen en geldige strategische muren kunnen plaatsen.
+- De Quoridor-statusbalk houdt altijd dezelfde hoogte, zodat het bord niet meer verspringt tussen beurten.
+- De README vermeldt de actuele NPC-ondersteuning en een regressietest bewaakt zelfstandige NPC-beurten.
+
 ## v1.2.0 — Vier nieuwe bordspellen
 
 - Stratego toegevoegd als compact duel met geheime rangen, vrije beginopstelling, gevechten en NPC-tegenstander.

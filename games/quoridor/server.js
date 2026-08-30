@@ -28,7 +28,6 @@ function createGame(roomPlayers){
     goalLabel:STARTS[index].goalLabel,
     walls
   }));
-  if(players.some(player=>player.isNpc))throw new Error('Quoridor ondersteunt voorlopig geen NPCs.');
   return {
     gameKey:'quoridor',
     boardSize:BOARD_SIZE,
@@ -38,7 +37,8 @@ function createGame(roomPlayers){
     gameOver:false,
     winnerId:null,
     resultText:'',
-    log:[`${players[0].name} begint.`]
+    log:[`${players[0].name} begint.`],
+    nextNpcAt:0
   };
 }
 
@@ -144,6 +144,23 @@ function legalMoves(game,player){
 
 function endTurn(game){game.turnIndex=(game.turnIndex+1)%game.players.length}
 
+function movePlayer(game,player,row,col){
+  player.row=row;player.col=col;
+  game.log.unshift(`${player.name} verplaatst zijn pion.`);
+  if(goalReached(player,row,col)){
+    game.gameOver=true;game.winnerId=player.id;game.nextNpcAt=0;
+    game.resultText=`${player.name} bereikt de overkant en wint.`;
+    game.log.unshift(game.resultText);return;
+  }
+  endTurn(game);
+}
+
+function placeWall(game,player,candidate){
+  game.walls.push(candidate);player.walls-=1;
+  game.log.unshift(`${player.name} plaatst een ${candidate.orientation==='h'?'horizontale':'verticale'} muur.`);
+  endTurn(game);
+}
+
 function handleAction(game,playerId,action,payload){
   if(game.gameOver)throw new Error('Het spel is afgelopen.');
   const player=currentPlayer(game);
@@ -152,31 +169,55 @@ function handleAction(game,playerId,action,payload){
   if(action==='move'){
     const row=Number(payload?.row),col=Number(payload?.col);
     if(!Number.isInteger(row)||!Number.isInteger(col)||!legalMoves(game,player).some(move=>move.row===row&&move.col===col))throw new Error('Ongeldige zet.');
-    player.row=row;player.col=col;
-    game.log.unshift(`${player.name} verplaatst zijn pion.`);
-    if(goalReached(player,row,col)){
-      game.gameOver=true;
-      game.winnerId=player.id;
-      game.resultText=`${player.name} bereikt de overkant en wint.`;
-      game.log.unshift(game.resultText);
-      return;
-    }
-    endTurn(game);
-    return;
+    return movePlayer(game,player,row,col);
   }
 
   if(action==='wall'){
     if(player.walls<=0)throw new Error('Je hebt geen muren meer.');
     const candidate=normalizeWall(payload);
     if(!isValidWall(game,candidate))throw new Error('Deze muur mag hier niet staan. Iedere speler moet een route naar zijn doel houden.');
-    game.walls.push(candidate);
-    player.walls-=1;
-    game.log.unshift(`${player.name} plaatst een ${candidate.orientation==='h'?'horizontale':'verticale'} muur.`);
-    endTurn(game);
-    return;
+    return placeWall(game,player,candidate);
   }
 
   throw new Error('Onbekende actie.');
+}
+
+function distanceToGoal(game,player,start={row:player.row,col:player.col},walls=game.walls){
+  const queue=[{...start,distance:0}],seen=new Set([key(start.row,start.col)]);
+  for(let index=0;index<queue.length;index+=1){
+    const pos=queue[index];if(goalReached(player,pos.row,pos.col))return pos.distance;
+    for(const[dr,dc]of DIRECTIONS){
+      const next={row:pos.row+dr,col:pos.col+dc,distance:pos.distance+1},nextKey=key(next.row,next.col);
+      if(!inBounds(next.row,next.col)||seen.has(nextKey)||edgeBlockedByWalls(pos,next,walls))continue;
+      seen.add(nextKey);queue.push(next);
+    }
+  }
+  return Infinity;
+}
+
+function npcTurn(game,player){
+  if(player.walls>0&&Math.random()<.22){
+    const candidates=validWalls(game);
+    if(candidates.length){
+      const opponents=game.players.filter(item=>item.id!==player.id);
+      const sample=candidates.sort(()=>Math.random()-.5).slice(0,24);
+      sample.sort((a,b)=>Math.min(...opponents.map(item=>distanceToGoal(game,item,undefined,[...game.walls,b])))-Math.min(...opponents.map(item=>distanceToGoal(game,item,undefined,[...game.walls,a]))));
+      return placeWall(game,player,sample[0]);
+    }
+  }
+  const moves=legalMoves(game,player);
+  moves.sort((a,b)=>distanceToGoal(game,player,a)-distanceToGoal(game,player,b));
+  const bestDistance=distanceToGoal(game,player,moves[0]);
+  const best=moves.filter(move=>distanceToGoal(game,player,move)===bestDistance);
+  const choice=best[Math.floor(Math.random()*best.length)];
+  if(choice)movePlayer(game,player,choice.row,choice.col);
+}
+
+function scheduleNpc(game,delay=650){const player=currentPlayer(game);game.nextNpcAt=!game.gameOver&&player?.isNpc?Date.now()+delay:0}
+function tick(game,now=Date.now()){
+  if(game.gameOver)return false;const player=currentPlayer(game);
+  if(!player?.isNpc){game.nextNpcAt=0;return false}if(!game.nextNpcAt)game.nextNpcAt=now+650;if(now<game.nextNpcAt)return false;
+  npcTurn(game,player);scheduleNpc(game);return true;
 }
 
 function serialize(game,requesterId,connected){
@@ -212,4 +253,4 @@ function results(game){
   }));
 }
 
-module.exports={createGame,handleAction,serialize,results,legalMoves,isValidWall,hasPath};
+module.exports={createGame,handleAction,serialize,results,legalMoves,isValidWall,hasPath,tick,distanceToGoal};

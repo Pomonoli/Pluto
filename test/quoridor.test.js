@@ -40,3 +40,14 @@ test('Quoridor eindigt zodra een pion de overkant bereikt',()=>{
   assert.equal(game.gameOver,true);
   assert.equal(game.winnerId,'a');
 });
+
+test('Quoridor NPC speelt zelfstandig een geldige beurt',()=>{
+  const game=quoridor.createGame([players(2)[0],{...players(2)[1],isNpc:true}]);
+  game.turnIndex=1;
+  game.players[1].walls=0;
+  const before={row:game.players[1].row,col:game.players[1].col};
+  game.nextNpcAt=1;
+  assert.equal(quoridor.tick(game,Date.now()),true);
+  assert.equal(game.turnIndex,0);
+  assert.notDeepEqual({row:game.players[1].row,col:game.players[1].col},before);
+});

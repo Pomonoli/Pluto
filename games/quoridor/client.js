@@ -30,7 +30,7 @@ function renderQuoridor({room,game,els,E,action,titlebar,logBox}){
   shell.append(players);
 
   const help=E('div','quoridor-help',game.canAct?'Tik op een gemarkeerd vak om te bewegen, of kies hieronder een muurrichting.':game.gameOver?'':`Wachten op ${turn?.name||'de andere speler'}.`);
-  if(help.textContent)shell.append(help);
+  shell.append(help);
 
   const boardWrap=E('div','quoridor-board-wrap');
   const board=E('div','quoridor-board');
