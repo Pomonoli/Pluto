@@ -48,7 +48,6 @@ test('elke game-client koppelt render() aan zijn echte hoofdrenderer',()=>{
   };
   for(const [key,renderer] of Object.entries(expected)){
     const client=fs.readFileSync(path.join(__dirname,'..','games',key,'client.js'),'utf8');
-    const escaped=renderer.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-    assert.match(client,new RegExp(`export\\s+function\\s+render\\s*\\([^)]*\\)\\s*\\{[^}]*\\b${escaped}\\s*\\(`,'s'),`${key} render() roept ${renderer} niet aan`);
+    assert.match(client,new RegExp(`export\\s+function\\s+render\\s*\\([^)]*\\)\\s*\\{[^}]*\\b${renderer}\\s*\\(`,'s'),`${key} render() roept ${renderer} niet aan`);
   }
 });
