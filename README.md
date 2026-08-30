@@ -2,6 +2,16 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
+## Nieuw in versie 1.0.0
+
+Pluto 1 vormt de eerste stabiele hoofdversie van het platform. De app combineert negen minigames met realtime rooms, NPCs, accounts, blijvende statistieken, leaderboards en een installeerbare mobiele PWA in één self-hosted omgeving.
+
+Games zijn zelfstandige modules onder `games/`. Elke game beheert daar zijn serverlogica, client-entrypoint, metadata, spelregels en resultaten. De server ontdekt deze mappen automatisch, waardoor nieuwe games vanuit de meegeleverde template kunnen worden toegevoegd zonder de centrale registry aan te passen.
+
+## Nieuw in versie 1.0.1
+
+De Docker-deployment bevat nu ook de volledige `games/`-map. Daarmee is de opstartcrash uit 1.0.0 opgelost en zijn alle negen games beschikbaar in een gebouwde container. Een regressietest bewaakt dat deze map in toekomstige images aanwezig blijft.
+
 ## Games
 
 Hofslag, Blackjack, Solitaire, Presidenten, Pesten, Hartenjagen, Cluedo, Carcassonne en Minigolf met een Map Editor.
