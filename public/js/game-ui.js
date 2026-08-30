@@ -5,15 +5,6 @@ export function createGameUi(ctx) {
 function resultPresentation(room,game){
   const plugin=pluginRenderers.get(game.kind);if(plugin?.presentResult){const result=plugin.presentResult({room,game});if(result)return result}
   let winners=[];
-  if(game.kind==='blackjack')winners=(game.players||[]).filter(player=>['Wint','Blackjack'].includes(player.result));
-  else if(game.kind==='cluedo')winners=(game.players||[]).filter(player=>player.id===game.winnerId);
-  else if(game.kind==='presidenten')winners=(game.players||[]).filter(player=>player.place===1);
-  else if(game.kind==='pesten')winners=(game.players||[]).filter(player=>player.handCount===0);
-  else if(game.kind==='hofslag'&&game.players?.length){const best=Math.max(...game.players.map(player=>player.score));winners=game.players.filter(player=>player.score===best)}
-  else if(game.kind==='hartenjagen'&&game.players?.length){const best=Math.min(...game.players.map(player=>player.totalScore));winners=game.players.filter(player=>player.totalScore===best)}
-  else if(game.kind==='carcassonne'&&game.players?.length){const best=Math.max(...game.players.map(player=>player.score));winners=game.players.filter(player=>player.score===best)}
-  else if(game.kind==='minigolf'&&game.players?.length){const best=Math.max(...game.players.map(player=>player.totalPoints));winners=game.players.filter(player=>player.totalPoints===best)}
-  else if(game.kind==='solitaire')winners=(game.players||room.players||[]).filter(player=>player.id===room.meId).slice(0,1);
   if(!winners.length){
     const text=String(game.resultText||'');
     if(/dealer wint/i.test(text))return {title:'Dealer',copy:'is de winnaar.'};
@@ -48,27 +39,20 @@ function renderGame(room) {
   }
   // Hofslag gebruikt bewust opnieuw zijn eigen v0.4 renderpad.
   // Geen generieke player-strip of andere wrapper vóór de Hofslag-renderer.
-  if (game.kind === 'hofslag') {
-    renderHofslag(room, game);
-    return;
-  }
+  const plugin=pluginRenderers.get(game.kind);
+  if(plugin?.render)plugin.render({room,game,state,els,E,action,profileButton,sound,socket,handleAck,cardNode,valueLabel,titlebar,logBox,renderGame,renderBuiltin});
+  else els.gameStage.textContent = 'Renderer wordt geladen…';
+}
 
-  if(!['minigolf','blackjack','pesten','presidenten','carcassonne'].includes(game.kind))els.gameStage.append(renderGamePlayerStrip(room,game));
-  const renderer = { blackjack:renderBlackjack, solitaire:renderSolitaire, presidenten:renderPresidenten, pesten:renderPesten, hartenjagen:renderHartenjagen, cluedo:renderCluedo, carcassonne:renderCarcassonne, minigolf:renderMinigolf }[game.kind];
-  if (renderer) renderer(room, game); else {const plugin=pluginRenderers.get(game.kind);if(plugin?.render)plugin.render({room,game,state,els,E,action,profileButton,sound,socket,handleAck,cardNode,valueLabel,titlebar,logBox,renderGame});else els.gameStage.textContent = 'Renderer ontbreekt.'}
+function renderBuiltin(kind,room,game,{playerStrip=true}={}){
+  if(kind==='hofslag'){renderHofslag(room,game);return}
+  if(playerStrip)els.gameStage.append(renderGamePlayerStrip(room,game));
+  const renderer={blackjack:renderBlackjack,solitaire:renderSolitaire,presidenten:renderPresidenten,pesten:renderPesten,hartenjagen:renderHartenjagen,cluedo:renderCluedo,carcassonne:renderCarcassonne,minigolf:renderMinigolf}[kind];
+  if(renderer)renderer(room,game);else els.gameStage.textContent='Renderer ontbreekt.';
 }
 
 function gameMetric(game,p) {
   const plugin=pluginRenderers.get(game.kind);if(plugin?.metric){const metric=plugin.metric({game,player:p});if(metric)return metric}
-  if(game.kind==='hofslag')return {text:`${p.score} pt`,score:Number(p.score||0)};
-  if(game.kind==='hartenjagen')return {text:String(p.totalScore),score:Number(p.totalScore||0)};
-  if(game.kind==='blackjack')return {text:p.result||`${p.value ?? ''}`,score:null};
-  if(game.kind==='presidenten')return {text:p.place?`#${p.place}`:`${p.handCount} kaarten`,score:null};
-  if(game.kind==='pesten')return {text:`${p.handCount} kaarten`,score:null};
-  if(game.kind==='cluedo')return {text:p.canAccuse?`${p.handCount} kaarten`:'uit',score:null};
-  if(game.kind==='carcassonne')return {text:`${p.score} pt · ${p.meeples} horigen`,score:Number(p.score||0)};
-  if(game.kind==='minigolf')return {text:`${p.totalPoints} pt`,score:Number(p.totalPoints||0)};
-  if(game.kind==='solitaire')return {text:'solo',score:null};
   return {text:'',score:null};
 }
 function renderGamePlayerStrip(room,game) {

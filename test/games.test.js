@@ -1,11 +1,11 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const blackjack = require('../src/blackjack');
+const blackjack = require('../games/blackjack/server');
 const { handValue } = blackjack;
-const solitaire = require('../src/solitaire');
-const { presidentRank, playableCardIds } = require('../src/presidenten');
-const { cardPoints } = require('../src/hartenjagen');
-const carcassonne = require('../src/carcassonne');
+const solitaire = require('../games/solitaire/server');
+const { presidentRank, playableCardIds } = require('../games/presidenten/server');
+const { cardPoints } = require('../games/hartenjagen/server');
+const carcassonne = require('../games/carcassonne/server');
 const { getGame, listGames } = require('../src/games');
 
 test('alle 9 games zijn geregistreerd', () => {
@@ -104,7 +104,7 @@ test('game registry geeft metadata terug', () => {
 
 
 test('Cluedo valideert een geldige suggestie', () => {
-  const { validateTriplet, CATEGORIES } = require('../src/cluedo');
+  const { validateTriplet, CATEGORIES } = require('../games/cluedo/server');
   const triplet = validateTriplet({
     suspect: CATEGORIES.suspect[0],
     weapon: CATEGORIES.weapon[0],
@@ -114,7 +114,7 @@ test('Cluedo valideert een geldige suggestie', () => {
 });
 
 test('Cluedo verdeelt 15 kaarten bij twee spelers als 8 en 7', () => {
-  const { createGame } = require('../src/cluedo');
+  const { createGame } = require('../games/cluedo/server');
   const game=createGame([{id:'a',name:'A'},{id:'b',name:'B'}]);
   assert.deepEqual(game.players.map(player=>player.hand.length).sort((a,b)=>a-b),[7,8]);
 });
@@ -149,7 +149,7 @@ test('Carcassonne doorloopt leggen en horige overslaan', () => {
 
 
 test('Minigolf genereert een slimme pool van 20 speelbare maps en kiest 5 unieke', () => {
-  const golf = require('../src/minigolf');
+  const golf = require('../games/minigolf/server');
   const pool = golf.buildSmartPool(20);
   assert.equal(pool.length, 20);
   assert.equal(new Set(pool.map(h => h.id)).size, 20);
@@ -163,7 +163,7 @@ test('Minigolf genereert een slimme pool van 20 speelbare maps en kiest 5 unieke
 });
 
 test('Minigolf punten gebruiken dense ranking en ex aequo', () => {
-  const { scoreHole } = require('../src/minigolf');
+  const { scoreHole } = require('../games/minigolf/server');
   const scored = scoreHole([
     {id:'a',potted:true,holeStrokes:2},
     {id:'b',potted:true,holeStrokes:2},
@@ -175,7 +175,7 @@ test('Minigolf punten gebruiken dense ranking en ex aequo', () => {
 });
 
 test('Minigolf roze cement remt sterker dan zand', () => {
-  const { simulateShot } = require('../src/minigolf');
+  const { simulateShot } = require('../games/minigolf/server');
   const base = {
     name:'test', maxStrokes:5, cup:{x:880,y:500}, walls:[], props:[],
     terrain:[]
@@ -189,7 +189,7 @@ test('Minigolf roze cement remt sterker dan zand', () => {
 });
 
 test('Minigolf custom maps worden alleen toegevoegd als ze speelbaar zijn', () => {
-  const golf = require('../src/minigolf');
+  const golf = require('../games/minigolf/server');
   const custom = golf.sanitizeMapDefinition({
     name:'Test custom',difficulty:'Moeilijk',maxStrokes:6,
     startZone:{x:50,y:360,w:140,h:100},cup:{x:800,y:100},
@@ -205,7 +205,7 @@ test('Minigolf custom maps worden alleen toegevoegd als ze speelbaar zijn', () =
 });
 
 test('Minigolf map sanitizer ondersteunt startvak en boosts', () => {
-  const { sanitizeMapDefinition } = require('../src/minigolf');
+  const { sanitizeMapDefinition } = require('../games/minigolf/server');
   const map = sanitizeMapDefinition({
     name:'  Mijn Map  ',maxStrokes:99,difficulty:'Expert',
     startZone:{x:40,y:350,w:140,h:100},cup:{x:800,y:100},
@@ -222,7 +222,7 @@ test('Minigolf map sanitizer ondersteunt startvak en boosts', () => {
 
 
 test('Minigolf weigert een hole die volledig door water is afgesloten', () => {
-  const golf = require('../src/minigolf');
+  const golf = require('../games/minigolf/server');
   const map = golf.sanitizeMapDefinition({
     name:'Onmogelijk',difficulty:'Normaal',maxStrokes:5,
     startZone:{x:40,y:350,w:140,h:100},
@@ -241,7 +241,7 @@ test('Minigolf weigert een hole die volledig door water is afgesloten', () => {
 });
 
 test('Minigolf boost geeft extra snelheid in de pijlrichting', () => {
-  const golf = require('../src/minigolf');
+  const golf = require('../games/minigolf/server');
   const base = golf.sanitizeMapDefinition({
     name:'Boost test',startZone:{x:40,y:220,w:120,h:80},cup:{x:850,y:480},
     terrain:[],walls:[],props:[],boosts:[]
@@ -254,7 +254,7 @@ test('Minigolf boost geeft extra snelheid in de pijlrichting', () => {
 });
 
 test('Presidenten sorteert kaarten primair op rang, niet op suit', () => {
-  const { sortPresidentCards } = require('../src/presidenten');
+  const { sortPresidentCards } = require('../games/presidenten/server');
   const hand = [
     {id:'9♣',rank:'9',value:9,suit:'♣'},
     {id:'3♠',rank:'3',value:3,suit:'♠'},
@@ -268,13 +268,13 @@ test('Presidenten sorteert kaarten primair op rang, niet op suit', () => {
 
 
 test('Minigolf met 2 spelers geeft maximaal 1 punt per hole', () => {
-  const { scoreHole } = require('../src/minigolf');
+  const { scoreHole } = require('../games/minigolf/server');
   const result = scoreHole([{id:'a',potted:true,holeStrokes:2},{id:'b',potted:true,holeStrokes:4}]);
   assert.deepEqual(Object.fromEntries(result.map(r=>[r.playerId,r.points])), {a:1,b:0});
 });
 
 test('Minigolf startpositie vereist alleen dat het middelpunt in het startvak ligt', () => {
-  const golf = require('../src/minigolf');
+  const golf = require('../games/minigolf/server');
   const game = golf.createGame([{id:'a',name:'A',isNpc:false},{id:'b',name:'B',isNpc:false}]);
   const z=game.course[0].startZone;
   const point={x:z.x+1,y:z.y+z.h/2};
@@ -282,7 +282,7 @@ test('Minigolf startpositie vereist alleen dat het middelpunt in het startvak li
 });
 
 test('Minigolf laatste speler krijgt maximaal één extra poging', () => {
-  const golf = require('../src/minigolf');
+  const golf = require('../games/minigolf/server');
   const game = golf.createGame([{id:'a',name:'A',isNpc:false},{id:'b',name:'B',isNpc:false}]);
   game.players[0].potted=true;game.players[0].holeDone=true;game.players[0].holeStrokes=3;
   game.players[1].placed=true;game.players[1].ball={...game.course[0].start};game.players[1].holeStrokes=2;
@@ -291,7 +291,7 @@ test('Minigolf laatste speler krijgt maximaal één extra poging', () => {
 });
 
 test('Minigolf destructible object botst eerst en verdwijnt daarna', () => {
-  const golf = require('../src/minigolf');
+  const golf = require('../games/minigolf/server');
   const map = golf.sanitizeMapDefinition({
     name:'Collider',startZone:{x:40,y:220,w:120,h:80},cup:{x:850,y:480},terrain:[],walls:[],boosts:[],
     props:[{kind:'tractor',shape:'rect',x:250,y:235,w:76,h:46}]
@@ -304,7 +304,7 @@ test('Minigolf destructible object botst eerst en verdwijnt daarna', () => {
 
 
 test('Minigolf speler kiest startpositie en kan onmiddellijk slag 1 spelen', () => {
-  const golf = require('../src/minigolf');
+  const golf = require('../games/minigolf/server');
   const game = golf.createGame([{id:'a',name:'A',isNpc:false},{id:'b',name:'B',isNpc:false}]);
   const z=game.course[0].startZone;
   const point={x:z.x+12,y:z.y+z.h/2};
@@ -320,7 +320,7 @@ test('Minigolf speler kiest startpositie en kan onmiddellijk slag 1 spelen', () 
 });
 
 test('Minigolf laatste-kans speler is DNF na zijn ene misser', () => {
-  const golf = require('../src/minigolf');
+  const golf = require('../games/minigolf/server');
   const game = golf.createGame([{id:'a',name:'A',isNpc:false},{id:'b',name:'B',isNpc:false}]);
   const simple=golf.sanitizeMapDefinition({
     name:'Last chance',difficulty:'Normaal',maxStrokes:6,

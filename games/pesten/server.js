@@ -1,4 +1,4 @@
-const { makeDeck, shuffle, sortCards, cardLabel, SUITS } = require('./cards');
+const { makeDeck, shuffle, sortCards, cardLabel, SUITS } = require('../../src/cards');
 
 const meta = {
   key: 'pesten', name: 'Pesten', description: 'Leg dezelfde kleur of waarde. Pestkaarten veranderen het spel.',
@@ -161,4 +161,6 @@ function serialize(game, requesterId, connected) {
   };
 }
 
-module.exports = { meta, createGame, handleAction, serialize, tick, canPlay };
+function results(game){const winner=game.players.find(p=>p.hand.length===0);return game.players.map(p=>({playerId:p.id,placement:winner?.id===p.id?1:2,score:p.hand.length,won:winner?.id===p.id,outcome:winner?.id===p.id?'Wint':'Verliest'}))}
+
+module.exports = { meta, createGame, handleAction, serialize, tick, canPlay, results };

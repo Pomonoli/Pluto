@@ -15,14 +15,17 @@ test('server bootstrap bevat geen room/socket businesslogica meer',()=>{
  assert.match(server,/configureHttp/);
 });
 
-test('frontend controller is opgesplitst in game UI en map editor modules',()=>{
+test('frontend controller en games zijn opgesplitst in modules',()=>{
  assert.ok(lines('public/app.js') < 700);
  assert.ok(fs.existsSync(path.join(__dirname,'../public/js/game-ui.js')));
  assert.ok(fs.existsSync(path.join(__dirname,'../public/js/map-editor.js')));
- assert.ok(fs.existsSync(path.join(__dirname,'../public/js/rules.js')));
+ for(const game of ['hofslag','blackjack','solitaire','presidenten','pesten','hartenjagen','cluedo','carcassonne','minigolf']){
+  for(const file of ['manifest.json','server.js','client.js','rules.html'])assert.ok(fs.existsSync(path.join(__dirname,'..','games',game,file)),`${game}/${file} ontbreekt`);
+  assert.ok(!fs.existsSync(path.join(__dirname,'..','src',`${game}.js`)),`obsolete src/${game}.js bestaat nog`);
+ }
 });
 
 test('Minigolf mapgeneratie staat los van de engine',()=>{
- assert.ok(fs.existsSync(path.join(__dirname,'../src/minigolf/generator.js')));
- assert.ok(lines('src/minigolf.js') < 1100);
+ assert.ok(fs.existsSync(path.join(__dirname,'../games/minigolf/generator.js')));
+ assert.ok(lines('games/minigolf/server.js') < 1100);
 });

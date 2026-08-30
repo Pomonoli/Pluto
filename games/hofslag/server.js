@@ -1,4 +1,4 @@
-const { shuffle } = require('./cards');
+const { shuffle } = require('../../src/cards');
 
 const meta = {
   key: 'hofslag',
@@ -243,4 +243,6 @@ function serialize(game, requesterId, connected) {
   };
 }
 
-module.exports = { meta, createGame, handleAction, serialize, maybeAdvance, getMoves };
+function results(game){const {competitionPlacements}=require('../../src/result-utils');const placements=competitionPlacements(game.players,p=>p.score,true),top=Math.max(...game.players.map(p=>p.score)),leaders=game.players.filter(p=>p.score===top);return game.players.map(p=>({playerId:p.id,placement:placements.get(p.id),score:p.score,won:leaders.length===1&&leaders[0].id===p.id,outcome:leaders.length>1&&p.score===top?'Gelijkspel':p.score===top?'Wint':'Verliest'}))}
+
+module.exports = { meta, createGame, handleAction, serialize, maybeAdvance, getMoves, results };

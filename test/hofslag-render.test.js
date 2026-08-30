@@ -5,18 +5,20 @@ const path=require('node:path');
 
 const gameUiPath=path.join(__dirname,'../public/js/game-ui.js');
 
-test('Hofslag gebruikt eigen renderpad vóór generieke player-strip',()=>{
+test('Hofslag-plugin gebruikt zijn eigen renderpad zonder player-strip',()=>{
  const app=fs.readFileSync(gameUiPath,'utf8');
- const special=app.indexOf("if (game.kind === 'hofslag')");
- const strip=app.indexOf("if(!['minigolf','blackjack','pesten','presidenten','carcassonne'].includes(game.kind))els.gameStage.append(renderGamePlayerStrip(room,game));");
- assert.ok(special>0);
- assert.ok(strip>special);
- assert.match(app.slice(special,strip),/renderHofslag\(room, game\);/);
+ const client=fs.readFileSync(path.join(__dirname,'../games/hofslag/client.js'),'utf8');
+ assert.match(client,/renderBuiltin\('hofslag'/);
+ assert.match(app,/if\(kind==='hofslag'\)\{renderHofslag\(room,game\);return\}/);
 });
 
 test('Blackjack, Pesten en Presidenten verbergen de generieke player-strip',()=>{
  const app=fs.readFileSync(gameUiPath,'utf8');
- assert.match(app,/!\['minigolf','blackjack','pesten','presidenten','carcassonne'\]\.includes\(game\.kind\)/);
+ for(const game of ['blackjack','pesten','presidenten']){
+  const client=fs.readFileSync(path.join(__dirname,'..','games',game,'client.js'),'utf8');
+  assert.match(client,/playerStrip:false/);
+ }
+ assert.match(app,/if\(playerStrip\)els\.gameStage\.append\(renderGamePlayerStrip/);
  assert.match(app,/titlebar\('Blackjack',status\)/);
  assert.doesNotMatch(app,/Blackjack · ronde/);
 });

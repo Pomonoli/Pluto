@@ -4,7 +4,7 @@ const path = require('node:path');
 const fs = require('node:fs');
 const express = require('express');
 const { getGame, listGames, listGamePlugins, getGamePlugin } = require('../games');
-const minigolf = require('../minigolf');
+const minigolf = require('../../games/minigolf/server');
 const authDb = require('../db');
 
 function isSecureRequest(req) {

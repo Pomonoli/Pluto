@@ -1,4 +1,4 @@
-const { makeDeck, shuffle, cardLabel } = require('./cards');
+const { makeDeck, shuffle, cardLabel } = require('../../src/cards');
 
 const meta = {
   key: 'presidenten', name: 'Presidenten', description: 'Speel hogere combinaties en raak als eerste je kaarten kwijt.',
@@ -237,5 +237,6 @@ function serialize(game, requesterId, connected) {
 }
 
 module.exports = {
-  meta, createGame, handleAction, serialize, tick, presidentRank, sortPresidentCards, isValidSelection, canPlayAnything, playableCardIds
+  meta, createGame, handleAction, serialize, tick, presidentRank, sortPresidentCards, isValidSelection, canPlayAnything, playableCardIds,
+  results:(game)=>game.players.map(p=>({playerId:p.id,placement:p.place,score:p.place,won:p.place===1,outcome:p.place===1?'President':p.place===game.players.length?'Klootzak':`#${p.place}`}))
 };

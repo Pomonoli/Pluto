@@ -1,4 +1,4 @@
-const { shuffle } = require('./cards');
+const { shuffle } = require('../../src/cards');
 
 const meta = {
   key: 'cluedo',
@@ -310,5 +310,6 @@ function serialize(game, requesterId, connected) {
 }
 
 module.exports = {
-  meta, CATEGORIES, createGame, handleAction, serialize, tick, validateTriplet
+  meta, CATEGORIES, createGame, handleAction, serialize, tick, validateTriplet,
+  results:(game)=>game.players.map(p=>({playerId:p.id,placement:game.winnerId===p.id?1:2,score:null,won:game.winnerId===p.id,outcome:game.winnerId===p.id?'Opgelost':'Verliest'}))
 };

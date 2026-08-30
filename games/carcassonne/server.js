@@ -1,4 +1,4 @@
-const { shuffle } = require('./cards');
+const { shuffle } = require('../../src/cards');
 
 const meta = {
   key: 'carcassonne', name: 'Carcassonne',
@@ -82,4 +82,6 @@ function handleAction(game,playerId,action,payload={}){if(game.gameOver)throw ne
 function serializeTile(tile){return {...tile,edges:tile.edges.slice(),cities:tile.cities.map(g=>g.slice()),roads:tile.roads.map(g=>g.slice())}}
 function serialize(game,requesterId,connected){const current=game.players[game.turnIndex],mine=current?.id===requesterId;return {kind:meta.key,phase:game.phase,gameOver:game.gameOver,resultText:game.resultText,turnPlayerId:game.gameOver?null:current?.id,tilesRemaining:game.deck.length+(game.currentTile?1:0),discarded:game.discarded,currentTile:mine&&game.phase==='place'?serializeTile(game.currentTile):null,validPlacements:mine&&game.phase==='place'?game.validPlacements:[],lastPlaced:game.lastPlaced?{x:game.lastPlaced.x,y:game.lastPlaced.y}:null,meepleChoices:mine&&game.phase==='meeple'&&game.lastPlaced?meepleChoices(game,game.lastPlaced):[],board:[...game.board.values()].map(e=>({x:e.x,y:e.y,tile:serializeTile(e.tile)})),meeples:game.meeples,players:game.players.map(p=>({...p,connected:p.isNpc||connected.get(p.id)})),log:game.log.slice(0,20)}}
 
-module.exports={meta,createGame,handleAction,serialize,tick,rotateTile,canPlaceAt,placementsFor,feature};
+function results(game){const {competitionPlacements}=require('../../src/result-utils'),placements=competitionPlacements(game.players,p=>p.score,true),high=Math.max(...game.players.map(p=>p.score)),leaders=game.players.filter(p=>p.score===high);return game.players.map(p=>({playerId:p.id,placement:placements.get(p.id),score:p.score,won:leaders.length===1&&leaders[0].id===p.id,outcome:leaders.length>1&&p.score===high?'Gelijkspel':p.score===high?'Wint':'Verliest'}))}
+
+module.exports={meta,createGame,handleAction,serialize,tick,rotateTile,canPlaceAt,placementsFor,feature,results};

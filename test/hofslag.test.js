@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { getMoves } = require('../src/hofslag');
+const { getMoves } = require('../games/hofslag/server');
 
 test('Hofslag: hoogste beweegt volledig, lagere één minder', () => {
   assert.deepEqual(getMoves([9, 7, 3]), [9, 6, 2]);

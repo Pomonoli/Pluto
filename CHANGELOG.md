@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.0.0 — Modulaire games
+
+- Alle bestaande games staan als zelfstandige modules onder `games/`.
+- Iedere game beheert zijn serverlogica, client-entrypoint, metadata, spelregels en resultaten in de eigen map.
+- De server ontdekt games automatisch; de centrale registry bevat geen hardcoded gamelijst meer.
+- Oude losse gamebestanden en centrale spelregels zijn opgeruimd.
+- De template en architectuurtests bewaken de nieuwe uitbreidbare structuur.
+
 ## v0.13.1 — Uitbreidbare game-architectuur
 
 - Nieuwe games kunnen als zelfstandige map onder `games/` worden toegevoegd.

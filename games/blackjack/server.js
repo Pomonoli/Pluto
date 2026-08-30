@@ -1,4 +1,4 @@
-const { makeDeck, shuffle, cardLabel } = require('./cards');
+const { makeDeck, shuffle, cardLabel } = require('../../src/cards');
 
 const meta = {
   key:'blackjack', name:'Blackjack', description:'Versla de dealer zonder boven 21 te gaan.',
@@ -206,4 +206,6 @@ function serialize(game,requesterId,connected){
   };
 }
 
-module.exports={meta,createGame,handleAction,serialize,tick,handValue,isNatural,settleFinal,BASE_BET};
+function results(game){return game.players.map(p=>({playerId:p.id,placement:p.result==='Wint'?1:p.result==='Push'?2:3,score:p.score,won:p.result==='Wint',outcome:p.result}))}
+
+module.exports={meta,createGame,handleAction,serialize,tick,handValue,isNatural,settleFinal,BASE_BET,results};

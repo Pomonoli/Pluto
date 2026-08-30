@@ -8,9 +8,9 @@ const version=require(path.join(root,'package.json')).version;
 
 test('frontend versioneert ook ES module imports',()=>{
   const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
-  assert.ok(app.includes(`rules.js?v=${version}`));
   assert.ok(app.includes(`game-ui.js?v=${version}`));
   assert.ok(app.includes(`map-editor.js?v=${version}`));
+  assert.match(app,/import\(game\.clientUrl\)/);
 });
 
 test('service worker forceert updates buiten browsercache',()=>{

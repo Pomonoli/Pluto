@@ -1,4 +1,4 @@
-const { makeDeck, shuffle, sortCards, rankValueAceHigh, cardLabel } = require('./cards');
+const { makeDeck, shuffle, sortCards, rankValueAceHigh, cardLabel } = require('../../src/cards');
 
 const meta = {
   key: 'hartenjagen', name: 'Hartenjagen', description: 'Vermijd harten en vooral de Schoppenvrouw.',
@@ -343,5 +343,6 @@ function serialize(game, requesterId, connected) {
 }
 
 module.exports = {
-  meta, createGame, handleAction, serialize, tick, cardPoints, legalCards
+  meta, createGame, handleAction, serialize, tick, cardPoints, legalCards,
+  results:(game)=>{const {competitionPlacements}=require('../../src/result-utils'),placements=competitionPlacements(game.players,p=>p.totalScore,false),low=Math.min(...game.players.map(p=>p.totalScore)),leaders=game.players.filter(p=>p.totalScore===low);return game.players.map(p=>({playerId:p.id,placement:placements.get(p.id),score:p.totalScore,won:leaders.length===1&&leaders[0].id===p.id,outcome:leaders.length>1&&p.totalScore===low?'Gelijkspel':p.totalScore===low?'Wint':'Verliest'}))}
 };

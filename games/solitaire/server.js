@@ -1,4 +1,4 @@
-const { makeDeck, shuffle } = require('./cards');
+const { makeDeck, shuffle } = require('../../src/cards');
 
 const meta = {
   key: 'solitaire', name: 'Solitaire', description: 'Klondike draw-3.',
@@ -103,4 +103,6 @@ function serialize(game) {
   };
 }
 
-module.exports = { meta, createGame, handleAction, serialize, foundationAccepts, tableauAccepts };
+function results(game,durationMs){return [{playerId:game.playerId,placement:1,score:game.moves,won:true,outcome:'Uitgespeeld',durationMs,moves:game.moves}]}
+
+module.exports = { meta, createGame, handleAction, serialize, foundationAccepts, tableauAccepts, results };

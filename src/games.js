@@ -1,16 +1,5 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const hofslag = require('./hofslag');
-const blackjack = require('./blackjack');
-const solitaire = require('./solitaire');
-const presidenten = require('./presidenten');
-const pesten = require('./pesten');
-const hartenjagen = require('./hartenjagen');
-const cluedo = require('./cluedo');
-const carcassonne = require('./carcassonne');
-const minigolf = require('./minigolf');
-
-const legacyModules = [hofslag, blackjack, solitaire, presidenten, pesten, hartenjagen, cluedo, carcassonne, minigolf];
 const pluginRoot = path.join(__dirname, '..', 'games');
 
 function loadPluginGames(root = pluginRoot) {
@@ -23,6 +12,8 @@ function loadPluginGames(root = pluginRoot) {
     const serverPath = path.join(directory, 'server.js');
     if (!fs.existsSync(manifestPath) || !fs.existsSync(serverPath)) continue;
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    const rulesPath=path.join(directory,'rules.html');
+    if(fs.existsSync(rulesPath))manifest.rules=fs.readFileSync(rulesPath,'utf8').trim();
     const key = String(manifest.key || '').toLowerCase();
     if (!/^[a-z0-9-]+$/.test(key) || key !== entry.name.toLowerCase()) throw new Error(`Ongeldige game-plugin map of key: ${entry.name}`);
     const engine = require(serverPath);
@@ -41,7 +32,7 @@ function loadPluginGames(root = pluginRoot) {
 }
 
 const pluginModules = loadPluginGames();
-const modules = [...legacyModules, ...pluginModules];
+const modules = pluginModules;
 const byKey = new Map(modules.map((game) => [game.meta.key, game]));
 if (byKey.size !== modules.length) throw new Error('Dubbele game key in game registry.');
 

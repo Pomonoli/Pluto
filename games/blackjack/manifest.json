@@ -1,0 +1,1 @@
+{"key":"blackjack","name":"Blackjack","description":"Versla de dealer zonder boven 21 te gaan.","version":"1","icon":"21","badge":"1-4","actionLabel":"Nieuw spel","minPlayers":1,"maxPlayers":4,"supportsNpc":true,"realtime":false,"solo":false,"styles":false}

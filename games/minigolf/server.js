@@ -31,7 +31,7 @@ const MATERIALS = {
   water: { friction60: 1, label: 'Water' }
 };
 
-const { THEMES, generateSmartMap } = require('./minigolf/generator');
+const { THEMES, generateSmartMap } = require('./generator');
 
 let customMapProvider = () => [];
 
@@ -977,5 +977,6 @@ module.exports={
   meta,MATERIALS,selectCourse,combinedMapPool,buildSmartPool,customMapPool,setCustomMapProvider,
   sanitizeMapDefinition,validateMapPlayability,normalizeRuntimeMap,
   createGame,handleAction,serialize,tick,simulateShot,chooseNpcShot,scoreHole,terrainAt,
-  isPlacementValid,activateLastPlayerRule
+  isPlacementValid,activateLastPlayerRule,
+  results:(game)=>{const {competitionPlacements}=require('../../src/result-utils'),placements=competitionPlacements(game.players,p=>p.totalPoints,true),high=Math.max(...game.players.map(p=>p.totalPoints)),leaders=game.players.filter(p=>p.totalPoints===high);return game.players.map(p=>({playerId:p.id,placement:placements.get(p.id),score:p.totalPoints,won:leaders.length===1&&leaders[0].id===p.id,outcome:leaders.length>1&&p.totalPoints===high?'Gelijkspel':p.totalPoints===high?'Wint':'Verliest'}))}
 };
