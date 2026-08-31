@@ -1,0 +1,81 @@
+.settings-toggle{
+  width:46px;
+  min-width:46px;
+  height:46px;
+  min-height:46px;
+  padding:0;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+}
+.settings-toggle svg{
+  width:21px;
+  height:21px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.9;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.settings-modal{width:min(520px,100%)}
+.settings-list{display:grid;gap:10px}
+.settings-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:18px;
+  padding:15px 0;
+  border-bottom:1px solid var(--border);
+}
+.settings-row:last-child{border-bottom:0;padding-bottom:2px}
+.settings-row h3{margin:0 0 4px;font-size:15px}
+.settings-row p{margin:0;color:var(--muted);font-size:12px;line-height:1.45}
+.settings-control{min-width:160px}
+.settings-control label{display:block;margin-bottom:6px;color:var(--muted);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+.settings-control select{width:100%;min-height:42px;border:1px solid var(--border);border-radius:10px;background:#11151b;color:var(--text);padding:8px 10px}
+.settings-sound-button{
+  width:52px;
+  min-width:52px;
+  height:44px;
+  min-height:44px;
+  padding:0;
+  display:grid;
+  place-items:center;
+}
+.settings-sound-button .sound-icon svg{width:21px;height:21px}
+
+html[data-theme="pluto-1-8-0"] .settings-toggle{
+  background:rgba(255,250,246,.92);
+  border-color:rgba(105,66,42,.12);
+  color:#273244;
+  box-shadow:0 8px 24px rgba(99,54,25,.12);
+}
+html[data-theme="pluto-1-8-0"] .settings-modal{
+  background:#fffaf6;
+  color:#17243a;
+}
+html[data-theme="pluto-1-8-0"] .settings-control select{
+  background:#fff;
+  color:#17243a;
+  border-color:rgba(105,66,42,.16);
+}
+html[data-theme="pluto-1-8-0"] .settings-sound-button{
+  background:#f3e9e1;
+  color:#293449;
+  border-color:rgba(105,66,42,.13);
+}
+
+@media(max-width:760px){
+  .top-actions>#settingsButton{
+    display:grid!important;
+    width:44px;
+    min-width:44px;
+    height:44px;
+    min-height:44px;
+    padding:0;
+    border-radius:50%;
+  }
+  .settings-row{grid-template-columns:1fr;gap:10px}
+  .settings-control{min-width:0;width:100%}
+  .settings-sound-button{width:100%}
+}

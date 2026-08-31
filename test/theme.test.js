@@ -8,13 +8,19 @@ const path = require('node:path');
 const root = path.join(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 
-test('profile exposes classic and Pluto 1.8.0 preview skins', () => {
+test('settings popup exposes sound and both Pluto skins', () => {
   const html = read('public/index.html');
+  assert.match(html, /id="settingsButton"/);
+  assert.match(html, /id="settingsModal"/);
+  assert.match(html, /id="soundButton"/);
   assert.match(html, /id="themeSelect"/);
   assert.match(html, /value="pluto-1-7-3">Pluto 1\.7\.3/);
   assert.match(html, /value="pluto-1-8-0">Pluto 1\.8\.0 Preview/);
-  assert.match(html, /themes\/pluto-1\.8\.0\.css\?v=1\.8\.0/);
-  assert.match(html, /theme\.js\?v=1\.8\.0/);
+  assert.doesNotMatch(html, /theme-settings-card/);
+  assert.match(html, /settings\.css\?v=1\.8\.1/);
+  assert.match(html, /settings\.js\?v=1\.8\.1/);
+  assert.match(html, /themes\/pluto-1\.8\.0\.css\?v=1\.8\.1/);
+  assert.match(html, /theme\.js\?v=1\.8\.1/);
 });
 
 test('classic skin remains the fallback and the choice persists locally', () => {
@@ -33,4 +39,14 @@ test('preview skin launches games from the full card and shows arrows', () => {
   assert.match(css, /html\[data-theme="pluto-1-8-0"\] \.game-launch\{display:none!important\}/);
   assert.match(css, /\.game-card\.theme-card-launchable::after/);
   assert.match(css, /#recentGames \.recent-game-button span\{display:none\}/);
+});
+
+test('settings gear opens and closes the popup on desktop and mobile', () => {
+  const settings = read('public/settings.js');
+  const css = read('public/settings.css');
+  assert.match(settings, /button\.addEventListener\('click', \(\) => setOpen\(true\)\)/);
+  assert.match(settings, /close\.addEventListener\('click', \(\) => setOpen\(false\)\)/);
+  assert.match(settings, /event\.key === 'Escape'/);
+  assert.match(css, /\.top-actions>#settingsButton/);
+  assert.match(css, /display:grid!important/);
 });

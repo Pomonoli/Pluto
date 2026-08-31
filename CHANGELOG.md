@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.8.1 — Centrale instellingenpopup
+
+- De losse mute-knop in de header is vervangen door een instellingen-tandwiel.
+- Geluid en thema staan samen in één compacte instellingenpopup die op desktop en mobiel beschikbaar blijft.
+- De themakeuze is uit Profiel verwijderd; Profiel bevat opnieuw alleen account- en spelstatistieken.
+- De bestaande lokale opslag voor geluidsstatus en skin blijft behouden, zodat gebruikers hun huidige voorkeur niet verliezen.
+- De PWA-cache bevat de nieuwe settings-assets en regressietests bewaken de instellingenpopup en versiegebonden frontendassets.
+
 ## v1.8.0 — Thema's en oranje preview-skin
 
 - Onder Profiel staat voortaan een themakeuze waarmee skins zonder frontendkopie kunnen worden gewisseld.
