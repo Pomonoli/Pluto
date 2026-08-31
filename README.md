@@ -9,9 +9,6 @@ Wie in Age of Civilization alle zeven tijdperken overleeft, wint voortaan op de 
 ## Nieuw in versie 1.7.0
 
 Age of Civilization is grondig herzien. Victory Points zijn verdwenen: Religie- en Cultuurkaarten verdelen hun bonus nu over Attack, Defence en goud per beurt. Gebouwen kun je voortaan ook upgraden — elke stat schaalt met factor 1,5 en het gebouw krijgt een naam passend bij het huidige tijdperk. Een tijdperk telt drie beurten en de aanvalsgolf wordt alleen op de derde beurt verwerkt. Torens beginnen op 100 in plaats van 20 levenspunten.
-## Nieuw in versie 1.6.4
-
-Drie oude Age of Civilization-testbestanden zijn uit `games/` verwijderd, zodat daar alleen de echte gamefolders, template en documentatie overblijven.
 
 ## Nieuw in versie 1.0.0
 
