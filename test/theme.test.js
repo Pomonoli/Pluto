@@ -8,26 +8,26 @@ const path = require('node:path');
 const root = path.join(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 
-test('settings popup exposes sound and both Pluto skins', () => {
+test('settings popup exposes sound and both Pluto themes', () => {
   const html = read('public/index.html');
   assert.match(html, /id="settingsButton"/);
   assert.match(html, /id="settingsModal"/);
   assert.match(html, /id="soundButton"/);
   assert.match(html, /id="themeSelect"/);
-  assert.match(html, /value="pluto-1-7-3">Pluto 1\.7\.3/);
-  assert.match(html, /value="pluto-1-8-0">Pluto 1\.8\.0 Preview/);
+  assert.match(html, /value="pluto-1-8-0">Light theme/);
+  assert.match(html, /value="pluto-1-7-3">Classic theme/);
   assert.doesNotMatch(html, /theme-settings-card/);
-  assert.match(html, /settings\.css\?v=1\.11\.2/);
-  assert.match(html, /settings\.js\?v=1\.11\.2/);
-  assert.match(html, /themes\/pluto-1\.8\.0\.css\?v=1\.11\.2/);
-  assert.match(html, /theme\.js\?v=1\.11\.2/);
+  assert.match(html, /settings\.css\?v=1\.11\.3/);
+  assert.match(html, /settings\.js\?v=1\.11\.3/);
+  assert.match(html, /themes\/pluto-1\.8\.0\.css\?v=1\.11\.3/);
+  assert.match(html, /theme\.js\?v=1\.11\.3/);
 });
 
-test('classic skin remains the fallback and the choice persists locally', () => {
+test('light theme is the default and an explicit choice persists locally', () => {
   const html = read('public/index.html');
   const theme = read('public/theme.js');
-  assert.match(html, /allowed\.has\(saved\) \? saved : 'pluto-1-7-3'/);
-  assert.match(theme, /const DEFAULT_THEME = 'pluto-1-7-3'/);
+  assert.match(html, /allowed\.has\(saved\) \? saved : 'pluto-1-8-0'/);
+  assert.match(theme, /const DEFAULT_THEME = 'pluto-1-8-0'/);
   assert.match(theme, /localStorage\.setItem\(STORAGE_KEY, theme\)/);
 });
 
@@ -49,4 +49,39 @@ test('settings gear opens and closes the popup on desktop and mobile', () => {
   assert.match(settings, /event\.key === 'Escape'/);
   assert.match(css, /\.top-actions>#settingsButton/);
   assert.match(css, /display:grid!important/);
+});
+
+test('preview skin keeps home header visible and themes active rooms', () => {
+  const css = read('public/themes/pluto-1.8.0.css');
+  assert.match(css, /body\.room-active #lobbySection/);
+  assert.match(css, /body\.game-active \.game-panel/);
+  assert.match(css, /position:sticky;\s*top:0;\s*z-index:900/);
+  assert.doesNotMatch(css, /\.topbar\{\s*position:relative;\s*top:auto;/);
+});
+
+test('preview skin uses a compact header and edge-to-edge mobile navigation', () => {
+  const css = read('public/themes/pluto-1.8.0.css');
+  assert.match(css, /min-height:126px/);
+  assert.match(css, /\.mobile-nav\{[\s\S]*?left:0;[\s\S]*?bottom:0;[\s\S]*?width:100%;/);
+  assert.match(css, /border-radius:18px 18px 0 0/);
+});
+
+test('light theme has strong score contrast and light game surfaces', () => {
+  const css = read('public/themes/pluto-1.8.0.css');
+  assert.match(css, /\.head-to-head-side strong/);
+  assert.match(css, /color:#b84f17/);
+  assert.match(css, /body\.game-active \.civ-root\{[\s\S]*?--civ-bg-panel:#fffaf6/);
+  assert.match(css, /body\.game-active \.carc-viewport\{[\s\S]*?background-color:#e8ddcf/);
+  assert.match(css, /\.cluedo-last,[\s\S]*?\.cluedo-form,\.cluedo-notes/);
+  assert.match(css, /body\.game-active \.ttr-map-bg\{fill:#e8e1d5\}/);
+});
+
+test('light theme finishes Cluedo, rules and mobile profile overflow', () => {
+  const css = read('public/themes/pluto-1.8.0.css');
+  assert.match(css, /body\.game-active \.clue-card\{/);
+  assert.match(css, /body\.game-active \.danger-button\{[\s\S]*?background:#b64f38/);
+  assert.match(css, /\.rules-content :is\(p,li,span,strong\)\{color:#344054\}/);
+  assert.match(css, /#profileGames\{overflow-x:auto;overscroll-behavior-inline:contain\}/);
+  assert.match(css, /#profileGames \.stats-table\{width:100%;table-layout:fixed/);
+  assert.match(css, /#profileRecent \.recent-match\{grid-template-columns:minmax\(0,1fr\) auto/);
 });

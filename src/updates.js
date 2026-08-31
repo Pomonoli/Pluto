@@ -63,6 +63,16 @@ const RELEASES = [
     improvements:[
       'De spelersfilter blokkeert Home, knoppen en mobiele layout niet langer.'
     ]
+  },
+  {
+    version:'1.11.3',
+    features:[
+      'Het afgewerkte Light theme is voortaan standaard; Classic blijft beschikbaar via Instellingen.'
+    ],
+    improvements:[
+      'Lobby\'s en games gebruiken een lichte, schermvullende layout met betere contrasten.',
+      'De mobiele header, ondernavigatie en profieltabellen benutten kleine schermen beter.'
+    ]
   }
 ];
 

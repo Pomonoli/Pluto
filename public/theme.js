@@ -2,7 +2,7 @@
 
 (() => {
   const STORAGE_KEY = 'pluto.theme';
-  const DEFAULT_THEME = 'pluto-1-7-3';
+  const DEFAULT_THEME = 'pluto-1-8-0';
   const THEMES = {
     'pluto-1-7-3': { color: '#090b13' },
     'pluto-1-8-0': { color: '#cf641f' }

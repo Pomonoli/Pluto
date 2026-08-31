@@ -35,6 +35,7 @@ test('first guest visit establishes a silent baseline', () => {
 test('guest with an older seen version gets only relevant grouped changes', () => {
   const payload=updates.payloadFor({since:'1.11.0'});
   assert.deepEqual(payload.changes.games,[]);
-  assert.equal(payload.changes.features.length,1);
-  assert.equal(payload.changes.improvements.length,1);
+  assert.equal(payload.changes.features.length,2);
+  assert.equal(payload.changes.improvements.length,3);
+  assert.ok(payload.changes.features.some((item)=>item.includes('Light theme')));
 });

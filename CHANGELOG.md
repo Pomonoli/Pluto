@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.11.3 — Light theme en schermvullende games
+
+- Het oranje Light theme is volledig afgewerkt en voortaan standaard; Classic blijft beschikbaar via Instellingen.
+- Lobby's en actieve games gebruiken de lichte stijl, waarbij gamepanelen de beschikbare ruimte onder de header volledig benutten.
+- De mobiele header is compacter en blijft staan; de onderste navigatie sluit schermbreed aan op de onderrand.
+- Scores, chips, spelersnamen en spelregels hebben sterker contrast in het Light theme.
+- Donkere vaste spelpanelen en speelvelden in onder meer Age of Civilization, Carcassonne, Cluedo, Blackjack en Ticket to Ride zijn aangepast aan het Light theme.
+- Cluedo-kaarten en de definitieve beschuldigingsknop zijn beter leesbaar.
+- Profielstatistieken en recente matches blijven op mobiel binnen het scherm en scrollen alleen wanneer dat echt nodig is.
+
 ## v1.11.2 — Homefilter hersteld
 
 - Een zichzelf activerende `MutationObserver` in de spelersfilter is idempotent gemaakt.

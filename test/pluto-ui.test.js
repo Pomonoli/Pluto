@@ -44,6 +44,8 @@ test('actieve spellen gebruiken een viewporthoge layout met interne fallback',()
   assert.match(css,/body\.game-active \.game-panel\{[^}]*overflow:hidden/);
   assert.match(css,/body\.game-active #gameStage\{[^}]*overflow:auto/);
   assert.match(css,/body\.game-active \.log-box\{display:none!important\}/);
+  assert.match(css,/body\.game-active \.app-shell\{width:100%;max-width:none;padding-left:0;padding-right:0\}/);
+  assert.match(css,/body\.game-active \.game-panel\{[\s\S]*?border-radius:0;/);
 });
 
 test('homescreen bevat geen kaart meer om via een code te joinen',()=>{

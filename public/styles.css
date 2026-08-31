@@ -1249,4 +1249,41 @@ input:focus,select:focus,textarea:focus{border-color:rgba(226,163,134,.48);box-s
 /* Scrollen blijft werken, maar Pluto toont nergens native scrollbar-chrome. */
 html *{scrollbar-width:none!important;-ms-overflow-style:none!important}
 html *::-webkit-scrollbar{display:none!important;width:0!important;height:0!important;background:transparent!important}
+
+/* Rooms use the complete viewport below the persistent Pluto header. */
+body.room-active .app-shell{
+  min-height:100dvh;
+  padding-bottom:env(safe-area-inset-bottom);
+  display:flex;
+  flex-direction:column;
+}
+body.room-active main,
+body.room-active #roomView,
+body.room-active .room-layout,
+body.room-active .room-main{
+  flex:1;
+  min-height:0;
+}
+body.room-active main,
+body.room-active #roomView,
+body.room-active .room-layout,
+body.room-active .room-main{display:flex;flex-direction:column}
+body.game-active .app-shell{width:100%;max-width:none;padding-left:0;padding-right:0}
+body.game-active main,
+body.game-active #roomView,
+body.game-active .room-layout,
+body.game-active .room-main,
+body.game-active #gameSection{width:100%;max-width:none;margin:0}
+body.game-active .game-panel{
+  width:100%;
+  height:100%;
+  margin:0;
+  padding:10px;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+}
+@media(max-width:760px){
+  body.game-active .game-panel{padding:6px max(6px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))}
+}
 /* Carcassonne */
