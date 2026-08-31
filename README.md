@@ -2,6 +2,10 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
+## Nieuw in versie 1.11.5
+
+De schaduw onder de recente gamekaarten op Home is verwijderd in het Light theme.
+
 ## Nieuw in versie 1.11.4
 
 Carcassonne landbouwer-plaatsing is verbeterd voor betere gameplay.
@@ -9,14 +13,6 @@ Carcassonne landbouwer-plaatsing is verbeterd voor betere gameplay.
 ## Nieuw in versie 1.11.3
 
 Het volledig afgewerkte Light theme is voortaan de standaard, met Classic als blijvende keuze in de instellingen. Lobby's en actieve games sluiten aan op de lichte stijl en gebruiken zoveel mogelijk het volledige scherm onder de header. De mobiele header en ondernavigatie zijn compacter en randloos, scores en spelregels hebben sterker contrast, meerdere speelvelden zijn verlicht en profieltabellen blijven op kleine schermen bruikbaar.
-
-## Nieuw in versie 1.11.2
-
-De spelersfilter op Home veroorzaakt niet langer een oneindige browserlus zodra de eerste gamecard verschijnt. Games, knoppen en responsive device emulation blijven daardoor volledig werken. Nieuwe cacheversies zorgen dat bestaande installaties het gerepareerde filterbestand ophalen.
-
-## Nieuw in versie 1.11.1
-
-De geïnstalleerde PWA toont voortaan alleen wanneer er effectief iets nieuws is een compacte popup met wijzigingen sinds het vorige bezoek. Nieuwe games, nieuwe features en verbeteringen worden over gemiste releases heen samengevoegd; ingelogde accounts bewaren de laatst geziene versie centraal en gasten lokaal op hun toestel.
 
 ## Nieuw in versie 1.11.0
 
