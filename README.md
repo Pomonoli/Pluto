@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.7.2
+## Nieuw in versie 1.7.3
 
-Cluedo, Hartenjagen, Hofslag, Pesten en Solitaire hebben voortaan kleurrijke pictogrammen in het gameoverzicht. Daarnaast zijn achtergebleven dubbele 1.6.x-versiereferenties uit de recente merge opgeruimd, zodat de frontend weer één consistente release laadt.
+Ticket to Ride heeft een duidelijker en zoombaar speelveld: slepen, pinch-zoom en muiswielzoom werken zoals bij Carcassonne, stadnamen en routebadges overlappen minder en bezette routebadges krijgen een extra rand in de spelerskleur. NPC's kiezen voortaan ook nuttige open treinkaarten in plaats van uitsluitend van de gesloten stapel te trekken. De vijf open kaarten plus stapel en de zes kaarten van `Jouw hand` blijven elk op één rij staan, ook op smallere schermen.
 
 ## Nieuw in versie 1.7.0
 

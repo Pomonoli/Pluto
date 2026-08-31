@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.7.3 — Ticket to Ride leesbaarheid en NPC-kaartkeuze
+
+- NPC's kiezen voortaan nuttige open treinkaarten en jokers wanneer die hun nog vrije routes helpen; de gesloten stapel blijft de fallback.
+- Het Ticket to Ride-speelveld ondersteunt slepen, pinch-zoom en muiswielzoom, met een per-room bewaarde zoompositie zoals bij Carcassonne.
+- Stadnamen staan in compacte labels en routekosten/spelersbadges zijn van de routemiddens weggezet om overlap te verminderen.
+- Bezette routebadges hebben naast de witte binnenrand een duidelijke buitenrand in de kleur van de speler.
+- De vijf open treinkaarten plus stapel en de zes handkleuren gebruiken vaste zeskolomsrijen zodat ze op één schermbreedte blijven.
+- Een regressietest bewaakt dat NPC's daadwerkelijk de open treinkaartenmarkt gebruiken.
+
 ## v1.7.2 — Kleurrijke game-iconen
 
 - Cluedo, Hartenjagen, Hofslag, Pesten en Solitaire gebruiken voortaan gekleurde emoji-iconen in het gameoverzicht.

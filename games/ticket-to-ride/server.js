@@ -210,13 +210,29 @@ function ticketConnected(game,playerId,ticket){
   return false;
 }
 
+function npcTrainDraw(game,player){
+  const counts=trainCounts(player.hand),demand=new Map(COLORS.map(color=>[color,0]));
+  for(const route of game.routes){
+    if(route.ownerId||player.trains<route.length)continue;
+    const missing=Math.max(0,route.length-(counts[route.color]||0)-(counts[WILD]||0));
+    if(!missing)continue;
+    const ticketBoost=player.tickets.some(ticket=>!ticketConnected(game,player.id,ticket)&&(route.a===ticket.a||route.a===ticket.b||route.b===ticket.a||route.b===ticket.b))?4:0;
+    demand.set(route.color,(demand.get(route.color)||0)+missing+ticketBoost+route.length*.15);
+  }
+  let bestIndex=-1,bestScore=0;
+  game.market.forEach((color,index)=>{
+    const score=color===WILD?100:(demand.get(color)||0);
+    if(score>bestScore){bestScore=score;bestIndex=index}
+  });
+  return bestIndex>=0?{source:'market',index:bestIndex}:{source:'deck'};
+}
 function npcTurn(game,player){
   const pending=game.pendingTickets[player.id]||[];
   if(pending.length)return keepTickets(game,player.id,{ticketIds:[pending[0].id]},true);
-  if(game.drawCount>0)return drawTrain(game,player.id,{source:'deck'},true);
+  if(game.drawCount>0)return drawTrain(game,player.id,npcTrainDraw(game,player),true);
   const affordable=game.routes.filter(route=>!route.ownerId&&player.trains>=route.length&&((trainCounts(player.hand)[route.color]||0)+(trainCounts(player.hand)[WILD]||0)>=route.length));
   if(affordable.length){affordable.sort((a,b)=>b.length-a.length);return claimRoute(game,player.id,{routeId:affordable[0].id},true)}
-  return drawTrain(game,player.id,{source:'deck'},true);
+  return drawTrain(game,player.id,npcTrainDraw(game,player),true);
 }
 function scheduleNpc(game,delay=650){const player=currentPlayer(game);game.nextNpcAt=!game.gameOver&&player?.isNpc?Date.now()+delay:0}
 function tick(game,now=Date.now()){

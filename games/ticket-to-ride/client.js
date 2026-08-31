@@ -1,7 +1,15 @@
 let selectedRouteId=null;
 let selectedTicketIds=new Set();
+const mapViews={};
 const SVG='http://www.w3.org/2000/svg';
 const COLOR_LABELS={red:'Rood',blue:'Blauw',green:'Groen',yellow:'Geel',purple:'Paars',wild:'Joker'};
+const CITY_LABELS={
+  lisbon:[16,-16,'start'],madrid:[16,30,'start'],paris:[-16,30,'end'],london:[-16,-16,'end'],
+  brussels:[16,31,'start'],amsterdam:[16,-17,'start'],berlin:[16,-17,'start'],copenhagen:[16,-17,'start'],
+  warsaw:[16,-17,'start'],prague:[16,31,'start'],vienna:[-16,31,'end'],zurich:[-16,-18,'end'],
+  milan:[-16,31,'end'],rome:[-16,31,'end'],venice:[16,-18,'start'],budapest:[16,-18,'start'],
+  zagreb:[-16,32,'end'],belgrade:[16,-18,'start'],athens:[-16,31,'end'],istanbul:[-16,31,'end']
+};
 
 function svg(tag,attrs={}){
   const node=document.createElementNS(SVG,tag);
@@ -12,6 +20,42 @@ function cityMap(game){return new Map((game.cities||[]).map(city=>[city.id,city]
 function handCount(game,color){return Number(game.handCounts?.[color]||0)}
 function routeAffordable(game,route){return handCount(game,route.color)+handCount(game,'wild')>=route.length}
 function routeName(cities,route){return `${cities.get(route.a)?.name||route.a} – ${cities.get(route.b)?.name||route.b}`}
+function routeBadgePoint(a,b,route){
+  const dx=b.x-a.x,dy=b.y-a.y,length=Math.max(1,Math.hypot(dx,dy));
+  const direction=Number(String(route.id).replace(/\D/g,''))%2===0?-1:1;
+  const offset=(route.ownerId?16:18)*direction;
+  return {x:(a.x+b.x)/2+(-dy/length)*offset,y:(a.y+b.y)/2+(dx/length)*offset};
+}
+function cityLabelSpec(city){
+  const [dx,dy,anchor]=CITY_LABELS[city.id]||[city.x>475?-16:16,city.y>430?30:-17,city.x>475?'end':'start'];
+  return {x:city.x+dx,y:city.y+dy,anchor};
+}
+function attachTicketViewport(viewport,board,view){
+  const pointers=new Map();let drag=null,pinch=null,blockClick=false;
+  const apply=()=>{board.style.transform=`translate(calc(-50% + ${view.x}px),calc(-50% + ${view.y}px)) scale(${view.scale})`};apply();
+  viewport.addEventListener('pointerdown',event=>{
+    viewport.setPointerCapture?.(event.pointerId);pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+    if(pointers.size===1){drag={x:event.clientX,y:event.clientY,ox:view.x,oy:view.y};blockClick=false}
+    if(pointers.size===2){const [a,b]=[...pointers.values()];pinch={distance:Math.hypot(a.x-b.x,a.y-b.y),scale:view.scale};drag=null;blockClick=true}
+  });
+  viewport.addEventListener('pointermove',event=>{
+    if(!pointers.has(event.pointerId))return;
+    pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+    if(pointers.size===2&&pinch){
+      const [a,b]=[...pointers.values()];
+      view.scale=Math.max(.38,Math.min(2.2,pinch.scale*Math.hypot(a.x-b.x,a.y-b.y)/Math.max(1,pinch.distance)));blockClick=true;
+    }else if(drag){
+      const dx=event.clientX-drag.x,dy=event.clientY-drag.y;
+      if(Math.hypot(dx,dy)>4)blockClick=true;
+      view.x=drag.ox+dx;view.y=drag.oy+dy;
+    }
+    apply();event.preventDefault();
+  });
+  const end=event=>{pointers.delete(event.pointerId);drag=null;pinch=null};
+  viewport.addEventListener('pointerup',end);viewport.addEventListener('pointercancel',end);
+  viewport.addEventListener('click',event=>{if(!blockClick)return;event.preventDefault();event.stopPropagation();blockClick=false},true);
+  viewport.addEventListener('wheel',event=>{view.scale=Math.max(.38,Math.min(2.2,view.scale*(event.deltaY>0?.9:1.1)));apply();event.preventDefault()},{passive:false});
+}
 
 export function render(api){renderTicketToRide(api)}
 
@@ -51,9 +95,10 @@ function renderTicketToRide({room,game,els,E,action,titlebar,logBox,renderGame})
     const group=svg('g',{class:`ttr-route ${route.ownerId?'owned':'free'} ${isMine?'mine':''} ${route.ownerId?`owner-${owner?.index??0}`:`color-${route.color}`} ${selectedRouteId===route.id?'selected':''}`});
     const hit=svg('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,class:'ttr-route-hit'});
     const line=svg('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,class:'ttr-route-line'});
-    const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+    const point=routeBadgePoint(a,b,route),mx=point.x,my=point.y;
     const badge=svg('g',{class:'ttr-route-badge'});
-    badge.append(svg('circle',{cx:mx,cy:my,r:route.ownerId?18:13}),svg('text',{x:mx,y:my+(route.ownerId?4:5),'text-anchor':'middle'}));
+    if(route.ownerId)badge.append(svg('circle',{cx:mx,cy:my,r:21,class:'ttr-route-owner-ring'}));
+    badge.append(svg('circle',{cx:mx,cy:my,r:route.ownerId?16:13,class:'ttr-route-badge-fill'}),svg('text',{x:mx,y:my+(route.ownerId?4:5),'text-anchor':'middle'}));
     badge.lastChild.textContent=route.ownerId?(isMine?'JIJ':String(owner?.name||'?').trim().charAt(0).toUpperCase()):String(route.length);
     group.append(hit,line,badge);
     const title=svg('title');title.textContent=route.ownerId?`${routeName(cities,route)} · ${isMine?'jouw route':owner?.name||'bezet'}`:`${routeName(cities,route)} · ${route.length} ${COLOR_LABELS[route.color]}`;group.append(title);
@@ -62,11 +107,16 @@ function renderTicketToRide({room,game,els,E,action,titlebar,logBox,renderGame})
   }
 
   for(const city of game.cities){
-    const group=svg('g',{class:'ttr-city'});
+    const group=svg('g',{class:'ttr-city'}),spec=cityLabelSpec(city);
     group.append(svg('circle',{cx:city.x,cy:city.y,r:10}));
-    const label=svg('text',{x:city.x+13,y:city.y-13});label.textContent=city.name;group.append(label);board.append(group);
+    const labelGroup=svg('g',{class:'ttr-city-label'}),width=Math.max(48,city.name.length*8.4+14),height=24;
+    const rectX=spec.anchor==='end'?spec.x-width+5:spec.x-5;
+    labelGroup.append(svg('rect',{x:rectX,y:spec.y-height+6,width,height,rx:7}),svg('text',{x:spec.x,y:spec.y,'text-anchor':spec.anchor}));
+    labelGroup.lastChild.textContent=city.name;group.append(labelGroup);board.append(group);
   }
   mapWrap.append(board);els.gameStage.append(mapWrap);
+  const initialScale=Math.max(.46,Math.min(.82,((mapWrap.clientWidth||760)-20)/950));
+  const view=mapViews[room.id]||(mapViews[room.id]={x:0,y:0,scale:initialScale});attachTicketViewport(mapWrap,board,view);
 
   if(selectedRouteId){
     const route=game.routes.find(item=>item.id===selectedRouteId);

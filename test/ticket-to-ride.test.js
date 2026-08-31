@@ -44,3 +44,16 @@ test('Ticket to Ride NPC rondt zelfstandig een beurt af',()=>{
   assert.equal(game.turnIndex,0);
   assert.equal(game.players[1].hand.length,2);
 });
+
+test('Ticket to Ride NPC gebruikt nuttige open treinkaarten',()=>{
+  const game=gameModule.createGame([{id:'a',name:'A',isNpc:false},{id:'bot',name:'NPC 1',isNpc:true}]);
+  game.turnIndex=1;
+  game.players[1].hand=[];
+  game.market=['red','blue','green','yellow','purple'];
+  game.trainDeck=Array(10).fill('wild');
+  game.nextNpcAt=1;
+  assert.equal(gameModule.tick(game,Date.now()),true);
+  assert.equal(game.drawCount,1);
+  assert.notEqual(game.players[1].hand[0],'wild');
+  assert.equal(game.market.includes('wild'),true);
+});
