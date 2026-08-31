@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.7.1 — Winnen op levenspunten
+
+- Overleven beide torens alle zeven tijdperken, dan wint voortaan wie de meeste levenspunten over heeft, niet het meeste goud.
+- Goud beslist alleen nog als tiebreaker wanneer beide torens met exact evenveel levenspunten eindigen.
+- Matchstatistieken (`results`) gebruiken nu overal dezelfde winnaar als het spel zelf, ook bij een gelijkspel.
+
+## v1.7.0 — Age of Civilization v4
+
+- Victory Points zijn verwijderd; Religie- en Cultuurkaarten verdelen hun bonus voortaan over Attack, Defence en goud per beurt.
+- Nieuwe actie: gebouwen upgraden. Elke stat schaalt met factor 1,5 (naar beneden afgerond), behalve een stat van 1 die altijd 2 wordt.
+- Een tijdperk telt nu drie beurten; de aanvalsgolf wordt alleen nog op de derde beurt van elk tijdperk verwerkt (21 beurten totaal).
+- Zes categorieën vervangen de oude drie: Attack, Defence, Science (voedt Defence), Economy (goud per beurt), Religie en Cultuur.
+- Gebouwen zijn uniek per speler en krijgen bij upgraden een naam passend bij het huidige tijdperk.
+- Torens beginnen op 100 in plaats van 20 levenspunten; zonder VP is er geen genezing meer. Overleven beide torens alle tijdperken, dan wint het meeste goud.
+- Nieuwe regressietests bewaken de upgrademechaniek, de unieke gebouwen, de driebeurtstructuur en de goudgebaseerde eindstand.
 ## v1.6.3 — Solitaire-weergave en solo-leaderboard
 
 - Solitaire draw-3 toont de drie getrokken kaarten overlappend, waarbij alleen de bovenste kaart speelbaar is.

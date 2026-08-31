@@ -1,4 +1,4 @@
-const ICONS={military:'🛡️',economy:'💰',culture:'🏛️',wonder:'✨'};
+const ICONS={attack:'⚔️',defence:'🛡️',science:'🔬',economy:'💰',religion:'⛩️',culture:'🏛️',wonder:'✨'};
 const ACCENTS=['#B8895A','#C9A961','#9C4A55','#3E8067','#7A8062','#3E9BC9','#9D6FEF'];
 
 export function render(api){renderCivilization(api)}
@@ -9,13 +9,14 @@ function renderCivilization({game,state,els,E,action,titlebar,logBox,sound}) {
 
   const status=game.gameOver?'Spel afgelopen.':game.phase==='wave'
     ?`Tijdperk ${game.age}/${game.totalAges} · aanval`
-    :you.acted?`Tijdperk ${game.age}/${game.totalAges} · wachten`:`Tijdperk ${game.age}/${game.totalAges} · kies een kaart`;
+    :you.acted?`Tijdperk ${game.age}/${game.totalAges} · beurt ${game.turnInAge}/${game.turnsPerAge} · wachten`:`Tijdperk ${game.age}/${game.totalAges} · beurt ${game.turnInAge}/${game.turnsPerAge} · kies een actie`;
   const root=E('div','civ-root');
   root.style.setProperty('--civ-accent',ACCENTS[(game.age-1)%ACCENTS.length]);
-  root.append(renderMonument(E,game),renderEraBanner(E,game),renderStats(E,you,true),renderStats(E,opponent,false),renderGrid(E,you,'Jouw stad'));
+  root.append(renderMonument(E,game),renderEraBanner(E,game),renderStats(E,you,true),renderStats(E,opponent,false),renderYourGrid(E,action,sound,game,you));
 
   if(game.phase==='draft'){
     if(!you.acted&&game.yourHand.length)root.append(renderDraft(E,action,sound,state,game,you));
+    else if(!you.acted)root.append(E('div','civ-waiting','Geen kaarten of upgrades meer beschikbaar.'));
     else root.append(E('div','civ-waiting',`Wachten op ${opponent.name}…`));
   } else if(game.phase==='wave') root.append(renderWave(E,game,you,opponent));
   else root.append(renderGameOver(E,game,you,opponent));
@@ -33,11 +34,30 @@ function renderStats(E,player,isYou){
   const wrap=E('div',`civ-stats-row ${isYou?'civ-you':'civ-opp'}`);
   wrap.append(E('div','civ-stat-name',`${isYou?'Jij · ':''}${player.name}${player.connected===false?' (offline)':''}`));
   const boxes=E('div','civ-stat-boxes');
-  for(const [label,value] of [['Goud',player.gold],['Power',player.power],['VP',player.vp]])boxes.append(statBox(E,label,value));
-  const hp=statBox(E,'Toren',player.hp),track=E('div','civ-hp-track'),fill=E('div','civ-hp-fill');fill.style.width=`${Math.max(0,player.hp)*5}%`;track.append(fill);hp.append(track);boxes.append(hp);wrap.append(boxes);return wrap;
+  for(const [label,value] of [['Goud',player.gold],['Attack',player.attack],['Defence',player.defence],['Inkomen',`+${player.income}`]])boxes.append(statBox(E,label,value));
+  const hp=statBox(E,'Toren',`${player.hp}/100`),track=E('div','civ-hp-track'),fill=E('div','civ-hp-fill');fill.style.width=`${Math.max(0,player.hp)}%`;track.append(fill);hp.append(track);boxes.append(hp);wrap.append(boxes);return wrap;
 }
 function statBox(E,label,value){const box=E('div','civ-stat-box');box.append(E('div','civ-stat-label',label),E('div','civ-stat-value',String(value)));return box;}
-function renderGrid(E,player,label){const wrap=E('div','civ-grid-block'),grid=E('div','civ-grid');wrap.append(E('div','civ-grid-label',label));for(const card of player.grid){const tile=E('div',`civ-tile${card?' filled':''}`);if(card)tile.append(E('div','civ-tile-icon',ICONS[card.type]||''),E('div','civ-tile-name',card.name));grid.append(tile)}wrap.append(grid);return wrap;}
+
+function renderYourGrid(E,action,sound,game,you){
+  const wrap=E('div','civ-grid-block'),grid=E('div','civ-grid');
+  wrap.append(E('div','civ-grid-label','Jouw stad'));
+  const canAct=game.phase==='draft'&&!you.acted;
+  you.grid.forEach((tile,slot)=>{
+    if(!tile){grid.append(E('div','civ-tile'));return}
+    const node=E('button','civ-tile filled');node.type='button';
+    node.append(E('div','civ-tile-icon',ICONS[tile.type]||''),E('div','civ-tile-name',tile.name),E('div','civ-tile-level',`Niv. ${tile.level}`));
+    if(canAct){
+      const afford=you.gold>=tile.upgradeCost;
+      node.append(E('div','civ-tile-upgrade',`Upgrade (${tile.upgradeCost}g)`));
+      node.disabled=!afford;
+      node.onclick=()=>{sound('score');action('upgrade',{slot})};
+    } else node.disabled=true;
+    grid.append(node);
+  });
+  wrap.append(grid);
+  return wrap;
+}
 
 function renderDraft(E,action,sound,state,game,you){
   const wrap=E('div','civ-draft'),hand=E('div','civ-hand'),detail=E('div','civ-detail-slot');
@@ -56,9 +76,31 @@ function renderDraft(E,action,sound,state,game,you){
   const selected=state.selection?.game==='civilization'&&game.yourHand.find((card)=>card.idx===state.selection.handIndex);if(selected)showDetail(selected);
   return wrap;
 }
-function renderWave(E,game,you,opponent){const wrap=E('div','civ-wave');wrap.append(E('div','civ-wave-title',`Aanvalskracht ${game.waveResult.wave}`));const cols=E('div','civ-wave-cols');for(const player of [you,opponent]){const result=game.waveResult.results[player.id],col=E('div','civ-wave-col');col.append(E('div','civ-wave-name',player.name),E('div','civ-wave-numbers',`Power ${result.power} tegen ${result.wave}`),E('div',`civ-wave-result ${result.damage?'hit':'ok'}`,result.damage?`Toren verliest ${result.damage} HP`:'Aanval afgeslagen!'));cols.append(col)}wrap.append(cols);return wrap;}
-function renderGameOver(E,game,you,opponent){const wrap=E('div','civ-gameover');wrap.append(E('h2','civ-go-headline',game.resultText));const table=E('div','civ-final-table');for(const player of [you,opponent]){const row=E('div',`civ-final-row${game.winnerId===player.id?' winner':''}`),info=E('div');info.append(E('div','civ-fname',player.name),E('div','civ-breakdown',`VP ${player.vp} + goudbonus ${Math.floor(player.gold/3)} · Toren ${player.hp}/20`));row.append(info,E('div','civ-fscore',String(game.finalScores?.[player.id]??player.vp)));table.append(row)}wrap.append(table);return wrap;}
+function renderWave(E,game,you,opponent){
+  const wrap=E('div','civ-wave');
+  wrap.append(E('div','civ-wave-title',`Tijdperk ${game.waveResult.age} — Aanvalsgolf`));
+  const cols=E('div','civ-wave-cols');
+  for(const player of [you,opponent]){
+    const result=game.waveResult.results[player.id],col=E('div','civ-wave-col');
+    col.append(E('div','civ-wave-name',player.name),E('div','civ-wave-numbers',`Attack ${result.attack} · Defence ${result.defence} tegen inkomende ${result.incoming}`),E('div',`civ-wave-result ${result.damage?'hit':'ok'}`,result.damage?`Toren verliest ${result.damage} HP`:'Aanval afgeslagen!'));
+    cols.append(col);
+  }
+  wrap.append(cols);
+  return wrap;
+}
+function renderGameOver(E,game,you,opponent){
+  const wrap=E('div','civ-gameover');wrap.append(E('h2','civ-go-headline',game.resultText));
+  const table=E('div','civ-final-table');
+  for(const player of [you,opponent]){
+    const row=E('div',`civ-final-row${game.winnerId===player.id?' winner':''}`),info=E('div');
+    info.append(E('div','civ-fname',player.name),E('div','civ-breakdown',`Goud ${player.gold} · Attack ${player.attack} · Defence ${player.defence}`));
+    row.append(info,E('div','civ-fscore',`${player.hp}/100`));
+    table.append(row);
+  }
+  wrap.append(table);
+  return wrap;
+}
 
-export function metric({game,player}){const score=Number(game.finalScores?.[player.id]??player.vp??0);return{text:`${score} pt`,score};}
+export function metric({game,player}){const score=Number(game.finalScores?.[player.id]??player.gold??0);return{text:`${score}g`,score};}
 export function isWinner({game,myId}){return game.winnerId===myId;}
 export function presentResult({game}){return game.resultText;}

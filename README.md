@@ -2,12 +2,20 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
+## Nieuw in versie 1.7.1
+
+Wie in Age of Civilization alle zeven tijdperken overleeft, wint voortaan op de meeste levenspunten van zijn toren. Goud beslist alleen nog bij een exacte gelijke stand in levenspunten.
+
+## Nieuw in versie 1.7.0
+
+Age of Civilization is grondig herzien. Victory Points zijn verdwenen: Religie- en Cultuurkaarten verdelen hun bonus nu over Attack, Defence en goud per beurt. Gebouwen kun je voortaan ook upgraden — elke stat schaalt met factor 1,5 en het gebouw krijgt een naam passend bij het huidige tijdperk. Een tijdperk telt drie beurten en de aanvalsgolf wordt alleen op de derde beurt verwerkt. Torens beginnen op 100 in plaats van 20 levenspunten.
 ## Nieuw in versie 1.6.4
 
 Drie oude Age of Civilization-testbestanden zijn uit `games/` verwijderd, zodat daar alleen de echte gamefolders, template en documentatie overblijven.
 
-## Nieuw in versie 1.6.0
+## Nieuw in versie 1.0.0
 
+Alle games zijn ondergebracht in zelfstandige modules onder `games/`. Iedere game beheert daar zijn eigen serverlogica, client-entrypoint, metadata, spelregels en resultaten, en de server ontdekt deze mappen automatisch zonder een hardcoded gamelijst in de centrale registry.
 Actieve spellen gebruiken zoveel mogelijk de volledige schermhoogte zonder paginascroll. De ongebruikte chat en aparte vertrekknoppen zijn verwijderd; het Pluto-logo brengt je rechtstreeks terug naar Home.
 
 Carcassonne behandelt kruispunthoeken als afzonderlijke akkers, toont de volgende tegel alvast aan de volgende speler en gebruikt een compacte eindtabel die binnen één schermbreedte past.
