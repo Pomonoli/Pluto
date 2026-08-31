@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.11.6
+## Nieuw in versie 1.11.7
 
-De oranje Light-theme banner op mobiel is compacter gemaakt zodat Home meer bruikbare schermruimte overhoudt.
+Tijdens actieve games op mobiel klapt de oranje header terug tot een minimale exit-strip met alleen het klikbare Pluto-logo, zodat het spel vrijwel het volledige scherm kan gebruiken.
 
 ## Nieuw in versie 1.11.0
 
