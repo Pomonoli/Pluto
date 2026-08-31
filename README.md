@@ -2,9 +2,13 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
+## Nieuw in versie 1.8.1
+
+De thema- en geluidsinstellingen staan niet langer onder Profiel of als losse mute-knop in de header. Rechtsboven staat nu één instellingen-tandwiel dat een compacte popup opent met **Geluid** en **Thema**. De gekozen skin en geluidsstatus blijven lokaal op het toestel bewaard.
+
 ## Nieuw in versie 1.8.0
 
-Pluto ondersteunt voortaan skins via **Profiel → Thema**. `Pluto 1.7.3` blijft standaard actief, terwijl `Pluto 1.8.0 Preview` een nieuw licht thema met een oranje kleurenpalet toevoegt. In de preview-skin verdwijnt de aparte knop `Nieuw spel`: de volledige gamekaart start het spel en een pijltje rechts maakt de actie duidelijk. De gekozen skin wordt lokaal op het toestel onthouden.
+Pluto ondersteunt voortaan skins. `Pluto 1.7.3` blijft standaard actief, terwijl `Pluto 1.8.0 Preview` een nieuw licht thema met een oranje kleurenpalet toevoegt. In de preview-skin verdwijnt de aparte knop `Nieuw spel`: de volledige gamekaart start het spel en een pijltje rechts maakt de actie duidelijk. De gekozen skin wordt lokaal op het toestel onthouden.
 
 ## Nieuw in versie 1.0.0
 
