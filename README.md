@@ -2,41 +2,19 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.6.2
+## Nieuw in versie 1.6.3
 
-Actieve spellen blijven nu als volledige pagina vast binnen de schermhoogte. Spellogs zijn verwijderd uit de spelweergave en alleen spellen die echt meer ruimte nodig hebben, gebruiken nog een interne scrollfallback. Santorini schaalt zijn bord bovendien mee met de beschikbare schermhoogte en verbergt op lage schermen overbodige uitleg.
-
-## Nieuw in versie 1.6.1
-
-Lopende spellen blijven in het lobbyoverzicht staan zolang minstens één speler aanwezig is. Deelnemers die per ongeluk naar Home gaan, kunnen via `Ga terug` onmiddellijk hun bestaande plaats en spel hervatten.
+Solitaire toont bij draw-3 voortaan de drie getrokken kaarten overlappend, waarbij alleen de bovenste speelbaar is en onderliggende kaarten correct zichtbaar blijven wanneer kaarten worden gespeeld. Lange tableau-stacks verkleinen hun verticale overlap automatisch op lagere schermen, zodat ook lange reeksen volledig zichtbaar blijven. Gewonnen Solitaire-runs van ingelogde spelers worden nu correct opgeslagen in statistieken en het Solitaire-leaderboard.
 
 ## Nieuw in versie 1.6.0
 
-Spellen gebruiken voortaan zoveel mogelijk de volledige schermhoogte zonder paginascroll. De ongebruikte chat en aparte vertrekknoppen zijn verwijderd; het Pluto-logo brengt je rechtstreeks terug naar Home.
+Actieve spellen gebruiken zoveel mogelijk de volledige schermhoogte zonder paginascroll. De ongebruikte chat en aparte vertrekknoppen zijn verwijderd; het Pluto-logo brengt je rechtstreeks terug naar Home.
 
-Carcassonne toont de eindscore in een compacte tabel met pictogrammen, laat de volgende speler alvast zijn tegel bekijken en plaatst landbouwers correct in afzonderlijke hoekakkers rond kruispunten.
+Carcassonne behandelt kruispunthoeken als afzonderlijke akkers, toont de volgende tegel alvast aan de volgende speler en gebruikt een compacte eindtabel die binnen één schermbreedte past.
 
-## Nieuw in versie 1.5.0
+## Nieuw in versie 1.0.0
 
-Age of Civilization is toegevoegd als veertiende spel. Twee spelers bouwen gedurende zeven tijdperken een beschaving met militaire, economische en culturele kaarten, verdedigen hun toren tegen steeds sterkere aanvalsgolven en strijden om de hoogste eindscore. Het spel ondersteunt ook een NPC-tegenstander.
-
-## Nieuw in versie 1.4.0
-
-Pluto werkt voortaan volledig via de centrale lobby: open lobby's verschijnen als compacte kaartjes op Home, terwijl oude roomlinks en code-invoer uit de interface zijn verwijderd. Tijdens een spel verdwijnt de mobiele ondernavigatie en blijft alleen een duidelijke knop `Verlaat spel` over.
-
-Carcassonne toont op het eindscherm nu een volledige puntentabel met de punten tijdens het spel en de eindpunten voor landbouwers, onafgewerkte wegen, steden en kloosters.
-
-## Nieuw in versie 1.3.0
-
-Carcassonne gebruikt nu afzonderlijke akkersegmenten: wegen en steden scheiden akkers, kloosters niet. Landbouwers verschijnen op het juiste deel van de tegel, spelers kunnen tijdens de burgerkeuze teruggaan om hun tegel anders te leggen en de laatst gespeelde tegel heeft een rode markering. Op mobiel staan de twee Minigolf-acties voortaan naast elkaar.
-
-Pluto bevat nu veertien spellen met realtime rooms, accounts, blijvende statistieken, leaderboards en een installeerbare mobiele PWA in één self-hosted omgeving.
-
-Games zijn zelfstandige modules onder `games/`. Elke game beheert daar zijn serverlogica, client-entrypoint, metadata, spelregels en resultaten. De server ontdekt deze mappen automatisch, waardoor nieuwe games vanuit de meegeleverde template kunnen worden toegevoegd zonder de centrale registry aan te passen.
-
-## Nieuw in versie 1.1.0
-
-Games zijn nu werkelijk self-contained: hun renderer, helpers, CSS, spelregels, assets en eventuele extra views of modules leven samen in één pluginmap. Pluto ontdekt en laadt die onderdelen dynamisch, terwijl een defecte plugin alleen de betreffende game uitschakelt. De Minigolf Map Editor is eveneens volledig naar zijn plugin verhuisd en nieuwe productiechecks bewaken alle browser- en Docker-paden.
+Pluto kreeg een modulaire game-architectuur: alle games leven als zelfstandige modules onder `games/`, met eigen serverlogica, client-entrypoint, metadata, spelregels en resultaten. De server ontdekt deze modules automatisch, waardoor nieuwe games kunnen worden toegevoegd zonder de centrale registry aan te passen.
 
 ## Games
 
