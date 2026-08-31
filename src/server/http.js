@@ -80,6 +80,7 @@ function configureHttp(app, runtime) {
     try {
       const result = authDb.register(req.body?.username, req.body?.password);
       if (!result.ok) return res.status(400).json(result);
+      updates.markSeen(result.user.id);
       res.setHeader('Set-Cookie', authDb.cookieHeader(result.session.token, result.session.expiresAt, isSecureRequest(req)));
       res.json({ ok:true, user:result.user });
     } catch (error) {
