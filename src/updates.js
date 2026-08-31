@@ -3,6 +3,9 @@
 const { version: APP_VERSION } = require('../package.json');
 const authDb = require('./db');
 
+const INITIAL_BASELINE_VERSION = '1.11.1';
+const BASELINE_MIGRATION_KEY = 'v1.11.1-update-popup-baseline';
+
 const RELEASES = [
   {
     version:'1.8.0',
@@ -107,6 +110,31 @@ authDb.db.exec(`
   );
 `);
 
+function applyInitialBaseline() {
+  const alreadyApplied=authDb.db.prepare(
+    'SELECT migration_key FROM app_migrations WHERE migration_key = ?'
+  ).get(BASELINE_MIGRATION_KEY);
+  if (alreadyApplied) return;
+
+  authDb.db.exec('BEGIN IMMEDIATE');
+  try {
+    const now=Date.now();
+    authDb.db.prepare(`
+      INSERT OR IGNORE INTO user_update_state(user_id,last_seen_version,updated_at)
+      SELECT id, ?, ? FROM users
+    `).run(INITIAL_BASELINE_VERSION,now);
+    authDb.db.prepare(
+      'INSERT INTO app_migrations(migration_key,applied_at) VALUES(?,?)'
+    ).run(BASELINE_MIGRATION_KEY,now);
+    authDb.db.exec('COMMIT');
+  } catch (error) {
+    authDb.db.exec('ROLLBACK');
+    throw error;
+  }
+}
+
+applyInitialBaseline();
+
 function getLastSeenVersion(userId) {
   return authDb.db.prepare(
     'SELECT last_seen_version AS lastSeenVersion FROM user_update_state WHERE user_id = ?'
@@ -126,8 +154,9 @@ function markSeen(userId, version = APP_VERSION) {
 function payloadFor({ user = null, since = null } = {}) {
   let lastSeenVersion = user ? getLastSeenVersion(user.id) : String(since || '').trim() || null;
 
-  // First rollout / first device visit: establish a silent baseline instead of
-  // dumping the historical changelog on the user.
+  // New accounts and first-time guest devices start silently at the current
+  // release. Existing accounts were already pinned to the 1.11.1 baseline by
+  // the one-time migration above.
   if (!lastSeenVersion || !parseVersion(lastSeenVersion)) {
     if (user) markSeen(user.id);
     return {
@@ -159,6 +188,7 @@ function payloadFor({ user = null, since = null } = {}) {
 
 module.exports = {
   APP_VERSION,
+  INITIAL_BASELINE_VERSION,
   RELEASES,
   compareVersions,
   changesSince,
