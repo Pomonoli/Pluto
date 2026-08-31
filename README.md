@@ -2,13 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.9.0
+## Nieuw in versie 1.10.0
 
-**7 Wonders Duel** is toegevoegd als volledig tweespelersspel met NPC-ondersteuning. Het spel bevat drie leeftijden met een gedeelde kaartpiramide, productie en dynamische handel, wonders, vooruitgangstokens, het militaire spoor en zowel militaire als wetenschappelijke suprematie naast de klassieke puntentelling.
-
-## Nieuw in versie 1.8.0
-
-Pluto ondersteunt voortaan skins. `Pluto 1.7.3` blijft standaard actief, terwijl `Pluto 1.8.0 Preview` een nieuw licht thema met een oranje kleurenpalet toevoegt. In de preview-skin verdwijnt de aparte knop `Nieuw spel`: de volledige gamekaart start het spel en een pijltje rechts maakt de actie duidelijk. De gekozen skin wordt lokaal op het toestel onthouden.
+**Kingdomino** is toegevoegd voor 2 tot 4 spelers, inclusief NPC-ondersteuning. Bouw een koninkrijk van maximaal 5×5 vakken, draft domino's in nummerorde, verbind dezelfde terreinen en scoor elk gebied als aantal vakken × aantal kronen. De 2-spelervariant gebruikt twee koningen per speler en 24 domino's; bij 3 spelers wordt de vierde niet-gekozen domino per rij afgelegd.
 
 ## Nieuw in versie 1.0.0
 
@@ -26,6 +22,7 @@ Actieve spellen gebruiken zoveel mogelijk de volledige schermhoogte zonder pagin
 | Cluedo | 2-6 | Ja |
 | Hartenjagen | 4 | Ja |
 | Hofslag | 2-4 | Ja |
+| Kingdomino | 2-4 | Ja |
 | Minigolf | 1-4 | Ja |
 | Pesten | 2-4 | Ja |
 | Presidenten | 3-4 | Ja |
