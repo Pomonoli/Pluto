@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.8.3
+## Nieuw in versie 1.9.0
 
-Op Home staat naast **GAMES** een compacte filterknop voor het aantal spelers. De schuifbalk loopt van **Alle** naar het beschikbare maximum; kies je bijvoorbeeld 4 spelers, dan blijven alle games zichtbaar die 4 spelers ondersteunen binnen hun minimum- en maximumaantal. Games worden voortaan alfabetisch gesorteerd op hun echte displaynaam, zodat **Age of Civilization** bij de A staat en niet meer op basis van de map- of game-key wordt geplaatst.
+**7 Wonders Duel** is toegevoegd als volledig tweespelersspel met NPC-ondersteuning. Het spel bevat drie leeftijden met een gedeelde kaartpiramide, productie en dynamische handel, wonders, vooruitgangstokens, het militaire spoor en zowel militaire als wetenschappelijke suprematie naast de klassieke puntentelling.
 
 ## Nieuw in versie 1.8.0
 
@@ -19,6 +19,7 @@ Actieve spellen gebruiken zoveel mogelijk de volledige schermhoogte zonder pagin
 
 | Spel | Spelers | NPC's |
 | --- | ---: | :---: |
+| 7 Wonders Duel | 2 | Ja |
 | Age of Civilization | 2 | Ja |
 | Blackjack | 1-4 | Ja |
 | Carcassonne | 2-5 | Ja |
