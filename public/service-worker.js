@@ -1,4 +1,4 @@
-const CACHE = 'pluto-v1.10.0';
+const CACHE = 'pluto-v1.11.0';
 
 const OFFLINE_SHELL = [
   '/',

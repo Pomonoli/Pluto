@@ -22,7 +22,7 @@ test('game-plugin loader ontdekt een zelfstandige gamemap',()=>{
 
 test('alle bestaande games zijn plugins en de template wordt overgeslagen',()=>{
   const plugins=listGamePlugins();
-  assert.equal(plugins.length,14);
+  assert.equal(plugins.length,17);
   assert.ok(plugins.every((plugin)=>plugin.key!=='_template'&&plugin.clientUrl));
 });
 
@@ -34,10 +34,18 @@ test('frontend heeft een dynamische pluginloader en rendererregistratie',()=>{
   assert.match(ui,/registerPlugin\(key,plugin\)/);
 });
 
-test('elke game-client koppelt render() aan zijn echte hoofdrenderer',()=>{
+test('elke game-client exporteert render()',()=>{
+  for(const plugin of listGamePlugins()){
+    const client=fs.readFileSync(path.join(__dirname,'..','games',plugin.key,'client.js'),'utf8');
+    assert.match(client,/export\s+function\s+render\s*\(/,`${plugin.key} exporteert render() niet`);
+  }
+});
+
+test('helper-gebaseerde game-clients koppelen render() aan hun hoofdrenderer',()=>{
   const expected={
     blackjack:'renderBlackjack',
     carcassonne:'renderCarcassonne',
+    cascadia:'renderCascadia',
     civilization:'renderCivilization',
     cluedo:'renderCluedo',
     hartenjagen:'renderHartenjagen',

@@ -1,0 +1,14 @@
+{
+  "key": "cascadia",
+  "name": "Cascadia",
+  "description": "Bouw je eigen ecosysteem met habitats, dieren en slimme corridors.",
+  "version": "1",
+  "icon": "🏞️",
+  "badge": "2-4",
+  "actionLabel": "Nieuw spel",
+  "minPlayers": 2,
+  "maxPlayers": 4,
+  "supportsNpc": true,
+  "realtime": false,
+  "solo": false
+}
