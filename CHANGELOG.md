@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.11.8 — Carcassonne vult schermhoogte
+
+- Het Carcassonne-speelveld gebruikt op mobiel alle resterende hoogte van de gamecontainer.
+- De oude vaste `100dvh - 300px`-hoogte en 430px-limiet zijn verwijderd voor actieve mobiele games.
+- Titel, spelers en tegelbediening blijven vast; alleen het bord groeit of krimpt met de beschikbare schermruimte.
+
+## v1.11.7 — Minimale game-header
+
+- Tijdens actieve games op mobiel klapt de oranje header terug tot een minimale exit-strip.
+- Alleen het klikbare Pluto-logo blijft zichtbaar zodat spelers snel naar Home kunnen terugkeren en de game vrijwel het volledige scherm gebruikt.
+
 ## v1.11.6 — Compactere mobiele Light-header
 
 - De oranje banner op mobiele niet-game-schermen is lager gemaakt zodat Home meer verticale ruimte overhoudt.
