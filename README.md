@@ -6,14 +6,6 @@ Private, self-hosted minigameplatform voor vrienden, met realtime rooms, account
 
 De schaduw onder de recente gamekaarten op Home is verwijderd in het Light theme.
 
-## Nieuw in versie 1.11.4
-
-Carcassonne landbouwer-plaatsing is verbeterd voor betere gameplay.
-
-## Nieuw in versie 1.11.3
-
-Het volledig afgewerkte Light theme is voortaan de standaard, met Classic als blijvende keuze in de instellingen. Lobby's en actieve games sluiten aan op de lichte stijl en gebruiken zoveel mogelijk het volledige scherm onder de header. De mobiele header en ondernavigatie zijn compacter en randloos, scores en spelregels hebben sterker contrast, meerdere speelvelden zijn verlicht en profieltabellen blijven op kleine schermen bruikbaar.
-
 ## Nieuw in versie 1.11.0
 
 **Cascadia** is toegevoegd voor 2 tot 4 spelers, inclusief NPC-ondersteuning. Kies iedere beurt een habitattegel en dier, bouw een eigen hexagonaal ecosysteem en scoor op dierpatronen, aaneengesloten habitatcorridors en habitatmeerderheden. Keystone-habitats leveren natuurfiches op waarmee je marktcombinaties kan mixen of dieren kan verversen.
