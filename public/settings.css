@@ -78,4 +78,27 @@ html[data-theme="pluto-1-8-0"] .settings-sound-button{
   .settings-row{grid-template-columns:1fr;gap:10px}
   .settings-control{min-width:0;width:100%}
   .settings-sound-button{width:100%}
+
+  /* During an active game the Pluto header becomes an exit strip: logo only. */
+  html[data-theme="pluto-1-8-0"] body.game-active .topbar{
+    min-height:0;
+    padding:calc(env(safe-area-inset-top) + 5px) 8px 5px;
+    margin-bottom:0;
+    justify-content:flex-start;
+    border-radius:0 0 14px 14px;
+    box-shadow:0 4px 12px rgba(113,57,25,.10);
+  }
+  html[data-theme="pluto-1-8-0"] body.game-active .brand-button{
+    min-height:38px;
+    gap:0;
+  }
+  html[data-theme="pluto-1-8-0"] body.game-active .brand-mark,
+  html[data-theme="pluto-1-8-0"] body.game-active .brand-mark-img{
+    width:38px;
+    height:38px;
+  }
+  html[data-theme="pluto-1-8-0"] body.game-active .brand-copy,
+  html[data-theme="pluto-1-8-0"] body.game-active .top-actions{
+    display:none!important;
+  }
 }
