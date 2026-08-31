@@ -15,6 +15,14 @@
 - Gebouwen zijn uniek per speler en krijgen bij upgraden een naam passend bij het huidige tijdperk.
 - Torens beginnen op 100 in plaats van 20 levenspunten; zonder VP is er geen genezing meer. Overleven beide torens alle tijdperken, dan wint het meeste goud.
 - Nieuwe regressietests bewaken de upgrademechaniek, de unieke gebouwen, de driebeurtstructuur en de goudgebaseerde eindstand.
+## v1.6.3 — Solitaire-weergave en solo-leaderboard
+
+- Solitaire draw-3 toont de drie getrokken kaarten overlappend, waarbij alleen de bovenste kaart speelbaar is.
+- Na het spelen van kaarten blijven de overige kaarten uit dezelfde draw zichtbaar en correct speelbaar in volgorde.
+- Lange tableau-stacks verkleinen hun verticale overlap automatisch op lage schermen zodat de onderste kaart zichtbaar blijft.
+- Voltooide Solitaire-runs van ingelogde spelers tellen nu mee voor wins, beste score en het Solitaire-leaderboard.
+- De algemene regel die oefenmatches met minder dan twee menselijke spelers uitsluit, maakt voortaan expliciet uitzondering voor echte solo-games.
+- De GitHub-frontpage toont voortaan alleen de huidige release, de `.0`-release van de huidige minorreeks en de `.0.0`-release van de huidige majorreeks; volledige historie blijft in deze changelog.
 
 ## v1.6.2 — Vaste spelweergave
 
