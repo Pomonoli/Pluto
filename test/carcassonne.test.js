@@ -153,11 +153,33 @@ test('client gebruikt serverankers boven generieke featureposities',()=>{
   assert.match(css,/\.carc-tile \.carc-meeple\.feature-anchor\{left:calc\(var\(--anchor-x\) - 9px\);top:calc\(var\(--anchor-y\) - 9px\)\}/);
 });
 
-test('volgende speler ziet vooraf de tegel bovenaan de stapel',()=>{
-  const game=carcassonne.createGame([{id:'a',name:'A',isNpc:false},{id:'b',name:'B',isNpc:false}]);
-  const expected=game.deck.at(-1).id,connected=new Map([['a',true],['b',true]]);
+test('iedere speler ziet vanaf de volgende beurt zijn verwachte tegel en wachttijd',()=>{
+  const players=['a','b','c','d'].map(id=>({id,name:id.toUpperCase(),isNpc:false}));
+  const game=carcassonne.createGame(players),connected=new Map(players.map(player=>[player.id,true]));
   assert.equal(carcassonne.serialize(game,'a',connected).nextTile,null);
-  assert.equal(carcassonne.serialize(game,'b',connected).nextTile.id,expected);
+  for(const [id,distance] of [['b',1],['c',2],['d',3]]){
+    const view=carcassonne.serialize(game,id,connected);
+    assert.equal(view.nextTile.id,game.deck.at(-distance).id);
+    assert.equal(view.nextTilePlayersBefore,distance);
+  }
+});
+
+test('Carcassonne ondersteunt standaard, short en blitz tegelsets',()=>{
+  const players=[{id:'a',name:'A'},{id:'b',name:'B'}];
+  for(const tileCount of [72,36,18]){
+    const game=carcassonne.createGame(players,{tileCount});
+    assert.equal(game.tileCount,tileCount);
+    assert.equal(game.board.size+game.deck.length+Number(Boolean(game.currentTile)),tileCount);
+  }
+  assert.deepEqual(carcassonne.normalizeRoomOptions({tileCount:99}),{tileCount:72});
+});
+
+test('Carcassonne-client toont lobbykeuzes en compacte preview-wachttijd',()=>{
+  const fs=require('node:fs'),path=require('node:path');
+  const client=fs.readFileSync(path.join(__dirname,'../games/carcassonne/client.js'),'utf8');
+  assert.match(client,/export function renderLobbyOptions/);
+  assert.match(client,/\[\[72,'Standaard'\],\[36,'Short'\],\[18,'Blitz'\]\]/);
+  assert.match(client,/Nog \$\{count\} speler/);
 });
 
 test('Carcassonne eindtabel gebruikt compacte pictogramkolommen zonder minimumbreedte',()=>{

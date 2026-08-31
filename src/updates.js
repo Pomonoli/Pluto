@@ -90,6 +90,16 @@ const RELEASES = [
       'Recent, profielen en leaderboards zijn compacter en beter bruikbaar op kleine schermen.',
       'De mobiele loginflow, safe areas en touch-targets zijn verbeterd.'
     ]
+  },
+  {
+    version:'1.11.10',
+    features:[
+      'Carcassonne kan in de lobby met 72, 36 of 18 tegels worden gestart.',
+      'Wachtende Carcassonne-spelers zien eerder hun verwachte volgende tegel en hoeveel spelers nog voor hen komen.'
+    ],
+    improvements:[
+      'De oranje Home-banner heeft een subtiele planeet-, ringen- en sterrenachtergrond.'
+    ]
   }
 ];
 

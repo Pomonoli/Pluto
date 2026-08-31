@@ -40,6 +40,9 @@ html[data-theme="pluto-1-8-0"] body::before{
 html[data-theme="pluto-1-8-0"] body::after{display:none}
 
 html[data-theme="pluto-1-8-0"] .topbar{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
   min-height:104px;
   background:linear-gradient(135deg,rgba(183,73,20,.97),rgba(236,127,38,.97));
   border:0;
@@ -49,6 +52,35 @@ html[data-theme="pluto-1-8-0"] .topbar{
   backdrop-filter:none;
   -webkit-backdrop-filter:none;
 }
+html[data-theme="pluto-1-8-0"] body:not(.room-active) .topbar::before{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  inset:-65% -8% -70% 31%;
+  pointer-events:none;
+  opacity:.78;
+  background:
+    radial-gradient(circle at 68% 47%,rgba(255,221,166,.12) 0 2.5%,transparent 3.2%),
+    radial-gradient(circle at 62% 50%,rgba(255,198,112,.30) 0 23%,rgba(239,119,35,.18) 35%,rgba(119,39,13,.15) 43%,transparent 44%),
+    radial-gradient(ellipse 68% 18% at 62% 52%,transparent 0 54%,rgba(255,220,160,.24) 55% 56%,transparent 57% 62%,rgba(255,210,142,.13) 63% 64%,transparent 65%);
+  transform:rotate(-5deg);
+}
+html[data-theme="pluto-1-8-0"] body:not(.room-active) .topbar::after{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  inset:0;
+  pointer-events:none;
+  opacity:.72;
+  background:
+    radial-gradient(circle at 12% 76%,rgba(255,231,190,.45) 0 1px,transparent 1.6px),
+    radial-gradient(circle at 29% 31%,rgba(255,229,181,.55) 0 1px,transparent 1.7px),
+    radial-gradient(circle at 47% 72%,rgba(255,237,202,.34) 0 1px,transparent 1.5px),
+    radial-gradient(circle at 58% 24%,rgba(255,241,212,.62) 0 1.2px,transparent 1.9px),
+    radial-gradient(circle at 91% 70%,rgba(255,225,177,.40) 0 1px,transparent 1.6px),
+    linear-gradient(118deg,transparent 5%,rgba(255,220,168,.08) 38%,transparent 62%);
+}
+html[data-theme="pluto-1-8-0"] body:not(.room-active) .topbar>*{position:relative;z-index:1}
 html[data-theme="pluto-1-8-0"] .brand-copy strong{color:#fff;font-size:1.9rem}
 html[data-theme="pluto-1-8-0"] .brand-copy small{display:block;color:rgba(255,255,255,.88);font-size:13px;letter-spacing:.06em}
 html[data-theme="pluto-1-8-0"] .brand-mark,
@@ -402,6 +434,7 @@ html[data-theme="pluto-1-8-0"] .mobile-nav-item.active::after{background:#cb5d1b
       linear-gradient(135deg,#b74b18 0%,#d56620 52%,#ed8129 100%);
     box-shadow:0 12px 28px rgba(113,57,25,.15);
   }
+  html[data-theme="pluto-1-8-0"] body:not(.room-active) .topbar::before{inset:-38% -24% -43% 23%;opacity:.86}
   html[data-theme="pluto-1-8-0"] body.game-active .mobile-game-header{
     color:#fff;
     background:

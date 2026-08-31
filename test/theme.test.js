@@ -61,6 +61,15 @@ test('preview skin keeps home header visible and themes active rooms', () => {
   assert.doesNotMatch(css, /\.topbar\{\s*position:relative;\s*top:auto;/);
 });
 
+test('light home header has a subtle space background without growing taller', () => {
+  const css = read('public/themes/pluto-1.8.0.css');
+  const html = read('public/index.html');
+  assert.match(css, /body:not\(\.room-active\) \.topbar::before\{[\s\S]*?radial-gradient\(ellipse 68% 18%/);
+  assert.match(css, /body:not\(\.room-active\) \.topbar::after\{[\s\S]*?radial-gradient\(circle at 58% 24%/);
+  assert.match(css, /\.topbar\{[\s\S]*?min-height:104px/);
+  assert.match(html, /body:not\(\.room-active\) \.topbar\{[\s\S]*?min-height:112px/);
+});
+
 test('preview skin uses a compact header and edge-to-edge mobile navigation', () => {
   const css = read('public/themes/pluto-1.8.0.css');
   assert.match(css, /min-height:126px/);

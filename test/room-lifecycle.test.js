@@ -57,3 +57,18 @@ test('speler kan een lopend spel hervatten en laatste vertrek verwijdert de room
   second.handlers.get('room:leave')({},()=>{});
   assert.equal(runtime.rooms.has(room.id),false);
 });
+
+test('Carcassonne-host kiest de tegelset in de lobby en start met die optie',()=>{
+  const {runtime,makeSocket}=harness(),host=makeSocket('host',null,null);let created;
+  host.handlers.get('room:create')({gameKey:'carcassonne',name:'Ada',token:'aaaaaaaaaaaaaaaa'},result=>{created=result});
+  assert.equal(created.ok,true);
+  const room=runtime.rooms.get(created.roomId);
+  assert.deepEqual(room.gameOptions,{tileCount:72});
+  let changed;host.handlers.get('room:setOptions')({tileCount:36},result=>{changed=result});
+  assert.deepEqual(changed,{ok:true,gameOptions:{tileCount:36}});
+  host.handlers.get('room:addNpc')({},()=>{});
+  let started;host.handlers.get('room:start')({},result=>{started=result});
+  assert.equal(started.ok,true);
+  assert.equal(room.gameState.tileCount,36);
+  assert.equal(room.gameState.board.size+room.gameState.deck.length+Number(Boolean(room.gameState.currentTile)),36);
+});

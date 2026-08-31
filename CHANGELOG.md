@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.11.10 — Carcassonne spelduur en Home-banner
+
+- De Carcassonne-host kan in de lobby kiezen uit 72 tegels (standaard), 36 tegels (short) of 18 tegels (blitz).
+- De gekozen tegelset blijft behouden bij het starten en bij een rematch.
+- Iedere wachtende speler ziet vanaf de beurt direct na zijn eigen beurt al de verwachte volgende tegel.
+- De tegelpreview toont compact hoeveel spelers nog voor jou aan de beurt komen.
+- De oranje Home-banner heeft een subtiele planeet, ringen, gloed en sterren gekregen zonder de bestaande hoogte te wijzigen.
+
 ## v1.11.9 — Mobiele spelervaring
 
 - Actieve games gebruiken op mobiel één compacte oranje header met terugknop, gamenaam en een menu voor spelregels en geluid.

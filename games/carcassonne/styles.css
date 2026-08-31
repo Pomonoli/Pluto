@@ -1,4 +1,7 @@
 .carc-dashboard{display:flex;gap:7px;overflow-x:auto;margin-bottom:10px}
+.carc-lobby-options{margin-top:14px;padding:12px;border:1px solid var(--border);border-radius:13px;background:var(--panel2)}
+.carc-lobby-options-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:9px}.carc-lobby-options-head strong{font-size:13px}.carc-lobby-options-head small{color:var(--muted);font-size:9px}
+.carc-tile-count-options{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.carc-tile-count-option{min-width:0;min-height:48px;padding:6px;display:grid;place-items:center;gap:1px}.carc-tile-count-option b{font-size:16px}.carc-tile-count-option span{font-size:9px}.carc-tile-count-option.active{color:var(--text);background:color-mix(in srgb,var(--accent) 18%,var(--panel));border-color:color-mix(in srgb,var(--accent) 55%,var(--border));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 18%,transparent)}.carc-tile-count-option:disabled{opacity:.72}
 .carc-player{flex:1 0 112px;display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:5px;align-items:center;padding:8px;border:1px solid rgba(238,216,205,.12);border-radius:12px;background:rgba(7,9,17,.55)}
 .carc-player.active{border-color:var(--player-color);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--player-color) 45%,transparent)}
 .carc-player-dot{width:9px;height:9px;border-radius:3px;background:var(--player-color)}
@@ -13,7 +16,7 @@
 .carc-drawn{display:flex;align-items:center;gap:9px}
 .carc-drawn .preview{width:72px;height:72px;position:relative;left:auto;top:auto;flex:0 0 72px;transform:scale(.75);transform-origin:center;margin:-9px}
 .carc-drawn button{min-height:38px}
-.carc-next-drawn{margin-left:auto}.carc-next-label{max-width:72px;color:var(--muted);font-size:9px;font-weight:900;line-height:1.25;text-align:right}
+.carc-next-drawn{margin-left:auto}.carc-next-label{max-width:72px;color:var(--muted);font-size:9px;font-weight:900;line-height:1.25;text-align:right}.carc-next-wait{max-width:72px;padding-left:9px;border-left:1px solid var(--border);color:var(--muted);font-size:9px;font-weight:800;line-height:1.3}
 .carc-viewport{position:relative;width:100%;height:clamp(240px,calc(100dvh - 330px),590px);min-height:240px;overflow:hidden;touch-action:none;border:1px solid rgba(238,216,205,.14);border-radius:15px;background-color:#10151a;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:24px 24px;cursor:grab}
 .carc-viewport:active{cursor:grabbing}
 .carc-board{position:absolute;left:50%;top:50%;transform-origin:center;will-change:transform}

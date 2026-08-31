@@ -115,6 +115,7 @@ function createRealtime(io) {
       gameMeta: module.meta,
       status: room.status,
       gameRevision: room.gameRevision || 0,
+      gameOptions: room.gameOptions || {},
       isHost: Boolean(me && me.token === room.hostToken),
       meId: me?.id || null,
       players: room.players.map((p) => ({
@@ -276,7 +277,7 @@ function createRealtime(io) {
     if (!allHumansConnected(room)) throw new Error('Niet alle spelers zijn verbonden.');
 
     const gamePlayers = module.preparePlayers?.(room.players,{db:authDb}) || room.players;
-    room.gameState = module.createGame(gamePlayers);
+    room.gameState = module.createGame(gamePlayers, room.gameOptions || {});
     room.status = room.gameState.gameOver ? 'finished' : 'playing';
     room.startedAt = Date.now();
     room.matchRecorded = false;
@@ -326,6 +327,7 @@ function createRealtime(io) {
           players: [player],
           messages: [],
           gameState: null,
+          gameOptions: typeof module.normalizeRoomOptions === 'function' ? module.normalizeRoomOptions({}) : {},
           startedAt: null,
           matchRecorded: false,
           gameRevision: 0,
@@ -458,6 +460,18 @@ function createRealtime(io) {
       room.players = room.players.filter((p) => p.id !== npc.id);
       broadcastRoom(room);
       if (typeof ack === 'function') ack({ ok: true });
+    });
+
+    socket.on('room:setOptions', (payload = {}, ack) => {
+      try {
+        const { room, player } = getPlayerForSocket(socket);
+        if (!room || !player) return ackError(ack, 'Je zit niet in een lobby.');
+        if (room.status !== 'lobby' || player.token !== room.hostToken) return ackError(ack, 'Alleen de host kan spelopties aanpassen.');
+        const normalize=gameModule(room).normalizeRoomOptions;
+        if(typeof normalize!=='function')return ackError(ack,'Dit spel heeft geen instelbare opties.');
+        room.gameOptions=normalize({...room.gameOptions,...payload});broadcastRoom(room);
+        if(typeof ack==='function')ack({ok:true,gameOptions:room.gameOptions});
+      } catch (error) { ackError(ack,error.message||'Kon spelopties niet aanpassen.'); }
     });
 
     socket.on('room:start', (_payload, ack) => {
