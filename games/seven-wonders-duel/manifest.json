@@ -1,0 +1,14 @@
+{
+  "key": "seven-wonders-duel",
+  "name": "7 Wonders Duel",
+  "description": "Bouw je beschaving door drie leeftijden en win via punten, militaire druk of wetenschap.",
+  "version": "1",
+  "icon": "🏛️",
+  "badge": "2",
+  "actionLabel": "Nieuw spel",
+  "minPlayers": 2,
+  "maxPlayers": 2,
+  "supportsNpc": true,
+  "realtime": false,
+  "solo": false
+}
