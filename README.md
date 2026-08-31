@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.11.7
+## Nieuw in versie 1.11.8
 
-Tijdens actieve games op mobiel klapt de oranje header terug tot een minimale exit-strip met alleen het klikbare Pluto-logo, zodat het spel vrijwel het volledige scherm kan gebruiken.
+Carcassonne gebruikt op mobiel voortaan alle resterende schermhoogte voor het speelveld, zodat er geen ongebruikte ruimte onder het bord blijft staan.
 
 ## Nieuw in versie 1.11.0
 
