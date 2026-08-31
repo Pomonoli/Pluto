@@ -2,6 +2,10 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
+## Nieuw in versie 1.11.1
+
+De geïnstalleerde PWA toont voortaan alleen wanneer er effectief iets nieuws is een compacte popup met wijzigingen sinds het vorige bezoek. Nieuwe games, nieuwe features en verbeteringen worden over gemiste releases heen samengevoegd; ingelogde accounts bewaren de laatst geziene versie centraal en gasten lokaal op hun toestel.
+
 ## Nieuw in versie 1.11.0
 
 **Cascadia** is toegevoegd voor 2 tot 4 spelers, inclusief NPC-ondersteuning. Kies iedere beurt een habitattegel en dier, bouw een eigen hexagonaal ecosysteem en scoor op dierpatronen, aaneengesloten habitatcorridors en habitatmeerderheden. Keystone-habitats leveren natuurfiches op waarmee je marktcombinaties kan mixen of dieren kan verversen.
