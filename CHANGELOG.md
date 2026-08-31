@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.8.2 — Leaderboard en compacte matchgeschiedenis
+
+- Het algemene leaderboard toont voortaan `Wins` vóór `Games`, gevolgd door `Winrate`.
+- Profielen tonen standaard maximaal vijf recente matches.
+- Bij meer dan vijf matches verschijnt `Toon meer`; na een klik worden de overige matches toegevoegd.
+- Frontend-, server- en PWA-cacheversies zijn bijgewerkt naar 1.8.2.
+- Nieuwe regressietests bewaken de kolomvolgorde en de limiet van vijf recente matches.
+
 ## v1.8.1 — Centrale instellingenpopup
 
 - De losse mute-knop in de header is vervangen door een instellingen-tandwiel.
