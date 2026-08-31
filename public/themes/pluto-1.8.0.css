@@ -1,0 +1,278 @@
+/* Pluto 1.8.0 preview skin. All overrides stay scoped so Pluto 1.7.3 remains untouched. */
+html[data-theme="pluto-1-8-0"]{
+  --bg:#f6f0ea;
+  --panel:#fffaf6;
+  --panel2:#f4e9e1;
+  --panel3:#efe1d7;
+  --text:#17243a;
+  --muted:#746f70;
+  --border:rgba(85,60,43,.13);
+  --accent:#d56620;
+  --accent-2:#eb8a38;
+  --accent-3:#f1b173;
+  --success:#6d8c4d;
+  --card:#fffdf9;
+  --ink:#18243a;
+  background:#f6f0ea;
+}
+
+html[data-theme="pluto-1-8-0"] body{
+  color:var(--text);
+  background:
+    radial-gradient(circle at 92% 5%,rgba(231,132,51,.12),transparent 24%),
+    linear-gradient(180deg,#f8f2ed 0%,#f6f0ea 100%);
+}
+html[data-theme="pluto-1-8-0"] body::before{
+  content:"";
+  position:fixed;
+  z-index:-1;
+  inset:0 0 auto 0;
+  width:100%;
+  height:220px;
+  border-radius:0;
+  opacity:1;
+  filter:none;
+  box-shadow:none;
+  background:
+    radial-gradient(120% 80% at 72% 0%,rgba(255,184,102,.34),transparent 58%),
+    linear-gradient(135deg,#b94d18 0%,#d7651e 52%,#ee852b 100%);
+}
+html[data-theme="pluto-1-8-0"] body::after{display:none}
+
+html[data-theme="pluto-1-8-0"] .topbar{
+  min-height:104px;
+  background:linear-gradient(135deg,rgba(183,73,20,.97),rgba(236,127,38,.97));
+  border:0;
+  border-radius:0 0 28px 28px;
+  box-shadow:0 12px 32px rgba(121,58,22,.16);
+  color:#fff;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+}
+html[data-theme="pluto-1-8-0"] .brand-copy strong{color:#fff;font-size:1.9rem}
+html[data-theme="pluto-1-8-0"] .brand-copy small{display:block;color:rgba(255,255,255,.88);font-size:13px;letter-spacing:.06em}
+html[data-theme="pluto-1-8-0"] .brand-mark,
+html[data-theme="pluto-1-8-0"] .brand-mark-img{width:62px;height:62px}
+html[data-theme="pluto-1-8-0"] .brand-mark-img{filter:drop-shadow(0 8px 14px rgba(91,40,18,.28))}
+html[data-theme="pluto-1-8-0"] .top-actions .ghost,
+html[data-theme="pluto-1-8-0"] .top-actions button,
+html[data-theme="pluto-1-8-0"] .sound-toggle{
+  color:#233044;
+  background:rgba(255,250,246,.92);
+  border-color:rgba(255,255,255,.62);
+  box-shadow:0 8px 20px rgba(102,48,20,.13);
+}
+html[data-theme="pluto-1-8-0"] #soundButton{border-radius:50%}
+
+html[data-theme="pluto-1-8-0"] body:not(.room-active) .home-guest-bar,
+html[data-theme="pluto-1-8-0"] body:not(.room-active) .invite-box,
+html[data-theme="pluto-1-8-0"] body:not(.room-active) .panel,
+html[data-theme="pluto-1-8-0"] body:not(.room-active) .stats-heading,
+html[data-theme="pluto-1-8-0"] body:not(.room-active) .open-room-card,
+html[data-theme="pluto-1-8-0"] body:not(.room-active) .recent-game-button,
+html[data-theme="pluto-1-8-0"] body:not(.room-active) .game-card,
+html[data-theme="pluto-1-8-0"] .modal{
+  color:var(--text);
+  background:rgba(255,250,246,.96);
+  border-color:rgba(86,59,42,.11);
+  box-shadow:0 13px 34px rgba(97,66,45,.10),inset 0 1px rgba(255,255,255,.86);
+  backdrop-filter:none;
+}
+html[data-theme="pluto-1-8-0"] .eyebrow{color:#b85d25}
+html[data-theme="pluto-1-8-0"] .muted,
+html[data-theme="pluto-1-8-0"] .hero-copy,
+html[data-theme="pluto-1-8-0"] .player-note,
+html[data-theme="pluto-1-8-0"] .recent-game-button span{color:var(--muted)}
+html[data-theme="pluto-1-8-0"] .badge{
+  color:#a9521e;
+  background:#f8e7da;
+  border-color:#f0d6c4;
+}
+html[data-theme="pluto-1-8-0"] input,
+html[data-theme="pluto-1-8-0"] select,
+html[data-theme="pluto-1-8-0"] textarea{
+  color:var(--text);
+  background:#fffdf9;
+  border-color:rgba(86,59,42,.16);
+}
+html[data-theme="pluto-1-8-0"] input:focus,
+html[data-theme="pluto-1-8-0"] select:focus,
+html[data-theme="pluto-1-8-0"] textarea:focus{
+  border-color:rgba(213,102,32,.55);
+  box-shadow:0 0 0 3px rgba(213,102,32,.10);
+}
+html[data-theme="pluto-1-8-0"] .primary,
+html[data-theme="pluto-1-8-0"] .game-card .primary,
+html[data-theme="pluto-1-8-0"] .recent-card .primary{
+  color:#fff;
+  background:linear-gradient(135deg,#c6561a,#e27527);
+  border-color:#d86721;
+  box-shadow:0 8px 18px rgba(197,86,28,.16);
+}
+html[data-theme="pluto-1-8-0"] .secondary,
+html[data-theme="pluto-1-8-0"] button.secondary,
+html[data-theme="pluto-1-8-0"] .ghost{
+  color:#314057;
+  background:#f5ebe4;
+  border-color:rgba(86,59,42,.12);
+}
+
+html[data-theme="pluto-1-8-0"] .game-card{
+  position:relative;
+  overflow:hidden;
+  cursor:pointer;
+  border-radius:22px;
+  grid-template-columns:62px minmax(0,1fr);
+  align-items:center;
+  padding:18px 68px 18px 18px;
+  min-height:100px;
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;
+}
+html[data-theme="pluto-1-8-0"] .game-card::before{display:none}
+html[data-theme="pluto-1-8-0"] .game-card.theme-card-launchable::after{
+  content:"›";
+  position:absolute;
+  right:22px;
+  top:50%;
+  transform:translateY(-52%);
+  color:#687182;
+  font-size:38px;
+  font-weight:400;
+  line-height:1;
+}
+html[data-theme="pluto-1-8-0"] .game-card.theme-card-launchable:focus-visible{
+  outline:3px solid rgba(213,102,32,.26);
+  outline-offset:2px;
+}
+html[data-theme="pluto-1-8-0"] .game-card .game-icon{
+  width:62px;
+  height:62px;
+  border:0;
+  border-radius:50%;
+  color:#fff;
+  background:linear-gradient(145deg,#d56a24,#b84e19);
+  box-shadow:inset 0 1px rgba(255,255,255,.32),0 8px 17px rgba(83,55,36,.13);
+  text-shadow:none;
+}
+html[data-theme="pluto-1-8-0"] .game-card .game-icon::after{display:none}
+html[data-theme="pluto-1-8-0"] .game-card:nth-child(4n+2) .game-icon{background:linear-gradient(145deg,#729c43,#426c2d)}
+html[data-theme="pluto-1-8-0"] .game-card:nth-child(4n+3) .game-icon{background:linear-gradient(145deg,#4d91dc,#315db4)}
+html[data-theme="pluto-1-8-0"] .game-card:nth-child(4n) .game-icon{background:linear-gradient(145deg,#9867ad,#69407d)}
+html[data-theme="pluto-1-8-0"] .game-title-row{min-height:0}
+html[data-theme="pluto-1-8-0"] .game-title-row h3{color:#17243a;font-size:19px}
+html[data-theme="pluto-1-8-0"] .game-title-row .badge{margin-right:0}
+html[data-theme="pluto-1-8-0"] .game-info{
+  top:50%;
+  right:48px;
+  transform:translateY(-50%);
+  color:#5f6570;
+  background:#f3e8df;
+  border-color:rgba(86,59,42,.09);
+}
+html[data-theme="pluto-1-8-0"] .game-info:hover{
+  color:#fff;
+  background:#ce621f;
+  border-color:#ce621f;
+}
+html[data-theme="pluto-1-8-0"] .game-launch{display:none!important}
+html[data-theme="pluto-1-8-0"] .game-card-actions{margin-top:0}
+html[data-theme="pluto-1-8-0"] .game-card-actions .secondary{margin-top:5px}
+
+html[data-theme="pluto-1-8-0"] .recent-game-button{
+  position:relative;
+  min-width:180px;
+  min-height:86px;
+  padding:17px 48px 17px 17px;
+  border-radius:20px;
+  text-align:left;
+}
+html[data-theme="pluto-1-8-0"] .recent-game-button::before{display:none}
+html[data-theme="pluto-1-8-0"] #recentGames .recent-game-button span{display:none}
+html[data-theme="pluto-1-8-0"] #recentGames .recent-game-button::after,
+html[data-theme="pluto-1-8-0"] .home-open-lobby-button::after{
+  content:"›";
+  position:absolute;
+  right:17px;
+  top:50%;
+  transform:translateY(-54%);
+  color:#697181;
+  font-size:32px;
+  line-height:1;
+}
+html[data-theme="pluto-1-8-0"] .recent-game-button strong{color:#17243a;font-size:16px}
+
+html[data-theme="pluto-1-8-0"] .theme-settings-card{margin-top:14px}
+html[data-theme="pluto-1-8-0"] .theme-settings-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(190px,280px);gap:18px;align-items:center}
+html[data-theme="pluto-1-8-0"] .theme-settings-row h2{margin:0 0 5px}
+html[data-theme="pluto-1-8-0"] .theme-settings-row p{margin:0;color:var(--muted);font-size:13px;line-height:1.45}
+html[data-theme="pluto-1-8-0"] .theme-select-wrap{display:grid;gap:6px}
+html[data-theme="pluto-1-8-0"] .theme-select-wrap label{color:#8b5a3d;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+
+html[data-theme="pluto-1-8-0"] .stats-table th{color:#8a7770}
+html[data-theme="pluto-1-8-0"] .stats-table th,
+html[data-theme="pluto-1-8-0"] .stats-table td{border-bottom-color:rgba(86,59,42,.10)}
+html[data-theme="pluto-1-8-0"] .recent-match,
+html[data-theme="pluto-1-8-0"] .auth-form,
+html[data-theme="pluto-1-8-0"] .head-to-head-score{
+  color:var(--text);
+  background:#fbf4ee;
+  border-color:rgba(86,59,42,.10);
+}
+html[data-theme="pluto-1-8-0"] .profile-link{color:#c45c1d}
+
+html[data-theme="pluto-1-8-0"] .mobile-nav{
+  color:#6d7480;
+  background:rgba(255,250,246,.96);
+  border-top-color:rgba(88,60,42,.10);
+  box-shadow:0 -10px 26px rgba(83,58,41,.08);
+  backdrop-filter:blur(14px);
+}
+html[data-theme="pluto-1-8-0"] .mobile-nav-item{color:#717783;background:transparent}
+html[data-theme="pluto-1-8-0"] .mobile-nav-item.active{color:#cb5d1b;background:transparent}
+html[data-theme="pluto-1-8-0"] .mobile-nav-item.active svg{color:#cb5d1b}
+html[data-theme="pluto-1-8-0"] .mobile-nav-item.active::after{background:#cb5d1b;box-shadow:none}
+
+@media(hover:hover) and (pointer:fine){
+  html[data-theme="pluto-1-8-0"] .game-card.theme-card-launchable:hover,
+  html[data-theme="pluto-1-8-0"] .recent-game-button:hover{
+    transform:translateY(-2px);
+    border-color:rgba(213,102,32,.24);
+    box-shadow:0 17px 38px rgba(97,66,45,.14);
+  }
+}
+
+@media(max-width:760px){
+  html[data-theme="pluto-1-8-0"] body{background:#f6f0ea}
+  html[data-theme="pluto-1-8-0"] .app-shell{width:100%;padding:0 14px 96px}
+  html[data-theme="pluto-1-8-0"] .topbar{
+    position:relative;
+    top:auto;
+    width:100vw;
+    min-height:154px;
+    margin:0 0 18px calc(50% - 50vw);
+    padding:calc(max(18px,env(safe-area-inset-top)) + 8px) max(20px,env(safe-area-inset-right)) 30px max(20px,env(safe-area-inset-left));
+    border-radius:0 0 30px 30px;
+    background:
+      radial-gradient(80% 68% at 72% 105%,rgba(255,175,84,.28),transparent 70%),
+      linear-gradient(135deg,#b74b18 0%,#d56620 52%,#ed8129 100%);
+    box-shadow:0 12px 28px rgba(113,57,25,.15);
+  }
+  html[data-theme="pluto-1-8-0"] .brand-button{gap:14px}
+  html[data-theme="pluto-1-8-0"] .brand-mark,
+  html[data-theme="pluto-1-8-0"] .brand-mark-img{width:60px;height:60px}
+  html[data-theme="pluto-1-8-0"] .brand-copy strong{font-size:2rem;line-height:1}
+  html[data-theme="pluto-1-8-0"] .brand-copy small{display:block!important;margin-top:7px;font-size:13px}
+  html[data-theme="pluto-1-8-0"] .top-actions>#soundButton{display:grid!important;width:52px;min-width:52px;height:52px;min-height:52px;padding:0;border-radius:50%}
+  html[data-theme="pluto-1-8-0"] .top-actions>#installButton{color:#fff;background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.18)}
+  html[data-theme="pluto-1-8-0"] .section-heading{margin-top:24px}
+  html[data-theme="pluto-1-8-0"] .section-heading .eyebrow{color:#17243a;font-size:15px;letter-spacing:0;text-transform:none}
+  html[data-theme="pluto-1-8-0"] .game-grid{gap:11px}
+  html[data-theme="pluto-1-8-0"] .game-card{grid-template-columns:58px minmax(0,1fr);padding:15px 66px 15px 15px;min-height:94px;border-radius:20px}
+  html[data-theme="pluto-1-8-0"] .game-card .game-icon{width:58px;height:58px;font-size:25px}
+  html[data-theme="pluto-1-8-0"] .game-title-row h3{font-size:18px}
+  html[data-theme="pluto-1-8-0"] .game-info{right:44px}
+  html[data-theme="pluto-1-8-0"] .game-card.theme-card-launchable::after{right:18px;font-size:34px}
+  html[data-theme="pluto-1-8-0"] .recent-game-row{gap:10px}
+  html[data-theme="pluto-1-8-0"] .recent-game-button{min-width:165px;border-radius:18px}
+  html[data-theme="pluto-1-8-0"] .theme-settings-row{grid-template-columns:1fr;gap:12px}
+}
