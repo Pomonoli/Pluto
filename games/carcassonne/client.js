@@ -154,7 +154,9 @@ function renderCarcassonne(room,game){
       const group=m.kind==='city'?entry.tile.cities?.[m.group]:m.kind==='road'?entry.tile.roads?.[m.group]:null;
       const fieldPosition=m.kind==='field'?`field-${m.position||fieldPositionClass(entry.tile.fields?.[m.group]||[])}`:'';
       const position=group?featurePositionClass(group):fieldPosition;
-      const meeple=E('span',`carc-meeple ${m.kind} ${position}`.trim(),visual.text);meeple.style.background=player?.color||'#fff';meeple.title=`${player?.name||''} · ${visual.role}`;tile.append(meeple)
+      const meeple=E('span',`carc-meeple ${m.kind} ${position}`.trim(),visual.text);meeple.style.background=player?.color||'#fff';meeple.title=`${player?.name||''} · ${visual.role}`;
+      if(Array.isArray(m.anchor)&&m.anchor.length===2){meeple.classList.add('feature-anchor');meeple.style.setProperty('--anchor-x',`${m.anchor[0]}px`);meeple.style.setProperty('--anchor-y',`${m.anchor[1]}px`)}
+      tile.append(meeple)
     });
     board.append(tile)
   });

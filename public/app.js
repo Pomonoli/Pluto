@@ -1,4 +1,4 @@
-import { createGameUi } from './js/game-ui.js?v=1.11.3';
+import { createGameUi } from './js/game-ui.js?v=1.11.4';
 
 const socket = window.io();
   const $ = (id) => document.getElementById(id);

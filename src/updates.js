@@ -73,6 +73,12 @@ const RELEASES = [
       'Lobby\'s en games gebruiken een lichte, schermvullende layout met betere contrasten.',
       'De mobiele header, ondernavigatie en profieltabellen benutten kleine schermen beter.'
     ]
+  },
+  {
+    version:'1.11.4',
+    improvements:[
+      'Carcassonne landbouwer-plaatsing verbeterd.'
+    ]
   }
 ];
 

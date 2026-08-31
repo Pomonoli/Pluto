@@ -23,6 +23,32 @@ const TEMPLATES = {
   roadEnd:{edges:'RFFF',roads:[[0]],fields:[ALL_FIELD_PORTS]}, field:{edges:'FFFF',fields:[ALL_FIELD_PORTS]}
 };
 
+// Visual centres on the unrotated 72x72 tile. Group indexes match TEMPLATES.
+// Anchors are intentionally independent from feature connectivity and scoring.
+const MEEPLE_ANCHORS = {
+  monastery:{monastery:[[36,36]],field:[[14,55]]},
+  monasteryRoad:{monastery:[[36,34]],road:[[36,54]],field:[[15,15]]},
+  cityCap:{city:[[36,11]],field:[[36,52]]},
+  cityCapRoad:{city:[[36,10]],road:[[36,36]],field:[[9,14],[36,56]]},
+  cityCapFork:{city:[[36,10]],road:[[36,36]],field:[[17,50],[56,56]]},
+  cityStraight:{city:[[36,36]],field:[[10,36],[62,36]]},
+  doubleCity:{city:[[36,10],[36,62]],field:[[9,36],[63,36]]},
+  cityCorner:{city:[[52,20]],field:[[18,53]]},
+  cityCornerRoad:{city:[[52,20]],road:[[36,52]],field:[[10,39],[60,60]]},
+  cityThree:{city:[[42,31]],field:[[9,36]]},
+  cityThreeRoad:{city:[[42,31]],road:[[19,36]],field:[[9,60],[9,12]]},
+  cityFull:{city:[[36,36]]},
+  roadStraight:{road:[[36,36]],field:[[36,16],[36,56]]},
+  roadCurve:{road:[[36,36]],field:[[17,17],[55,55]]},
+  roadT:{road:[[53,36],[36,53],[19,36]],field:[[36,15],[55,55],[17,55]]},
+  roadCross:{road:[[36,19],[53,36],[36,53],[19,36]],field:[[17,17],[55,17],[55,55],[17,55]]},
+  roadEnd:{road:[[36,19]],field:[[36,55]]},
+  field:{field:[[36,36]]}
+};
+
+function rotateAnchor([x,y],turns){let point=[x,y];for(let i=0;i<((turns%4)+4)%4;i+=1)point=[72-point[1],point[0]];return point}
+function meepleAnchor(tile,kind,group=0){const anchor=MEEPLE_ANCHORS[tile?.type]?.[kind]?.[group];return anchor?rotateAnchor(anchor,tile.rotation||0):null}
+
 const DECK_SPEC = [
   ['monastery',4],['monasteryRoad',2],['cityCap',5],['cityCapRoad',4],['cityCapFork',3],
   ['cityStraight',4],['doubleCity',3],['cityCorner',4],['cityCornerRoad',4],['cityThree',3],
@@ -92,7 +118,7 @@ function fieldPosition(ports){
   return'center'
 }
 function fieldLabel(tile,group){if((tile.fields||[]).length<=1)return'Landbouwer';const words={left:'links',right:'rechts',top:'midden-boven',bottom:'midden-onder',center:'midden','top-left':'linksboven','top-right':'rechtsboven','bottom-right':'rechtsonder','bottom-left':'linksonder'};return`Landbouwer ${words[fieldPosition(tile.fields[group])]}`}
-function meepleChoices(game,entry){const choices=[];entry.tile.cities.forEach((_,group)=>{if(!featureOccupied(game,entry.x,entry.y,'city',group))choices.push({key:`city:${group}`,kind:'city',group,label:'Ridder op stad'})});entry.tile.roads.forEach((_,group)=>{if(!featureOccupied(game,entry.x,entry.y,'road',group))choices.push({key:`road:${group}`,kind:'road',group,label:'Struikrover op weg'})});if(entry.tile.monastery&&!game.meeples.some(m=>m.x===entry.x&&m.y===entry.y&&m.kind==='monastery'))choices.push({key:'monastery:0',kind:'monastery',group:0,label:'Monnik op klooster'});entry.tile.fields.forEach((ports,group)=>{if(!featureOccupied(game,entry.x,entry.y,'field',group))choices.push({key:`field:${group}`,kind:'field',group,label:fieldLabel(entry.tile,group),position:fieldPosition(ports)})});return choices}
+function meepleChoices(game,entry){const choices=[];entry.tile.cities.forEach((_,group)=>{if(!featureOccupied(game,entry.x,entry.y,'city',group))choices.push({key:`city:${group}`,kind:'city',group,label:'Ridder op stad',anchor:meepleAnchor(entry.tile,'city',group)})});entry.tile.roads.forEach((_,group)=>{if(!featureOccupied(game,entry.x,entry.y,'road',group))choices.push({key:`road:${group}`,kind:'road',group,label:'Struikrover op weg',anchor:meepleAnchor(entry.tile,'road',group)})});if(entry.tile.monastery&&!game.meeples.some(m=>m.x===entry.x&&m.y===entry.y&&m.kind==='monastery'))choices.push({key:'monastery:0',kind:'monastery',group:0,label:'Monnik op klooster',anchor:meepleAnchor(entry.tile,'monastery',0)});entry.tile.fields.forEach((ports,group)=>{if(!featureOccupied(game,entry.x,entry.y,'field',group))choices.push({key:`field:${group}`,kind:'field',group,label:fieldLabel(entry.tile,group),position:fieldPosition(ports),anchor:meepleAnchor(entry.tile,'field',group)})});return choices}
 function scoreEnd(game){
   const breakdown=new Map(game.players.map(player=>[player.id,{playerId:player.id,points:player.score,farmers:0,incompleteRoads:0,incompleteCities:0,incompleteMonasteries:0,total:0}]));
   const add=(playerIds,category,points)=>playerIds.forEach(id=>{breakdown.get(id)[category]+=points});
@@ -122,7 +148,7 @@ function drawNext(game){game.currentTile=null;game.validPlacements=[];while(game
 function advance(game){game.turnIndex=(game.turnIndex+1)%game.players.length;game.lastPlaced=null;drawNext(game);scheduleNpc(game)}
 function placeCurrent(game,x,y,rotation){const valid=game.validPlacements.some(p=>p.x===x&&p.y===y&&p.rotation===rotation);if(!valid)throw new Error('Daar past deze tegel niet.');const tile=rotateTile(game.currentTile,rotation),entry={x,y,tile};game.board.set(posKey(x,y),entry);game.lastPlaced=entry;game.phase='meeple';game.validPlacements=[];game.log.unshift(`${game.players[game.turnIndex].name} legt een tegel.`)}
 function undoPlacement(game){if(game.phase!=='meeple'||!game.lastPlaced)throw new Error('Er is geen tegel om terug te nemen.');const entry=game.lastPlaced;game.board.delete(posKey(entry.x,entry.y));game.currentTile=entry.tile;game.lastPlaced=null;game.phase='place';game.validPlacements=placementsForCurrentRotation(game,game.currentTile);if(/ legt een tegel\.$/.test(game.log[0]||''))game.log.shift()}
-function finishTurn(game,choiceKey){const player=game.players[game.turnIndex],entry=game.lastPlaced;if(choiceKey&&player.meeples>0){const choice=meepleChoices(game,entry).find(c=>c.key===choiceKey);if(!choice)throw new Error('Daar mag geen burger staan.');game.meeples.push({playerId:player.id,x:entry.x,y:entry.y,kind:choice.kind,group:choice.group,position:choice.position||null});player.meeples-=1}game.lastPlayed={x:entry.x,y:entry.y};scoreCompleted(game,entry);if(!game.deck.length)scoreEnd(game);else advance(game)}
+function finishTurn(game,choiceKey){const player=game.players[game.turnIndex],entry=game.lastPlaced;if(choiceKey&&player.meeples>0){const choice=meepleChoices(game,entry).find(c=>c.key===choiceKey);if(!choice)throw new Error('Daar mag geen burger staan.');game.meeples.push({playerId:player.id,x:entry.x,y:entry.y,kind:choice.kind,group:choice.group,position:choice.position||null,anchor:choice.anchor||null});player.meeples-=1}game.lastPlayed={x:entry.x,y:entry.y};scoreCompleted(game,entry);if(!game.deck.length)scoreEnd(game);else advance(game)}
 function createGame(roomPlayers){
   const start=cloneTile('cityCapRoad','start');start.id='start';const board=new Map([[posKey(0,0),{x:0,y:0,tile:start}]]);const game={gameKey:meta.key,players:roomPlayers.map((p,i)=>({id:p.id,name:p.name,isNpc:p.isNpc,score:0,meeples:7,color:COLORS[i]})),board,deck:makeDeck(),currentTile:null,validPlacements:[],lastPlaced:null,lastPlayed:null,meeples:[],scored:new Set(),turnIndex:0,phase:'place',discarded:0,gameOver:false,resultText:'',log:[],nextNpcAt:0};drawNext(game);scheduleNpc(game,700);return game
 }
@@ -135,4 +161,4 @@ function serialize(game,requesterId,connected){const current=game.players[game.t
 
 function results(game){const {competitionPlacements}=require('../../src/result-utils'),placements=competitionPlacements(game.players,p=>p.score,true),high=Math.max(...game.players.map(p=>p.score)),leaders=game.players.filter(p=>p.score===high);return game.players.map(p=>({playerId:p.id,placement:placements.get(p.id),score:p.score,won:leaders.length===1&&leaders[0].id===p.id,outcome:leaders.length>1&&p.score===high?'Gelijkspel':p.score===high?'Wint':'Verliest'}))}
 
-module.exports={meta,createGame,handleAction,serialize,tick,rotateTile,canPlaceAt,placementsFor,feature,fieldFeature,fieldPosition,meepleChoices,scoreEnd,results};
+module.exports={meta,createGame,handleAction,serialize,tick,rotateTile,canPlaceAt,placementsFor,feature,fieldFeature,fieldPosition,meepleAnchor,meepleChoices,scoreEnd,results};

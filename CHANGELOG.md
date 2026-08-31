@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.11.4 — Minor carcassonne fixes
+
+- Landbouwer placement in Carcassonne verbeterd.
+
 ## v1.11.3 — Light theme en schermvullende games
 
 - Het oranje Light theme is volledig afgewerkt en voortaan standaard; Classic blijft beschikbaar via Instellingen.

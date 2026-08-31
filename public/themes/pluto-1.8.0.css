@@ -350,6 +350,18 @@ html[data-theme="pluto-1-8-0"] .head-to-head-score{
   border-color:rgba(86,59,42,.10);
 }
 html[data-theme="pluto-1-8-0"] .profile-link{color:#c45c1d}
+html[data-theme="pluto-1-8-0"] .open-room-player{
+  color:#8f411b;
+  background:#f8e5d7;
+  border-color:#edcbb7;
+}
+html[data-theme="pluto-1-8-0"] .lobby-rooms-heading #refreshRoomsButton{
+  color:#9e4719;
+  background:#fffaf6;
+  border-color:#dfbda8;
+  opacity:1;
+}
+html[data-theme="pluto-1-8-0"] .lobby-rooms-heading #refreshRoomsButton:hover{color:#fff;background:#c75a1c;border-color:#c75a1c}
 
 html[data-theme="pluto-1-8-0"] .mobile-nav{
   color:#6d7480;

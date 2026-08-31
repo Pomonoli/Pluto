@@ -70,6 +70,7 @@
 .carc-meeple.city.corner-ne{left:45px;top:10px}.carc-meeple.city.corner-se{left:45px;top:44px}.carc-meeple.city.corner-sw{left:10px;top:44px}.carc-meeple.city.corner-nw{left:10px;top:10px}.carc-meeple.city.center{left:27px;top:27px}
 .carc-meeple.road.side-north{left:27px;top:14px}.carc-meeple.road.side-east{left:40px;top:27px}.carc-meeple.road.side-south{left:27px;top:40px}.carc-meeple.road.side-west{left:14px;top:27px}
 .carc-meeple.road.corner-ne{left:40px;top:14px}.carc-meeple.road.corner-se{left:40px;top:40px}.carc-meeple.road.corner-sw{left:14px;top:40px}.carc-meeple.road.corner-nw{left:14px;top:14px}.carc-meeple.road.center{left:27px;top:27px}
+.carc-tile .carc-meeple.feature-anchor{left:calc(var(--anchor-x) - 9px);top:calc(var(--anchor-y) - 9px)}
 .carc-burger-backdrop{position:fixed;inset:0;z-index:980;display:grid;place-items:center;padding:18px;background:rgba(3,5,10,.68);backdrop-filter:blur(3px)}
 .carc-burger-modal{width:min(430px,100%);border:1px solid rgba(204,211,241,.18);border-radius:17px;background:linear-gradient(180deg,#171b2d,#10131f);padding:18px;box-shadow:0 22px 60px rgba(0,0,0,.48)}
 .carc-burger-modal .eyebrow{margin-bottom:5px}.carc-burger-modal h3{margin:0 0 7px;font-size:21px}.carc-burger-copy{margin:0 0 14px;color:var(--muted);font-size:12px;line-height:1.45}
