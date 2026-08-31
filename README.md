@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.6.3
+## Nieuw in versie 1.6.4
 
-Solitaire toont bij draw-3 voortaan de drie getrokken kaarten overlappend, waarbij alleen de bovenste speelbaar is en onderliggende kaarten correct zichtbaar blijven wanneer kaarten worden gespeeld. Lange tableau-stacks verkleinen hun verticale overlap automatisch op lagere schermen, zodat ook lange reeksen volledig zichtbaar blijven. Gewonnen Solitaire-runs van ingelogde spelers worden nu correct opgeslagen in statistieken en het Solitaire-leaderboard.
+Drie oude Age of Civilization-testbestanden zijn uit `games/` verwijderd, zodat daar alleen de echte gamefolders, template en documentatie overblijven.
 
 ## Nieuw in versie 1.6.0
 
