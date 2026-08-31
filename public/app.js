@@ -1,4 +1,4 @@
-import { createGameUi } from './js/game-ui.js?v=1.8.1';
+import { createGameUi } from './js/game-ui.js?v=1.8.2';
 
 const socket = window.io();
   const $ = (id) => document.getElementById(id);
@@ -405,14 +405,14 @@ const socket = window.io();
     els.leaderboardContent.replaceChildren();
     if (!rows.length) { els.leaderboardContent.append(E('p','muted','Nog geen resultaten.')); return; }
     const table=E('table','stats-table');
-    const plugin=state.gamePlugins[gameKey],columns=plugin?.leaderboardColumns||['#','Speler','Games','Wins','Winrate'];
+    const plugin=state.gamePlugins[gameKey],columns=plugin?.leaderboardColumns||['#','Speler','Wins','Games','Winrate'];
     const head=E('tr');columns.forEach(x=>head.append(E('th','',x)));
     table.append(head);
     rows.forEach((row,index)=>{
       const tr=E('tr');
       tr.append(E('td','',String(index+1)));
       const td=E('td'); const link=E('button','profile-link',row.username); link.type='button'; link.onclick=()=>{setRoute(`/profile/${encodeURIComponent(row.username)}`);showProfile(row.username)};td.append(link);tr.append(td);
-      const cells=plugin?.renderLeaderboardCells?.({row,E})||[E('td','',String(row.games)),E('td','',String(row.wins)),E('td','',`${row.winRate||0}%`)];tr.append(...cells);
+      const cells=plugin?.renderLeaderboardCells?.({row,E})||[E('td','',String(row.wins)),E('td','',String(row.games)),E('td','',`${row.winRate||0}%`)];tr.append(...cells);
       table.append(tr);
     });
     els.leaderboardContent.append(table);
@@ -430,7 +430,15 @@ const socket = window.io();
     }
     els.profileRecent.replaceChildren();
     if(!recent.length) els.profileRecent.append(E('p','muted','Nog geen match history.'));
-    recent.forEach(m=>{const item=E('div','recent-match');const d=new Date(Number(m.endedAt));item.append(E('strong','',GAME_NAMES[m.gameKey]||m.gameKey),E('span','',m.won?'Winst':m.outcome||'Match'),E('small','',`${d.toLocaleDateString('nl-BE')} ${d.toLocaleTimeString('nl-BE',{hour:'2-digit',minute:'2-digit'})}${m.durationMs?` · ${formatDuration(m.durationMs)}`:''}`));els.profileRecent.append(item)});
+    else {
+      const appendMatch=(m)=>{const item=E('div','recent-match');const d=new Date(Number(m.endedAt));item.append(E('strong','',GAME_NAMES[m.gameKey]||m.gameKey),E('span','',m.won?'Winst':m.outcome||'Match'),E('small','',`${d.toLocaleDateString('nl-BE')} ${d.toLocaleTimeString('nl-BE',{hour:'2-digit',minute:'2-digit'})}${m.durationMs?` · ${formatDuration(m.durationMs)}`:''}`));els.profileRecent.append(item)};
+      recent.slice(0,5).forEach(appendMatch);
+      if(recent.length>5){
+        const more=E('button','secondary','Toon meer');more.type='button';
+        more.onclick=()=>{recent.slice(5).forEach(appendMatch);more.remove()};
+        els.profileRecent.append(more);
+      }
+    }
   }
   async function loadHeadToHead(username,gameKey=''){
     els.headToHeadContent.replaceChildren(E('p','muted','Laden…'));
@@ -617,7 +625,7 @@ const socket = window.io();
   if('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.8.1', {
+        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.8.2', {
           updateViaCache:'none'
         });
         await registration.update();
