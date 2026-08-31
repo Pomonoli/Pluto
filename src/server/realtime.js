@@ -223,8 +223,9 @@ function createRealtime(io) {
     if (!room.gameState?.gameOver || room.matchRecorded) return;
 
     const humanCount = room.players.filter((player) => !player.isNpc).length;
-    if (humanCount < 2) {
+    if (humanCount < 2 && !gameModule(room).meta.solo) {
       // Practice matches (one human + NPCs) never affect persistent stats/leaderboards.
+      // True solo games, such as Solitaire, do count.
       room.matchRecorded = true;
       return;
     }
