@@ -94,12 +94,14 @@ test('een ingestorte toren bepaalt ook het opgeslagen wedstrijdresultaat',()=>{
   assert.equal(result.find((row)=>row.playerId==='b').won,true);
 });
 
-test('overleven beide torens alle tijdperken, dan wint het meeste goud',()=>{
+test('overleven beide torens alle tijdperken, dan wint de meeste levenspunten (goud telt niet mee)',()=>{
   const game=civilization.createGame(players());
   game.age=7;
   game.turnInAge=3;
-  game.players.a.gold=50;
-  game.players.b.gold=10;
+  game.players.a.hp=80;
+  game.players.b.hp=40;
+  game.players.a.gold=10;
+  game.players.b.gold=999;
   civilization.handleAction(game,'a','discard',{handIndex:0});
   civilization.handleAction(game,'b','discard',{handIndex:0});
   assert.equal(game.phase,'wave');
@@ -107,6 +109,24 @@ test('overleven beide torens alle tijdperken, dan wint het meeste goud',()=>{
   civilization.tick(game,game.waveShownUntil+1);
   assert.equal(game.gameOver,true);
   assert.equal(game.endedSuddenDeath,false);
+  assert.equal(game.winnerId,'a');
+  const result=civilization.results(game,1000);
+  assert.equal(result.find((row)=>row.playerId==='a').won,true);
+  assert.equal(result.find((row)=>row.playerId==='b').won,false);
+});
+
+test('bij gelijke levenspunten na alle tijdperken beslist het goud',()=>{
+  const game=civilization.createGame(players());
+  game.age=7;
+  game.turnInAge=3;
+  game.players.a.hp=60;
+  game.players.b.hp=60;
+  game.players.a.gold=50;
+  game.players.b.gold=10;
+  civilization.handleAction(game,'a','discard',{handIndex:0});
+  civilization.handleAction(game,'b','discard',{handIndex:0});
+  civilization.tick(game,game.waveShownUntil+1);
+  assert.equal(game.gameOver,true);
   assert.equal(game.winnerId,'a');
   assert.equal(game.finalScores.a,game.players.a.gold);
 });

@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.7.1 — Winnen op levenspunten
+
+- Overleven beide torens alle zeven tijdperken, dan wint voortaan wie de meeste levenspunten over heeft, niet het meeste goud.
+- Goud beslist alleen nog als tiebreaker wanneer beide torens met exact evenveel levenspunten eindigen.
+- Matchstatistieken (`results`) gebruiken nu overal dezelfde winnaar als het spel zelf, ook bij een gelijkspel.
+
 ## v1.7.0 — Age of Civilization v4
 
 - Victory Points zijn verwijderd; Religie- en Cultuurkaarten verdelen hun bonus voortaan over Attack, Defence en goud per beurt.

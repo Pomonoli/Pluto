@@ -93,8 +93,8 @@ function renderGameOver(E,game,you,opponent){
   const table=E('div','civ-final-table');
   for(const player of [you,opponent]){
     const row=E('div',`civ-final-row${game.winnerId===player.id?' winner':''}`),info=E('div');
-    info.append(E('div','civ-fname',player.name),E('div','civ-breakdown',`Goud ${player.gold} · Attack ${player.attack} · Defence ${player.defence} · Toren ${player.hp}/100`));
-    row.append(info,E('div','civ-fscore',String(game.finalScores?.[player.id]??player.gold)));
+    info.append(E('div','civ-fname',player.name),E('div','civ-breakdown',`Goud ${player.gold} · Attack ${player.attack} · Defence ${player.defence}`));
+    row.append(info,E('div','civ-fscore',`${player.hp}/100`));
     table.append(row);
   }
   wrap.append(table);

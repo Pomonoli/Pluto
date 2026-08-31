@@ -27,8 +27,8 @@
  *     re-skinned to that category's current-age flavor name. Buildings are
  *     unique — you can never build the same named card twice.
  *   - City HP starts at 100 (no VP, so no healing). A tower hitting 0 is an
- *     instant loss. If both towers survive all 21 turns, the higher gold
- *     total wins.
+ *     instant loss. If both towers survive all 21 turns, the higher HP wins;
+ *     gold only breaks a tie in HP.
  */
 
 const TOTAL_AGES = 7;
@@ -286,9 +286,14 @@ function advanceAfterWave(game) {
     game.gameOver = true;
     game.endedSuddenDeath = false;
     finalizeScores(game);
-    const scores = game.finalScores;
-    const maxScore = Math.max(...Object.values(scores));
-    const winners = game.order.filter((id) => scores[id] === maxScore);
+    const maxHp = Math.max(...game.order.map((id) => game.players[id].hp));
+    const hpLeaders = game.order.filter((id) => game.players[id].hp === maxHp);
+    let winners = hpLeaders;
+    if (hpLeaders.length > 1) {
+      const scores = game.finalScores;
+      const maxScore = Math.max(...hpLeaders.map((id) => scores[id]));
+      winners = hpLeaders.filter((id) => scores[id] === maxScore);
+    }
     game.winnerId = winners.length === 1 ? winners[0] : null;
     setResultText(game);
     return;
@@ -436,16 +441,12 @@ function serialize(game, requesterId, connected) {
 
 function results(game, durationMs) {
   const scores = game.finalScores || Object.fromEntries(game.order.map((id) => [id, game.players[id].gold]));
-  const high = Math.max(...Object.values(scores));
-  const leaders = game.order.filter((id) => scores[id] === high);
   return game.order.map((id) => ({
     playerId: id,
-    placement: game.endedSuddenDeath ? (game.winnerId === null ? 1 : game.winnerId === id ? 1 : 2) : (scores[id] === high ? 1 : 2),
+    placement: game.winnerId === null ? 1 : (game.winnerId === id ? 1 : 2),
     score: scores[id],
-    won: game.endedSuddenDeath ? game.winnerId === id : leaders.length === 1 && leaders[0] === id,
-    outcome: game.endedSuddenDeath
-      ? (game.winnerId === null ? 'Gelijkspel' : game.winnerId === id ? 'Wint' : 'Verliest')
-      : (scores[id] === high ? (leaders.length === 1 ? 'Wint' : 'Gelijkspel') : 'Verliest'),
+    won: game.winnerId === id,
+    outcome: game.winnerId === null ? 'Gelijkspel' : (game.winnerId === id ? 'Wint' : 'Verliest'),
     durationMs
   }));
 }
