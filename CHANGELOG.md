@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.8.0 — Thema's en oranje preview-skin
+
+- Onder Profiel staat voortaan een themakeuze waarmee skins zonder frontendkopie kunnen worden gewisseld.
+- `Pluto 1.7.3` blijft de standaard skin; `Pluto 1.8.0 Preview` voegt een lichte interface met een oranje basiskleurenpalet toe.
+- In de preview-skin is de volledige gamekaart klikbaar en toetsenbordtoegankelijk; de aparte `Nieuw spel`-actie wordt verborgen en een pijltje rechts verduidelijkt de navigatie.
+- Recente games verbergen in de preview de tekst `Nieuw spel` en behouden de volledige kaart als startactie.
+- De gekozen skin wordt lokaal per toestel onthouden en de browser-theme-color volgt de actieve skin.
+- De PWA-cache bevat de nieuwe theme-assets en een regressietest bewaakt de selector, standaardskin en kaartinteractie.
+
 ## v1.7.3 — Ticket to Ride leesbaarheid en NPC-kaartkeuze
 
 - NPC's kiezen voortaan nuttige open treinkaarten en jokers wanneer die hun nog vrije routes helpen; de gesloten stapel blijft de fallback.
