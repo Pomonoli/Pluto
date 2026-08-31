@@ -52,7 +52,7 @@ html[data-theme="pluto-1-8-0"] .topbar{
   backdrop-filter:none;
   -webkit-backdrop-filter:none;
 }
-html[data-theme="pluto-1-8-0"] body:not(.room-active) .topbar::before{
+html[data-theme="pluto-1-8-0"] body:not(.game-active) .topbar::before{
   content:"";
   position:absolute;
   z-index:-1;
@@ -65,7 +65,7 @@ html[data-theme="pluto-1-8-0"] body:not(.room-active) .topbar::before{
     radial-gradient(ellipse 68% 18% at 62% 52%,transparent 0 54%,rgba(255,220,160,.24) 55% 56%,transparent 57% 62%,rgba(255,210,142,.13) 63% 64%,transparent 65%);
   transform:rotate(-5deg);
 }
-html[data-theme="pluto-1-8-0"] body:not(.room-active) .topbar::after{
+html[data-theme="pluto-1-8-0"] body:not(.game-active) .topbar::after{
   content:"";
   position:absolute;
   z-index:-1;
@@ -80,7 +80,7 @@ html[data-theme="pluto-1-8-0"] body:not(.room-active) .topbar::after{
     radial-gradient(circle at 91% 70%,rgba(255,225,177,.40) 0 1px,transparent 1.6px),
     linear-gradient(118deg,transparent 5%,rgba(255,220,168,.08) 38%,transparent 62%);
 }
-html[data-theme="pluto-1-8-0"] body:not(.room-active) .topbar>*{position:relative;z-index:1}
+html[data-theme="pluto-1-8-0"] body:not(.game-active) .topbar>*{position:relative;z-index:1}
 html[data-theme="pluto-1-8-0"] .brand-copy strong{color:#fff;font-size:1.9rem}
 html[data-theme="pluto-1-8-0"] .brand-copy small{display:block;color:rgba(255,255,255,.88);font-size:13px;letter-spacing:.06em}
 html[data-theme="pluto-1-8-0"] .brand-mark,
@@ -434,7 +434,7 @@ html[data-theme="pluto-1-8-0"] .mobile-nav-item.active::after{background:#cb5d1b
       linear-gradient(135deg,#b74b18 0%,#d56620 52%,#ed8129 100%);
     box-shadow:0 12px 28px rgba(113,57,25,.15);
   }
-  html[data-theme="pluto-1-8-0"] body:not(.room-active) .topbar::before{inset:-38% -24% -43% 23%;opacity:.86}
+  html[data-theme="pluto-1-8-0"] body:not(.game-active) .topbar::before{inset:-38% -24% -43% 23%;opacity:.86}
   html[data-theme="pluto-1-8-0"] body.game-active .mobile-game-header{
     color:#fff;
     background:

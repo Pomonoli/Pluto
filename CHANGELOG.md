@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.11.11 — Carcassonne-burgers en uniforme lobbybanner
+
+- De Carcassonne-lobby heeft onder de tegelkeuze een slider voor het aantal burgers per speler.
+- De slider gebruikt standaard 7 burgers en kan door de host worden ingesteld van 1 tot 12.
+- De gekozen hoeveelheid geldt voor menselijke spelers en NPC's en blijft behouden bij een rematch.
+- Alle game-lobby's gebruiken nu dezelfde hoogte, branding en subtiele ruimteachtergrond als de Home-banner.
+- Actieve games behouden hun bestaande compacte gameheader.
+
 ## v1.11.10 — Carcassonne spelduur en Home-banner
 
 - De Carcassonne-host kan in de lobby kiezen uit 72 tegels (standaard), 36 tegels (short) of 18 tegels (blitz).

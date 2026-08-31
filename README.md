@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.11.10
+## Nieuw in versie 1.11.11
 
-Carcassonne laat de host voortaan kiezen tussen 72 tegels (standaard), 36 tegels (short) en 18 tegels (blitz). Tijdens het wachten zie je al vanaf de speler na jou je verwachte volgende tegel, samen met het aantal spelers dat nog voor je aan de beurt komt. De oranje Home-banner heeft daarnaast een subtiele planeet-, ringen- en sterrenachtergrond gekregen zonder hoger te worden.
+Carcassonne laat de host voortaan met een slider kiezen hoeveel burgers iedere speler krijgt, van 1 tot 12 en standaard 7. Alle game-lobby's gebruiken daarnaast dezelfde compacte oranje banner met planeet, ringen en sterren als het homescreen; pas na de spelstart schakelt Pluto over naar de compacte gameheader.
 
 ## Nieuw in versie 1.11.0
 

@@ -3,7 +3,18 @@ const views={};
 export const roomOptions={bodyClass:'carcassonne-active'};
 function bind(api){({state,els,E,action,profileButton,sound,socket,handleAck,cardNode,valueLabel,titlebar,logBox,renderGame,renderCardOpponents,renderDiscardStack,scoreList}=api)}
 export function render(api){bind(api);renderCarcassonne(api.room,api.game)}
-export function renderLobbyOptions({room,container,E,socket,handleAck}){const wrap=E('section','carc-lobby-options'),head=E('div','carc-lobby-options-head'),choices=E('div','carc-tile-count-options'),selected=Number(room.gameOptions?.tileCount||72);head.append(E('strong','','Aantal tegels'),E('small','',room.isHost?'Kies de spelduur':'De host kiest de spelduur'));[[72,'Standaard'],[36,'Short'],[18,'Blitz']].forEach(([value,label])=>{const button=E('button',`carc-tile-count-option ${selected===value?'active':''}`.trim());button.type='button';button.disabled=!room.isHost;button.setAttribute('aria-pressed',selected===value?'true':'false');button.append(E('b','',String(value)),E('span','',label));button.onclick=()=>socket.emit('room:setOptions',{tileCount:value},handleAck);choices.append(button)});wrap.append(head,choices);container.append(wrap)}
+export function renderLobbyOptions({room,container,E,socket,handleAck}){
+  const wrap=E('section','carc-lobby-options'),head=E('div','carc-lobby-options-head'),choices=E('div','carc-tile-count-options'),selected=Number(room.gameOptions?.tileCount||72);
+  head.append(E('strong','','Aantal tegels'),E('small','',room.isHost?'Kies de spelduur':'De host kiest de spelduur'));
+  [[72,'Standaard'],[36,'Short'],[18,'Blitz']].forEach(([value,label])=>{const button=E('button',`carc-tile-count-option ${selected===value?'active':''}`.trim());button.type='button';button.disabled=!room.isHost;button.setAttribute('aria-pressed',selected===value?'true':'false');button.append(E('b','',String(value)),E('span','',label));button.onclick=()=>socket.emit('room:setOptions',{tileCount:value},handleAck);choices.append(button)});
+  const meepleRow=E('div','carc-meeple-count-option'),meepleCopy=E('label','carc-meeple-count-copy'),meepleValue=E('output','carc-meeple-count-value'),slider=E('input','carc-meeple-count-slider'),meepleCount=Number(room.gameOptions?.meepleCount||7);
+  meepleCopy.htmlFor='carcMeepleCount';meepleCopy.append(E('strong','','Aantal burgers'),E('small','',room.isHost?'Per speler':'Gekozen door de host'));
+  meepleValue.htmlFor='carcMeepleCount';meepleValue.textContent=String(meepleCount);
+  slider.id='carcMeepleCount';slider.type='range';slider.min='1';slider.max='12';slider.step='1';slider.value=String(meepleCount);slider.disabled=!room.isHost;slider.setAttribute('aria-label','Aantal burgers per speler');
+  slider.oninput=()=>{meepleValue.textContent=slider.value};
+  slider.onchange=()=>socket.emit('room:setOptions',{meepleCount:Number(slider.value)},handleAck);
+  meepleRow.append(meepleCopy,slider,meepleValue);wrap.append(head,choices,meepleRow);container.append(wrap)
+}
 
 const SIDE_NAMES=['north','east','south','west'];
 const SIDE_WORDS=['boven','rechts','onder','links'];

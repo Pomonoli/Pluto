@@ -171,14 +171,27 @@ test('Carcassonne ondersteunt standaard, short en blitz tegelsets',()=>{
     assert.equal(game.tileCount,tileCount);
     assert.equal(game.board.size+game.deck.length+Number(Boolean(game.currentTile)),tileCount);
   }
-  assert.deepEqual(carcassonne.normalizeRoomOptions({tileCount:99}),{tileCount:72});
+  assert.deepEqual(carcassonne.normalizeRoomOptions({tileCount:99}),{tileCount:72,meepleCount:7});
 });
 
-test('Carcassonne-client toont lobbykeuzes en compacte preview-wachttijd',()=>{
+test('Carcassonne gebruikt een instelbaar aantal burgers per speler',()=>{
+  const players=[{id:'a',name:'A'},{id:'b',name:'B'}];
+  for(const meepleCount of [1,7,12]){
+    const game=carcassonne.createGame(players,{meepleCount});
+    assert.equal(game.meepleCount,meepleCount);
+    assert.deepEqual(game.players.map(player=>player.meeples),[meepleCount,meepleCount]);
+  }
+  assert.deepEqual(carcassonne.normalizeRoomOptions({meepleCount:0}),{tileCount:72,meepleCount:7});
+  assert.deepEqual(carcassonne.normalizeRoomOptions({meepleCount:13}),{tileCount:72,meepleCount:7});
+});
+
+test('Carcassonne-client toont tegelkeuzes, burgerslider en compacte preview-wachttijd',()=>{
   const fs=require('node:fs'),path=require('node:path');
   const client=fs.readFileSync(path.join(__dirname,'../games/carcassonne/client.js'),'utf8');
   assert.match(client,/export function renderLobbyOptions/);
   assert.match(client,/\[\[72,'Standaard'\],\[36,'Short'\],\[18,'Blitz'\]\]/);
+  assert.match(client,/slider\.type='range';slider\.min='1';slider\.max='12'/);
+  assert.match(client,/Aantal burgers per speler/);
   assert.match(client,/Nog \$\{count\} speler/);
 });
 

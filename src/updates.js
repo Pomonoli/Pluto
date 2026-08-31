@@ -100,6 +100,15 @@ const RELEASES = [
     improvements:[
       'De oranje Home-banner heeft een subtiele planeet-, ringen- en sterrenachtergrond.'
     ]
+  },
+  {
+    version:'1.11.11',
+    features:[
+      'De Carcassonne-host kan het aantal burgers per speler instellen van 1 tot 12, met 7 als standaard.'
+    ],
+    improvements:[
+      'Game-lobby’s gebruiken dezelfde compacte oranje ruimtebanner als Home.'
+    ]
   }
 ];
 
