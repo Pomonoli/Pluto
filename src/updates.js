@@ -115,6 +115,12 @@ const RELEASES = [
     improvements:[
       'De lobby gebruikt overal game en games in plaats van room en rooms.'
     ]
+  },
+  {
+    version:'1.11.13',
+    improvements:[
+      'Games blijven in browser en tablet binnen een passende, gecentreerde breedte zonder de mobiele layout te wijzigen.'
+    ]
   }
 ];
 

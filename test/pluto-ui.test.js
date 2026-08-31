@@ -49,6 +49,17 @@ test('actieve spellen gebruiken een viewporthoge layout met interne fallback',()
   assert.match(css,/body\.game-active \.game-panel\{[\s\S]*?border-radius:0;/);
 });
 
+test('browser en tablet begrenzen gamebreedte zonder mobile te wijzigen',()=>{
+  const css=fs.readFileSync(path.join(root,'public/styles.css'),'utf8');
+  assert.match(css,/@media\(min-width:761px\)\{[\s\S]*?body\.game-active #gameStage\{[\s\S]*?width:min\(100%,1180px\);[\s\S]*?max-width:1180px/);
+  assert.match(css,/@media\(max-width:760px\)\{[\s\S]*?body\.game-active #gameStage\{overflow:auto/);
+  assert.ok(css.lastIndexOf('@media(min-width:761px)')>css.lastIndexOf('@media(max-width:760px)'));
+  for(const game of ['civilization','blackjack','cluedo','hartenjagen','hofslag','pesten','presidenten','quoridor','santorini','solitaire','stratego']){
+    const gameCss=fs.readFileSync(path.join(root,'games',game,'styles.css'),'utf8');
+    assert.match(gameCss,/@media\(min-width:761px\)\{#gameStage:has\(/,`${game} mist een desktop/tablet-breedtelimiet`);
+  }
+});
+
 test('homescreen bevat geen kaart meer om via een code te joinen',()=>{
   const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
   const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');

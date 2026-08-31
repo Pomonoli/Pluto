@@ -1,3 +1,4 @@
+@media(min-width:761px){#gameStage:has(.cluedo-layout){max-width:1050px}}
 .cluedo-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px}
 .cluedo-last,.cluedo-reveal,.cluedo-eliminated{
   border:1px solid var(--border);border-radius:11px;background:#12161c;padding:11px;margin-bottom:12px

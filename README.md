@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.11.12
+## Nieuw in versie 1.11.13
 
-De lobby gebruikt voortaan overal de duidelijke benamingen `game` en `games` in plaats van `room` en `rooms`. Dat geldt voor het lobbyoverzicht, uitnodigingen, hervatbare games, join- en vertrekknoppen, gamecodes en bijbehorende foutmeldingen.
+Actieve games gebruiken in browser- en tabletweergave voortaan een begrensde, gecentreerde werkbreedte. Brede spellen blijven ruim en overzichtelijk, terwijl compacte bord- en kaartspellen kleinere passende maxima gebruiken. De mobiele weergave tot en met 760px blijft ongewijzigd.
 
 ## Nieuw in versie 1.11.0
 

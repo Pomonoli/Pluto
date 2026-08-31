@@ -1340,4 +1340,22 @@ body.game-active .game-panel{
   body.game-active #gameStage{overflow:auto;overscroll-behavior:contain}
   body.game-active #gameStage>*{max-width:100%}
 }
+
+/* Browser/tablet game canvas: keep every plugin readable without stretching it
+   across an ultrawide viewport. Mobile keeps its existing full-width layout. */
+@media(min-width:761px){
+  body.game-active #gameStage{
+    align-self:center;
+    width:min(100%,1180px);
+    max-width:1180px;
+    padding-inline:clamp(8px,1.5vw,18px);
+    box-sizing:border-box;
+  }
+  body.game-active #gameStage>*,
+  body.game-active #gameStage :is(.table-surface,.hand-area,.card-row,.action-row){
+    min-width:0;
+    max-width:100%;
+    box-sizing:border-box;
+  }
+}
 /* Carcassonne */

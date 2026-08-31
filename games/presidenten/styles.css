@@ -1,3 +1,4 @@
+@media(min-width:761px){#gameStage:has(.presidenten-surface){max-width:980px}}
 .presidenten-fan .playing-card[aria-disabled="true"]{cursor:default;filter:saturate(.38) brightness(.84);opacity:1}
 .presidenten-fan .playing-card .rank{position:absolute;top:8px;left:8px;font-size:19px}
 .presidenten-fan .playing-card .suit{position:absolute;top:29px;left:8px;font-size:15px}

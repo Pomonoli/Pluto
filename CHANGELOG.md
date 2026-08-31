@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.11.13 — Passende gamebreedtes voor browser en tablet
+
+- Alle actieve games gebruiken vanaf 761px een gecentreerde gamecanvas van maximaal 1180px.
+- Panelen, handen, kaarten en actierijen blijven binnen de beschikbare schermbreedte.
+- Compacte spellen zoals Age of Civilization, Santorini, Stratego, Quoridor en Solitaire gebruiken kleinere spel-eigen maxima.
+- Brede bordspellen behouden voldoende ruimte zonder over ultrabrede schermen uit te rekken.
+- De mobiele layout tot en met 760px blijft volledig ongewijzigd.
+
 ## v1.11.12 — Consistente lobbyterminologie
 
 - Alle zichtbare lobbyteksten gebruiken voortaan `game` en `games` in plaats van `room` en `rooms`.
