@@ -1,4 +1,4 @@
-import { createGameUi } from './js/game-ui.js?v=1.8.2';
+import { createGameUi } from './js/game-ui.js?v=1.11.1';
 
 const socket = window.io();
   const $ = (id) => document.getElementById(id);
@@ -625,7 +625,7 @@ const socket = window.io();
   if('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.8.2', {
+        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.11.1', {
           updateViaCache:'none'
         });
         await registration.update();

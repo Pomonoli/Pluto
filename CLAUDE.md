@@ -33,6 +33,11 @@ Daarnaast altijd:
   geschiedenis (inclusief elke tussenliggende patchversie) bewaard blijft.
 - **README.md**: werk de "Nieuw in versie …"-sectie op de GitHub-frontpage bij
   (zie hieronder voor welke versies daar mogen staan).
+- **src/updates.js**: voeg alle wijzigingen toe die voor gebruikers zichtbaar
+  of relevant zijn. Gebruik uitsluitend de categorieën `games`, `features` en
+  `improvements`. De PWA groepeert hiermee automatisch alle wijzigingen sinds
+  de laatst geziene versie. Interne refactors zonder zichtbaar effect hoeven
+  geen popup-item te krijgen.
 
 Als de wijziging een nieuwe game toevoegt of de speltabel in README.md
 verandert, werk die tabel ook bij.

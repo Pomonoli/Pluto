@@ -1,5 +1,39 @@
 # Changelog
 
+## v1.11.1 — PWA-updatepopup
+
+- De geïnstalleerde PWA controleert bij openen welke gebruikersrelevante wijzigingen sinds het vorige bezoek zijn toegevoegd.
+- Nieuwe games, nieuwe features en verbeteringen worden over meerdere gemiste releases heen samengevoegd in drie compacte categorieën.
+- Ingelogde accounts bewaren de laatst geziene versie centraal in SQLite; gasten bewaren die versie lokaal op hun toestel.
+- Bestaande gebruikers krijgen bij deze eerste rollout stil een 1.11.1-baseline zodat er geen historische changelogdump verschijnt.
+- Wanneer er geen nieuwe items zijn, verschijnt expliciet geen popup en wordt een versie zonder gebruikersnieuws stil als gezien verwerkt.
+- `src/updates.js` is voortaan de centrale catalogus voor gebruikerszichtbare release-items.
+
+## v1.11.0 — Cascadia
+
+- Cascadia toegevoegd voor 2 tot 4 spelers met NPC-ondersteuning.
+- Habitattegels en dieren worden via een gedeelde markt gedraft en in een eigen hexagonaal ecosysteem geplaatst.
+- Dierpatronen, habitatcorridors en habitatmeerderheden bepalen de eindscore.
+- Natuurfiches ondersteunen marktcombinaties en het verversen van dieren.
+
+## v1.10.0 — Kingdomino
+
+- Kingdomino toegevoegd voor 2 tot 4 spelers met NPC-ondersteuning.
+- Domino's worden in nummerorde gedraft en moeten geldig aan hetzelfde terrein of het kasteel aansluiten.
+- Gebieden scoren als aantal vakken × aantal kronen en het koninkrijk blijft binnen de toegestane afmetingen.
+- De 2-spelervariant gebruikt twee koningen per speler; bij 3 spelers wordt de vierde domino per rij afgelegd.
+
+## v1.9.0 — 7 Wonders Duel
+
+- 7 Wonders Duel toegevoegd als tweespelersgame met NPC-ondersteuning.
+- De kaartpiramide, grondstoffen, munten, militaire vooruitgang, wetenschap en wonderen worden server-side beheerd.
+- NPC's kunnen zelfstandig volledige duels spelen.
+
+## v1.8.3 — Gamefilter en alfabetische sortering
+
+- Op Home kan de gamelijst via een compacte filterknop op aantal spelers worden gefilterd.
+- Games worden alfabetisch gesorteerd op hun zichtbare displaynaam in plaats van op de interne map- of gamekey.
+
 ## v1.8.2 — Leaderboard en compacte matchgeschiedenis
 
 - Het algemene leaderboard toont voortaan `Wins` vóór `Games`, gevolgd door `Winrate`.

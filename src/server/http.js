@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const express = require('express');
 const { getGame, listGames, listGamePlugins, getGamePlugin, modules } = require('../games');
 const authDb = require('../db');
+const updates = require('../updates');
 
 function isSecureRequest(req) {
   return req.secure || String(req.headers['x-forwarded-proto'] || '').toLowerCase() === 'https';
@@ -63,10 +64,23 @@ function configureHttp(app, runtime) {
     res.json({ ok:true, user:publicUser(user), stats:user ? authDb.getOwnStats(user.id) : null });
   });
 
+  app.get('/api/updates', (req, res) => {
+    const user=authDb.getUserFromCookieHeader(req.headers.cookie);
+    res.setHeader('Cache-Control','no-store');
+    res.json(updates.payloadFor({user,since:req.query.since}));
+  });
+
+  app.post('/api/updates/seen', (req, res) => {
+    const user=authDb.getUserFromCookieHeader(req.headers.cookie);
+    if (user) updates.markSeen(user.id);
+    res.json({ok:true,currentVersion:updates.APP_VERSION});
+  });
+
   app.post('/api/auth/register', (req, res) => {
     try {
       const result = authDb.register(req.body?.username, req.body?.password);
       if (!result.ok) return res.status(400).json(result);
+      updates.markSeen(result.user.id);
       res.setHeader('Set-Cookie', authDb.cookieHeader(result.session.token, result.session.expiresAt, isSecureRequest(req)));
       res.json({ ok:true, user:result.user });
     } catch (error) {
