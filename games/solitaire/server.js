@@ -19,7 +19,7 @@ function createGame(roomPlayers) {
     gameKey: meta.key,
     playerId: roomPlayers[0].id,
     stock: deck.map((c) => ({ ...c, faceUp: false })),
-    waste: [], tableau,
+    waste: [], wasteVisibleCount: 0, tableau,
     foundations: { '♣': [], '♦': [], '♥': [], '♠': [] },
     moves: 0, gameOver: false, resultText: ''
   };
@@ -38,6 +38,19 @@ function tableauAccepts(card, pile) {
 function revealTop(pile) {
   if (pile.length && !pile[pile.length - 1].faceUp) pile[pile.length - 1].faceUp = true;
 }
+function visibleWasteCount(game) {
+  if (!game.waste.length) return 0;
+  const count = Number.isInteger(game.wasteVisibleCount) ? game.wasteVisibleCount : 1;
+  return Math.max(1, Math.min(count, game.waste.length));
+}
+function takeWasteCard(game) {
+  const card = game.waste.pop();
+  const visible = visibleWasteCount({ ...game, waste: card ? [...game.waste, card] : game.waste });
+  if (!game.waste.length) game.wasteVisibleCount = 0;
+  else if (visible > 1) game.wasteVisibleCount = visible - 1;
+  else game.wasteVisibleCount = 1;
+  return card;
+}
 function checkWin(game) {
   if (Object.values(game.foundations).every((pile) => pile.length === 13)) {
     game.gameOver = true;
@@ -51,23 +64,26 @@ function handleAction(game, playerId, action, payload = {}) {
 
   if (action === 'draw') {
     if (game.stock.length) {
+      let drawn = 0;
       for (let i = 0; i < 3 && game.stock.length; i += 1) {
-        const card = game.stock.pop(); card.faceUp = true; game.waste.push(card);
+        const card = game.stock.pop(); card.faceUp = true; game.waste.push(card); drawn += 1;
       }
+      game.wasteVisibleCount = drawn;
     } else if (game.waste.length) {
       game.stock = game.waste.reverse().map((c) => ({ ...c, faceUp: false }));
       game.waste = [];
+      game.wasteVisibleCount = 0;
     } else throw new Error('Geen kaarten meer.');
     game.moves += 1;
   } else if (action === 'wasteToFoundation') {
     const card = game.waste[game.waste.length - 1];
     if (!card || !foundationAccepts(card, game.foundations[card.suit])) throw new Error('Die kaart kan daar niet naartoe.');
-    game.foundations[card.suit].push(game.waste.pop()); game.moves += 1;
+    game.foundations[card.suit].push(takeWasteCard(game)); game.moves += 1;
   } else if (action === 'wasteToTableau') {
     const dest = Number(payload.dest);
     const card = game.waste[game.waste.length - 1];
     if (!Number.isInteger(dest) || !game.tableau[dest] || !card || !tableauAccepts(card, game.tableau[dest])) throw new Error('Ongeldige zet.');
-    game.tableau[dest].push(game.waste.pop()); game.moves += 1;
+    game.tableau[dest].push(takeWasteCard(game)); game.moves += 1;
   } else if (action === 'tableauToFoundation') {
     const src = Number(payload.src);
     const pile = game.tableau[src];
@@ -98,7 +114,7 @@ function handleAction(game, playerId, action, payload = {}) {
 
 function serialize(game) {
   return {
-    kind: meta.key, stockCount: game.stock.length, waste: game.waste, tableau: game.tableau,
+    kind: meta.key, stockCount: game.stock.length, waste: game.waste, wasteVisibleCount: visibleWasteCount(game), tableau: game.tableau,
     foundations: game.foundations, moves: game.moves, gameOver: game.gameOver, resultText: game.resultText
   };
 }
