@@ -9,7 +9,7 @@ if (heading && grid) {
     #gamesHeading.games-heading-filterable{display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative}
     #gamesHeading.games-heading-filterable .eyebrow{margin-bottom:0}
     .games-player-filter{position:relative;margin-left:auto}
-    .games-player-filter-button{width:38px;height:38px;min-height:38px;padding:0;display:grid;place-items:center;position:relative;border-radius:10px}
+    .games-player-filter-button{width:38px;height:38px;min-width:38px;min-height:38px;padding:0;display:grid;place-items:center;position:relative;border-radius:10px;touch-action:manipulation}
     .games-player-filter-button svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
     .games-player-filter-button.active::after{content:'';position:absolute;top:7px;right:7px;width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--panel)}
     .games-player-filter-popover{position:absolute;z-index:120;top:calc(100% + 8px);right:0;width:min(280px,calc(100vw - 36px));padding:14px;border:1px solid var(--border);border-radius:13px;background:var(--panel);box-shadow:0 18px 45px rgba(0,0,0,.35)}
@@ -18,6 +18,7 @@ if (heading && grid) {
     .games-player-filter-range{width:100%;min-height:30px;height:30px;margin:10px 0 1px;padding:0;border:0;border-radius:0;background:transparent;accent-color:var(--accent);box-shadow:none}
     .games-player-filter-scale{display:flex;justify-content:space-between;gap:4px;color:var(--muted);font-size:9px;font-weight:800}
     .games-player-filter-empty{grid-column:1/-1;margin:0;padding:18px;border:1px dashed var(--border);border-radius:14px;color:var(--muted);text-align:center;font-size:12px}
+    @media(max-width:760px){.games-player-filter-button{width:44px;height:44px;min-width:44px;min-height:44px;border-radius:11px}}
   `;
   document.head.append(style);
   heading.classList.add('games-heading-filterable');

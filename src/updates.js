@@ -79,6 +79,17 @@ const RELEASES = [
     improvements:[
       'Carcassonne landbouwer-plaatsing verbeterd.'
     ]
+  },
+  {
+    version:'1.11.9',
+    features:[
+      'Actieve games hebben op mobiel een compacte oranje gameheader en een visuele bevestiging bij het verlaten.',
+      'Lopende games kunnen prominent via Doorgaan met spelen worden hervat.'
+    ],
+    improvements:[
+      'Recent, profielen en leaderboards zijn compacter en beter bruikbaar op kleine schermen.',
+      'De mobiele loginflow, safe areas en touch-targets zijn verbeterd.'
+    ]
   }
 ];
 

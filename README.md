@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.11.8
+## Nieuw in versie 1.11.9
 
-Carcassonne gebruikt op mobiel voortaan alle resterende schermhoogte voor het speelveld, zodat er geen ongebruikte ruimte onder het bord blijft staan.
+Pluto heeft een vernieuwde mobiele spelervaring met een compacte oranje gameheader, directe toegang tot spelregels en geluid, een visuele bevestiging bij het verlaten en een prominente knop om lopende games te hervatten. Recent, profielen, leaderboards en de accountflow passen nu beter op kleine schermen zonder het desktopontwerp te wijzigen.
 
 ## Nieuw in versie 1.11.0
 

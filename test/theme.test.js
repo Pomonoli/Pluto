@@ -7,6 +7,8 @@ const path = require('node:path');
 
 const root = path.join(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
+const version = require(path.join(root, 'package.json')).version;
+const escapedVersion = version.replaceAll('.', '\\.');
 
 test('settings popup exposes sound and both Pluto themes', () => {
   const html = read('public/index.html');
@@ -17,10 +19,10 @@ test('settings popup exposes sound and both Pluto themes', () => {
   assert.match(html, /value="pluto-1-8-0">Light theme/);
   assert.match(html, /value="pluto-1-7-3">Classic theme/);
   assert.doesNotMatch(html, /theme-settings-card/);
-  assert.match(html, /settings\.css\?v=1\.11\.3/);
-  assert.match(html, /settings\.js\?v=1\.11\.3/);
-  assert.match(html, /themes\/pluto-1\.8\.0\.css\?v=1\.11\.3/);
-  assert.match(html, /theme\.js\?v=1\.11\.3/);
+  assert.match(html, new RegExp(`settings\\.css\\?v=${escapedVersion}`));
+  assert.match(html, new RegExp(`settings\\.js\\?v=${escapedVersion}`));
+  assert.match(html, new RegExp(`themes/pluto-1\\.8\\.0\\.css\\?v=${escapedVersion}`));
+  assert.match(html, new RegExp(`theme\\.js\\?v=${escapedVersion}`));
 });
 
 test('light theme is the default and an explicit choice persists locally', () => {
@@ -62,6 +64,7 @@ test('preview skin keeps home header visible and themes active rooms', () => {
 test('preview skin uses a compact header and edge-to-edge mobile navigation', () => {
   const css = read('public/themes/pluto-1.8.0.css');
   assert.match(css, /min-height:126px/);
+  assert.match(css, /body\.game-active \.mobile-game-header\{[\s\S]*?linear-gradient\(135deg,#b74b18 0%,#d56620 52%,#ed8129 100%\)/);
   assert.match(css, /\.mobile-nav\{[\s\S]*?left:0;[\s\S]*?bottom:0;[\s\S]*?width:100%;/);
   assert.match(css, /border-radius:18px 18px 0 0/);
 });

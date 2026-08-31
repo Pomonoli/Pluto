@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.11.9 — Mobiele spelervaring
+
+- Actieve games gebruiken op mobiel één compacte oranje header met terugknop, gamenaam en een menu voor spelregels en geluid.
+- Interne vertrekacties tonen een visuele Pluto-bevestiging met duidelijke keuzes om te blijven of het spel te verlaten.
+- Hervatbare games verschijnen prominent op Home als `Doorgaan met spelen`.
+- Recente games scrollen vloeiender met horizontale snap en de spelersfilter heeft een touch-target van minstens 44 × 44 px.
+- Profielstatistieken gebruiken compacte mobiele kaarten en leaderboards passen zonder horizontaal scrollen.
+- Op mobiel staat inloggen centraal en is `Account maken` een secundaire flow.
+- Safe areas, modals, spacing, interne game-scroll en algemene mobiele touch-targets zijn verder verfijnd.
+
 ## v1.11.8 — Carcassonne vult schermhoogte
 
 - Het Carcassonne-speelveld gebruikt op mobiel alle resterende hoogte van de gamecontainer.

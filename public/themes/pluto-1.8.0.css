@@ -402,6 +402,20 @@ html[data-theme="pluto-1-8-0"] .mobile-nav-item.active::after{background:#cb5d1b
       linear-gradient(135deg,#b74b18 0%,#d56620 52%,#ed8129 100%);
     box-shadow:0 12px 28px rgba(113,57,25,.15);
   }
+  html[data-theme="pluto-1-8-0"] body.game-active .mobile-game-header{
+    color:#fff;
+    background:
+      radial-gradient(80% 68% at 72% 105%,rgba(255,175,84,.28),transparent 70%),
+      linear-gradient(135deg,#b74b18 0%,#d56620 52%,#ed8129 100%);
+    border-bottom-color:rgba(255,255,255,.16);
+    box-shadow:0 7px 20px rgba(113,57,25,.20);
+  }
+  html[data-theme="pluto-1-8-0"] body.game-active :is(.mobile-game-leave,.mobile-game-menu-button){
+    color:#fff;
+    background:rgba(255,255,255,.13);
+    border-color:rgba(255,255,255,.24);
+    box-shadow:none;
+  }
   html[data-theme="pluto-1-8-0"] .brand-button{gap:14px}
   html[data-theme="pluto-1-8-0"] .brand-mark,
   html[data-theme="pluto-1-8-0"] .brand-mark-img{width:52px;height:52px}

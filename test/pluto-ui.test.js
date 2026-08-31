@@ -29,10 +29,11 @@ test('mobile nav wordt in een actieve room verborgen',()=>{
   assert.match(css,/body\.room-active\{padding-bottom:env\(safe-area-inset-bottom\)\}/);
 });
 
-test('spelruimte bevat geen chat, vertrekknop of deelkaart',()=>{
+test('spelruimte bevat geen chat of deelkaart en gebruikt alleen de compacte mobiele vertrekactie',()=>{
   const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
   const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
   assert.doesNotMatch(html,/Kopieer link|id="roomShareBox"|id="shareLink"|id="roomFooterMeta"|id="roomLeaveButton"|id="leaveButton"|id="chatPanel"|id="chatForm"/);
+  assert.match(html,/id="mobileGameLeaveButton"/);
   assert.doesNotMatch(app,/function copyLink|Roomlink gekopieerd|els\.shareLink|renderChat|els\.chatForm|els\.roomLeaveButton/);
 });
 
@@ -61,7 +62,7 @@ test('homescreen toont alleen beschikbare open lobbykaarten',()=>{
   assert.match(html,/id="homeOpenLobbiesSection" class="recent-games-section hidden"/);
   assert.match(html,/id="homeOpenLobbies" class="recent-game-row"/);
   assert.match(app,/room\.joinable\|\|\(room\.resumable&&room\.playerNames\.some/);
-  assert.match(app,/homeOpenLobbiesSection\.classList\.toggle\('hidden',!rooms\.length\)/);
+  assert.match(app,/homeOpenLobbiesSection\.classList\.toggle\('hidden',!open\.length\)/);
   assert.match(app,/button\.onclick=\(\)=>joinRoom\(room\.id\)/);
   assert.match(app,/canResume\?'Ga terug':room\.resumable\?'Lopend'/);
 });
@@ -87,4 +88,23 @@ test('profiel toont eerst maximaal vijf recente matches met toon meer',()=>{
   assert.match(app,/if\(recent\.length>5\)/);
   assert.match(app,/Toon meer/);
   assert.match(app,/recent\.slice\(5\)\.forEach\(appendMatch\)/);
+});
+
+test('mobile UX heeft een uniforme gameheader, bevestiging, hervatten en compacte dataweergaves',()=>{
+  const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
+  const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
+  const css=fs.readFileSync(path.join(root,'public/styles.css'),'utf8');
+  const filter=fs.readFileSync(path.join(root,'public/js/home-game-filter.js'),'utf8');
+  assert.match(html,/id="mobileGameHeader"[\s\S]*id="mobileGameRulesButton"[\s\S]*id="mobileGameSoundButton"/);
+  assert.match(html,/id="leaveGameModal"[\s\S]*id="cancelLeaveGameButton"[\s\S]*id="confirmLeaveGameButton"/);
+  assert.match(app,/function requestLeaveRoom\(\)[\s\S]*requestAnimationFrame/);
+  assert.doesNotMatch(app,/window\.confirm/);
+  assert.match(app,/beforeunload/);
+  assert.match(html,/id="resumeGameSection"[\s\S]*DOORGAAN MET SPELEN/);
+  assert.match(app,/classList\.toggle\('hidden',!resumable\.length\)/);
+  assert.match(css,/scroll-snap-type:x mandatory/);
+  assert.match(css,/\.profile-mobile-stats\{display:grid/);
+  assert.match(css,/#leaderboardContent \.stats-table\{width:100%;table-layout:fixed/);
+  assert.match(css,/#loggedOutAccount #registerForm\{display:none\}/);
+  assert.match(filter,/width:44px;height:44px;min-width:44px;min-height:44px/);
 });
