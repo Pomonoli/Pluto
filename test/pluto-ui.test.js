@@ -53,6 +53,14 @@ test('homescreen bevat geen kaart meer om via een code te joinen',()=>{
   assert.doesNotMatch(app,/els\.joinCodeForm|els\.joinCode\.value/);
 });
 
+test('lobby rendert door plugins gedeclareerde spelinstellingen',()=>{
+  const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
+  const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
+  assert.match(html,/id="lobbyGameOptions"/);
+  assert.match(app,/meta\.lobbyOptions\|\|\[\]/);
+  assert.match(app,/room:updateOptions/);
+});
+
 test('homescreen toont alleen beschikbare open lobbykaarten',()=>{
   const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
   const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');

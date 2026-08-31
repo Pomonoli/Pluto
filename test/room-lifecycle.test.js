@@ -57,3 +57,16 @@ test('speler kan een lopend spel hervatten en laatste vertrek verwijdert de room
   second.handlers.get('room:leave')({},()=>{});
   assert.equal(runtime.rooms.has(room.id),false);
 });
+
+test('alleen de host kan Carcassonne-tegelaantal in de lobby aanpassen',()=>{
+  const {runtime,makeSocket}=harness(),host=makeSocket('host',null,null);let created;
+  host.handlers.get('room:create')({gameKey:'carcassonne',name:'Ada',token:'aaaaaaaaaaaaaaaa'},result=>{created=result});
+  const room=runtime.rooms.get(created.roomId);
+  assert.equal(room.options.tileCount,72);
+
+  let updated;host.handlers.get('room:updateOptions')({key:'tileCount',value:36},result=>{updated=result});
+  assert.equal(updated.ok,true);assert.equal(room.options.tileCount,36);
+
+  let invalid;host.handlers.get('room:updateOptions')({key:'tileCount',value:20},result=>{invalid=result});
+  assert.equal(invalid.ok,false);assert.equal(room.options.tileCount,36);
+});

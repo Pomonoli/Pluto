@@ -20,10 +20,14 @@ function loadPluginGames(root = pluginRoot) {
     for (const fn of ['createGame','handleAction','serialize']) if (typeof engine[fn] !== 'function') throw new Error(`Game-plugin ${key} mist ${fn}().`);
     const createGame=engine.createGame;
     engine.createGame=(...args)=>{const game=createGame(...args);game.gameKey=key;return game};
+    const lobbyOptions=Array.isArray(manifest.lobbyOptions)?manifest.lobbyOptions.map(option=>({
+      key:String(option.key||''),label:String(option.label||option.key||''),default:option.default,
+      choices:Array.isArray(option.choices)?option.choices.map(choice=>({value:choice.value,label:String(choice.label||choice.value)})):[]
+    })).filter(option=>/^[A-Za-z][A-Za-z0-9]*$/.test(option.key)&&option.choices.length):[];
     engine.meta = {
       key, name:String(manifest.name || key), description:String(manifest.description || ''),
       minPlayers:Number(manifest.minPlayers || 1), maxPlayers:Number(manifest.maxPlayers || 1),
-      supportsNpc:Boolean(manifest.supportsNpc), realtime:Boolean(manifest.realtime), solo:Boolean(manifest.solo)
+      supportsNpc:Boolean(manifest.supportsNpc), realtime:Boolean(manifest.realtime), solo:Boolean(manifest.solo),lobbyOptions
     };
     engine.plugin = { directory, manifest:{...manifest,key}, version:String(manifest.version || '1') };
     plugins.push(engine);

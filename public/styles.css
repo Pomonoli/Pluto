@@ -52,6 +52,8 @@ h2{margin-bottom:0;font-size:22px}
 .player-note,.muted{color:var(--muted)}
 .player-note{font-size:10px;margin-top:2px}
 .host-controls{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.lobby-game-options{display:grid;gap:8px;margin-top:14px}.lobby-game-option{display:grid;grid-template-columns:1fr minmax(170px,auto);align-items:center;gap:12px;padding:10px 11px;border:1px solid #252b34;border-radius:11px;background:#11151b;font-size:12px;font-weight:800}.lobby-game-option select{min-height:38px}.lobby-game-option select:disabled{opacity:.72}
+@media(max-width:480px){.lobby-game-option{grid-template-columns:1fr}.lobby-game-option select{width:100%}}
 .game-panel{min-width:0}
 .result-box{margin-top:13px;border:1px solid rgba(112,212,155,.35);background:rgba(112,212,155,.08);border-radius:11px;padding:12px;font-weight:800}
 .modal-backdrop{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.72);display:grid;place-items:center;padding:16px}

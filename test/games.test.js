@@ -127,6 +127,16 @@ test('Carcassonne start met 72 landschapstegels en 7 horigen', () => {
   assert.deepEqual(game.players.map(player=>player.meeples),[7,7]);
 });
 
+test('Carcassonne ondersteunt volledige, korte en blitz tegelstapels', () => {
+  const players=[{id:'a',name:'A'},{id:'b',name:'B'}];
+  for(const tileCount of [72,36,18]){
+    const game=carcassonne.createGame(players,{tileCount});
+    assert.equal(game.tileCount,tileCount);
+    assert.equal(game.board.size+game.deck.length+(game.currentTile?1:0),tileCount);
+  }
+  assert.equal(carcassonne.createGame(players,{tileCount:999}).tileCount,72);
+});
+
 test('Carcassonne roteert alle tegelranden met de klok mee', () => {
   const tile={edges:['C','R','F','F'],cities:[[0]],roads:[[1]],rotation:0};
   const rotated=carcassonne.rotateTile(tile,1);

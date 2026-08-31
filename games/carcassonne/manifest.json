@@ -2,12 +2,24 @@
   "key": "carcassonne",
   "name": "Carcassonne",
   "description": "Bouw een landschap en scoor met steden, wegen, kloosters en weilanden.",
-  "version": "13",
+  "version": "14",
   "icon": "🏰",
   "badge": "2-5",
   "actionLabel": "Nieuw spel",
   "minPlayers": 2,
   "maxPlayers": 5,
+  "lobbyOptions": [
+    {
+      "key": "tileCount",
+      "label": "Aantal tegels",
+      "default": 72,
+      "choices": [
+        { "value": 72, "label": "72 · Volledig spel" },
+        { "value": 36, "label": "36 · Short game" },
+        { "value": 18, "label": "18 · Blitz game" }
+      ]
+    }
+  ],
   "supportsNpc": true,
   "realtime": false,
   "solo": false

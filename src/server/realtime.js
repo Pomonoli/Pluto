@@ -66,6 +66,11 @@ function createRealtime(io) {
 
   function gameModule(room) { return getGame(room.gameKey); }
 
+  function defaultRoomOptions(module){return Object.fromEntries((module.meta.lobbyOptions||[]).map(option=>{
+    const selected=option.choices.some(choice=>choice.value===option.default)?option.default:option.choices[0].value;
+    return[option.key,selected]
+  }))}
+
   function openRoomSummaries() {
     return [...rooms.values()]
       .filter((room) => {
@@ -115,6 +120,7 @@ function createRealtime(io) {
       gameMeta: module.meta,
       status: room.status,
       gameRevision: room.gameRevision || 0,
+      options: {...(room.options||{})},
       isHost: Boolean(me && me.token === room.hostToken),
       meId: me?.id || null,
       players: room.players.map((p) => ({
@@ -275,7 +281,7 @@ function createRealtime(io) {
     if (!allHumansConnected(room)) throw new Error('Niet alle spelers zijn verbonden.');
 
     const gamePlayers = module.preparePlayers?.(room.players,{db:authDb}) || room.players;
-    room.gameState = module.createGame(gamePlayers);
+    room.gameState = module.createGame(gamePlayers,{...(room.options||{})});
     room.status = room.gameState.gameOver ? 'finished' : 'playing';
     room.startedAt = Date.now();
     room.matchRecorded = false;
@@ -324,6 +330,7 @@ function createRealtime(io) {
           hostToken: token,
           players: [player],
           messages: [],
+          options: defaultRoomOptions(module),
           gameState: null,
           startedAt: null,
           matchRecorded: false,
@@ -455,6 +462,19 @@ function createRealtime(io) {
       if (!npc) return ackError(ack, 'NPC niet gevonden.');
 
       room.players = room.players.filter((p) => p.id !== npc.id);
+      broadcastRoom(room);
+      if (typeof ack === 'function') ack({ ok: true });
+    });
+
+    socket.on('room:updateOptions', (payload = {}, ack) => {
+      const { room, player } = getPlayerForSocket(socket);
+      if (!room || !player) return ackError(ack, 'Je zit niet in een lobby.');
+      if (room.status !== 'lobby' || player.token !== room.hostToken) return ackError(ack, 'Alleen de host kan dit in de lobby aanpassen.');
+      const option=gameModule(room).meta.lobbyOptions?.find(item=>item.key===String(payload.key||''));
+      if(!option)return ackError(ack,'Onbekende spelinstelling.');
+      const choice=option.choices.find(item=>item.value===payload.value);
+      if(!choice)return ackError(ack,'Ongeldige keuze.');
+      room.options={...(room.options||{}),[option.key]:choice.value};
       broadcastRoom(room);
       if (typeof ack === 'function') ack({ ok: true });
     });
