@@ -1,5 +1,4 @@
 import { createGameUi } from './js/game-ui.js?v=1.7.1';
-import { createGameUi } from './js/game-ui.js?v=1.6.3';
 
 const socket = window.io();
   const $ = (id) => document.getElementById(id);
@@ -619,7 +618,6 @@ const socket = window.io();
     window.addEventListener('load', async () => {
       try {
         const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.7.1', {
-        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.6.3', {
           updateViaCache:'none'
         });
         await registration.update();

@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.7.1
+## Nieuw in versie 1.7.2
 
-Wie in Age of Civilization alle zeven tijdperken overleeft, wint voortaan op de meeste levenspunten van zijn toren. Goud beslist alleen nog bij een exacte gelijke stand in levenspunten.
+Cluedo, Hartenjagen, Hofslag, Pesten en Solitaire hebben voortaan kleurrijke pictogrammen in het gameoverzicht. Daarnaast zijn achtergebleven dubbele 1.6.x-versiereferenties uit de recente merge opgeruimd, zodat de frontend weer één consistente release laadt.
 
 ## Nieuw in versie 1.7.0
 

@@ -3,7 +3,7 @@
   "name": "Hofslag",
   "description": "Tactisch kaartspel rond 12 beeldkaarten.",
   "version": "2",
-  "icon": "♛",
+  "icon": "👸",
   "badge": "2-4",
   "actionLabel": "Nieuw spel",
   "minPlayers": 2,

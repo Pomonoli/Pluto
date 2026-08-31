@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.7.2 — Kleurrijke game-iconen
+
+- Cluedo, Hartenjagen, Hofslag, Pesten en Solitaire gebruiken voortaan gekleurde emoji-iconen in het gameoverzicht.
+- Achtergebleven dubbele 1.6.x-versiereferenties uit de Civilization-merge zijn verwijderd uit de frontend, service worker, serverstart en package metadata.
+
 ## v1.7.1 — Winnen op levenspunten
 
 - Overleven beide torens alle zeven tijdperken, dan wint voortaan wie de meeste levenspunten over heeft, niet het meeste goud.
