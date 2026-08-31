@@ -2,13 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.7.3
+## Nieuw in versie 1.8.0
 
-Ticket to Ride heeft een duidelijker en zoombaar speelveld: slepen, pinch-zoom en muiswielzoom werken zoals bij Carcassonne, stadnamen en routebadges overlappen minder en bezette routebadges krijgen een extra rand in de spelerskleur. NPC's kiezen voortaan ook nuttige open treinkaarten in plaats van uitsluitend van de gesloten stapel te trekken. De vijf open kaarten plus stapel en de zes kaarten van `Jouw hand` blijven elk op één rij staan, ook op smallere schermen.
-
-## Nieuw in versie 1.7.0
-
-Age of Civilization is grondig herzien. Victory Points zijn verdwenen: Religie- en Cultuurkaarten verdelen hun bonus nu over Attack, Defence en goud per beurt. Gebouwen kun je voortaan ook upgraden — elke stat schaalt met factor 1,5 en het gebouw krijgt een naam passend bij het huidige tijdperk. Een tijdperk telt drie beurten en de aanvalsgolf wordt alleen op de derde beurt verwerkt. Torens beginnen op 100 in plaats van 20 levenspunten.
+Pluto ondersteunt voortaan skins via **Profiel → Thema**. `Pluto 1.7.3` blijft standaard actief, terwijl `Pluto 1.8.0 Preview` een nieuw licht thema met een oranje kleurenpalet toevoegt. In de preview-skin verdwijnt de aparte knop `Nieuw spel`: de volledige gamekaart start het spel en een pijltje rechts maakt de actie duidelijk. De gekozen skin wordt lokaal op het toestel onthouden.
 
 ## Nieuw in versie 1.0.0
 
