@@ -49,7 +49,9 @@ if (heading && grid) {
   let currentPlayers = 0;
 
   function keepHeadingVisible() {
-    if (grid.querySelector('.game-card')) heading.classList.remove('hidden');
+    if (grid.querySelector('.game-card') && heading.classList.contains('hidden')) {
+      heading.classList.remove('hidden');
+    }
   }
 
   function setPopover(open) {

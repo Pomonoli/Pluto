@@ -17,10 +17,10 @@ test('settings popup exposes sound and both Pluto skins', () => {
   assert.match(html, /value="pluto-1-7-3">Pluto 1\.7\.3/);
   assert.match(html, /value="pluto-1-8-0">Pluto 1\.8\.0 Preview/);
   assert.doesNotMatch(html, /theme-settings-card/);
-  assert.match(html, /settings\.css\?v=1\.8\.1/);
-  assert.match(html, /settings\.js\?v=1\.8\.1/);
-  assert.match(html, /themes\/pluto-1\.8\.0\.css\?v=1\.8\.1/);
-  assert.match(html, /theme\.js\?v=1\.8\.1/);
+  assert.match(html, /settings\.css\?v=1\.11\.2/);
+  assert.match(html, /settings\.js\?v=1\.11\.2/);
+  assert.match(html, /themes\/pluto-1\.8\.0\.css\?v=1\.11\.2/);
+  assert.match(html, /theme\.js\?v=1\.11\.2/);
 });
 
 test('classic skin remains the fallback and the choice persists locally', () => {

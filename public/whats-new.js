@@ -29,7 +29,7 @@
     if (document.querySelector('link[data-whats-new]')) return;
     const link=document.createElement('link');
     link.rel='stylesheet';
-    link.href='/whats-new.css?v=1.11.1';
+    link.href='/whats-new.css?v=1.11.2';
     link.dataset.whatsNew='1';
     document.head.append(link);
   }

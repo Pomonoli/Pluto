@@ -57,6 +57,12 @@ const RELEASES = [
     features:[
       'Een compacte updatepopup toont voortaan alleen wat nieuw is sinds je vorige bezoek.'
     ]
+  },
+  {
+    version:'1.11.2',
+    improvements:[
+      'De spelersfilter blokkeert Home, knoppen en mobiele layout niet langer.'
+    ]
   }
 ];
 

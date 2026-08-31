@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.11.2 — Homefilter hersteld
+
+- Een zichzelf activerende `MutationObserver` in de spelersfilter is idempotent gemaakt.
+- Gamecards, navigatieknoppen en responsive device emulation blokkeren niet langer na het renderen van Home.
+- Alle frontend-cacheverwijzingen zijn verhoogd zodat browsers het defecte 1.11.1-filterbestand niet hergebruiken.
+- Een regressietest bewaakt dat de heading-observer alleen een werkelijk aanwezige klasse verwijdert.
+- Releasechecks zijn bijgewerkt voor alle zeventien games.
+
 ## v1.11.1 — PWA-updatepopup
 
 - De geïnstalleerde PWA controleert bij openen welke gebruikersrelevante wijzigingen sinds het vorige bezoek zijn toegevoegd.

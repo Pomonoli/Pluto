@@ -2,6 +2,10 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
+## Nieuw in versie 1.11.2
+
+De spelersfilter op Home veroorzaakt niet langer een oneindige browserlus zodra de eerste gamecard verschijnt. Games, knoppen en responsive device emulation blijven daardoor volledig werken. Nieuwe cacheversies zorgen dat bestaande installaties het gerepareerde filterbestand ophalen.
+
 ## Nieuw in versie 1.11.1
 
 De geïnstalleerde PWA toont voortaan alleen wanneer er effectief iets nieuws is een compacte popup met wijzigingen sinds het vorige bezoek. Nieuwe games, nieuwe features en verbeteringen worden over gemiste releases heen samengevoegd; ingelogde accounts bewaren de laatst geziene versie centraal en gasten lokaal op hun toestel.
