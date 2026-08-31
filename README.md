@@ -2,41 +2,13 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.6.2
+## Nieuw in versie 1.7.0
 
-Actieve spellen blijven nu als volledige pagina vast binnen de schermhoogte. Spellogs zijn verwijderd uit de spelweergave en alleen spellen die echt meer ruimte nodig hebben, gebruiken nog een interne scrollfallback. Santorini schaalt zijn bord bovendien mee met de beschikbare schermhoogte en verbergt op lage schermen overbodige uitleg.
+Age of Civilization is grondig herzien. Victory Points zijn verdwenen: Religie- en Cultuurkaarten verdelen hun bonus nu over Attack, Defence en goud per beurt. Gebouwen kun je voortaan ook upgraden — elke stat schaalt met factor 1,5 en het gebouw krijgt een naam passend bij het huidige tijdperk. Een tijdperk telt drie beurten en de aanvalsgolf wordt alleen op de derde beurt verwerkt. Torens beginnen op 100 in plaats van 20 levenspunten en wie alle tijdperken overleeft, wint voortaan op het meeste goud.
 
-## Nieuw in versie 1.6.1
+## Nieuw in versie 1.0.0
 
-Lopende spellen blijven in het lobbyoverzicht staan zolang minstens één speler aanwezig is. Deelnemers die per ongeluk naar Home gaan, kunnen via `Ga terug` onmiddellijk hun bestaande plaats en spel hervatten.
-
-## Nieuw in versie 1.6.0
-
-Spellen gebruiken voortaan zoveel mogelijk de volledige schermhoogte zonder paginascroll. De ongebruikte chat en aparte vertrekknoppen zijn verwijderd; het Pluto-logo brengt je rechtstreeks terug naar Home.
-
-Carcassonne toont de eindscore in een compacte tabel met pictogrammen, laat de volgende speler alvast zijn tegel bekijken en plaatst landbouwers correct in afzonderlijke hoekakkers rond kruispunten.
-
-## Nieuw in versie 1.5.0
-
-Age of Civilization is toegevoegd als veertiende spel. Twee spelers bouwen gedurende zeven tijdperken een beschaving met militaire, economische en culturele kaarten, verdedigen hun toren tegen steeds sterkere aanvalsgolven en strijden om de hoogste eindscore. Het spel ondersteunt ook een NPC-tegenstander.
-
-## Nieuw in versie 1.4.0
-
-Pluto werkt voortaan volledig via de centrale lobby: open lobby's verschijnen als compacte kaartjes op Home, terwijl oude roomlinks en code-invoer uit de interface zijn verwijderd. Tijdens een spel verdwijnt de mobiele ondernavigatie en blijft alleen een duidelijke knop `Verlaat spel` over.
-
-Carcassonne toont op het eindscherm nu een volledige puntentabel met de punten tijdens het spel en de eindpunten voor landbouwers, onafgewerkte wegen, steden en kloosters.
-
-## Nieuw in versie 1.3.0
-
-Carcassonne gebruikt nu afzonderlijke akkersegmenten: wegen en steden scheiden akkers, kloosters niet. Landbouwers verschijnen op het juiste deel van de tegel, spelers kunnen tijdens de burgerkeuze teruggaan om hun tegel anders te leggen en de laatst gespeelde tegel heeft een rode markering. Op mobiel staan de twee Minigolf-acties voortaan naast elkaar.
-
-Pluto bevat nu veertien spellen met realtime rooms, accounts, blijvende statistieken, leaderboards en een installeerbare mobiele PWA in één self-hosted omgeving.
-
-Games zijn zelfstandige modules onder `games/`. Elke game beheert daar zijn serverlogica, client-entrypoint, metadata, spelregels en resultaten. De server ontdekt deze mappen automatisch, waardoor nieuwe games vanuit de meegeleverde template kunnen worden toegevoegd zonder de centrale registry aan te passen.
-
-## Nieuw in versie 1.1.0
-
-Games zijn nu werkelijk self-contained: hun renderer, helpers, CSS, spelregels, assets en eventuele extra views of modules leven samen in één pluginmap. Pluto ontdekt en laadt die onderdelen dynamisch, terwijl een defecte plugin alleen de betreffende game uitschakelt. De Minigolf Map Editor is eveneens volledig naar zijn plugin verhuisd en nieuwe productiechecks bewaken alle browser- en Docker-paden.
+Alle games zijn ondergebracht in zelfstandige modules onder `games/`. Iedere game beheert daar zijn eigen serverlogica, client-entrypoint, metadata, spelregels en resultaten, en de server ontdekt deze mappen automatisch zonder een hardcoded gamelijst in de centrale registry.
 
 ## Games
 
