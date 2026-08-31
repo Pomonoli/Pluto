@@ -72,3 +72,17 @@ test('sound button is icon-only en app knop heet App',()=>{
   assert.match(app,/Geluid uitzetten/);
   assert.match(app,/Geluid aanzetten/);
 });
+
+test('leaderboard toont wins voor games',()=>{
+  const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
+  assert.match(app,/\['#','Speler','Wins','Games','Winrate'\]/);
+  assert.match(app,/String\(row\.wins\).*String\(row\.games\).*row\.winRate/s);
+});
+
+test('profiel toont eerst maximaal vijf recente matches met toon meer',()=>{
+  const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
+  assert.match(app,/recent\.slice\(0,5\)\.forEach\(appendMatch\)/);
+  assert.match(app,/if\(recent\.length>5\)/);
+  assert.match(app,/Toon meer/);
+  assert.match(app,/recent\.slice\(5\)\.forEach\(appendMatch\)/);
+});
