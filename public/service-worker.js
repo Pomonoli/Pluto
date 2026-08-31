@@ -1,15 +1,15 @@
-const CACHE = 'pluto-v1.8.1';
+const CACHE = 'pluto-v1.8.2';
 
 const OFFLINE_SHELL = [
   '/',
-  '/styles.css?v=1.8.1',
-  '/settings.css?v=1.8.1',
-  '/themes/pluto-1.8.0.css?v=1.8.1',
-  '/theme.js?v=1.8.1',
-  '/settings.js?v=1.8.1',
-  '/app.js?v=1.8.1',
-  '/js/game-ui.js?v=1.8.1',
-  '/manifest.webmanifest?v=1.8.1',
+  '/styles.css?v=1.8.2',
+  '/settings.css?v=1.8.2',
+  '/themes/pluto-1.8.0.css?v=1.8.2',
+  '/theme.js?v=1.8.2',
+  '/settings.js?v=1.8.2',
+  '/app.js?v=1.8.2',
+  '/js/game-ui.js?v=1.8.2',
+  '/manifest.webmanifest?v=1.8.2',
   '/icons/icon-192-v2.png',
   '/icons/icon-512-v2.png',
   '/icons/maskable-192-v2.png',
