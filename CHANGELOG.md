@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.11.6 — Compactere mobiele Light-header
+
+- De oranje banner op mobiele niet-game-schermen is lager gemaakt zodat Home meer verticale ruimte overhoudt.
+- Logo, titel en verticale padding zijn licht verkleind; actieve rooms en games behouden hun bestaande headerhoogte.
+
+## v1.11.5 — Recente gamekaarten zonder schaduw
+
+- De schaduw onder de recente gamekaarten op Home is verwijderd in het Light theme.
+
 ## v1.11.4 — Minor carcassonne fixes
 
 - Landbouwer placement in Carcassonne verbeterd.
