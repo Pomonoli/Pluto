@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.8.2
+## Nieuw in versie 1.8.3
 
-Het algemene leaderboard toont voortaan **Wins** vóór **Games**, gevolgd door **Winrate**. Op profielen worden maximaal vijf recente matches meteen getoond; bij een langere matchgeschiedenis verschijnt een knop **Toon meer** om de overige matches zichtbaar te maken.
+Op Home staat naast **GAMES** een compacte filterknop voor het aantal spelers. De schuifbalk loopt van **Alle** naar het beschikbare maximum; kies je bijvoorbeeld 4 spelers, dan blijven alle games zichtbaar die 4 spelers ondersteunen binnen hun minimum- en maximumaantal. Games worden voortaan alfabetisch gesorteerd op hun echte displaynaam, zodat **Age of Civilization** bij de A staat en niet meer op basis van de map- of game-key wordt geplaatst.
 
 ## Nieuw in versie 1.8.0
 
