@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.8.1
+## Nieuw in versie 1.8.2
 
-De thema- en geluidsinstellingen staan niet langer onder Profiel of als losse mute-knop in de header. Rechtsboven staat nu één instellingen-tandwiel dat een compacte popup opent met **Geluid** en **Thema**. De gekozen skin en geluidsstatus blijven lokaal op het toestel bewaard.
+Het algemene leaderboard toont voortaan **Wins** vóór **Games**, gevolgd door **Winrate**. Op profielen worden maximaal vijf recente matches meteen getoond; bij een langere matchgeschiedenis verschijnt een knop **Toon meer** om de overige matches zichtbaar te maken.
 
 ## Nieuw in versie 1.8.0
 
