@@ -15,12 +15,6 @@ Age of Civilization is grondig herzien. Victory Points zijn verdwenen: Religie- 
 Alle games zijn ondergebracht in zelfstandige modules onder `games/`. Iedere game beheert daar zijn eigen serverlogica, client-entrypoint, metadata, spelregels en resultaten, en de server ontdekt deze mappen automatisch zonder een hardcoded gamelijst in de centrale registry.
 Actieve spellen gebruiken zoveel mogelijk de volledige schermhoogte zonder paginascroll. De ongebruikte chat en aparte vertrekknoppen zijn verwijderd; het Pluto-logo brengt je rechtstreeks terug naar Home.
 
-Carcassonne behandelt kruispunthoeken als afzonderlijke akkers, toont de volgende tegel alvast aan de volgende speler en gebruikt een compacte eindtabel die binnen één schermbreedte past.
-
-## Nieuw in versie 1.0.0
-
-Pluto kreeg een modulaire game-architectuur: alle games leven als zelfstandige modules onder `games/`, met eigen serverlogica, client-entrypoint, metadata, spelregels en resultaten. De server ontdekt deze modules automatisch, waardoor nieuwe games kunnen worden toegevoegd zonder de centrale registry aan te passen.
-
 ## Games
 
 | Spel | Spelers | NPC's |
