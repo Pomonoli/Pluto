@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.10.0
+## Nieuw in versie 1.11.0
 
-**Kingdomino** is toegevoegd voor 2 tot 4 spelers, inclusief NPC-ondersteuning. Bouw een koninkrijk van maximaal 5×5 vakken, draft domino's in nummerorde, verbind dezelfde terreinen en scoor elk gebied als aantal vakken × aantal kronen. De 2-spelervariant gebruikt twee koningen per speler en 24 domino's; bij 3 spelers wordt de vierde niet-gekozen domino per rij afgelegd.
+**Cascadia** is toegevoegd voor 2 tot 4 spelers, inclusief NPC-ondersteuning. Kies iedere beurt een habitattegel en dier, bouw een eigen hexagonaal ecosysteem en scoor op dierpatronen, aaneengesloten habitatcorridors en habitatmeerderheden. Keystone-habitats leveren natuurfiches op waarmee je marktcombinaties kan mixen of dieren kan verversen.
 
 ## Nieuw in versie 1.0.0
 
@@ -19,6 +19,7 @@ Actieve spellen gebruiken zoveel mogelijk de volledige schermhoogte zonder pagin
 | Age of Civilization | 2 | Ja |
 | Blackjack | 1-4 | Ja |
 | Carcassonne | 2-5 | Ja |
+| Cascadia | 2-4 | Ja |
 | Cluedo | 2-6 | Ja |
 | Hartenjagen | 4 | Ja |
 | Hofslag | 2-4 | Ja |
