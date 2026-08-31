@@ -109,6 +109,12 @@ const RELEASES = [
     improvements:[
       'Game-lobby’s gebruiken dezelfde compacte oranje ruimtebanner als Home.'
     ]
+  },
+  {
+    version:'1.11.12',
+    improvements:[
+      'De lobby gebruikt overal game en games in plaats van room en rooms.'
+    ]
   }
 ];
 

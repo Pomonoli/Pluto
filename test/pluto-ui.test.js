@@ -67,6 +67,20 @@ test('homescreen toont alleen beschikbare open lobbykaarten',()=>{
   assert.match(app,/canResume\?'Ga terug':room\.resumable\?'Lopend'/);
 });
 
+test('lobby gebruikt game en games als zichtbare benaming',()=>{
+  const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
+  const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
+  const realtime=fs.readFileSync(path.join(root,'src/server/realtime.js'),'utf8');
+  assert.match(html,/Beschikbare games/);
+  assert.match(html,/Join game/);
+  assert.match(app,/Geen open games/);
+  assert.match(app,/Game \$\{room\.id\}/);
+  assert.match(app,/Game verlaten\?/);
+  assert.doesNotMatch(html,/Beschikbare rooms|Rooms laden|Join room/);
+  assert.doesNotMatch(app,/Geen open rooms|Room \$\{room\.id\}|Join room|Room verlaten|roomcode|eerst de room/);
+  assert.doesNotMatch(realtime,/room bestaat niet|room zit vol|in een room/);
+});
+
 test('sound button is icon-only en app knop heet App',()=>{
   const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
   const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');

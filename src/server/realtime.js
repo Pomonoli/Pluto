@@ -19,7 +19,7 @@ function createRealtime(io) {
       for (let i = 0; i < 5; i += 1) code += ROOM_CODE_CHARS[Math.floor(Math.random() * ROOM_CODE_CHARS.length)];
       if (!rooms.has(code)) return code;
     }
-    throw new Error('Kon geen vrije roomcode genereren.');
+    throw new Error('Kon geen vrije gamecode genereren.');
   }
 
   function normalizeRoomCode(value) {
@@ -345,14 +345,14 @@ function createRealtime(io) {
         broadcastRoom(room);
       } catch (error) {
         console.error(error);
-        ackError(ack, error.message || 'Kon de room niet maken.');
+        ackError(ack, error.message || 'Kon de game niet maken.');
       }
     });
 
     socket.on('room:join', (payload = {}, ack) => {
       try {
         const room = rooms.get(normalizeRoomCode(payload.roomId));
-        if (!room) return ackError(ack, 'Deze room bestaat niet meer.');
+        if (!room) return ackError(ack, 'Deze game bestaat niet meer.');
 
         const identity = playerIdentity(socket, payload);
         const token = normalizeToken(payload.token);
@@ -389,7 +389,7 @@ function createRealtime(io) {
             .reverse()
             .find(({ item }) => item.isNpc)?.index;
 
-          if (idx === undefined) return ackError(ack, 'Deze room zit vol.');
+          if (idx === undefined) return ackError(ack, 'Deze game zit vol.');
           room.players.splice(idx, 1);
         }
 
@@ -525,7 +525,7 @@ function createRealtime(io) {
       try {
         const { room, player } = getPlayerForSocket(socket);
 
-        if (!room || !player) return ackError(ack, 'Je zit niet in een room.');
+        if (!room || !player) return ackError(ack, 'Je zit niet in een game.');
         if (room.status !== 'finished') return ackError(ack, 'Het spel is nog niet afgelopen.');
         if (player.token !== room.hostToken) return ackError(ack, 'Alleen de host kan opnieuw spelen.');
         if (!allHumansConnected(room)) return ackError(ack, 'Niet alle spelers zijn verbonden.');
@@ -556,7 +556,7 @@ function createRealtime(io) {
 
     socket.on('chat:send', (payload = {}, ack) => {
       const { room, player } = getPlayerForSocket(socket);
-      if (!room || !player) return ackError(ack, 'Je zit niet in een room.');
+      if (!room || !player) return ackError(ack, 'Je zit niet in een game.');
 
       const text = sanitizeMessage(payload.text);
       if (!text) return ackError(ack, 'Leeg bericht.');

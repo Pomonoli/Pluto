@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.11.11
+## Nieuw in versie 1.11.12
 
-Carcassonne laat de host voortaan met een slider kiezen hoeveel burgers iedere speler krijgt, van 1 tot 12 en standaard 7. Alle game-lobby's gebruiken daarnaast dezelfde compacte oranje banner met planeet, ringen en sterren als het homescreen; pas na de spelstart schakelt Pluto over naar de compacte gameheader.
+De lobby gebruikt voortaan overal de duidelijke benamingen `game` en `games` in plaats van `room` en `rooms`. Dat geldt voor het lobbyoverzicht, uitnodigingen, hervatbare games, join- en vertrekknoppen, gamecodes en bijbehorende foutmeldingen.
 
 ## Nieuw in versie 1.11.0
 

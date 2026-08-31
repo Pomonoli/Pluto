@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.11.12 — Consistente lobbyterminologie
+
+- Alle zichtbare lobbyteksten gebruiken voortaan `game` en `games` in plaats van `room` en `rooms`.
+- Het lobbyoverzicht, lege toestand, uitnodigingen, hervatbare games en join-knoppen zijn aangepast.
+- Gamecodes, vertrekbevestigingen, navigatiemeldingen en serverfouten gebruiken dezelfde terminologie.
+- Interne roomroutes en socket-events blijven ongewijzigd voor technische compatibiliteit.
+
 ## v1.11.11 — Carcassonne-burgers en uniforme lobbybanner
 
 - De Carcassonne-lobby heeft onder de tegelkeuze een slider voor het aantal burgers per speler.
