@@ -84,13 +84,17 @@
 .carc-controls{min-height:120px;align-items:flex-start;justify-content:flex-start;flex-direction:column}
 .carc-controls.waiting-choice::after{margin-top:16px}
 .carc-drawn{width:100%}
-.carc-viewport{height:clamp(220px,calc(100dvh - 300px),430px);min-height:220px}
 .carc-player{flex-basis:98px}
 .carc-burger-choices{grid-template-columns:1fr}
 .carc-burger-skip{grid-column:auto}
 .carc-burger-back{grid-column:auto}
 }
 @media(max-width:760px){
+body.game-active.carcassonne-active #gameStage{display:flex;flex-direction:column;overflow:hidden}
+body.game-active.carcassonne-active .game-titlebar,
+body.game-active.carcassonne-active .carc-dashboard,
+body.game-active.carcassonne-active .carc-controls{flex:0 0 auto}
+body.game-active.carcassonne-active .carc-viewport{flex:1 1 auto;height:auto;min-height:0;max-height:none}
 body.carcassonne-active .top-actions>#rulesButton{display:inline-flex!important;align-items:center;justify-content:center;order:-1;min-height:39px;padding:8px 11px;font-size:12px;border-radius:12px}
 body.carcassonne-active .top-actions>#soundButton{order:0}
 }
