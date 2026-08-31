@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.11.5
+## Nieuw in versie 1.11.6
 
-De schaduw onder de recente gamekaarten op Home is verwijderd in het Light theme.
+De oranje Light-theme banner op mobiel is compacter gemaakt zodat Home meer bruikbare schermruimte overhoudt.
 
 ## Nieuw in versie 1.11.0
 
