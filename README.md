@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.12.0
+## Nieuw in versie 1.12.1
 
-Drie nieuwe spellen zijn toegevoegd: **Isle of Skye**, **The Deep Bleu C** en **CycClub**. Bouw en verhandel eilandtegels in Isle of Skye, verken en vis op een grote Europese kaart in The Deep Bleu C, of bouw een blijvende wielerploeg en race om prijzengeld in CycClub. De meegeleverde Ragnarok-branch bevat voorlopig alleen een ontwerpdocument en is daarom nog niet als spel zichtbaar.
+De mobiele gameheader is verfijnd met randloze terug- en menuknoppen en een beter gecentreerde gamenaam. Spelersaantallen op Home blijven voortaan op één regel en de instellingenpopup toont subtiel de actieve Pluto-versie.
 
 ## Nieuw in versie 1.11.0
 

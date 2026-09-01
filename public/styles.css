@@ -18,7 +18,7 @@ input{width:100%;min-height:44px;border:1px solid var(--border);border-radius:10
 .brand-button strong,.brand-button small{display:block}
 .brand-button small{color:var(--muted);font-size:11px;margin-top:1px}
 .top-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.connection-pill,.badge{display:inline-flex;align-items:center;min-height:28px;border-radius:999px;border:1px solid var(--border);padding:4px 9px;color:var(--muted);background:#12161c;font-size:11px;font-weight:800}
+.connection-pill,.badge{display:inline-flex;align-items:center;min-height:28px;border-radius:999px;border:1px solid var(--border);padding:4px 9px;color:var(--muted);background:#12161c;font-size:11px;font-weight:800;white-space:nowrap;flex-shrink:0}
 .connection-pill.online{color:var(--success);border-color:rgba(112,212,155,.35)}
 .hero{min-height:245px;border:1px solid var(--border);border-radius:20px;padding:clamp(22px,4vw,46px);background:linear-gradient(135deg,rgba(231,198,111,.08),transparent 48%),var(--panel);display:grid;grid-template-columns:1.5fr .7fr;gap:28px;align-items:center}
 .eyebrow{display:block;color:var(--muted);font-size:10px;font-weight:900;letter-spacing:.13em;margin-bottom:6px}
@@ -1302,8 +1302,9 @@ body.game-active .game-panel{
   body.game-active .mobile-game-header{
     position:relative;z-index:970;flex:0 0 auto;width:100%;min-height:calc(50px + env(safe-area-inset-top));padding:env(safe-area-inset-top) max(7px,env(safe-area-inset-right)) 6px max(7px,env(safe-area-inset-left));display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:7px;color:var(--text);background:var(--panel);border-bottom:1px solid var(--border);box-shadow:0 5px 16px rgba(0,0,0,.10)
   }
-  .mobile-game-leave,.mobile-game-menu-button{width:44px;min-width:44px;height:44px;min-height:44px;padding:0;display:grid;place-items:center;border:1px solid var(--border);border-radius:12px;background:var(--panel2);color:inherit;font-size:21px;touch-action:manipulation}
-  .mobile-game-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;font-size:15px}
+  .mobile-game-leave,.mobile-game-menu-button{width:44px;min-width:44px;height:44px;min-height:44px;padding:0;display:grid;place-items:center;border:0;border-radius:0;background:transparent;color:inherit;font-size:21px;touch-action:manipulation;box-shadow:none}
+  .mobile-game-leave:focus-visible,.mobile-game-menu-button:focus-visible{outline:2px solid currentColor;outline-offset:-6px;border-radius:10px}
+  .mobile-game-name{height:44px;min-width:0;display:grid;place-items:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;font-size:15px;line-height:1;transform:translateY(1px)}
   .mobile-game-menu-wrap{position:relative}
   .mobile-game-menu{position:absolute;z-index:1000;top:calc(100% + 7px);right:0;width:min(220px,calc(100vw - 20px));padding:7px;display:grid;gap:5px;border:1px solid var(--border);border-radius:14px;background:var(--panel);box-shadow:0 18px 40px rgba(0,0,0,.28)}
   .mobile-game-menu.hidden{display:none}

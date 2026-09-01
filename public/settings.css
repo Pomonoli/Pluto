@@ -43,6 +43,7 @@
   place-items:center;
 }
 .settings-sound-button .sound-icon svg{width:21px;height:21px}
+.settings-version{margin:14px 0 0;text-align:center;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:.06em;opacity:.72}
 
 html[data-theme="pluto-1-8-0"] .settings-toggle{
   background:rgba(255,250,246,.92);

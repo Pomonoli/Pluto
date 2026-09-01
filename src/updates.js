@@ -137,6 +137,12 @@ const RELEASES = [
     features:[
       'CycClub bewaart de wielerploeg van ingelogde spelers en heeft een eigen clubleaderboard.'
     ]
+  },
+  {
+    version:'1.12.1',
+    improvements:[
+      'De mobiele gameheader is strakker uitgelijnd, spelersaantallen blijven op één regel en Instellingen toont de huidige versie.'
+    ]
   }
 ];
 

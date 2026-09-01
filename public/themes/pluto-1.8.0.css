@@ -445,8 +445,8 @@ html[data-theme="pluto-1-8-0"] .mobile-nav-item.active::after{background:#cb5d1b
   }
   html[data-theme="pluto-1-8-0"] body.game-active :is(.mobile-game-leave,.mobile-game-menu-button){
     color:#fff;
-    background:rgba(255,255,255,.13);
-    border-color:rgba(255,255,255,.24);
+    background:transparent;
+    border-color:transparent;
     box-shadow:none;
   }
   html[data-theme="pluto-1-8-0"] .brand-button{gap:14px}

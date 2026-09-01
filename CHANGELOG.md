@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.12.1 — Compactere gameheader en versie-info
+
+- De instellingenpopup toont subtiel de huidige Pluto-versie.
+- De terugpijl en menupuntjes in de mobiele gameheader hebben geen zichtbare omlijning of achtergrond meer.
+- De gamenaam staat verticaal gecentreerd in de mobiele bovenbanner.
+- Spelersaantallen zoals `2-7` blijven op Home altijd op één regel staan.
+- De headeracties behouden hun volledige touch-target en toegankelijke toetsenbordfocus.
+
 ## v1.12.0 — Isle of Skye, The Deep Bleu C en CycClub
 
 - Isle of Skye is toegevoegd voor 2 tot 4 spelers, met tegelprijzen, afleggen, onderlinge aankopen, eilandbouw en NPC's.

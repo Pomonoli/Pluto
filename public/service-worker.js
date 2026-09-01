@@ -1,25 +1,25 @@
-const CACHE = 'pluto-v1.12.0';
+const CACHE = 'pluto-v1.12.1';
 
 const OFFLINE_SHELL = [
   '/',
-  '/styles.css?v=1.12.0',
-  '/settings.css?v=1.12.0',
-  '/themes/pluto-1.8.0.css?v=1.12.0',
-  '/theme.js?v=1.12.0',
-  '/settings.js?v=1.12.0',
-  '/whats-new.js?v=1.12.0',
-  '/whats-new.css?v=1.12.0',
-  '/app.js?v=1.12.0',
-  '/js/game-ui.js?v=1.12.0',
-  '/js/home-game-filter.js?v=1.12.0',
-  '/manifest.webmanifest?v=1.12.0',
+  '/styles.css?v=1.12.1',
+  '/settings.css?v=1.12.1',
+  '/themes/pluto-1.8.0.css?v=1.12.1',
+  '/theme.js?v=1.12.1',
+  '/settings.js?v=1.12.1',
+  '/whats-new.js?v=1.12.1',
+  '/whats-new.css?v=1.12.1',
+  '/app.js?v=1.12.1',
+  '/js/game-ui.js?v=1.12.1',
+  '/js/home-game-filter.js?v=1.12.1',
+  '/manifest.webmanifest?v=1.12.1',
   '/icons/icon-192-v2.png',
   '/icons/icon-512-v2.png',
   '/icons/maskable-192-v2.png',
   '/icons/maskable-512-v2.png',
   '/assets/pluto-wallpaper.svg',
   '/assets/pluto-logo-v2.png',
-  '/assets/pluto-logo-v2.png?v=1.12.0'
+  '/assets/pluto-logo-v2.png?v=1.12.1'
 ];
 
 self.addEventListener('install', (event) => {

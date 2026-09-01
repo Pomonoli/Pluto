@@ -133,3 +133,14 @@ test('mobile UX heeft een uniforme gameheader, bevestiging, hervatten en compact
   assert.match(css,/#loggedOutAccount #registerForm\{display:none\}/);
   assert.match(filter,/width:44px;height:44px;min-width:44px;min-height:44px/);
 });
+
+test('settings en mobiele gameheader tonen compacte consistente metadata',()=>{
+  const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
+  const css=fs.readFileSync(path.join(root,'public/styles.css'),'utf8');
+  const light=fs.readFileSync(path.join(root,'public/themes/pluto-1.8.0.css'),'utf8');
+  assert.match(html,/class="settings-version"[^>]*>Pluto v1\.12\.1</);
+  assert.match(css,/\.connection-pill,\.badge\{[^}]*white-space:nowrap;[^}]*flex-shrink:0/);
+  assert.match(css,/\.mobile-game-leave,\.mobile-game-menu-button\{[^}]*border:0;[^}]*background:transparent/);
+  assert.match(css,/\.mobile-game-name\{[^}]*height:44px;[^}]*place-items:center;[^}]*line-height:1/);
+  assert.match(light,/body\.game-active :is\(\.mobile-game-leave,\.mobile-game-menu-button\)\{[^}]*background:transparent;[^}]*border-color:transparent/);
+});
