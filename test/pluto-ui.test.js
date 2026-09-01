@@ -60,6 +60,24 @@ test('browser en tablet begrenzen gamebreedte zonder mobile te wijzigen',()=>{
   }
 });
 
+test('Age of Civilization blijft fixed en gebruikt overlays voor kaartinfo en upgrades',()=>{
+  const client=fs.readFileSync(path.join(root,'games/civilization/client.js'),'utf8');
+  const css=fs.readFileSync(path.join(root,'games/civilization/styles.css'),'utf8');
+  assert.match(css,/#gameStage:has\(\.civ-root\)\{[^}]*overflow:hidden!important/);
+  assert.match(css,/\.civ-grid \{[^}]*grid-template-columns: repeat\(6, minmax\(0,1fr\)\)/);
+  assert.match(css,/@media\(min-height:720px\)\{[\s\S]*?\.civ-grid\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(css,/\.civ-modal-backdrop\{position:absolute;[^}]*place-items:center/);
+  assert.match(client,/function showCivModal/);
+  assert.match(client,/confirmLabel:'Bouw'/);
+  assert.match(client,/eyebrow:'Jouw stad'/);
+  assert.match(client,/eyebrow:'Vast gebouw'/);
+  assert.match(client,/function upgradeDeltaText/);
+  assert.match(client,/`ATK \+\$\{tile\.nextAttack-tile\.attack\}`/);
+  assert.doesNotMatch(client,/body:`Niveau \$\{tile\.level\} →/);
+  assert.match(css,/\.civ-modal-actions:has\(\.civ-modal-secondary\) \.civ-modal-confirm\{grid-column:1\/-1/);
+  assert.doesNotMatch(client,/civ-detail-slot/);
+});
+
 test('homescreen bevat geen kaart meer om via een code te joinen',()=>{
   const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
   const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
@@ -138,7 +156,7 @@ test('settings en mobiele gameheader tonen compacte consistente metadata',()=>{
   const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
   const css=fs.readFileSync(path.join(root,'public/styles.css'),'utf8');
   const light=fs.readFileSync(path.join(root,'public/themes/pluto-1.8.0.css'),'utf8');
-  assert.match(html,/class="settings-version"[^>]*>Pluto v1\.12\.1</);
+  assert.match(html,/class="settings-version"[^>]*>Pluto v1\.12\.2</);
   assert.match(css,/\.connection-pill,\.badge\{[^}]*white-space:nowrap;[^}]*flex-shrink:0/);
   assert.match(css,/\.mobile-game-leave,\.mobile-game-menu-button\{[^}]*border:0;[^}]*background:transparent/);
   assert.match(css,/\.mobile-game-name\{[^}]*height:44px;[^}]*place-items:center;[^}]*line-height:1/);

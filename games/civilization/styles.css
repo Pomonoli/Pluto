@@ -6,6 +6,10 @@
 
 @media(min-width:761px){#gameStage:has(.civ-root){max-width:640px}}
 
+#gameStage:has(.civ-root){display:flex;flex-direction:column;overflow:hidden!important}
+#gameStage:has(.civ-root)>.civ-root{flex:1;min-height:0}
+#gameStage:has(.civ-root)>.log-box{display:none!important}
+
 .civ-root {
   --civ-accent: #B8895A;
   --civ-bg-panel: #fbf4e6;
@@ -19,9 +23,12 @@
   color: var(--civ-text);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: clamp(3px, 0.75vh, 8px);
   padding: 2px 0 8px;
   font-size: 1rem;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
 }
 
 .civ-root h2 { font-family: inherit; margin: 0; }
@@ -67,9 +74,9 @@
 
 /* ---- grid (shared: civic row + flexible grid) ---- */
 .civ-grid-label { font-size: 0.6rem; color: var(--civ-text-dim); text-transform: uppercase; margin-bottom: 4px; }
-.civ-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.civ-grid { display: grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap: 4px; }
 .civ-tile {
-  aspect-ratio: 1; background: var(--civ-bg-panel); border: 1px solid var(--civ-bg-panel-2);
+  min-width:0;min-height:clamp(52px,8.5vh,72px);background: var(--civ-bg-panel); border: 1px solid var(--civ-bg-panel-2);
   border-radius: 9px; display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 1px; font-size: 0.5rem; text-align: center; padding: 3px;
   font-family: inherit; color: inherit;
@@ -91,7 +98,7 @@ button.civ-tile.filled:disabled .civ-tile-upgrade { color: var(--civ-text-dim); 
 
 /* ---- civic row (fixed, permanent buildings) ---- */
 .civ-civic-row { display: flex; gap: 6px; }
-.civ-civic { flex: 1; aspect-ratio: auto; min-height: 66px; border-style: dashed; border-width: 2px; border-color: var(--tile-accent, var(--civ-accent)); }
+.civ-civic { flex: 1; aspect-ratio: auto; min-height:clamp(55px,9vh,70px); border-style: dashed; border-width: 2px; border-color: var(--tile-accent, var(--civ-accent)); }
 .civ-civic .civ-tile-name { font-size: 0.52rem; font-weight: 600; }
 
 /* ---- draft ---- */
@@ -119,6 +126,22 @@ button.civ-tile.filled:disabled .civ-tile-upgrade { color: var(--civ-text-dim); 
 .civ-detail-name { color: var(--civ-accent); font-weight: 700; font-size: 0.98rem; }
 .civ-detail-desc { font-size: 0.8rem; color: var(--civ-text-dim); }
 .civ-detail-actions { display: flex; gap: 7px; }
+
+.civ-modal-backdrop{position:absolute;z-index:30;inset:0;display:grid;place-items:center;padding:14px;background:rgba(49,35,20,.5);backdrop-filter:blur(5px)}
+.civ-modal{position:relative;width:min(400px,100%);max-height:100%;overflow:auto;background:linear-gradient(155deg,#fffaf0 0%,var(--civ-bg-panel) 100%);border:1px solid color-mix(in srgb,var(--civ-accent) 72%,#fff);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:11px;box-shadow:0 22px 60px rgba(48,31,15,.34)}
+.civ-modal::before{content:"";position:absolute;inset:0 18% auto;height:3px;border-radius:0 0 4px 4px;background:var(--civ-accent)}
+.civ-modal-eyebrow{margin-top:2px;color:var(--civ-text-dim);font-size:.56rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.civ-modal .civ-detail-name{font-size:1.05rem;line-height:1.25}
+.civ-modal .civ-detail-desc{font-size:.76rem;line-height:1.55}
+.civ-modal-cost{align-self:flex-start;padding:7px 10px;border:1px solid color-mix(in srgb,var(--civ-accent) 28%,transparent);border-radius:999px;background:color-mix(in srgb,var(--civ-accent) 10%,var(--civ-bg-panel));font-size:.68rem;font-weight:800}
+.civ-modal-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:3px}
+.civ-modal-actions .civ-btn{min-height:44px;padding:10px 12px;border:1px solid transparent;transition:transform .12s ease,filter .12s ease}
+.civ-modal-actions .civ-btn:not(:disabled):active{transform:scale(.98)}
+.civ-modal-actions .civ-btn-primary{box-shadow:0 7px 18px color-mix(in srgb,var(--civ-accent) 25%,transparent)}
+.civ-modal-actions .civ-btn-ghost{border-color:color-mix(in srgb,var(--civ-text-dim) 20%,transparent);background:rgba(255,255,255,.54)}
+.civ-modal-actions:has(.civ-modal-secondary) .civ-modal-confirm{grid-column:1/-1;grid-row:1}
+.civ-modal-actions:has(.civ-modal-secondary) .civ-modal-secondary{grid-column:1;grid-row:2}
+.civ-modal-actions:has(.civ-modal-secondary) .civ-modal-back{grid-column:2;grid-row:2}
 
 .civ-btn {
   flex: 1; font-family: inherit; border: none; border-radius: 9px;
@@ -163,7 +186,24 @@ button.civ-tile.filled:disabled .civ-tile-upgrade { color: var(--civ-text-dim); 
 .civ-picking { gap: 9px; }
 .civ-pick-title { text-align: center; font-size: 1.15rem; font-weight: 700; color: var(--civ-accent); }
 .civ-pick-sub { text-align: center; font-size: 0.78rem; color: var(--civ-text-dim); margin-top: -4px; }
-.civ-leader-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; overflow-y: auto; }
+.civ-leader-list { min-height:0;flex:1;display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; overflow-y: auto; }
+
+@media(max-height:700px){
+  .civ-root{font-size:.9rem}
+  .civ-top-strip{max-height:54px}
+  .civ-player-chip{padding:2px 5px}
+  .civ-stats-row{padding:3px 7px}
+  .civ-tile{min-height:48px}
+  .civ-civic{min-height:50px}
+  .civ-card{padding:4px 3px;gap:1px}
+  .civ-card-icon{font-size:1rem}
+  .civ-card-name{min-height:0}
+}
+
+@media(min-height:720px){
+  .civ-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .civ-grid .civ-tile{min-height:clamp(66px,9.5vh,86px)}
+}
 .civ-leader-card {
   background: var(--civ-bg-panel); border: 1.5px solid var(--civ-bg-panel-2); border-radius: 12px;
   padding: 9px 7px; display: flex; flex-direction: column; align-items: center; gap: 4px;

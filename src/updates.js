@@ -143,6 +143,12 @@ const RELEASES = [
     improvements:[
       'De mobiele gameheader is strakker uitgelijnd, spelersaantallen blijven op één regel en Instellingen toont de huidige versie.'
     ]
+  },
+  {
+    version:'1.12.2',
+    improvements:[
+      'Age of Civilization past op één vast scherm en gebruikt verzorgde kaart- en upgradepopups met compacte statverschillen.'
+    ]
   }
 ];
 

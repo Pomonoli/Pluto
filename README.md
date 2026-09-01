@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.12.1
+## Nieuw in versie 1.12.2
 
-De mobiele gameheader is verfijnd met randloze terug- en menuknoppen en een beter gecentreerde gamenaam. Spelersaantallen op Home blijven voortaan op één regel en de instellingenpopup toont subtiel de actieve Pluto-versie.
+Age of Civilization past nu volledig binnen één vast spelscherm. Kaarten en upgrades gebruiken centrale bevestigingspopups, stadsupgrades tonen compacte statverschillen en `Jouw stad` schakelt automatisch tussen één compacte rij en twee grotere rijen naargelang de beschikbare schermhoogte.
 
 ## Nieuw in versie 1.11.0
 

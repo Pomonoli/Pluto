@@ -137,6 +137,9 @@ test('vrije gebouwen kunnen pas het volgende tijdperk upgraden, en krijgen dan +
   const tile=view.players.find((player)=>player.isYou).grid[slot];
   assert.equal(tile.level,2);
   assert.equal(tile.attack,Math.round(baseAttack*1.25));
+  assert.equal(tile.nextAttack,Math.round(baseAttack*1.5));
+  assert.equal(tile.nextDefence,0);
+  assert.equal(tile.nextIncome,0);
 });
 
 test('een vast gebouw upgraden doet niets tot de derde upgrade, die een duurdere stapelbare gebeurtenis ontketent',()=>{

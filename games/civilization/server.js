@@ -577,6 +577,9 @@ function serialize(game, requesterId, connected) {
         attack: tileStat(tile.base.attack, tile.level),
         defence: tileStat(tile.base.defence, tile.level),
         income: tileStat(tile.base.income, tile.level),
+        nextAttack: tileStat(tile.base.attack, tile.level + 1),
+        nextDefence: tileStat(tile.base.defence, tile.level + 1),
+        nextIncome: tileStat(tile.base.income, tile.level + 1),
         upgradeCost: flexibleUpgradeCost(game.age, tile.type, p),
         maxed: tile.level >= game.age
       } : null),

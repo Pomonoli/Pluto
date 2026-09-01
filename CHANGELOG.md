@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.12.2 — Fixed-screen Age of Civilization
+
+- Age of Civilization gebruikt één vast spelscherm zonder paginascroll of spellog.
+- Kaartinformatie opent centraal met duidelijke acties voor bouwen, weggooien en teruggaan.
+- Upgrades van stadskaarten en vaste gebouwen vragen voortaan bevestiging in een verzorgde popup.
+- Stadsupgrades tonen compacte verschillen zoals `ATK +1`, `DEF +1` en `Inkomen +1`.
+- De zes stadstegels staan op lage schermen in één compacte rij en schakelen bij voldoende hoogte naar twee grotere rijen van drie.
+- De server levert exacte volgende statwaarden zodat de upgradepreview overeenkomt met de spelberekening.
+
 ## v1.12.1 — Compactere gameheader en versie-info
 
 - De instellingenpopup toont subtiel de huidige Pluto-versie.
