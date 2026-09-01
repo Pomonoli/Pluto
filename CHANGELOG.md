@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.12.0 — Isle of Skye
+
+- Isle of Skye toegevoegd voor 2 tot 4 spelers, inclusief NPC-ondersteuning.
+- Speel om de beurt verkoper: leg een markt van spelers+1 tegels open, bepaal zelf de prijzen en verkoop aan medespelers.
+- Andere spelers kopen naar keuze één tegel en plaatsen die meteen op hun eigen eiland; randen (weide, berg, water) moeten exact aansluiten.
+- Na de verkoop plaatst de verkoper gratis een overgebleven tegel op het eigen eiland.
+- Elk spel kiest willekeurig drie scorecategorieën uit whisky (via wegverbinding met het kasteel), schapen, vee (alleen solitair vee) en schepen (volledig afgesloten wateroppervlak met een schip).
+- Checkpoints scoren na ronde 2, 4 en 6; de eindscore telt ook resterend goud mee.
+
 ## v1.11.13 — Passende gamebreedtes voor browser en tablet
 
 - Alle actieve games gebruiken vanaf 761px een gecentreerde gamecanvas van maximaal 1180px.

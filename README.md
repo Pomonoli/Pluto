@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.11.13
+## Nieuw in versie 1.12.0
 
-Actieve games gebruiken in browser- en tabletweergave voortaan een begrensde, gecentreerde werkbreedte. Brede spellen blijven ruim en overzichtelijk, terwijl compacte bord- en kaartspellen kleinere passende maxima gebruiken. De mobiele weergave tot en met 760px blijft ongewijzigd.
+**Isle of Skye** is toegevoegd voor 2 tot 4 spelers, inclusief NPC-ondersteuning. Speel om de beurt verkoper: leg een markt van tegels open, bepaal zelf de prijzen en verkoop aan medespelers, die de tegel meteen op hun eigen eiland plaatsen met exact aansluitende randen. Elk spel scoort willekeurig op drie van de vier categorieën whisky, schapen, vee en schepen.
 
 ## Nieuw in versie 1.11.0
 
@@ -27,6 +27,7 @@ Actieve spellen gebruiken zoveel mogelijk de volledige schermhoogte zonder pagin
 | Cluedo | 2-6 | Ja |
 | Hartenjagen | 4 | Ja |
 | Hofslag | 2-4 | Ja |
+| Isle of Skye | 2-4 | Ja |
 | Kingdomino | 2-4 | Ja |
 | Minigolf | 1-4 | Ja |
 | Pesten | 2-4 | Ja |
