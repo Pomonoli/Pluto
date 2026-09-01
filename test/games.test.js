@@ -8,8 +8,8 @@ const { cardPoints } = require('../games/hartenjagen/server');
 const carcassonne = require('../games/carcassonne/server');
 const { getGame, listGames } = require('../src/games');
 
-test('alle 17 games zijn geregistreerd', () => {
-  assert.deepEqual(listGames().map(g => g.key).sort(), ['blackjack','carcassonne','cascadia','civilization','cluedo','hartenjagen','hofslag','kingdomino','minigolf','pesten','presidenten','quoridor','santorini','seven-wonders-duel','solitaire','stratego','ticket-to-ride'].sort());
+test('alle 18 games zijn geregistreerd', () => {
+  assert.deepEqual(listGames().map(g => g.key).sort(), ['blackjack','carcassonne','cascadia','civilization','cluedo','hartenjagen','hofslag','isle-of-skye','kingdomino','minigolf','pesten','presidenten','quoridor','santorini','seven-wonders-duel','solitaire','stratego','ticket-to-ride'].sort());
 });
 
 test('Blackjack Aas telt als 1 wanneer nodig', () => {

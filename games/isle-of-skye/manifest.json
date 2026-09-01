@@ -1,0 +1,14 @@
+{
+  "key": "isle-of-skye",
+  "name": "Isle of Skye",
+  "version": "1",
+  "description": "Veil tegels op de markt, stel prijzen in, koop van elkaar en bouw je eigen eiland op met wegen, whisky, schapen, vee en scheepvaart.",
+  "icon": "🏰",
+  "badge": "2-4",
+  "actionLabel": "Nieuw spel",
+  "minPlayers": 2,
+  "maxPlayers": 4,
+  "supportsNpc": true,
+  "realtime": false,
+  "solo": false
+}
