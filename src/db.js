@@ -69,6 +69,12 @@ db.exec(`
     migration_key TEXT PRIMARY KEY,
     applied_at INTEGER NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS cycclub_teams (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    state_json TEXT NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
 `);
 
 if (!db.prepare("PRAGMA table_info(users)").all().some((column) => column.name === 'blackjack_chips')) {
@@ -308,6 +314,9 @@ function leaderboard(gameKey = null, limit = 100) {
       LIMIT ${safeLimit}
     `).all();
   }
+  if (gameKey === 'cycclub') {
+    return cycclubLeaderboard(safeLimit);
+  }
   if (gameKey === 'solitaire') {
     return db.prepare(`
       SELECT
@@ -450,6 +459,53 @@ function setBlackjackChips(userId, value) {
   if (reset) chips = 100;
   db.prepare('UPDATE users SET blackjack_chips = ? WHERE id = ?').run(chips, userId);
   return { chips, reset };
+}
+
+function getCycClubTeam(userId) {
+  const row = db.prepare('SELECT state_json AS stateJson FROM cycclub_teams WHERE user_id = ?').get(userId);
+  if (!row) return null;
+  try {
+    return JSON.parse(row.stateJson);
+  } catch {
+    return null;
+  }
+}
+
+function saveCycClubTeam(userId, state) {
+  db.prepare(`
+    INSERT INTO cycclub_teams(user_id,state_json,updated_at) VALUES(?,?,?)
+    ON CONFLICT(user_id) DO UPDATE SET state_json=excluded.state_json, updated_at=excluded.updated_at
+  `).run(userId, JSON.stringify(state), Date.now());
+}
+
+function cycclubLeaderboard(limit = 100) {
+  const safeLimit = Math.max(1, Math.min(100, Number(limit) || 100));
+  const rows = db.prepare(`
+    SELECT u.username, t.state_json AS stateJson
+    FROM cycclub_teams t
+    JOIN users u ON u.id = t.user_id
+  `).all();
+
+  return rows
+    .map((row) => {
+      let state;
+      try { state = JSON.parse(row.stateJson); } catch { return null; }
+      const wallet = Number(state?.wallet || 0);
+      const netWorth = wallet + (state?.riders || []).reduce((sum, rider) => sum + Number(rider.marketValue || 0), 0);
+      const career = state?.career || {};
+      return {
+        username: row.username,
+        netWorth: Math.round(netWorth),
+        victories: Number(career.victories || 0),
+        podiums: Number(career.podiums || 0),
+        monumentsWon: Number(career.monumentsWon || 0),
+        gtStagesWon: Number(career.gtStagesWon || 0),
+        prizeMoney: Math.round(Number(career.prizeMoney || 0))
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.victories - a.victories || b.netWorth - a.netWorth || a.username.localeCompare(b.username, 'nl-BE', { sensitivity: 'base' }))
+    .slice(0, safeLimit);
 }
 
 function headToHead(viewerUserId, opponentUsername, gameKey = null) {
@@ -619,6 +675,9 @@ module.exports = {
   getBlackjackChips,
   adjustBlackjackChips,
   setBlackjackChips,
+  getCycClubTeam,
+  saveCycClubTeam,
+  cycclubLeaderboard,
   headToHead,
   validateUsername,
   listMinigolfMaps,

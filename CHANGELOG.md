@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.12.0 — CycClub
+
+- Nieuwe game: CycClub, een persistente wielerploeg-builder en race-simulator.
+- Beheer een blijvende rennersroster, koop en verkoop renners via een scoutingmarkt en verkoop overtollige renners.
+- Investeer prijzengeld in Fietsen & Materiaal, Voeding & Supplementen, Trainers & Analyse en Medische Staf, elk met 5 upgradeniveaus.
+- Kies vrij uit een koerskalender met Monumenten, Vlaamse Klassiekers, Kampioenschappen, Rittenkoersen en Grote Rondrit-ritten; geen vast seizoen of volgorde.
+- Een server-authoritatieve RNG-engine simuleert elke koers per renner met Topdagen, Offdays, mechanische defecten, ziekte en valpartijen.
+- Zeges, podiums, Monumentzeges, Grote Rondrit-ritzeges en prijzengeld worden permanent bijgehouden op een eigen leaderboard.
+
 ## v1.11.13 — Passende gamebreedtes voor browser en tablet
 
 - Alle actieve games gebruiken vanaf 761px een gecentreerde gamecanvas van maximaal 1180px.

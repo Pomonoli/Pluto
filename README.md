@@ -2,13 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.11.13
+## Nieuw in versie 1.12.0
 
-Actieve games gebruiken in browser- en tabletweergave voortaan een begrensde, gecentreerde werkbreedte. Brede spellen blijven ruim en overzichtelijk, terwijl compacte bord- en kaartspellen kleinere passende maxima gebruiken. De mobiele weergave tot en met 760px blijft ongewijzigd.
-
-## Nieuw in versie 1.11.0
-
-**Cascadia** is toegevoegd voor 2 tot 4 spelers, inclusief NPC-ondersteuning. Kies iedere beurt een habitattegel en dier, bouw een eigen hexagonaal ecosysteem en scoor op dierpatronen, aaneengesloten habitatcorridors en habitatmeerderheden. Keystone-habitats leveren natuurfiches op waarmee je marktcombinaties kan mixen of dieren kan verversen.
+**CycClub** is toegevoegd voor 1 tot 6 spelers, inclusief NPC-ondersteuning. Bouw een persistente wielerploeg op: koop en verkoop renners via een scoutingmarkt, investeer prijzengeld in Fietsen & Materiaal, Voeding & Supplementen, Trainers & Analyse en Medische Staf, en kies vrij uit een koerskalender met Monumenten, Vlaamse Klassiekers, Kampioenschappen, Rittenkoersen en Grote Rondrit-ritten. Een server-authoritatieve RNG-engine simuleert elke koers per renner, met Topdagen, Offdays, mechanische defecten, ziekte en valpartijen. Zeges, podiums en prijzengeld tellen permanent mee voor een eigen leaderboard.
 
 ## Nieuw in versie 1.0.0
 
@@ -25,6 +21,7 @@ Actieve spellen gebruiken zoveel mogelijk de volledige schermhoogte zonder pagin
 | Carcassonne | 2-5 | Ja |
 | Cascadia | 2-4 | Ja |
 | Cluedo | 2-6 | Ja |
+| CycClub | 1-6 | Ja |
 | Hartenjagen | 4 | Ja |
 | Hofslag | 2-4 | Ja |
 | Kingdomino | 2-4 | Ja |
