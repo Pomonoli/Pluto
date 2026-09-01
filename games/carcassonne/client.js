@@ -3,6 +3,18 @@ const views={};
 export const roomOptions={bodyClass:'carcassonne-active'};
 function bind(api){({state,els,E,action,profileButton,sound,socket,handleAck,cardNode,valueLabel,titlebar,logBox,renderGame,renderCardOpponents,renderDiscardStack,scoreList}=api)}
 export function render(api){bind(api);renderCarcassonne(api.room,api.game)}
+export function renderLobbyOptions({room,container,E,socket,handleAck}){
+  const wrap=E('section','carc-lobby-options'),head=E('div','carc-lobby-options-head'),choices=E('div','carc-tile-count-options'),selected=Number(room.gameOptions?.tileCount||72);
+  head.append(E('strong','','Aantal tegels'),E('small','',room.isHost?'Kies de spelduur':'De host kiest de spelduur'));
+  [[72,'Standaard'],[36,'Short'],[18,'Blitz']].forEach(([value,label])=>{const button=E('button',`carc-tile-count-option ${selected===value?'active':''}`.trim());button.type='button';button.disabled=!room.isHost;button.setAttribute('aria-pressed',selected===value?'true':'false');button.append(E('b','',String(value)),E('span','',label));button.onclick=()=>socket.emit('room:setOptions',{tileCount:value},handleAck);choices.append(button)});
+  const meepleRow=E('div','carc-meeple-count-option'),meepleCopy=E('label','carc-meeple-count-copy'),meepleValue=E('output','carc-meeple-count-value'),slider=E('input','carc-meeple-count-slider'),meepleCount=Number(room.gameOptions?.meepleCount||7);
+  meepleCopy.htmlFor='carcMeepleCount';meepleCopy.append(E('strong','','Aantal burgers'),E('small','',room.isHost?'Per speler':'Gekozen door de host'));
+  meepleValue.htmlFor='carcMeepleCount';meepleValue.textContent=String(meepleCount);
+  slider.id='carcMeepleCount';slider.type='range';slider.min='1';slider.max='12';slider.step='1';slider.value=String(meepleCount);slider.disabled=!room.isHost;slider.setAttribute('aria-label','Aantal burgers per speler');
+  slider.oninput=()=>{meepleValue.textContent=slider.value};
+  slider.onchange=()=>socket.emit('room:setOptions',{meepleCount:Number(slider.value)},handleAck);
+  meepleRow.append(meepleCopy,slider,meepleValue);wrap.append(head,choices,meepleRow);container.append(wrap)
+}
 
 const SIDE_NAMES=['north','east','south','west'];
 const SIDE_WORDS=['boven','rechts','onder','links'];
@@ -144,7 +156,7 @@ function renderCarcassonne(room,game){
   const dashboard=E('div','carc-dashboard');game.players.forEach(p=>{const item=E('div',`carc-player ${p.id===game.turnPlayerId?'active':''}`);item.style.setProperty('--player-color',p.color);item.append(E('span','carc-player-dot'),E('strong','',p.name),E('b','',String(p.score)),E('small','',burgerLabel(p.meeples)));dashboard.append(item)});els.gameStage.append(dashboard);
   const controls=E('div',`carc-controls ${mine&&game.phase==='meeple'?'waiting-choice':''}`);controls.append(E('span','eyebrow',`${game.tilesRemaining} TEGELS OVER`));
   if(mine&&game.phase==='place'&&game.currentTile){const drawn=E('div','carc-drawn');drawn.append(carcassonneTileNode(game.currentTile,{preview:true}));const rotate=E('button','secondary','↻ Roteer');rotate.onclick=()=>action('rotate');drawn.append(rotate);controls.append(drawn);if(!game.validPlacements.length)controls.append(E('div','player-note','Geen plek in deze stand — roteer de tegel.'))}
-  else if(game.nextTile){const drawn=E('div','carc-drawn carc-next-drawn');drawn.append(E('span','carc-next-label','JOUW VOLGENDE TEGEL'),carcassonneTileNode(game.nextTile,{preview:true}));controls.append(drawn)}
+  else if(game.nextTile){const drawn=E('div','carc-drawn carc-next-drawn'),count=Number(game.nextTilePlayersBefore||1);drawn.append(E('span','carc-next-label','JOUW VOLGENDE TEGEL'),carcassonneTileNode(game.nextTile,{preview:true}),E('span','carc-next-wait',`Nog ${count} speler${count===1?'':'s'} voor je`));controls.append(drawn)}
   els.gameStage.append(controls);
   const viewport=E('div','carc-viewport');const board=E('div','carc-board');const size=72,world=160,origin=(world-1)/2;board.style.width=`${world*size}px`;board.style.height=`${world*size}px`;
   (game.board||[]).forEach(entry=>{
@@ -154,7 +166,9 @@ function renderCarcassonne(room,game){
       const group=m.kind==='city'?entry.tile.cities?.[m.group]:m.kind==='road'?entry.tile.roads?.[m.group]:null;
       const fieldPosition=m.kind==='field'?`field-${m.position||fieldPositionClass(entry.tile.fields?.[m.group]||[])}`:'';
       const position=group?featurePositionClass(group):fieldPosition;
-      const meeple=E('span',`carc-meeple ${m.kind} ${position}`.trim(),visual.text);meeple.style.background=player?.color||'#fff';meeple.title=`${player?.name||''} · ${visual.role}`;tile.append(meeple)
+      const meeple=E('span',`carc-meeple ${m.kind} ${position}`.trim(),visual.text);meeple.style.background=player?.color||'#fff';meeple.title=`${player?.name||''} · ${visual.role}`;
+      if(Array.isArray(m.anchor)&&m.anchor.length===2){meeple.classList.add('feature-anchor');meeple.style.setProperty('--anchor-x',`${m.anchor[0]}px`);meeple.style.setProperty('--anchor-y',`${m.anchor[1]}px`)}
+      tile.append(meeple)
     });
     board.append(tile)
   });

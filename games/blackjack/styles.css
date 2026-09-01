@@ -1,3 +1,4 @@
+@media(min-width:761px){#gameStage:has(.blackjack-table){max-width:900px}}
 .blackjack-table{display:grid;gap:18px}
 .blackjack-player{border:1px solid var(--border);border-radius:12px;background:#12161c;padding:12px}
 .blackjack-player.active{border-color:var(--accent)}

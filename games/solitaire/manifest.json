@@ -3,7 +3,7 @@
   "name": "Solitaire",
   "description": "Klondike draw-3.",
   "version": "3",
-  "icon": "♠",
+  "icon": "🃏",
   "badge": "Solo",
   "actionLabel": "Spelen",
   "minPlayers": 1,

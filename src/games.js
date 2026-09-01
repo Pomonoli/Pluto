@@ -58,7 +58,7 @@ function listGamePlugins() {
       styleUrl:m.styles===false||!fs.existsSync(path.join(game.plugin.directory,'styles.css'))?null:`/game-plugins/${encodeURIComponent(m.key)}/styles.css?v=${encodeURIComponent(game.plugin.version)}`,
       viewUrl:fs.existsSync(path.join(game.plugin.directory,'view.html'))?`/game-plugins/${encodeURIComponent(m.key)}/view.html?v=${encodeURIComponent(game.plugin.version)}`:null
     };
-  });
+  }).sort((a,b)=>a.name.localeCompare(b.name,'nl-BE',{sensitivity:'base'}));
 }
 
 function getGamePlugin(key) {

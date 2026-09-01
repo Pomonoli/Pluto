@@ -4,6 +4,8 @@
    mobile screen without the page itself scrolling, but leaves a bit more
    breathing room than a pure information-density layout would. */
 
+@media(min-width:761px){#gameStage:has(.civ-root){max-width:640px}}
+
 .civ-root {
   --civ-accent: #B8895A;
   --civ-bg-panel: #fbf4e6;

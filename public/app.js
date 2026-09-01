@@ -1,9 +1,8 @@
-import { createGameUi } from './js/game-ui.js?v=1.9.1';
-
+import { createGameUi } from './js/game-ui.js?v=1.11.13';
 const socket = window.io();
   const $ = (id) => document.getElementById(id);
   const els = {};
-  ['brandButton','lobbyBrowserButton','leaderboardButton','soundButton','installButton','accountButton','mobileNav','mobilePlayButton','mobileLobbyButton','mobileLeaderboardButton','mobileProfileButton','rulesButton','homeView','lobbyBrowserView','leaderboardView','profileView','roomView','homeGuestBar','guestName','homeAccountButton','inviteBox','inviteText','joinInviteButton','recentGamesSection','recentGames','homeOpenLobbiesSection','homeOpenLobbies','gamesHeading','gameGrid','refreshRoomsButton','lobbyIdentityBar','lobbyIdentityText','lobbyGuestWrap','lobbyGuestName','openRoomCount','openRoomsContent','leaderboardGame','leaderboardContent','profileUsername','profileSummary','profileGames','profileRecent','headToHeadCard','headToHeadGame','headToHeadContent','roomLayout','lobbySection','gameSection','playerCountBadge','lobbyPlayers','hostControls','addNpcButton','startGameButton','lobbyHint','gameStage','gameResult','accountModal','closeAccountButton','loggedOutAccount','loggedInAccount','loginForm','loginUsername','loginPassword','registerForm','registerUsername','registerPassword','accountUsername','accountGames','accountWins','accountWinRate','myProfileButton','logoutButton','rulesModal','rulesGameName','rulesContent','closeRulesButton','toast'].forEach((id) => els[id] = $(id));
+  ['brandButton','lobbyBrowserButton','leaderboardButton','soundButton','installButton','accountButton','mobileNav','mobilePlayButton','mobileLobbyButton','mobileLeaderboardButton','mobileProfileButton','mobileGameHeader','mobileGameLeaveButton','mobileGameName','mobileGameMenuButton','mobileGameMenu','mobileGameRulesButton','mobileGameSoundButton','mobileGameLeaveMenuButton','rulesButton','homeView','lobbyBrowserView','leaderboardView','profileView','roomView','homeGuestBar','guestName','homeAccountButton','inviteBox','inviteText','joinInviteButton','resumeGameSection','resumeGames','recentGamesSection','recentGames','homeOpenLobbiesSection','homeOpenLobbies','gamesHeading','gameGrid','refreshRoomsButton','lobbyIdentityBar','lobbyIdentityText','lobbyGuestWrap','lobbyGuestName','openRoomCount','openRoomsContent','leaderboardGame','leaderboardContent','profileUsername','profileSummary','profileGames','profileRecent','headToHeadCard','headToHeadGame','headToHeadContent','roomLayout','lobbySection','gameSection','playerCountBadge','lobbyPlayers','gameLobbyOptions','hostControls','addNpcButton','startGameButton','lobbyHint','gameStage','gameResult','accountModal','closeAccountButton','loggedOutAccount','loggedInAccount','loginForm','loginUsername','loginPassword','showRegisterButton','showLoginButton','registerForm','registerUsername','registerPassword','accountUsername','accountGames','accountWins','accountWinRate','myProfileButton','logoutButton','rulesModal','rulesGameName','rulesContent','closeRulesButton','leaveGameModal','leaveGameTitle','leaveGamePromptText','cancelLeaveGameButton','confirmLeaveGameButton','toast'].forEach((id) => els[id] = $(id));
 
   const state = {
     room: null,
@@ -29,9 +28,6 @@ const socket = window.io();
     activeGameBodyClass: null
   };
   els.guestName.value = state.guestName;
-
-
-
   function E(tag, cls, text) { const el = document.createElement(tag); if (cls) el.className = cls; if (text !== undefined) el.textContent = text; return el; }
   function getRoomFromPath() { const m = location.pathname.match(/^\/room\/([A-Za-z0-9]+)\/?$/); return m ? m[1].toUpperCase() : null; }
   function getProfileFromPath() { const m = location.pathname.match(/^\/profile\/([^/]+)\/?$/); return m ? decodeURIComponent(m[1]) : null; }
@@ -67,7 +63,6 @@ const socket = window.io();
     return b;
   }
   function valueLabel(v) { return v === 1 ? 'A' : String(v); }
-
   function setMobileNavActive(active) {
     if (!els.mobileNav) return;
     els.mobileNav.querySelectorAll('.mobile-nav-item').forEach((button) => {
@@ -76,23 +71,21 @@ const socket = window.io();
       else button.removeAttribute('aria-current');
     });
   }
-
   function setRoomChrome(active) {
     document.body.classList.toggle('room-active', active);
     if(!active)document.body.classList.remove('game-active');
+    if(!active)closeMobileGameMenu();
   }
-
-
+  function closeMobileGameMenu(){if(!els.mobileGameMenu)return;els.mobileGameMenu.classList.add('hidden');els.mobileGameMenuButton.setAttribute('aria-expanded','false')}
+  function toggleMobileGameMenu(){const open=els.mobileGameMenu.classList.contains('hidden');els.mobileGameMenu.classList.toggle('hidden',!open);els.mobileGameMenuButton.setAttribute('aria-expanded',open?'true':'false')}
   function isStandaloneApp() {
     return window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true;
   }
-
   function updateInstallButtonVisibility() {
     const onStandalone = isStandaloneApp();
     document.body.classList.toggle('standalone-mode', onStandalone);
     els.installButton.classList.toggle('hidden', onStandalone);
   }
-
   function hideMainViews() {
     document.querySelectorAll('main > .view').forEach(view=>view.classList.add('hidden'));
     if (state.lobbyRefreshTimer) { clearInterval(state.lobbyRefreshTimer); state.lobbyRefreshTimer = null; }
@@ -102,7 +95,6 @@ const socket = window.io();
     els.accountButton.textContent = loggedIn ? state.authUser.username : 'Inloggen';
     els.homeGuestBar.classList.toggle('hidden', loggedIn);
     els.homeAccountButton.classList.toggle('hidden', loggedIn);
-
     if (loggedIn) {
       els.guestName.value = state.authUser.username;
       els.lobbyIdentityText.textContent = state.authUser.username;
@@ -121,7 +113,7 @@ const socket = window.io();
     hideMainViews(); setMobileNavActive('play'); els.homeView.classList.remove('hidden');
     els.rulesButton.classList.add('hidden');
     const target = getRoomFromPath(); state.directRoomId = target;
-    els.inviteBox.classList.toggle('hidden', !target); if (target) els.inviteText.textContent = `Je bent uitgenodigd voor room ${target}`;
+    els.inviteBox.classList.toggle('hidden', !target); if (target) els.inviteText.textContent = `Je bent uitgenodigd voor game ${target}`;
     updateIdentityUi();
     renderRecentGames();
     loadHomeOpenLobbies();
@@ -172,7 +164,6 @@ const socket = window.io();
       els.headToHeadCard.classList.remove('hidden');await loadHeadToHead(data.profile.user.username);
     }
   }
-
   function recentGamesList() {
     try { return JSON.parse(localStorage.getItem('minigames.recentGames') || '[]').filter(k=>GAME_NAMES[k]).slice(0,4); }
     catch { return []; }
@@ -197,14 +188,14 @@ const socket = window.io();
     updateHomeGamesHeading();
   }
   function updateHomeGamesHeading() {
-    const hasExtraSections=!els.recentGamesSection.classList.contains('hidden')||!els.homeOpenLobbiesSection.classList.contains('hidden');
+    const hasExtraSections=!els.resumeGameSection.classList.contains('hidden')||!els.recentGamesSection.classList.contains('hidden')||!els.homeOpenLobbiesSection.classList.contains('hidden');
     els.gamesHeading.classList.toggle('hidden',!hasExtraSections);
   }
   async function loadHomeOpenLobbies() {
     try {
       const response=await fetch('/api/rooms',{cache:'no-store'});
       const data=await response.json();
-      if(!data.ok)throw new Error(data.error||'Kon rooms niet laden.');
+      if(!data.ok)throw new Error(data.error||'Kon games niet laden.');
       const identity=(state.authUser?.username||state.guestName||els.guestName.value||'').toLocaleLowerCase('nl-BE');
       renderHomeOpenLobbies((data.rooms||[]).filter(room=>room.joinable||(room.resumable&&room.playerNames.some(name=>name.toLocaleLowerCase('nl-BE')===identity))));
     } catch {
@@ -212,9 +203,19 @@ const socket = window.io();
     }
   }
   function renderHomeOpenLobbies(rooms) {
+    const identity=(state.authUser?.username||state.guestName||els.guestName.value||'').toLocaleLowerCase('nl-BE');
+    const resumable=rooms.filter(room=>room.resumable&&room.playerNames.some(name=>name.toLocaleLowerCase('nl-BE')===identity));
+    const open=rooms.filter(room=>!resumable.includes(room));
+    els.resumeGames.replaceChildren();
+    els.resumeGameSection.classList.toggle('hidden',!resumable.length);
+    resumable.forEach(room=>{
+      const button=E('button','resume-game-button');button.type='button';
+      const copy=E('span','resume-game-copy');copy.append(E('small','',room.gameName),E('strong','','Doorgaan met spelen'),E('span','',`Game ${room.id} · ${room.playerCount}/${room.maxPlayers} spelers`));
+      button.append(copy,E('span','resume-game-arrow','→'));button.onclick=()=>joinRoom(room.id);els.resumeGames.append(button)
+    });
     els.homeOpenLobbies.replaceChildren();
-    els.homeOpenLobbiesSection.classList.toggle('hidden',!rooms.length);
-    rooms.forEach(room=>{
+    els.homeOpenLobbiesSection.classList.toggle('hidden',!open.length);
+    open.forEach(room=>{
       const button=E('button','recent-game-button home-open-lobby-button');
       button.type='button';
       button.append(E('strong','',room.gameName),E('span','',`${room.resumable?'Lopend · ':''}${room.playerCount}/${room.maxPlayers} spelers · ${room.hostName}`));
@@ -244,7 +245,7 @@ const socket = window.io();
     try {
       const response=await fetch('/api/rooms',{cache:'no-store'});
       const data=await response.json();
-      if(!data.ok)throw new Error(data.error||'Kon rooms niet laden.');
+      if(!data.ok)throw new Error(data.error||'Kon games niet laden.');
       renderOpenRooms(data.rooms||[]);
     } catch(error) {
       els.openRoomsContent.replaceChildren(E('div','panel',error.message));
@@ -255,14 +256,14 @@ const socket = window.io();
     els.openRoomsContent.replaceChildren();
     if(!rooms.length){
       const empty=E('div','panel empty-rooms');
-      empty.append(E('h3','','Geen open rooms'),E('p','muted','Maak zelf een game op Home, of wacht tot iemand een room opent.'));
+      empty.append(E('h3','','Geen open games'),E('p','muted','Maak zelf een game op Home, of wacht tot iemand een game opent.'));
       els.openRoomsContent.append(empty);return;
     }
     rooms.forEach(room=>{
       const card=E('article','open-room-card');
       const head=E('div','open-room-head');
       const left=E('div');
-      left.append(E('span','eyebrow',room.gameName.toUpperCase()),E('h3','',`${room.resumable?'Lopend · ':''}Room ${room.id}`));
+      left.append(E('span','eyebrow',room.gameName.toUpperCase()),E('h3','',`${room.resumable?'Lopend · ':''}Game ${room.id}`));
       head.append(left,E('span','badge',`${room.playerCount}/${room.maxPlayers}`));
       const players=E('div','open-room-players');
       room.playerNames.forEach(name=>players.append(E('span','open-room-player',name)));
@@ -271,14 +272,13 @@ const socket = window.io();
       const identity=(state.authUser?.username||state.guestName||els.lobbyGuestName.value||'').toLocaleLowerCase('nl-BE');
       const canResume=Boolean(room.resumable&&room.playerNames.some(name=>name.toLocaleLowerCase('nl-BE')===identity));
       const canEnter=room.joinable||canResume;
-      const join=E('button',canEnter?'primary':'secondary',canResume?'Ga terug':room.resumable?'Lopend':room.joinable?'Join room':'Vol');
+      const join=E('button',canEnter?'primary':'secondary',canResume?'Ga terug':room.resumable?'Lopend':room.joinable?'Join game':'Vol');
       join.type='button';join.disabled=!canEnter;
       join.onclick=()=>{if(!syncLobbyGuestName())return;joinRoom(room.id)};
       card.append(head,players,meta,join);
       els.openRoomsContent.append(card);
     });
   }
-
   function updateSoundButton() {
     const muted = state.soundMuted;
     els.soundButton.setAttribute('aria-label', muted ? 'Geluid aanzetten' : 'Geluid uitzetten');
@@ -287,7 +287,9 @@ const socket = window.io();
     els.soundButton.innerHTML = muted
       ? '<span class="sound-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 14h4l5 4V6L8 10H4z"></path></svg></span>'
       : '<span class="sound-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 14h4l5 4V6L8 10H4z"></path><path d="M16 9c1.6 1.2 2.4 2.7 2.4 4.5S17.6 16.8 16 18"></path><path d="M18.6 6.8C21 8.7 22 10.9 22 13.5c0 1.5-.3 2.9-.9 4.1"></path><path d="M18.8 6.2 6.2 18.8"></path></svg></span>';
+    if(els.mobileGameSoundButton){els.mobileGameSoundButton.textContent=muted?'Geluid aan':'Geluid uit';els.mobileGameSoundButton.setAttribute('aria-pressed',muted?'true':'false')}
   }
+  function toggleSound(){state.soundMuted=!state.soundMuted;localStorage.setItem('minigames.soundMuted',state.soundMuted?'1':'0');updateSoundButton();if(!state.soundMuted){ensureAudio();sound('turn')}}
   function ensureAudio() {
     if (state.soundMuted) return null;
     const Ctx=window.AudioContext||window.webkitAudioContext;
@@ -338,14 +340,10 @@ const socket = window.io();
     b.onclick=(e)=>{e.stopPropagation();window.open(`/profile/${encodeURIComponent(name)}`,'_blank','noopener')};
     return b;
   }
-
   const gameUi = createGameUi({
     state, els, E, action, profileButton, sound, socket, handleAck, cardNode, valueLabel, requestRematch
   });
-
   function handlePluginRoute(){return Object.values(state.gamePlugins).some(plugin=>plugin.handleRoute?.({path:location.pathname,state,setRoute,toast})===true)}
-
-
   function createRoom(gameKey) {
     const name = saveGuestName(); if (!name) return;
     rememberRecentGame(gameKey);
@@ -361,7 +359,7 @@ const socket = window.io();
   }
   function joinRoom(roomId) {
     const name = saveGuestName(); if (!name) return;
-    const code = String(roomId || '').toUpperCase().replace(/[^A-Z0-9]/g,''); if (!code) return toast('Vul een roomcode in.');
+    const code = String(roomId || '').toUpperCase().replace(/[^A-Z0-9]/g,''); if (!code) return toast('Vul een gamecode in.');
     state.expectedRoomId = code;
     state.roomStateBlocked = false;
     socket.emit('room:join', { roomId: code, name, token: state.token }, (result) => {
@@ -370,8 +368,6 @@ const socket = window.io();
       if (location.pathname !== `/room/${result.roomId}`) setRouteRoom(result.roomId);
     });
   }
-
-
   const GAME_NAMES = {}, RULES = {};
   async function loadGamePlugins(){
     try{
@@ -405,14 +401,15 @@ const socket = window.io();
     els.leaderboardContent.replaceChildren();
     if (!rows.length) { els.leaderboardContent.append(E('p','muted','Nog geen resultaten.')); return; }
     const table=E('table','stats-table');
-    const plugin=state.gamePlugins[gameKey],columns=plugin?.leaderboardColumns||['#','Speler','Games','Wins','Winrate'];
-    const head=E('tr');columns.forEach(x=>head.append(E('th','',x)));
+    const plugin=state.gamePlugins[gameKey],columns=plugin?.leaderboardColumns||['#','Speler','Wins','Games','Winrate'];
+    const shortLabels={'Speler':'Speler','Wins':'W','Games':'G','Winrate':'%','Chips':'Chips','Beste':'Beste'};
+    const head=E('tr');columns.forEach(x=>{const th=E('th','',x);th.dataset.short=shortLabels[x]||x;head.append(th)});
     table.append(head);
     rows.forEach((row,index)=>{
       const tr=E('tr');
       tr.append(E('td','',String(index+1)));
       const td=E('td'); const link=E('button','profile-link',row.username); link.type='button'; link.onclick=()=>{setRoute(`/profile/${encodeURIComponent(row.username)}`);showProfile(row.username)};td.append(link);tr.append(td);
-      const cells=plugin?.renderLeaderboardCells?.({row,E})||[E('td','',String(row.games)),E('td','',String(row.wins)),E('td','',`${row.winRate||0}%`)];tr.append(...cells);
+      const cells=plugin?.renderLeaderboardCells?.({row,E})||[E('td','',String(row.wins)),E('td','',String(row.games)),E('td','',`${row.winRate||0}%`)];tr.append(...cells);
       table.append(tr);
     });
     els.leaderboardContent.append(table);
@@ -426,11 +423,27 @@ const socket = window.io();
     else {
       const table=E('table','stats-table'); const head=E('tr'); ['Game','Games','Wins','Winrate','Extra'].forEach(x=>head.append(E('th','',x)));table.append(head);
       perGame.forEach(g=>{const tr=E('tr'),extra=state.gamePlugins[g.gameKey]?.profileExtra?.({stat:g,formatDuration})||'—';tr.append(E('td','',GAME_NAMES[g.gameKey]||g.gameKey),E('td','',String(g.games)),E('td','',String(g.wins)),E('td','',`${g.winRate||0}%`),E('td','',extra));table.append(tr)});
-      els.profileGames.append(table);
+      const mobile=E('div','profile-mobile-stats');
+      perGame.forEach(g=>{
+        const name=GAME_NAMES[g.gameKey]||g.gameKey,extra=state.gamePlugins[g.gameKey]?.profileExtra?.({stat:g,formatDuration})||'—';
+        const row=E('article','profile-stat-row'),title=E('div','profile-stat-title'),values=E('div','profile-stat-values');
+        title.append(E('strong','',name),E('small','',extra));
+        [['Games',g.games],['Wins',g.wins],['Winrate',`${g.winRate||0}%`]].forEach(([label,value])=>{const stat=E('span');stat.append(E('small','',label),E('b','',String(value)));values.append(stat)});
+        row.append(title,values);mobile.append(row)
+      });
+      els.profileGames.append(table,mobile);
     }
     els.profileRecent.replaceChildren();
     if(!recent.length) els.profileRecent.append(E('p','muted','Nog geen match history.'));
-    recent.forEach(m=>{const item=E('div','recent-match');const d=new Date(Number(m.endedAt));item.append(E('strong','',GAME_NAMES[m.gameKey]||m.gameKey),E('span','',m.won?'Winst':m.outcome||'Match'),E('small','',`${d.toLocaleDateString('nl-BE')} ${d.toLocaleTimeString('nl-BE',{hour:'2-digit',minute:'2-digit'})}${m.durationMs?` · ${formatDuration(m.durationMs)}`:''}`));els.profileRecent.append(item)});
+    else {
+      const appendMatch=(m)=>{const item=E('div','recent-match');const d=new Date(Number(m.endedAt));item.append(E('strong','',GAME_NAMES[m.gameKey]||m.gameKey),E('span','',m.won?'Winst':m.outcome||'Match'),E('small','',`${d.toLocaleDateString('nl-BE')} ${d.toLocaleTimeString('nl-BE',{hour:'2-digit',minute:'2-digit'})}${m.durationMs?` · ${formatDuration(m.durationMs)}`:''}`));els.profileRecent.append(item)};
+      recent.slice(0,5).forEach(appendMatch);
+      if(recent.length>5){
+        const more=E('button','secondary','Toon meer');more.type='button';
+        more.onclick=()=>{recent.slice(5).forEach(appendMatch);more.remove()};
+        els.profileRecent.append(more);
+      }
+    }
   }
   async function loadHeadToHead(username,gameKey=''){
     els.headToHeadContent.replaceChildren(E('p','muted','Laden…'));
@@ -463,6 +476,7 @@ const socket = window.io();
     els.accountModal.classList.remove('hidden');els.accountModal.setAttribute('aria-hidden','false');
     const loggedIn=Boolean(state.authUser);
     els.loggedOutAccount.classList.toggle('hidden',loggedIn);els.loggedInAccount.classList.toggle('hidden',!loggedIn);
+    if(!loggedIn){els.loggedOutAccount.classList.remove('mobile-register-open');els.showRegisterButton.setAttribute('aria-expanded','false')}
     if(loggedIn){els.accountUsername.textContent=state.authUser.username;els.accountGames.textContent=state.authStats?.games||0;els.accountWins.textContent=state.authStats?.wins||0;els.accountWinRate.textContent=`${state.authStats?.winRate||0}%`}
   }
   function closeAccount(){els.accountModal.classList.add('hidden');els.accountModal.setAttribute('aria-hidden','true')}
@@ -470,7 +484,6 @@ const socket = window.io();
     const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     const data=await response.json();if(!data.ok)throw new Error(data.error||'Actie mislukt.');return data;
   }
-
   function renderRoom(room) {
     const expected = state.expectedRoomId || getRoomFromPath();
     if (state.roomStateBlocked || !expected || room.id !== expected) return;
@@ -481,6 +494,7 @@ const socket = window.io();
     state.room = room; state.previousRoom=room; rememberRecentGame(room.gameKey); showRoom();
     const roomOptions=state.gamePlugins[room.gameKey]?.roomOptions||{};if(state.activeGameBodyClass&&state.activeGameBodyClass!==roomOptions.bodyClass)document.body.classList.remove(state.activeGameBodyClass);state.activeGameBodyClass=room.status!=='lobby'?roomOptions.bodyClass||null:null;if(state.activeGameBodyClass)document.body.classList.add(state.activeGameBodyClass);
     document.body.classList.toggle('game-active',room.status!=='lobby');
+    els.mobileGameName.textContent=room.gameMeta?.name||GAME_NAMES[room.gameKey]||'Spel';
     if (room.status === 'lobby') {
       els.lobbySection.classList.remove('hidden'); els.gameSection.classList.add('hidden'); renderLobby(room);
       state.renderedGameRevision=-1;
@@ -491,7 +505,6 @@ const socket = window.io();
       }
     }
   }
-
   function renderLobby(room) {
     const meta = room.gameMeta; els.playerCountBadge.textContent = `${room.players.length}/${meta.maxPlayers}`; els.hostControls.classList.toggle('hidden', !room.isHost);
     els.lobbyPlayers.replaceChildren();
@@ -503,6 +516,7 @@ const socket = window.io();
       if (room.isHost && p.isNpc) { const rm = E('button','ghost','Verwijder'); rm.type='button'; rm.onclick=() => socket.emit('room:removeNpc',{playerId:p.id},handleAck); act.append(rm); }
       row.append(dot,info,act); els.lobbyPlayers.append(row);
     });
+    els.gameLobbyOptions.replaceChildren();state.gamePlugins[room.gameKey]?.renderLobbyOptions?.({room,container:els.gameLobbyOptions,E,socket,handleAck});
     const disconnected = room.players.find((p) => !p.isNpc && !p.connected);
     const enough = room.players.length >= meta.minPlayers && room.players.length <= meta.maxPlayers;
     els.startGameButton.disabled = !enough || Boolean(disconnected); els.addNpcButton.disabled = room.players.length >= meta.maxPlayers || !meta.supportsNpc;
@@ -514,18 +528,17 @@ const socket = window.io();
       else els.lobbyHint.textContent = 'Klaar om te starten.';
     } else els.lobbyHint.textContent = 'Wachten tot de host start.';
   }
-
-
-
-
-
   function openRules(gameKey,stateName){const key=gameKey||state.room?.gameKey;if(!key)return;const name=stateName||state.room?.gameMeta?.name||GAME_NAMES[key]||key;els.rulesGameName.textContent=name.toUpperCase();els.rulesContent.innerHTML=RULES[key]||'<p>Geen regels beschikbaar.</p>';els.rulesModal.classList.remove('hidden');els.rulesModal.setAttribute('aria-hidden','false')}
   function closeRules(){els.rulesModal.classList.add('hidden');els.rulesModal.setAttribute('aria-hidden','true')}
-  function leaveRoom(){
+  function closeLeavePrompt(){els.leaveGameModal.classList.add('hidden');els.leaveGameModal.setAttribute('aria-hidden','true')}
+  function requestLeaveRoom(){if(!state.room)return false;closeMobileGameMenu();if(getRoomFromPath()!==state.room.id)history.pushState({},'',`/room/${state.room.id}`);const active=state.room.status!=='lobby',name=state.room.gameMeta?.name||GAME_NAMES[state.room.gameKey]||'dit spel';els.leaveGameTitle.textContent=active?'Spel verlaten?':'Game verlaten?';els.leaveGamePromptText.textContent=active?`Weet je zeker dat je ${name} wilt verlaten? Je kunt een lopend spel later via de lobby hervatten.`:`Weet je zeker dat je de game van ${name} wilt verlaten?`;els.leaveGameModal.classList.remove('hidden');els.leaveGameModal.setAttribute('aria-hidden','false');requestAnimationFrame(()=>els.cancelLeaveGameButton.focus());return false}
+  function leaveRoom({confirmed=false}={}){
+    if(state.room&&!confirmed)return requestLeaveRoom();
+    closeLeavePrompt();
     state.roomStateBlocked=true;state.expectedRoomId=null;state.directRoomId=null;
     if(state.activeGameBodyClass)document.body.classList.remove(state.activeGameBodyClass);state.activeGameBodyClass=null;state.room=null;state.previousRoom=null;state.selection=null;state.renderedRoomId=null;state.renderedGameRevision=-1;
     history.replaceState({},'', '/');showHome();
-    socket.emit('room:leave',{},()=>{state.roomStateBlocked=false});
+    socket.emit('room:leave',{},()=>{state.roomStateBlocked=false});return true;
   }
   function requestRematch(button){
     if(button){button.disabled=true;button.textContent='Starten…'}
@@ -552,32 +565,40 @@ const socket = window.io();
   els.startGameButton.onclick=()=>socket.emit('room:start',{},handleAck);
   els.headToHeadGame.onchange=()=>{if(state.viewedProfileUsername)loadHeadToHead(state.viewedProfileUsername,els.headToHeadGame.value)};
   els.rulesButton.onclick=()=>openRules();
+  els.mobileGameRulesButton.onclick=()=>{closeMobileGameMenu();openRules()};
+  els.mobileGameMenuButton.onclick=(event)=>{event.stopPropagation();toggleMobileGameMenu()};
+  els.mobileGameLeaveButton.onclick=()=>leaveRoom();
+  els.mobileGameLeaveMenuButton.onclick=()=>{closeMobileGameMenu();leaveRoom()};
   els.closeRulesButton.onclick=closeRules;
   els.rulesModal.onclick=(e)=>{if(e.target===els.rulesModal)closeRules()};
+  els.cancelLeaveGameButton.onclick=closeLeavePrompt;
+  els.confirmLeaveGameButton.onclick=()=>leaveRoom({confirmed:true});
+  els.leaveGameModal.onclick=(e)=>{if(e.target===els.leaveGameModal)closeLeavePrompt()};
 
   els.mobilePlayButton.onclick=()=>{
     if(state.room)return leaveRoom();
     setRoute('/');showHome();
   };
   els.mobileLobbyButton.onclick=()=>{
-    if(state.room)return toast('Verlaat eerst de room.');
+    if(state.room)return toast('Verlaat eerst de game.');
     setRoute('/lobby');showOpenLobby();
   };
   els.mobileLeaderboardButton.onclick=()=>{
-    if(state.room)return toast('Verlaat eerst de room.');
+    if(state.room)return toast('Verlaat eerst de game.');
     setRoute('/leaderboard');showLeaderboard('');
   };
   els.mobileProfileButton.onclick=()=>{
-    if(state.room)return toast('Verlaat eerst de room.');
+    if(state.room)return toast('Verlaat eerst de game.');
     if(!state.authUser){openAccount();return}
     setRoute(`/profile/${encodeURIComponent(state.authUser.username)}`);
     showProfile(state.authUser.username);
   };
 
-  els.lobbyBrowserButton.onclick=()=>{if(state.room)return toast('Verlaat eerst de room.');setRoute('/lobby');showOpenLobby()};
+  els.lobbyBrowserButton.onclick=()=>{if(state.room)return toast('Verlaat eerst de game.');setRoute('/lobby');showOpenLobby()};
   els.refreshRoomsButton.onclick=loadOpenRooms;
   els.lobbyGuestName.oninput=()=>{if(!state.authUser){state.guestName=normalizeName(els.lobbyGuestName.value);els.lobbyIdentityText.textContent=state.guestName||'Guest'}};
-  els.soundButton.onclick=()=>{state.soundMuted=!state.soundMuted;localStorage.setItem('minigames.soundMuted',state.soundMuted?'1':'0');updateSoundButton();if(!state.soundMuted){ensureAudio();sound('turn')}};
+  els.soundButton.onclick=toggleSound;
+  els.mobileGameSoundButton.onclick=()=>{toggleSound();closeMobileGameMenu()};
   els.installButton.onclick=async()=>{
     if(state.deferredInstallPrompt){
       state.deferredInstallPrompt.prompt();
@@ -587,12 +608,14 @@ const socket = window.io();
     const isiOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
     toast(isiOS?'Safari: Deel → Zet op beginscherm.':'Gebruik het browsermenu → App installeren / Toevoegen aan beginscherm.');
   };
-  els.leaderboardButton.onclick=()=>{if(state.room)return toast('Verlaat eerst de room.');setRoute('/leaderboard');showLeaderboard('')};
+  els.leaderboardButton.onclick=()=>{if(state.room)return toast('Verlaat eerst de game.');setRoute('/leaderboard');showLeaderboard('')};
   els.leaderboardGame.onchange=()=>{const game=els.leaderboardGame.value;showLeaderboard(game)};
   els.accountButton.onclick=openAccount;
   els.homeAccountButton.onclick=openAccount;
   els.closeAccountButton.onclick=closeAccount;
   els.accountModal.onclick=(e)=>{if(e.target===els.accountModal)closeAccount()};
+  els.showRegisterButton.onclick=()=>{els.loggedOutAccount.classList.add('mobile-register-open');els.showRegisterButton.setAttribute('aria-expanded','true');els.registerUsername.focus()};
+  els.showLoginButton.onclick=()=>{els.loggedOutAccount.classList.remove('mobile-register-open');els.showRegisterButton.setAttribute('aria-expanded','false');els.loginUsername.focus()};
 
   els.loginForm.onsubmit=async(e)=>{
     e.preventDefault();
@@ -610,6 +633,8 @@ const socket = window.io();
   els.myProfileButton.onclick=()=>{if(!state.authUser)return;closeAccount();setRoute(`/profile/${encodeURIComponent(state.authUser.username)}`);showProfile(state.authUser.username)};
 
   document.addEventListener('pointerdown',()=>ensureAudio(),{once:true});
+  document.addEventListener('click',(event)=>{if(!els.mobileGameHeader.contains(event.target))closeMobileGameMenu()});
+  window.addEventListener('beforeunload',(event)=>{if(state.room){event.preventDefault();event.returnValue=''}});
   window.addEventListener('beforeinstallprompt',(event)=>{event.preventDefault();state.deferredInstallPrompt=event;updateInstallButtonVisibility()});
   window.addEventListener('appinstalled',()=>{state.deferredInstallPrompt=null;updateInstallButtonVisibility();toast('Pluto is geïnstalleerd.')});
   window.matchMedia?.('(display-mode: standalone)').addEventListener?.('change', updateInstallButtonVisibility);
@@ -618,6 +643,7 @@ const socket = window.io();
     window.addEventListener('load', async () => {
       try {
         const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.9.1', {
+        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.11.13', {
           updateViaCache:'none'
         });
         await registration.update();
@@ -635,7 +661,7 @@ const socket = window.io();
       } catch (_) {}
     });
   }
-  document.addEventListener('keydown',(e)=>{if(e.key==='Escape'){closeRules();closeAccount()}});
+  document.addEventListener('keydown',(e)=>{if(e.key==='Escape'){closeMobileGameMenu();closeRules();closeAccount();closeLeavePrompt()}});
   els.brandButton.onclick=()=>{
     if(state.room)return leaveRoom();
     setRoute('/');showHome();

@@ -1,3 +1,4 @@
+@media(min-width:761px){#gameStage:has(.pest-top){max-width:900px}}
 .pest-top{display:flex;gap:18px;align-items:center;justify-content:center;min-height:170px}
 .pest-direction{font-size:32px;color:var(--muted)}
 .pesten-fan .playing-card{margin-right:-17px}

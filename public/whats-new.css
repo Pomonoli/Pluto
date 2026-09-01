@@ -1,0 +1,14 @@
+.whats-new-backdrop{z-index:1100}
+.whats-new-modal{width:min(520px,100%)}
+.whats-new-content{display:grid;gap:16px}
+.whats-new-section{padding:14px 16px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.035)}
+.whats-new-section h3{margin:0 0 8px;font-size:14px}
+.whats-new-section ul{margin:0;padding-left:20px;display:grid;gap:6px;color:var(--muted);font-size:13px;line-height:1.45}
+.whats-new-section li::marker{color:var(--accent)}
+.whats-new-actions{display:flex;justify-content:flex-end;margin-top:18px}
+.whats-new-actions .primary{min-width:110px}
+@media(max-width:640px){
+  .whats-new-modal{max-height:min(78dvh,640px);overflow:auto}
+  .whats-new-section{padding:12px 13px}
+  .whats-new-actions .primary{width:100%}
+}

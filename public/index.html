@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#1d2148">
+  <meta name="theme-color" content="#cf641f">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Pluto">
@@ -11,21 +11,62 @@
   <link rel="manifest" href="/manifest.webmanifest?v=1.9.1">
   <link rel="apple-touch-icon" href="/icons/icon-192-v2.png?v=1.9.1">
   <link rel="stylesheet" href="/styles.css?v=1.9.1">
+  <script>
+    (() => {
+      const allowed = new Set(['pluto-1-7-3','pluto-1-8-0']);
+      const saved = localStorage.getItem('pluto.theme');
+      document.documentElement.dataset.theme = allowed.has(saved) ? saved : 'pluto-1-8-0';
+    })();
+  </script>
+  <link rel="manifest" href="/manifest.webmanifest?v=1.11.13">
+  <link rel="apple-touch-icon" href="/icons/icon-192-v2.png?v=1.11.13">
+  <link rel="stylesheet" href="/styles.css?v=1.11.13">
+  <link rel="stylesheet" href="/settings.css?v=1.11.13">
+  <link rel="stylesheet" href="/themes/pluto-1.8.0.css?v=1.11.13">
+  <style>
+    html[data-theme="pluto-1-8-0"] #recentGames .recent-game-button{box-shadow:none}
+    @media(max-width:760px){
+      html[data-theme="pluto-1-8-0"] body:not(.game-active) .topbar{
+        min-height:112px;
+        padding:calc(max(10px,env(safe-area-inset-top)) + 4px) max(18px,env(safe-area-inset-right)) 16px max(18px,env(safe-area-inset-left));
+      }
+      html[data-theme="pluto-1-8-0"] body:not(.game-active) .brand-mark,
+      html[data-theme="pluto-1-8-0"] body:not(.game-active) .brand-mark-img{width:48px;height:48px}
+      html[data-theme="pluto-1-8-0"] body:not(.game-active) .brand-copy strong{font-size:1.7rem}
+      html[data-theme="pluto-1-8-0"] body:not(.game-active) .brand-copy small{margin-top:4px}
+    }
+  </style>
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
       <button class="brand-button" id="brandButton" type="button" aria-label="Naar Pluto home">
         <span class="brand-mark" aria-hidden="true"><img class="brand-mark-img" src="/assets/pluto-logo-v2.png?v=1.9.1" alt=""></span>
+        <span class="brand-mark" aria-hidden="true"><img class="brand-mark-img" src="/assets/pluto-logo-v2.png?v=1.11.13" alt=""></span>
         <span class="brand-copy"><strong>Pluto</strong><small>gaming space</small></span>
       </button>
       <div class="top-actions">
         <button class="ghost" id="lobbyBrowserButton" type="button">Lobby</button>
         <button class="ghost" id="leaderboardButton" type="button">Leaderboard</button>
-        <button class="ghost sound-toggle" id="soundButton" type="button" aria-pressed="false" aria-label="Geluid uitzetten" title="Geluid uitzetten"></button>
+        <button class="ghost settings-toggle" id="settingsButton" type="button" aria-label="Instellingen" aria-haspopup="dialog" aria-expanded="false" title="Instellingen">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"></path></svg>
+        </button>
         <button class="ghost hidden" id="installButton" type="button">App</button>
         <button class="ghost" id="accountButton" type="button">Inloggen</button>
         <button class="ghost hidden" id="rulesButton" type="button">Spelregels</button>
+      </div>
+    </header>
+
+    <header class="mobile-game-header" id="mobileGameHeader" aria-label="Spelnavigatie">
+      <button class="mobile-game-leave" id="mobileGameLeaveButton" type="button" aria-label="Spel verlaten">←</button>
+      <strong class="mobile-game-name" id="mobileGameName">Spel</strong>
+      <div class="mobile-game-menu-wrap">
+        <button class="mobile-game-menu-button" id="mobileGameMenuButton" type="button" aria-label="Spelmenu" aria-haspopup="true" aria-expanded="false">•••</button>
+        <div class="mobile-game-menu hidden" id="mobileGameMenu">
+          <button id="mobileGameRulesButton" type="button">Spelregels</button>
+          <button id="mobileGameSoundButton" type="button">Geluid uit</button>
+          <button class="danger" id="mobileGameLeaveMenuButton" type="button">Spel verlaten</button>
+        </div>
       </div>
     </header>
 
@@ -40,9 +81,14 @@
         </div>
 
         <div id="inviteBox" class="invite-box hidden">
-          <div><span class="eyebrow">UITNODIGING</span><strong id="inviteText">Room</strong></div>
-          <button class="primary" id="joinInviteButton" type="button">Join room</button>
+          <div><span class="eyebrow">UITNODIGING</span><strong id="inviteText">Game</strong></div>
+          <button class="primary" id="joinInviteButton" type="button">Join game</button>
         </div>
+
+        <section id="resumeGameSection" class="resume-game-section hidden">
+          <div class="section-heading compact-heading"><div><span class="eyebrow">DOORGAAN MET SPELEN</span></div></div>
+          <div id="resumeGames" class="resume-game-list"></div>
+        </section>
 
         <section id="recentGamesSection" class="recent-games-section hidden">
           <div class="section-heading compact-heading"><div><span class="eyebrow">RECENT</span></div></div>
@@ -60,8 +106,6 @@
 
       </section>
 
-
-
       <section id="lobbyBrowserView" class="view hidden">
         <div id="lobbyIdentityBar" class="panel lobby-identity-bar hidden" aria-hidden="true">
           <div>
@@ -75,12 +119,12 @@
         </div>
 
         <div class="section-heading compact-heading lobby-rooms-heading">
-          <div><h1>Beschikbare rooms</h1><span class="badge" id="openRoomCount">0</span></div>
+          <div><h1>Beschikbare games</h1><span class="badge" id="openRoomCount">0</span></div>
           <button class="ghost" id="refreshRoomsButton" type="button">Vernieuwen</button>
         </div>
 
         <div id="openRoomsContent" class="open-room-grid">
-          <div class="panel"><p class="muted">Rooms laden…</p></div>
+          <div class="panel"><p class="muted">Games laden…</p></div>
         </div>
       </section>
 
@@ -137,6 +181,7 @@
             <section id="lobbySection" class="panel">
               <div class="panel-heading"><div><span class="eyebrow">LOBBY</span><h2>Spelers</h2></div><span class="badge" id="playerCountBadge">1/4</span></div>
               <div id="lobbyPlayers" class="lobby-players"></div>
+              <div id="gameLobbyOptions"></div>
               <div id="hostControls" class="host-controls hidden"><button class="secondary" id="addNpcButton" type="button">+ NPC</button><button class="primary" id="startGameButton" type="button">Start spel</button></div>
               <p id="lobbyHint" class="muted"></p>
             </section>
@@ -154,6 +199,41 @@
     </main>
   </div>
 
+  <div class="modal-backdrop hidden" id="settingsModal" aria-hidden="true">
+    <div class="modal settings-modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="modal-heading">
+        <div>
+          <span class="eyebrow">PLUTO</span>
+          <h2 id="settingsTitle">Instellingen</h2>
+        </div>
+        <button class="ghost" id="closeSettingsButton" type="button">Sluiten</button>
+      </div>
+
+      <div class="settings-list">
+        <div class="settings-row">
+          <div>
+            <h3>Geluid</h3>
+            <p>Zet de geluidseffecten van Pluto aan of uit.</p>
+          </div>
+          <button class="ghost sound-toggle settings-sound-button" id="soundButton" type="button" aria-pressed="false" aria-label="Geluid uitzetten" title="Geluid uitzetten"></button>
+        </div>
+
+        <div class="settings-row">
+          <div>
+            <h3>Thema</h3>
+            <p>Kies welke Pluto-skin op dit toestel actief is.</p>
+          </div>
+          <div class="settings-control">
+            <label for="themeSelect">Skin</label>
+            <select id="themeSelect">
+              <option value="pluto-1-8-0">Light theme</option>
+              <option value="pluto-1-7-3">Classic theme</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="modal-backdrop hidden" id="accountModal" aria-hidden="true">
     <div class="modal account-modal" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
@@ -175,12 +255,15 @@
             <button class="primary" type="submit">Inloggen</button>
           </form>
 
+          <button id="showRegisterButton" class="secondary mobile-register-toggle" type="button" aria-expanded="false">Account maken</button>
+
           <form id="registerForm" class="auth-form">
             <h3>Account maken</h3>
             <label>Username<input id="registerUsername" autocomplete="username" maxlength="18"></label>
             <label>Wachtwoord<input id="registerPassword" type="password" autocomplete="new-password" maxlength="128"></label>
             <div class="input-hint">Username: 3-18 tekens. Wachtwoord: minstens 8.</div>
             <button class="secondary" type="submit">Account maken</button>
+            <button id="showLoginButton" class="ghost mobile-login-toggle" type="button">Terug naar inloggen</button>
           </form>
         </div>
       </div>
@@ -210,6 +293,16 @@
     </div>
   </div>
 
+  <div class="modal-backdrop leave-game-backdrop hidden" id="leaveGameModal" aria-hidden="true">
+    <div class="modal leave-game-modal" role="alertdialog" aria-modal="true" aria-labelledby="leaveGameTitle" aria-describedby="leaveGamePromptText">
+      <div class="leave-game-icon" aria-hidden="true">←</div>
+      <span class="eyebrow">ACTIEF SPEL</span>
+      <h2 id="leaveGameTitle">Spel verlaten?</h2>
+      <p id="leaveGamePromptText">Weet je zeker dat je dit spel wilt verlaten?</p>
+      <div class="leave-game-actions"><button class="secondary" id="cancelLeaveGameButton" type="button">Blijven</button><button class="leave-game-confirm" id="confirmLeaveGameButton" type="button">Spel verlaten</button></div>
+    </div>
+  </div>
+
   <nav class="mobile-nav" id="mobileNav" aria-label="Hoofdnavigatie">
     <button class="mobile-nav-item active" id="mobilePlayButton" type="button" data-nav="play" aria-label="Speel">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10-6.5z"/></svg><span>Speel</span>
@@ -228,5 +321,9 @@
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
   <script src="/socket.io/socket.io.js"></script>
   <script type="module" src="/app.js?v=1.9.1"></script>
+  <script defer src="/theme.js?v=1.11.13"></script>
+  <script defer src="/settings.js?v=1.11.13"></script>
+  <script type="module" src="/app.js?v=1.11.13"></script>
+  <script type="module" src="/js/home-game-filter.js?v=1.11.13"></script>
 </body>
 </html>

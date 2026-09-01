@@ -25,6 +25,161 @@
 - Een vrije kaart upgraden geeft er blijvend +25% van zijn oorspronkelijke waarde bij per niveau.
 - De eerste twee upgrades van een vast gebouw doen op zichzelf niets; de derde (en opnieuw de zesde) ontketent een stapelbare gebeurtenis die Attack, Defence en Inkomen permanent vermenigvuldigt. Science geeft +30% Attack/+20% Inkomen/+10% Defence; Religie en Cultuur geven allebei +30% Inkomen/+20% Defence/+10% Attack.
 - Nieuwe regressietests bewaken de tijdperkgrens op upgrades, de +25%-schaling en de stapelbare gebeurtenis.
+## v1.11.13 — Passende gamebreedtes voor browser en tablet
+
+- Alle actieve games gebruiken vanaf 761px een gecentreerde gamecanvas van maximaal 1180px.
+- Panelen, handen, kaarten en actierijen blijven binnen de beschikbare schermbreedte.
+- Compacte spellen zoals Age of Civilization, Santorini, Stratego, Quoridor en Solitaire gebruiken kleinere spel-eigen maxima.
+- Brede bordspellen behouden voldoende ruimte zonder over ultrabrede schermen uit te rekken.
+- De mobiele layout tot en met 760px blijft volledig ongewijzigd.
+
+## v1.11.12 — Consistente lobbyterminologie
+
+- Alle zichtbare lobbyteksten gebruiken voortaan `game` en `games` in plaats van `room` en `rooms`.
+- Het lobbyoverzicht, lege toestand, uitnodigingen, hervatbare games en join-knoppen zijn aangepast.
+- Gamecodes, vertrekbevestigingen, navigatiemeldingen en serverfouten gebruiken dezelfde terminologie.
+- Interne roomroutes en socket-events blijven ongewijzigd voor technische compatibiliteit.
+
+## v1.11.11 — Carcassonne-burgers en uniforme lobbybanner
+
+- De Carcassonne-lobby heeft onder de tegelkeuze een slider voor het aantal burgers per speler.
+- De slider gebruikt standaard 7 burgers en kan door de host worden ingesteld van 1 tot 12.
+- De gekozen hoeveelheid geldt voor menselijke spelers en NPC's en blijft behouden bij een rematch.
+- Alle game-lobby's gebruiken nu dezelfde hoogte, branding en subtiele ruimteachtergrond als de Home-banner.
+- Actieve games behouden hun bestaande compacte gameheader.
+
+## v1.11.10 — Carcassonne spelduur en Home-banner
+
+- De Carcassonne-host kan in de lobby kiezen uit 72 tegels (standaard), 36 tegels (short) of 18 tegels (blitz).
+- De gekozen tegelset blijft behouden bij het starten en bij een rematch.
+- Iedere wachtende speler ziet vanaf de beurt direct na zijn eigen beurt al de verwachte volgende tegel.
+- De tegelpreview toont compact hoeveel spelers nog voor jou aan de beurt komen.
+- De oranje Home-banner heeft een subtiele planeet, ringen, gloed en sterren gekregen zonder de bestaande hoogte te wijzigen.
+
+## v1.11.9 — Mobiele spelervaring
+
+- Actieve games gebruiken op mobiel één compacte oranje header met terugknop, gamenaam en een menu voor spelregels en geluid.
+- Interne vertrekacties tonen een visuele Pluto-bevestiging met duidelijke keuzes om te blijven of het spel te verlaten.
+- Hervatbare games verschijnen prominent op Home als `Doorgaan met spelen`.
+- Recente games scrollen vloeiender met horizontale snap en de spelersfilter heeft een touch-target van minstens 44 × 44 px.
+- Profielstatistieken gebruiken compacte mobiele kaarten en leaderboards passen zonder horizontaal scrollen.
+- Op mobiel staat inloggen centraal en is `Account maken` een secundaire flow.
+- Safe areas, modals, spacing, interne game-scroll en algemene mobiele touch-targets zijn verder verfijnd.
+
+## v1.11.8 — Carcassonne vult schermhoogte
+
+- Het Carcassonne-speelveld gebruikt op mobiel alle resterende hoogte van de gamecontainer.
+- De oude vaste `100dvh - 300px`-hoogte en 430px-limiet zijn verwijderd voor actieve mobiele games.
+- Titel, spelers en tegelbediening blijven vast; alleen het bord groeit of krimpt met de beschikbare schermruimte.
+
+## v1.11.7 — Minimale game-header
+
+- Tijdens actieve games op mobiel klapt de oranje header terug tot een minimale exit-strip.
+- Alleen het klikbare Pluto-logo blijft zichtbaar zodat spelers snel naar Home kunnen terugkeren en de game vrijwel het volledige scherm gebruikt.
+
+## v1.11.6 — Compactere mobiele Light-header
+
+- De oranje banner op mobiele niet-game-schermen is lager gemaakt zodat Home meer verticale ruimte overhoudt.
+- Logo, titel en verticale padding zijn licht verkleind; actieve rooms en games behouden hun bestaande headerhoogte.
+
+## v1.11.5 — Recente gamekaarten zonder schaduw
+
+- De schaduw onder de recente gamekaarten op Home is verwijderd in het Light theme.
+
+## v1.11.4 — Minor carcassonne fixes
+
+- Landbouwer placement in Carcassonne verbeterd.
+
+## v1.11.3 — Light theme en schermvullende games
+
+- Het oranje Light theme is volledig afgewerkt en voortaan standaard; Classic blijft beschikbaar via Instellingen.
+- Lobby's en actieve games gebruiken de lichte stijl, waarbij gamepanelen de beschikbare ruimte onder de header volledig benutten.
+- De mobiele header is compacter en blijft staan; de onderste navigatie sluit schermbreed aan op de onderrand.
+- Scores, chips, spelersnamen en spelregels hebben sterker contrast in het Light theme.
+- Donkere vaste spelpanelen en speelvelden in onder meer Age of Civilization, Carcassonne, Cluedo, Blackjack en Ticket to Ride zijn aangepast aan het Light theme.
+- Cluedo-kaarten en de definitieve beschuldigingsknop zijn beter leesbaar.
+- Profielstatistieken en recente matches blijven op mobiel binnen het scherm en scrollen alleen wanneer dat echt nodig is.
+
+## v1.11.2 — Homefilter hersteld
+
+- Een zichzelf activerende `MutationObserver` in de spelersfilter is idempotent gemaakt.
+- Gamecards, navigatieknoppen en responsive device emulation blokkeren niet langer na het renderen van Home.
+- Alle frontend-cacheverwijzingen zijn verhoogd zodat browsers het defecte 1.11.1-filterbestand niet hergebruiken.
+- Een regressietest bewaakt dat de heading-observer alleen een werkelijk aanwezige klasse verwijdert.
+- Releasechecks zijn bijgewerkt voor alle zeventien games.
+
+## v1.11.1 — PWA-updatepopup
+
+- De geïnstalleerde PWA controleert bij openen welke gebruikersrelevante wijzigingen sinds het vorige bezoek zijn toegevoegd.
+- Nieuwe games, nieuwe features en verbeteringen worden over meerdere gemiste releases heen samengevoegd in drie compacte categorieën.
+- Ingelogde accounts bewaren de laatst geziene versie centraal in SQLite; gasten bewaren die versie lokaal op hun toestel.
+- Bestaande gebruikers krijgen bij deze eerste rollout stil een 1.11.1-baseline zodat er geen historische changelogdump verschijnt.
+- Wanneer er geen nieuwe items zijn, verschijnt expliciet geen popup en wordt een versie zonder gebruikersnieuws stil als gezien verwerkt.
+- `src/updates.js` is voortaan de centrale catalogus voor gebruikerszichtbare release-items.
+
+## v1.11.0 — Cascadia
+
+- Cascadia toegevoegd voor 2 tot 4 spelers met NPC-ondersteuning.
+- Habitattegels en dieren worden via een gedeelde markt gedraft en in een eigen hexagonaal ecosysteem geplaatst.
+- Dierpatronen, habitatcorridors en habitatmeerderheden bepalen de eindscore.
+- Natuurfiches ondersteunen marktcombinaties en het verversen van dieren.
+
+## v1.10.0 — Kingdomino
+
+- Kingdomino toegevoegd voor 2 tot 4 spelers met NPC-ondersteuning.
+- Domino's worden in nummerorde gedraft en moeten geldig aan hetzelfde terrein of het kasteel aansluiten.
+- Gebieden scoren als aantal vakken × aantal kronen en het koninkrijk blijft binnen de toegestane afmetingen.
+- De 2-spelervariant gebruikt twee koningen per speler; bij 3 spelers wordt de vierde domino per rij afgelegd.
+
+## v1.9.0 — 7 Wonders Duel
+
+- 7 Wonders Duel toegevoegd als tweespelersgame met NPC-ondersteuning.
+- De kaartpiramide, grondstoffen, munten, militaire vooruitgang, wetenschap en wonderen worden server-side beheerd.
+- NPC's kunnen zelfstandig volledige duels spelen.
+
+## v1.8.3 — Gamefilter en alfabetische sortering
+
+- Op Home kan de gamelijst via een compacte filterknop op aantal spelers worden gefilterd.
+- Games worden alfabetisch gesorteerd op hun zichtbare displaynaam in plaats van op de interne map- of gamekey.
+
+## v1.8.2 — Leaderboard en compacte matchgeschiedenis
+
+- Het algemene leaderboard toont voortaan `Wins` vóór `Games`, gevolgd door `Winrate`.
+- Profielen tonen standaard maximaal vijf recente matches.
+- Bij meer dan vijf matches verschijnt `Toon meer`; na een klik worden de overige matches toegevoegd.
+- Frontend-, server- en PWA-cacheversies zijn bijgewerkt naar 1.8.2.
+- Nieuwe regressietests bewaken de kolomvolgorde en de limiet van vijf recente matches.
+
+## v1.8.1 — Centrale instellingenpopup
+
+- De losse mute-knop in de header is vervangen door een instellingen-tandwiel.
+- Geluid en thema staan samen in één compacte instellingenpopup die op desktop en mobiel beschikbaar blijft.
+- De themakeuze is uit Profiel verwijderd; Profiel bevat opnieuw alleen account- en spelstatistieken.
+- De bestaande lokale opslag voor geluidsstatus en skin blijft behouden, zodat gebruikers hun huidige voorkeur niet verliezen.
+- De PWA-cache bevat de nieuwe settings-assets en regressietests bewaken de instellingenpopup en versiegebonden frontendassets.
+
+## v1.8.0 — Thema's en oranje preview-skin
+
+- Onder Profiel staat voortaan een themakeuze waarmee skins zonder frontendkopie kunnen worden gewisseld.
+- `Pluto 1.7.3` blijft de standaard skin; `Pluto 1.8.0 Preview` voegt een lichte interface met een oranje basiskleurenpalet toe.
+- In de preview-skin is de volledige gamekaart klikbaar en toetsenbordtoegankelijk; de aparte `Nieuw spel`-actie wordt verborgen en een pijltje rechts verduidelijkt de navigatie.
+- Recente games verbergen in de preview de tekst `Nieuw spel` en behouden de volledige kaart als startactie.
+- De gekozen skin wordt lokaal per toestel onthouden en de browser-theme-color volgt de actieve skin.
+- De PWA-cache bevat de nieuwe theme-assets en een regressietest bewaakt de selector, standaardskin en kaartinteractie.
+
+## v1.7.3 — Ticket to Ride leesbaarheid en NPC-kaartkeuze
+
+- NPC's kiezen voortaan nuttige open treinkaarten en jokers wanneer die hun nog vrije routes helpen; de gesloten stapel blijft de fallback.
+- Het Ticket to Ride-speelveld ondersteunt slepen, pinch-zoom en muiswielzoom, met een per-room bewaarde zoompositie zoals bij Carcassonne.
+- Stadnamen staan in compacte labels en routekosten/spelersbadges zijn van de routemiddens weggezet om overlap te verminderen.
+- Bezette routebadges hebben naast de witte binnenrand een duidelijke buitenrand in de kleur van de speler.
+- De vijf open treinkaarten plus stapel en de zes handkleuren gebruiken vaste zeskolomsrijen zodat ze op één schermbreedte blijven.
+- Een regressietest bewaakt dat NPC's daadwerkelijk de open treinkaartenmarkt gebruiken.
+
+## v1.7.2 — Kleurrijke game-iconen
+
+- Cluedo, Hartenjagen, Hofslag, Pesten en Solitaire gebruiken voortaan gekleurde emoji-iconen in het gameoverzicht.
+- Achtergebleven dubbele 1.6.x-versiereferenties uit de Civilization-merge zijn verwijderd uit de frontend, service worker, serverstart en package metadata.
 
 ## v1.7.1 — Winnen op levenspunten
 
@@ -41,6 +196,14 @@
 - Gebouwen zijn uniek per speler en krijgen bij upgraden een naam passend bij het huidige tijdperk.
 - Torens beginnen op 100 in plaats van 20 levenspunten; zonder VP is er geen genezing meer. Overleven beide torens alle tijdperken, dan wint het meeste goud.
 - Nieuwe regressietests bewaken de upgrademechaniek, de unieke gebouwen, de driebeurtstructuur en de goudgebaseerde eindstand.
+## v1.6.3 — Solitaire-weergave en solo-leaderboard
+
+- Solitaire draw-3 toont de drie getrokken kaarten overlappend, waarbij alleen de bovenste kaart speelbaar is.
+- Na het spelen van kaarten blijven de overige kaarten uit dezelfde draw zichtbaar en correct speelbaar in volgorde.
+- Lange tableau-stacks verkleinen hun verticale overlap automatisch op lage schermen zodat de onderste kaart zichtbaar blijft.
+- Voltooide Solitaire-runs van ingelogde spelers tellen nu mee voor wins, beste score en het Solitaire-leaderboard.
+- De algemene regel die oefenmatches met minder dan twee menselijke spelers uitsluit, maakt voortaan expliciet uitzondering voor echte solo-games.
+- De GitHub-frontpage toont voortaan alleen de huidige release, de `.0`-release van de huidige minorreeks en de `.0.0`-release van de huidige majorreeks; volledige historie blijft in deze changelog.
 
 ## v1.6.2 — Vaste spelweergave
 

@@ -1,3 +1,4 @@
+@media(min-width:761px){#gameStage:has(.hof-board){max-width:1050px}}
 .hof-board{position:relative;height:590px;border:1px solid #252b34;border-radius:14px;background:#10141a}
 .hof-card{position:absolute;width:78px;height:106px;transform:translate(-50%,-50%);border:2px solid #d8d3c8;border-radius:11px;background:var(--card);color:var(--ink);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(0,0,0,.24)}
 .hof-card.face{border-color:var(--danger);box-shadow:0 0 0 2px rgba(217,74,74,.34),0 0 12px rgba(217,74,74,.22),0 6px 16px rgba(0,0,0,.24)}

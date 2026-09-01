@@ -1,0 +1,14 @@
+{
+  "key": "kingdomino",
+  "name": "Kingdomino",
+  "version": "1",
+  "description": "Bouw een 5x5-koninkrijk met domino-terreinen, verbind gebieden en scoor met kronen.",
+  "icon": "👑",
+  "badge": "2-4",
+  "actionLabel": "Nieuw spel",
+  "minPlayers": 2,
+  "maxPlayers": 4,
+  "supportsNpc": true,
+  "realtime": false,
+  "solo": false
+}

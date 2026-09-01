@@ -1,3 +1,4 @@
+@media(min-width:761px){#gameStage:has(.hearts-table){max-width:1000px}}
 .hearts-table{display:grid;grid-template-columns:1fr minmax(220px,340px);gap:14px;align-items:start}
 .hearts-trick{min-height:260px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;align-items:center}
 .trick-seat{border:1px solid var(--border);border-radius:10px;background:#12161c;padding:10px;height:142px;min-height:142px;overflow:hidden}

@@ -9,21 +9,32 @@ Age of Civilization heeft een lichter, warmer kleurenthema met meer kleur per ca
 ## Nieuw in versie 1.9.0
 
 Age of Civilization is nu speelbaar voor 2 tot 7 spelers. Voor tijdperk 1 kiest iedereen op zetvolgorde een unieke leider — Cleopatra, Alexander de Grote, Einstein, Gandhi, Bismarck, Lincoln of Achilles — die elk een vaste bonus geven. Aanvalsgolven verwerken voortaan een kloksgewijze ring: sneuvelt een speler, dan speelt de rest gewoon door. Vaste gebouwen zijn altijd upgradebaar, kaarten tonen hun bonus meteen op de tegel, en elk tijdperk heeft zijn eigen kleur- en iconenpalet.
+## Nieuw in versie 1.11.13
+
+Actieve games gebruiken in browser- en tabletweergave voortaan een begrensde, gecentreerde werkbreedte. Brede spellen blijven ruim en overzichtelijk, terwijl compacte bord- en kaartspellen kleinere passende maxima gebruiken. De mobiele weergave tot en met 760px blijft ongewijzigd.
+
+## Nieuw in versie 1.11.0
+
+**Cascadia** is toegevoegd voor 2 tot 4 spelers, inclusief NPC-ondersteuning. Kies iedere beurt een habitattegel en dier, bouw een eigen hexagonaal ecosysteem en scoor op dierpatronen, aaneengesloten habitatcorridors en habitatmeerderheden. Keystone-habitats leveren natuurfiches op waarmee je marktcombinaties kan mixen of dieren kan verversen.
 
 ## Nieuw in versie 1.0.0
 
 Alle games zijn ondergebracht in zelfstandige modules onder `games/`. Iedere game beheert daar zijn eigen serverlogica, client-entrypoint, metadata, spelregels en resultaten, en de server ontdekt deze mappen automatisch zonder een hardcoded gamelijst in de centrale registry.
+Actieve spellen gebruiken zoveel mogelijk de volledige schermhoogte zonder paginascroll. De ongebruikte chat en aparte vertrekknoppen zijn verwijderd; het Pluto-logo brengt je rechtstreeks terug naar Home.
 
 ## Games
 
 | Spel | Spelers | NPC's |
 | --- | ---: | :---: |
+| 7 Wonders Duel | 2 | Ja |
 | Age of Civilization | 2 | Ja |
 | Blackjack | 1-4 | Ja |
 | Carcassonne | 2-5 | Ja |
+| Cascadia | 2-4 | Ja |
 | Cluedo | 2-6 | Ja |
 | Hartenjagen | 4 | Ja |
 | Hofslag | 2-4 | Ja |
+| Kingdomino | 2-4 | Ja |
 | Minigolf | 1-4 | Ja |
 | Pesten | 2-4 | Ja |
 | Presidenten | 3-4 | Ja |
