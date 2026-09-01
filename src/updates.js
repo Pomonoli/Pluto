@@ -121,6 +121,15 @@ const RELEASES = [
     improvements:[
       'Games blijven in browser en tablet binnen een passende, gecentreerde breedte zonder de mobiele layout te wijzigen.'
     ]
+  },
+  {
+    version:'1.11.14',
+    features:[
+      'Age of Civilization ondersteunt nu 2 tot 7 spelers, unieke leiders en gevechten in een kring.'
+    ],
+    improvements:[
+      'Age of Civilization heeft vernieuwde vaste gebouwen, gebeurtenissen, upgradeprijzen, kaartinformatie en een lichtere spelweergave.'
+    ]
   }
 ];
 

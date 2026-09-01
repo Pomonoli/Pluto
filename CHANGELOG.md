@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.11.14 — Uitgebreid Age of Civilization
+
+- Age of Civilization ondersteunt nu 2 tot 7 spelers in plaats van uitsluitend twee spelers.
+- Voor het eerste tijdperk kiest iedere speler een unieke leider met een eigen permanente bonus.
+- Aanvalsgolven verlopen kloksgewijs in een kring; uitgeschakelde spelers vallen af en de rest speelt door.
+- Observatorium, Grote Tempel en Academie zijn vaste gebouwen met stapelbare gebeurtenissen bij mijlpalen.
+- Vrije gebouwen, vaste gebouwen en gebeurtenisstappen hebben herwerkte upgradeprijzen en bonussen.
+- Kaarten en gebouwen tonen hun actuele effecten direct en gebruiken duidelijkere categorie- en tijdperkkleuren.
+- De Civilization-interface is lichter, leesbaarder en compact ingericht voor grotere spelersgroepen.
+- Extra regressietests bewaken leiders, multiplayergevechten, eliminatie, upgrades en gebeurtenissen.
+
 ## v1.11.13 — Passende gamebreedtes voor browser en tablet
 
 - Alle actieve games gebruiken vanaf 761px een gecentreerde gamecanvas van maximaal 1180px.

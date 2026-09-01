@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.11.13
+## Nieuw in versie 1.11.14
 
-Actieve games gebruiken in browser- en tabletweergave voortaan een begrensde, gecentreerde werkbreedte. Brede spellen blijven ruim en overzichtelijk, terwijl compacte bord- en kaartspellen kleinere passende maxima gebruiken. De mobiele weergave tot en met 760px blijft ongewijzigd.
+Age of Civilization is uitgebreid naar 2 tot 7 spelers. Iedere speler kiest een unieke leider, gevechten verlopen in een kring en uitgeschakelde spelers vallen af terwijl de overige beschavingen doorspelen. Vaste gebouwen, gebeurtenissen, upgradeprijzen, kaartinformatie en de volledige lichte spelweergave zijn eveneens vernieuwd.
 
 ## Nieuw in versie 1.11.0
 
@@ -20,7 +20,7 @@ Actieve spellen gebruiken zoveel mogelijk de volledige schermhoogte zonder pagin
 | Spel | Spelers | NPC's |
 | --- | ---: | :---: |
 | 7 Wonders Duel | 2 | Ja |
-| Age of Civilization | 2 | Ja |
+| Age of Civilization | 2-7 | Ja |
 | Blackjack | 1-4 | Ja |
 | Carcassonne | 2-5 | Ja |
 | Cascadia | 2-4 | Ja |
