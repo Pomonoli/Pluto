@@ -15,17 +15,17 @@
       document.documentElement.dataset.theme = allowed.has(saved) ? saved : 'pluto-1-8-0';
     })();
   </script>
-  <link rel="manifest" href="/manifest.webmanifest?v=1.12.5">
-  <link rel="apple-touch-icon" href="/icons/icon-192-v2.png?v=1.12.5">
-  <link rel="stylesheet" href="/styles.css?v=1.12.5">
-  <link rel="stylesheet" href="/settings.css?v=1.12.5">
-  <link rel="stylesheet" href="/themes/pluto-1.8.0.css?v=1.12.5">
+  <link rel="manifest" href="/manifest.webmanifest?v=1.13.0">
+  <link rel="apple-touch-icon" href="/icons/icon-192-v2.png?v=1.13.0">
+  <link rel="stylesheet" href="/styles.css?v=1.13.0">
+  <link rel="stylesheet" href="/settings.css?v=1.13.0">
+  <link rel="stylesheet" href="/themes/pluto-1.8.0.css?v=1.13.0">
 </head>
-<body>
+<body class="auth-pending" aria-busy="true">
   <div class="app-shell">
     <header class="topbar">
       <button class="brand-button" id="brandButton" type="button" aria-label="Naar Pluto home">
-        <span class="brand-mark" aria-hidden="true"><img class="brand-mark-img" src="/assets/pluto-logo-v2.png?v=1.12.5" alt=""></span>
+        <span class="brand-mark" aria-hidden="true"><img class="brand-mark-img" src="/assets/pluto-logo-v2.png?v=1.13.0" alt=""></span>
         <span class="brand-copy"><strong>Pluto</strong><small>gaming space</small></span>
       </button>
       <div class="top-actions">
@@ -126,8 +126,18 @@
         <div class="stats-heading">
           <div>
             <span class="eyebrow">PROFIEL</span>
-            <h1 id="profileUsername">Speler</h1>
+            <div class="profile-name-row">
+              <h1 id="profileUsername">Speler</h1>
+              <button class="profile-edit-name hidden" id="showRenameButton" type="button" aria-label="Naam wijzigen" title="Naam wijzigen">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l11-11-4-4L4 16v4Zm9.5-13.5 4 4M14.5 5.5l2-2a1.4 1.4 0 0 1 2 0l2 2a1.4 1.4 0 0 1 0 2l-2 2"/></svg>
+              </button>
+            </div>
             <p class="hero-copy" id="profileSummary"></p>
+            <form class="rename-form hidden" id="renameForm">
+              <label for="renameUsername">Nieuwe naam</label>
+              <div><input id="renameUsername" autocomplete="username" maxlength="18"><button class="primary" type="submit">Opslaan</button><button class="ghost" id="cancelRenameButton" type="button">Annuleren</button></div>
+              <small>3-18 tekens; letters, cijfers, _ of -.</small>
+            </form>
           </div>
         </div>
 
@@ -209,7 +219,7 @@
           </div>
         </div>
       </div>
-      <p class="settings-version" aria-label="Huidige versie">Pluto v1.12.5</p>
+      <p class="settings-version" aria-label="Huidige versie">Pluto v1.13.0</p>
     </div>
   </div>
 
@@ -298,9 +308,9 @@
 
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
   <script src="/socket.io/socket.io.js"></script>
-  <script defer src="/theme.js?v=1.12.5"></script>
-  <script defer src="/settings.js?v=1.12.5"></script>
-  <script type="module" src="/app.js?v=1.12.5"></script>
-  <script type="module" src="/js/home-game-filter.js?v=1.12.5"></script>
+  <script defer src="/theme.js?v=1.13.0"></script>
+  <script defer src="/settings.js?v=1.13.0"></script>
+  <script type="module" src="/app.js?v=1.13.0"></script>
+  <script type="module" src="/js/home-game-filter.js?v=1.13.0"></script>
 </body>
 </html>

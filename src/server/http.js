@@ -158,6 +158,19 @@ function configureHttp(app, runtime) {
     res.json({ ok:true, rooms:runtime.openRoomSummaries({token,userId:user?.id||null}) });
   });
 
+  app.put('/api/account/username', (req, res) => {
+    const user = requireUser(req, res); if (!user) return;
+    try {
+      const result = authDb.changeUsername(user.id, req.body?.username);
+      if (!result.ok) return res.status(400).json(result);
+      const refreshed = authDb.getUserFromCookieHeader(req.headers.cookie);
+      res.json({ ok:true, user:publicUser(refreshed) });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ ok:false, error:'Naam wijzigen mislukt.' });
+    }
+  });
+
   app.get('/health', (_req, res) => {
     res.json({
       ok:true,

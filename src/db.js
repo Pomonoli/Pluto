@@ -371,6 +371,31 @@ function leaderboard(gameKey = null, limit = 100) {
   return rows;
 }
 
+function changeUsername(userId, usernameValue) {
+  const userCheck = validateUsername(usernameValue);
+  if (!userCheck.ok) return userCheck;
+  const current = db.prepare('SELECT id,username,username_key FROM users WHERE id = ?').get(userId);
+  if (!current) return { ok:false, error:'Account niet gevonden.' };
+  if (current.username === userCheck.username && current.username_key === userCheck.key) {
+    return { ok:true, user:{ id:current.id, username:current.username } };
+  }
+
+  db.exec('BEGIN IMMEDIATE');
+  try {
+    db.prepare('UPDATE users SET username = ?, username_key = ? WHERE id = ?')
+      .run(userCheck.username, userCheck.key, userId);
+    // Guest names remain snapshots; registered match rows follow the account name.
+    db.prepare('UPDATE match_players SET display_name = ? WHERE user_id = ?')
+      .run(userCheck.username, userId);
+    db.exec('COMMIT');
+    return { ok:true, user:{ id:Number(userId), username:userCheck.username } };
+  } catch (error) {
+    db.exec('ROLLBACK');
+    if (String(error.message).includes('UNIQUE')) return { ok:false, error:'Die username bestaat al.' };
+    throw error;
+  }
+}
+
 function gamePopularity(userId) {
   if (!userId) return [];
   return db.prepare(`
@@ -684,6 +709,7 @@ module.exports = {
   SESSION_COOKIE,
   register,
   login,
+  changeUsername,
   logoutByToken,
   getUserFromCookieHeader,
   sessionTokenFromCookie,

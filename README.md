@@ -2,13 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.12.5
+## Nieuw in versie 1.13.0
 
-Verlaten actieve games blijven maximaal twee uur hervatbaar, ook wanneer een singleplayergame leeg is. De kaart `Doorgaan met spelen` heeft een veilig kruisje om een volledig verlaten game definitief te sluiten. De lobby blijft automatisch bijwerken en heeft daarom geen overbodige knop `Vernieuwen` meer.
-
-## Nieuw in versie 1.11.0
-
-**Cascadia** is toegevoegd voor 2 tot 4 spelers, inclusief NPC-ondersteuning. Kies iedere beurt een habitattegel en dier, bouw een eigen hexagonaal ecosysteem en scoor op dierpatronen, aaneengesloten habitatcorridors en habitatmeerderheden. Keystone-habitats leveren natuurfiches op waarmee je marktcombinaties kan mixen of dieren kan verversen.
+Accountnamen kunnen voortaan veilig vanuit het profiel worden gewijzigd zonder verlies van sessie, statistieken of match history. Pluto wacht bij refresh op de sessiecheck, gebruikt tablet- en desktopruimte compacter in de volledige app en alle games, en Presidenten verdeelt `Jouw kaarten` zonder horizontale scroll. De Minigolf Map editor staat nu in de spellobby.
 
 ## Nieuw in versie 1.0.0
 

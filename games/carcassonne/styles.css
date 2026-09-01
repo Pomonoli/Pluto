@@ -1,3 +1,4 @@
+@media(min-width:761px){#gameStage:has(.carc-viewport){max-width:1100px}}
 .carc-dashboard{display:flex;gap:7px;overflow-x:auto;margin-bottom:10px}
 .carc-lobby-options{margin-top:14px;padding:12px;border:1px solid var(--border);border-radius:13px;background:var(--panel2)}
 .carc-lobby-options-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:9px}.carc-lobby-options-head strong{font-size:13px}.carc-lobby-options-head small{color:var(--muted);font-size:9px}

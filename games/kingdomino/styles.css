@@ -1,4 +1,4 @@
-#gameStage:has(.kingdomino-layout){max-width:1180px;margin:0 auto}
+#gameStage:has(.kingdomino-layout){max-width:980px;margin:0 auto}
 .kingdomino-meta{display:flex;align-items:center;gap:8px;margin:4px 0 8px;flex-wrap:wrap}
 .kingdomino-mode{font-size:12px;color:var(--muted,#8f96aa)}
 .kingdomino-players{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-bottom:10px}

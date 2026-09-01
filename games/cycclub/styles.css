@@ -1,3 +1,4 @@
+@media(min-width:761px){#gameStage:has(.cc-dashboard){max-width:1100px}}
 .cc-panel{margin-top:14px}
 .cc-summary{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-top:14px}
 .cc-summary-item{border:1px solid var(--border);border-radius:12px;background:var(--panel2);padding:10px;display:flex;flex-direction:column;gap:4px}

@@ -173,6 +173,18 @@ const RELEASES = [
     improvements:[
       'De automatisch verversende lobby heeft geen overbodige knop Vernieuwen meer.'
     ]
+  },
+  {
+    version:'1.13.0',
+    features:[
+      'Je kunt je echte, unieke accountnaam voortaan veilig wijzigen vanuit je profiel.',
+      'De Minigolf Map editor staat voortaan in de spellobby.'
+    ],
+    improvements:[
+      'Ingelogde spelers zien bij refresh geen login-scherm meer tijdens de sessiecheck.',
+      'Tablet- en desktopweergaves zijn in Pluto en alle games compacter, evenwichtiger en beter gecentreerd.',
+      'Presidenten verdeelt Jouw kaarten responsief over meerdere rijen zonder horizontale scroll.'
+    ]
   }
 ];
 

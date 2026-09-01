@@ -40,7 +40,7 @@ function renderPresidenten(room,game) {
     };
     row.append(n)
   });
-  hand.append(E('span','eyebrow','JOUW HAND'),row);
+  hand.append(E('span','eyebrow','JOUW KAARTEN'),row);
 
   if(mine&&!game.gameOver){
     const ar=E('div','action-row presidenten-actions');

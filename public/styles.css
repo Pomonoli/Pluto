@@ -637,6 +637,7 @@ body{
   overflow-x:hidden;
 }
 html,body{width:100%;max-width:100%;overflow-x:clip}
+.auth-pending #homeGuestBar,.auth-pending #accountButton,.auth-pending #mobileProfileButton{visibility:hidden!important}
 #roomView,.room-layout,.room-main,#gameSection,.game-panel,#gameStage,.table-surface{min-width:0;max-width:100%;width:100%}
 .room-main,#gameSection,.game-panel{overflow:hidden}
 .game-player-strip,.card-fan{max-width:100%}
@@ -1345,6 +1346,15 @@ body.game-active .game-panel{
 /* Browser/tablet game canvas: keep every plugin readable without stretching it
    across an ultrawide viewport. Mobile keeps its existing full-width layout. */
 @media(min-width:761px){
+  #homeView{width:min(100%,1120px);margin-inline:auto}
+  #lobbyBrowserView{width:min(100%,980px);margin-inline:auto}
+  #leaderboardView{width:min(100%,900px);margin-inline:auto}
+  #profileView{width:min(100%,1100px);margin-inline:auto}
+  body.room-active:not(.game-active) #roomView{width:min(100%,760px);margin-inline:auto}
+  .game-grid{grid-template-columns:repeat(auto-fit,minmax(285px,1fr))}
+  .open-room-grid{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+  .modal{width:min(680px,calc(100vw - 48px))}
+  .account-modal{width:min(720px,calc(100vw - 48px))}
   body.game-active #gameStage{
     align-self:center;
     width:min(100%,1180px);
@@ -1359,4 +1369,8 @@ body.game-active .game-panel{
     box-sizing:border-box;
   }
 }
+.profile-name-row{display:flex;align-items:center;gap:7px}.profile-name-row h1{margin-bottom:8px}.profile-edit-name{width:32px;min-width:32px;height:32px;min-height:32px;margin-top:-1px;padding:6px;display:grid;place-items:center;border-radius:50%;background:transparent;color:var(--muted)}.profile-edit-name:hover{color:var(--text);background:var(--panel2)}.profile-edit-name svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.rename-form{width:min(100%,440px);margin-top:10px;display:grid;gap:5px}.rename-form>label,.rename-form>small{color:var(--muted);font-size:10px;font-weight:800}.rename-form>div{display:grid;grid-template-columns:minmax(150px,1fr) auto auto;gap:7px}.rename-form input,.rename-form button{min-height:40px}
+@media(max-width:560px){.rename-form>div{grid-template-columns:1fr 1fr}.rename-form input{grid-column:1/-1}}
+@media(min-width:761px){.profile-name-row{max-width:100%}}
 /* Carcassonne */

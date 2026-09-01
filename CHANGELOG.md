@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.13.0 — Accountnamen en responsive polish
+
+- Ingelogde gebruikers zien na refresh direct hun homescreen zonder login-flash tijdens de sessiecheck.
+- Profielen hebben een veilige optie `Naam wijzigen`; username en unieke sleutel wijzigen op hetzelfde account terwijl sessies, statistieken, historie, teams en maps behouden blijven.
+- Minigolf toont de Map editor voortaan in de spellobby in plaats van op de Home-gamekaart.
+- Homescreen, navigatie, gamekaarten, lobby's, profielen, leaderboards en modals gebruiken op tablet en desktop compactere gecentreerde breedtes.
+- Alle speelvelden houden realistische maximale breedtes en benutten extra ruimte gericht, zonder de mobiele touch-layout te verslechteren.
+- `Jouw kaarten` in Presidenten verdeelt kaarten automatisch over responsieve rijen en scrollt niet langer horizontaal.
+
 ## v1.12.5 — Hervatbare verlaten games
 
 - Verlaten actieve games blijven maximaal twee uur hervatbaar, ook bij singleplayergames zonder verbonden speler.
