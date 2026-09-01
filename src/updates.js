@@ -121,6 +121,12 @@ const RELEASES = [
     improvements:[
       'Games blijven in browser en tablet binnen een passende, gecentreerde breedte zonder de mobiele layout te wijzigen.'
     ]
+  },
+  {
+    version:'1.12.0',
+    games:[
+      'The Deep Bleu C'
+    ]
   }
 ];
 

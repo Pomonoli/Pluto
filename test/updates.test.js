@@ -22,7 +22,7 @@ test('current version has no unseen changes', () => {
 
 test('missed releases are grouped instead of shown as version history', () => {
   const changes=updates.changesSince('1.9.0');
-  assert.deepEqual(changes.games,['Kingdomino','Cascadia']);
+  assert.deepEqual(changes.games,['Kingdomino','Cascadia','The Deep Bleu C']);
   assert.ok(changes.features.some((item) => item.includes('updatepopup')));
 });
 
@@ -34,7 +34,7 @@ test('first guest visit establishes a silent baseline', () => {
 
 test('guest with an older seen version gets only relevant grouped changes', () => {
   const payload=updates.payloadFor({since:'1.11.0'});
-  assert.deepEqual(payload.changes.games,[]);
+  assert.deepEqual(payload.changes.games,['The Deep Bleu C']);
   assert.equal(payload.changes.features.length,7);
   assert.equal(payload.changes.improvements.length,10);
   assert.ok(payload.changes.features.some((item)=>item.includes('Light theme')));

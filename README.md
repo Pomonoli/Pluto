@@ -2,13 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.11.13
+## Nieuw in versie 1.12.0
 
-Actieve games gebruiken in browser- en tabletweergave voortaan een begrensde, gecentreerde werkbreedte. Brede spellen blijven ruim en overzichtelijk, terwijl compacte bord- en kaartspellen kleinere passende maxima gebruiken. De mobiele weergave tot en met 760px blijft ongewijzigd.
-
-## Nieuw in versie 1.11.0
-
-**Cascadia** is toegevoegd voor 2 tot 4 spelers, inclusief NPC-ondersteuning. Kies iedere beurt een habitattegel en dier, bouw een eigen hexagonaal ecosysteem en scoor op dierpatronen, aaneengesloten habitatcorridors en habitatmeerderheden. Keystone-habitats leveren natuurfiches op waarmee je marktcombinaties kan mixen of dieren kan verversen.
+**The Deep Bleu C** is toegevoegd: een solo vis-RPG op een gestileerde, procedureel gegenereerde 200x200 kaart van Europa. Wandel tap-to-move via A*-pathfinding naar de kust, werp je lijn uit op water vlak naast je en haal je vangst binnen met tijdige taps. Verkoop vis bij De Vishandel en verzamel de eerste vier vissets (Polderrivieren, Kustwateren, Atlantische Diepzee en Middellandse Zee). Het Aquarium-Museum, de Handelsmarkt en het Hall of Fame-monument staan al zichtbaar op de kaart als voorproefje van latere fases.
 
 ## Nieuw in versie 1.0.0
 
@@ -35,6 +31,7 @@ Actieve spellen gebruiken zoveel mogelijk de volledige schermhoogte zonder pagin
 | Santorini | 2-4 | Ja |
 | Solitaire | 1 | Niet van toepassing |
 | Stratego | 2 | Ja |
+| The Deep Bleu C | 1 | Niet van toepassing |
 | Ticket to Ride | 2-5 | Ja |
 
 Minigolf bevat daarnaast een Map Editor voor eigen banen.

@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.12.0 — The Deep Bleu C (fase 1: kaart en vissen)
+
+- **The Deep Bleu C** is toegevoegd: een solo vis-RPG op een gestileerde, procedureel gegenereerde 200x200 kaart van Europa.
+- Tik op de kaart om automatisch te wandelen; de route wordt server-side met A* berekend.
+- Tik op water vlak naast je om je hengel uit te werpen, trek op tijd aan bij een beet en haal de vis binnen voor de lijn breekt.
+- De eerste vier vissets zijn speelbaar: Polderrivieren, Kustwateren, Atlantische Diepzee en Middellandse Zee, elk met vier vissoorten.
+- De Vishandel staat op de kaart en koopt je volledige vangst of losse vissen op, met een prijs die meeschaalt met het gewicht.
+- Het Aquarium-Museum, de Handelsmarkt en het Hall of Fame-monument staan al zichtbaar op de kaart als voorproefje van latere fases.
+
 ## v1.11.13 — Passende gamebreedtes voor browser en tablet
 
 - Alle actieve games gebruiken vanaf 761px een gecentreerde gamecanvas van maximaal 1180px.
