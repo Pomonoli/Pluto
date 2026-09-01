@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.12.0 — Isle of Skye, The Deep Bleu C en CycClub
+
+- Isle of Skye is toegevoegd voor 2 tot 4 spelers, met tegelprijzen, afleggen, onderlinge aankopen, eilandbouw en NPC's.
+- The Deep Bleu C is toegevoegd als solospel met een grote Europese kaart, routezoeking, vissen en verkoop bij De Vishandel.
+- CycClub is toegevoegd voor 1 tot 6 spelers, met ploegopbouw, renners kopen en trainen, races, NPC's en prijzengeld.
+- Ingelogde CycClub-spelers behouden hun ploeg tussen games; hun clubprestaties verschijnen op een eigen leaderboard.
+- Alle drie games zijn als zelfstandige plugins geïntegreerd en vallen onder de bestaande lobby-, room- en hervatlogica.
+- De Ragnarok-branch is mee samengevoegd als ontwerpdocument; een speelbare plugin volgt pas zodra client- en servercode beschikbaar zijn.
+
 ## v1.11.14 — Uitgebreid Age of Civilization
 
 - Age of Civilization ondersteunt nu 2 tot 7 spelers in plaats van uitsluitend twee spelers.

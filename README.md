@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.11.14
+## Nieuw in versie 1.12.0
 
-Age of Civilization is uitgebreid naar 2 tot 7 spelers. Iedere speler kiest een unieke leider, gevechten verlopen in een kring en uitgeschakelde spelers vallen af terwijl de overige beschavingen doorspelen. Vaste gebouwen, gebeurtenissen, upgradeprijzen, kaartinformatie en de volledige lichte spelweergave zijn eveneens vernieuwd.
+Drie nieuwe spellen zijn toegevoegd: **Isle of Skye**, **The Deep Bleu C** en **CycClub**. Bouw en verhandel eilandtegels in Isle of Skye, verken en vis op een grote Europese kaart in The Deep Bleu C, of bouw een blijvende wielerploeg en race om prijzengeld in CycClub. De meegeleverde Ragnarok-branch bevat voorlopig alleen een ontwerpdocument en is daarom nog niet als spel zichtbaar.
 
 ## Nieuw in versie 1.11.0
 
@@ -25,8 +25,11 @@ Actieve spellen gebruiken zoveel mogelijk de volledige schermhoogte zonder pagin
 | Carcassonne | 2-5 | Ja |
 | Cascadia | 2-4 | Ja |
 | Cluedo | 2-6 | Ja |
+| CycClub | 1-6 | Ja |
+| The Deep Bleu C | 1 | Niet van toepassing |
 | Hartenjagen | 4 | Ja |
 | Hofslag | 2-4 | Ja |
+| Isle of Skye | 2-4 | Ja |
 | Kingdomino | 2-4 | Ja |
 | Minigolf | 1-4 | Ja |
 | Pesten | 2-4 | Ja |

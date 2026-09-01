@@ -130,6 +130,13 @@ const RELEASES = [
     improvements:[
       'Age of Civilization heeft vernieuwde vaste gebouwen, gebeurtenissen, upgradeprijzen, kaartinformatie en een lichtere spelweergave.'
     ]
+  },
+  {
+    version:'1.12.0',
+    games:['Isle of Skye','The Deep Bleu C','CycClub'],
+    features:[
+      'CycClub bewaart de wielerploeg van ingelogde spelers en heeft een eigen clubleaderboard.'
+    ]
   }
 ];
 
