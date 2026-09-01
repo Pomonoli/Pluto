@@ -1,8 +1,8 @@
-import { createGameUi } from './js/game-ui.js?v=1.12.4';
+import { createGameUi } from './js/game-ui.js?v=1.12.5';
 const socket = window.io();
   const $ = (id) => document.getElementById(id);
   const els = {};
-  ['brandButton','lobbyBrowserButton','leaderboardButton','soundButton','installButton','accountButton','mobileNav','mobilePlayButton','mobileLobbyButton','mobileLeaderboardButton','mobileProfileButton','mobileGameHeader','mobileGameLeaveButton','mobileGameName','mobileGameMenuButton','mobileGameMenu','mobileGameRulesButton','mobileGameSoundButton','mobileGameLeaveMenuButton','rulesButton','homeView','lobbyBrowserView','leaderboardView','profileView','roomView','homeGuestBar','guestName','homeAccountButton','inviteBox','inviteText','joinInviteButton','resumeGameSection','resumeGames','homeOpenLobbiesSection','homeOpenLobbies','gamesHeading','gameGrid','refreshRoomsButton','lobbyIdentityBar','lobbyIdentityText','lobbyGuestWrap','lobbyGuestName','openRoomCount','openRoomsContent','leaderboardGame','leaderboardContent','profileUsername','profileSummary','profileGames','profileRecent','headToHeadCard','headToHeadGame','headToHeadContent','roomLayout','lobbySection','gameSection','playerCountBadge','lobbyPlayers','gameLobbyOptions','hostControls','addNpcButton','startGameButton','lobbyHint','gameStage','gameResult','accountModal','closeAccountButton','loggedOutAccount','loggedInAccount','loginForm','loginUsername','loginPassword','showRegisterButton','showLoginButton','registerForm','registerUsername','registerPassword','accountUsername','accountGames','accountWins','accountWinRate','myProfileButton','logoutButton','rulesModal','rulesGameName','rulesContent','closeRulesButton','leaveGameModal','leaveGameTitle','leaveGamePromptText','cancelLeaveGameButton','confirmLeaveGameButton','toast'].forEach((id) => els[id] = $(id));
+  ['brandButton','lobbyBrowserButton','leaderboardButton','soundButton','installButton','accountButton','mobileNav','mobilePlayButton','mobileLobbyButton','mobileLeaderboardButton','mobileProfileButton','mobileGameHeader','mobileGameLeaveButton','mobileGameName','mobileGameMenuButton','mobileGameMenu','mobileGameRulesButton','mobileGameSoundButton','mobileGameLeaveMenuButton','rulesButton','homeView','lobbyBrowserView','leaderboardView','profileView','roomView','homeGuestBar','guestName','homeAccountButton','inviteBox','inviteText','joinInviteButton','resumeGameSection','resumeGames','homeOpenLobbiesSection','homeOpenLobbies','gamesHeading','gameGrid','lobbyIdentityBar','lobbyIdentityText','lobbyGuestWrap','lobbyGuestName','openRoomCount','openRoomsContent','leaderboardGame','leaderboardContent','profileUsername','profileSummary','profileGames','profileRecent','headToHeadCard','headToHeadGame','headToHeadContent','roomLayout','lobbySection','gameSection','playerCountBadge','lobbyPlayers','gameLobbyOptions','hostControls','addNpcButton','startGameButton','lobbyHint','gameStage','gameResult','accountModal','closeAccountButton','loggedOutAccount','loggedInAccount','loginForm','loginUsername','loginPassword','showRegisterButton','showLoginButton','registerForm','registerUsername','registerPassword','accountUsername','accountGames','accountWins','accountWinRate','myProfileButton','logoutButton','rulesModal','rulesGameName','rulesContent','closeRulesButton','leaveGameModal','leaveGameTitle','leaveGamePromptText','cancelLeaveGameButton','confirmLeaveGameButton','toast'].forEach((id) => els[id] = $(id));
 
   const state = {
     room: null,
@@ -169,25 +169,26 @@ const socket = window.io();
   }
   async function loadHomeOpenLobbies() {
     try {
-      const response=await fetch('/api/rooms',{cache:'no-store'});
+      const response=await fetch('/api/rooms',{cache:'no-store',headers:{'X-Pluto-Player-Token':state.token}});
       const data=await response.json();
       if(!data.ok)throw new Error(data.error||'Kon games niet laden.');
-      const identity=(state.authUser?.username||state.guestName||els.guestName.value||'').toLocaleLowerCase('nl-BE');
-      renderHomeOpenLobbies((data.rooms||[]).filter(room=>room.joinable||(room.resumable&&room.playerNames.some(name=>name.toLocaleLowerCase('nl-BE')===identity))));
+      renderHomeOpenLobbies((data.rooms||[]).filter(room=>room.joinable||room.canResume));
     } catch {
       renderHomeOpenLobbies([]);
     }
   }
   function renderHomeOpenLobbies(rooms) {
-    const identity=(state.authUser?.username||state.guestName||els.guestName.value||'').toLocaleLowerCase('nl-BE');
-    const resumable=rooms.filter(room=>room.resumable&&room.playerNames.some(name=>name.toLocaleLowerCase('nl-BE')===identity));
+    const resumable=rooms.filter(room=>room.resumable&&room.canResume);
     const open=rooms.filter(room=>!resumable.includes(room));
     els.resumeGames.replaceChildren();
     els.resumeGameSection.classList.toggle('hidden',!resumable.length);
     resumable.forEach(room=>{
+      const card=E('div','resume-game-card');
       const button=E('button','resume-game-button');button.type='button';
       const copy=E('span','resume-game-copy');copy.append(E('small','',room.gameName),E('strong','','Doorgaan met spelen'),E('span','',`Game ${room.id} · ${room.playerCount}/${room.maxPlayers} spelers`));
-      button.append(copy,E('span','resume-game-arrow','→'));button.onclick=()=>joinRoom(room.id);els.resumeGames.append(button)
+      button.append(copy,E('span','resume-game-arrow','→'));button.onclick=()=>joinRoom(room.id);card.append(button);
+      if(room.connectedHumanCount===0){const close=E('button','resume-game-close','×');close.type='button';close.setAttribute('aria-label',`${room.gameName} definitief sluiten`);close.onclick=()=>{close.disabled=true;socket.emit('room:close',{roomId:room.id,token:state.token},response=>{if(!response?.ok){close.disabled=false;return handleAck(response)}loadHomeOpenLobbies()})};card.append(close)}
+      els.resumeGames.append(card)
     });
     els.homeOpenLobbies.replaceChildren();
     els.homeOpenLobbiesSection.classList.toggle('hidden',!open.length);
@@ -219,10 +220,10 @@ const socket = window.io();
   async function loadOpenRooms() {
     if (els.lobbyBrowserView.classList.contains('hidden')) return;
     try {
-      const response=await fetch('/api/rooms',{cache:'no-store'});
+      const response=await fetch('/api/rooms',{cache:'no-store',headers:{'X-Pluto-Player-Token':state.token}});
       const data=await response.json();
       if(!data.ok)throw new Error(data.error||'Kon games niet laden.');
-      renderOpenRooms(data.rooms||[]);
+      renderOpenRooms((data.rooms||[]).filter(room=>room.connectedHumanCount>0||room.canResume));
     } catch(error) {
       els.openRoomsContent.replaceChildren(E('div','panel',error.message));
     }
@@ -245,8 +246,7 @@ const socket = window.io();
       room.playerNames.forEach(name=>players.append(E('span','open-room-player',name)));
       const meta=E('div','open-room-meta');
       meta.append(E('span','',`Host: ${room.hostName}`),E('span','',relativeAge(room.createdAt)));
-      const identity=(state.authUser?.username||state.guestName||els.lobbyGuestName.value||'').toLocaleLowerCase('nl-BE');
-      const canResume=Boolean(room.resumable&&room.playerNames.some(name=>name.toLocaleLowerCase('nl-BE')===identity));
+      const canResume=Boolean(room.resumable&&room.canResume);
       const canEnter=room.joinable||canResume;
       const join=E('button',canEnter?'primary':'secondary',canResume?'Ga terug':room.resumable?'Lopend':room.joinable?'Join game':'Vol');
       join.type='button';join.disabled=!canEnter;
@@ -513,7 +513,7 @@ const socket = window.io();
     state.roomStateBlocked=true;state.expectedRoomId=null;state.directRoomId=null;
     if(state.activeGameBodyClass)document.body.classList.remove(state.activeGameBodyClass);state.activeGameBodyClass=null;state.room=null;state.previousRoom=null;state.selection=null;state.renderedRoomId=null;state.renderedGameRevision=-1;
     history.replaceState({},'', '/');showHome();
-    socket.emit('room:leave',{},()=>{state.roomStateBlocked=false});return true;
+    socket.emit('room:leave',{},()=>{state.roomStateBlocked=false;if(!els.homeView.classList.contains('hidden'))loadHomeOpenLobbies()});return true;
   }
   function requestRematch(button){
     if(button){button.disabled=true;button.textContent='Starten…'}
@@ -570,7 +570,6 @@ const socket = window.io();
   };
 
   els.lobbyBrowserButton.onclick=()=>{if(state.room)return toast('Verlaat eerst de game.');setRoute('/lobby');showOpenLobby()};
-  els.refreshRoomsButton.onclick=loadOpenRooms;
   els.lobbyGuestName.oninput=()=>{if(!state.authUser){state.guestName=normalizeName(els.lobbyGuestName.value);els.lobbyIdentityText.textContent=state.guestName||'Guest'}};
   els.soundButton.onclick=toggleSound;
   els.mobileGameSoundButton.onclick=()=>{toggleSound();closeMobileGameMenu()};
@@ -617,7 +616,7 @@ const socket = window.io();
   if('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.12.4', {
+        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.12.5', {
           updateViaCache:'none'
         });
         await registration.update();

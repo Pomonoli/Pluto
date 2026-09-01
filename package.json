@@ -1,6 +1,6 @@
 {
   "name": "minigames-platform",
-  "version": "1.12.4",
+  "version": "1.12.5",
   "private": true,
   "description": "Pluto gaming space - unified site/app logo",
   "main": "server.js",

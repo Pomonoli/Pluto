@@ -1151,7 +1151,6 @@ input:focus,select:focus,textarea:focus{border-color:rgba(226,163,134,.48);box-s
 .lobby-rooms-heading{margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .lobby-rooms-heading>div{display:flex;align-items:center;gap:10px}
 .lobby-rooms-heading h1{margin:0;font-size:clamp(25px,5vw,34px)}
-.lobby-rooms-heading #refreshRoomsButton{min-height:36px;padding:7px 10px;color:#c9c2c0}
 @media(max-width:760px){
 .topbar{
     position:sticky;
@@ -1290,8 +1289,9 @@ body.game-active .game-panel{
 /* Generic mobile UX layer. Desktop keeps the established layout. */
 .mobile-game-header,.profile-mobile-stats,.mobile-register-toggle,.mobile-login-toggle{display:none}
 .resume-game-list{display:grid;gap:9px}
-.resume-game-button{width:100%;min-height:76px;padding:13px 16px;display:flex;align-items:center;justify-content:space-between;gap:14px;text-align:left;border-color:color-mix(in srgb,var(--accent) 48%,var(--border));background:color-mix(in srgb,var(--accent) 11%,var(--panel));box-shadow:0 10px 24px rgba(0,0,0,.12)}
+.resume-game-card{position:relative;min-width:0}.resume-game-button{width:100%;min-height:76px;padding:13px 52px 13px 16px;display:flex;align-items:center;justify-content:space-between;gap:14px;text-align:left;border-color:color-mix(in srgb,var(--accent) 48%,var(--border));background:color-mix(in srgb,var(--accent) 11%,var(--panel));box-shadow:0 10px 24px rgba(0,0,0,.12)}
 .resume-game-copy{min-width:0;display:grid;gap:2px}.resume-game-copy small{color:var(--muted);font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}.resume-game-copy strong{font-size:17px}.resume-game-copy>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:10px}.resume-game-arrow{font-size:25px}
+.resume-game-close{position:absolute;z-index:2;top:3px;right:3px;width:44px;min-width:44px;height:44px;min-height:44px;padding:0;border:0;border-radius:50%;display:grid;place-items:center;background:transparent;color:var(--muted);font-size:19px;line-height:1;box-shadow:none}.resume-game-close:hover{color:var(--text);background:color-mix(in srgb,var(--text) 10%,transparent)}
 .leave-game-backdrop{z-index:1120;background:rgba(3,4,9,.76);backdrop-filter:blur(10px)}
 .leave-game-modal{width:min(420px,100%);padding:26px;text-align:center;border-radius:22px;box-shadow:0 26px 75px rgba(0,0,0,.38)}
 .leave-game-icon{width:58px;height:58px;margin:0 auto 14px;display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--accent) 38%,var(--border));border-radius:50%;color:var(--accent);background:color-mix(in srgb,var(--accent) 13%,var(--panel2));font-size:28px;font-weight:900}

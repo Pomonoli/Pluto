@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.12.4
+## Nieuw in versie 1.12.5
 
-De gedeelde Light-header is compacter op Home, lobby, leaderboard en profiel. De mobiele ondernavigatie is iets ruimer en scherper met grotere iconen en labels, terwijl de instellingenknop voortaan een subtiele transparante stijl met een fijner tandwiel gebruikt.
+Verlaten actieve games blijven maximaal twee uur hervatbaar, ook wanneer een singleplayergame leeg is. De kaart `Doorgaan met spelen` heeft een veilig kruisje om een volledig verlaten game definitief te sluiten. De lobby blijft automatisch bijwerken en heeft daarom geen overbodige knop `Vernieuwen` meer.
 
 ## Nieuw in versie 1.11.0
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.12.5 — Hervatbare verlaten games
+
+- Verlaten actieve games blijven maximaal twee uur hervatbaar, ook bij singleplayergames zonder verbonden speler.
+- `Doorgaan met spelen` blijft na het verlaten zichtbaar en krijgt een klein kruisje om een lege game definitief te sluiten.
+- De sluitactie is alleen beschikbaar voor een deelnemer met dezelfde spelerstoken of hetzelfde account.
+- Bij multiplayer verschijnt het kruisje uitsluitend wanneer niemand meer verbonden is, zodat een lopende game niet per ongeluk wordt gesloten.
+- De lobby blijft automatisch iedere vijf seconden verversen; de overbodige knop `Vernieuwen` is verwijderd.
+
 ## v1.12.4 — Verfijnde mobiele navigatie
 
 - De gedeelde Light-header is compacter gemaakt op Home, lobby, leaderboard en profiel.

@@ -164,6 +164,15 @@ const RELEASES = [
     improvements:[
       'De gedeelde Light-header is compacter en de mobiele ondernavigatie is ruimer, scherper en beter leesbaar met een vernieuwde instellingenknop.'
     ]
+  },
+  {
+    version:'1.12.5',
+    features:[
+      'Verlaten games blijven tijdelijk hervatbaar en kunnen via een kruisje op de kaart Doorgaan met spelen definitief worden gesloten.'
+    ],
+    improvements:[
+      'De automatisch verversende lobby heeft geen overbodige knop Vernieuwen meer.'
+    ]
   }
 ];
 

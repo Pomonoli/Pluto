@@ -105,10 +105,22 @@ test('homescreen toont alleen beschikbare open lobbykaarten',()=>{
   const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
   assert.match(html,/id="homeOpenLobbiesSection" class="recent-games-section hidden"/);
   assert.match(html,/id="homeOpenLobbies" class="recent-game-row"/);
-  assert.match(app,/room\.joinable\|\|\(room\.resumable&&room\.playerNames\.some/);
+  assert.match(app,/room\.joinable\|\|room\.canResume/);
   assert.match(app,/homeOpenLobbiesSection\.classList\.toggle\('hidden',!open\.length\)/);
   assert.match(app,/button\.onclick=\(\)=>joinRoom\(room\.id\)/);
   assert.match(app,/canResume\?'Ga terug':room\.resumable\?'Lopend'/);
+});
+
+test('verlaten actieve games blijven hervatbaar en krijgen een expliciete sluitknop',()=>{
+  const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
+  const css=fs.readFileSync(path.join(root,'public/styles.css'),'utf8');
+  const realtime=fs.readFileSync(path.join(root,'src/server/realtime.js'),'utf8');
+  assert.match(app,/resume-game-close/);
+  assert.match(app,/socket\.emit\('room:close'/);
+  assert.match(app,/connectedHumanCount===0/);
+  assert.match(css,/\.resume-game-close\{position:absolute/);
+  assert.match(realtime,/socket\.on\('room:close'/);
+  assert.match(realtime,/ROOM_TTL_MS = 2 \* 60 \* 60 \* 1000/);
 });
 
 test('homescreen bevat geen Recent-sectie meer',()=>{
@@ -130,6 +142,14 @@ test('lobby gebruikt game en games als zichtbare benaming',()=>{
   assert.doesNotMatch(html,/Beschikbare rooms|Rooms laden|Join room/);
   assert.doesNotMatch(app,/Geen open rooms|Room \$\{room\.id\}|Join room|Room verlaten|roomcode|eerst de room/);
   assert.doesNotMatch(realtime,/room bestaat niet|room zit vol|in een room/);
+});
+
+test('lobby ververst automatisch zonder overbodige vernieuwknop',()=>{
+  const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
+  const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
+  assert.doesNotMatch(html,/refreshRoomsButton|>Vernieuwen</);
+  assert.doesNotMatch(app,/refreshRoomsButton/);
+  assert.match(app,/setInterval\(loadOpenRooms, 5000\)/);
 });
 
 test('sound button is icon-only en app knop heet App',()=>{
@@ -178,7 +198,7 @@ test('settings en mobiele gameheader tonen compacte consistente metadata',()=>{
   const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
   const css=fs.readFileSync(path.join(root,'public/styles.css'),'utf8');
   const light=fs.readFileSync(path.join(root,'public/themes/pluto-1.8.0.css'),'utf8');
-  assert.match(html,/class="settings-version"[^>]*>Pluto v1\.12\.4</);
+  assert.match(html,/class="settings-version"[^>]*>Pluto v1\.12\.5</);
   assert.match(css,/\.connection-pill,\.badge\{[^}]*white-space:nowrap;[^}]*flex-shrink:0/);
   assert.match(css,/\.mobile-game-leave,\.mobile-game-menu-button\{[^}]*border:0;[^}]*background:transparent/);
   assert.match(css,/\.mobile-game-name\{[^}]*height:44px;[^}]*place-items:center;[^}]*line-height:1/);

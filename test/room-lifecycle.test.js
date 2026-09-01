@@ -40,7 +40,7 @@ test('lopend spel blijft in lobbyoverzicht zolang iemand aanwezig is',()=>{
   assert.equal(summary.joinable,false);
 });
 
-test('speler kan een lopend spel hervatten en laatste vertrek verwijdert de room',()=>{
+test('speler kan een verlaten spel hervatten en sluit een lege game expliciet',()=>{
   const {runtime,makeSocket}=harness(),room=playingRoom();runtime.rooms.set(room.id,room);
   const first=makeSocket('socket-a',room.id,room.players[0].token);
   first.handlers.get('room:leave')({},()=>{});
@@ -55,6 +55,12 @@ test('speler kan een lopend spel hervatten en laatste vertrek verwijdert de room
   resumed.handlers.get('room:leave')({},()=>{});
   const second=makeSocket('socket-b',room.id,room.players[1].token);
   second.handlers.get('room:leave')({},()=>{});
+  assert.equal(runtime.rooms.has(room.id),true);
+  const [emptySummary]=runtime.openRoomSummaries({token:'aaaaaaaaaaaaaaaa'});
+  assert.equal(emptySummary.canResume,true);
+  assert.equal(emptySummary.connectedHumanCount,0);
+  let closeResult;resumed.handlers.get('room:close')({roomId:room.id,token:'aaaaaaaaaaaaaaaa'},result=>{closeResult=result});
+  assert.equal(closeResult.ok,true);
   assert.equal(runtime.rooms.has(room.id),false);
 });
 

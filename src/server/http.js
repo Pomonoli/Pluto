@@ -151,9 +151,11 @@ function configureHttp(app, runtime) {
     });
   });
 
-  app.get('/api/rooms', (_req, res) => {
+  app.get('/api/rooms', (req, res) => {
     res.setHeader('Cache-Control','no-store');
-    res.json({ ok:true, rooms:runtime.openRoomSummaries() });
+    const user=authDb.getUserFromCookieHeader(req.headers.cookie);
+    const token=String(req.get('x-pluto-player-token')||'').trim();
+    res.json({ ok:true, rooms:runtime.openRoomSummaries({token,userId:user?.id||null}) });
   });
 
   app.get('/health', (_req, res) => {
