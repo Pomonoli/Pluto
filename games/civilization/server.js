@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Age of Civilization — server-authoritative logic (v5).
+ * Age of Civilization — server-authoritative logic (v6).
  *
  * Follows the Pluto plugin server contract (see games/README.md):
  *   createGame(roomPlayers)
@@ -13,28 +13,19 @@
  * Nothing here trusts the client: hands, gold, grid state, and phase
  * transitions all live only in `game` and are only ever mutated here.
  *
- * v5 rules (on top of v4's 21-turn / combat-on-turn-3 structure):
- *   - Science, Religion and Culture are no longer draftable cards. Every
- *     player instead starts with one fixed, permanent building of each
- *     (never built or replaced, only upgraded).
- *   - The flexible city grid drops from 9 to 6 slots, drafted from Attack,
- *     Defence and Economy cards (plus a Wonder from Age 2).
- *   - Upgrading a flexible tile adds +25% of its BASE stat per level,
- *     linearly (level 2 = 125% of base, level 3 = 150%, ...).
- *   - Upgrading a fixed civic building does nothing on its own until the
- *     3rd upgrade (and again the 6th, 9th, ...): that "event" permanently
- *     multiplies the player's Attack/Defence/Income by a civic-specific
- *     split (Science: +30% attack/+20% income/+10% defence; Culture and
- *     Religion: +30% income/+20% defence/+10% attack), stacking each time
- *     it fires.
- *   - Every upgrade (flexible or civic) costs more than before, and its
- *     counter (tile level, or civic upgrade count) can never exceed the
- *     current Age — a building can't be pushed further than "its Age"
- *     allows, so nothing built or upgraded this Age can upgrade again
- *     until the Age advances.
- *   - City HP starts at 100 (no VP, so no healing). A tower hitting 0 is an
- *     instant loss. If both towers survive all 21 turns, the higher HP wins;
- *     gold only breaks a tie in HP.
+ * v6 additions on top of v5 (fixed civic buildings, 6-slot flexible grid):
+ *   - 2 to 7 players. Before Age 1, players pick a unique Leader in seat
+ *     order (a 'picking' phase ahead of 'draft'); each Leader grants a
+ *     fixed passive bonus.
+ *   - Combat is a clockwise ring: each player's Attack hits the next
+ *     player's Defence (game.order is the seating), not just a single
+ *     mutual opponent. A wave can now eliminate some players while others
+ *     fight on; the game only ends when at most one player is left alive,
+ *     or all 21 turns elapse.
+ *   - Civic buildings (Science/Religion/Culture) have no Age ceiling
+ *     any more — always upgradable — but the 3rd/6th upgrade (the one
+ *     that fires the stacking event) costs 3x the normal civic upgrade
+ *     price instead of the same price as steps 1 and 2.
  */
 
 const TOTAL_AGES = 7;
@@ -46,6 +37,8 @@ const START_GOLD = 4;
 const START_HP = 100;
 const GRID_SIZE = 6;
 const UPGRADE_COST_MULTIPLIER = 2;
+const EVENT_STEP_COST_MULTIPLIER = 3;
+const GANDHI_DAMAGE_CAP = 25;
 
 const CATEGORIES = ['attack', 'defence', 'economy'];
 const CIVIC_CATEGORIES = ['science', 'religion', 'culture'];
@@ -80,6 +73,23 @@ const CIVIC_SPLITS = {
   religion: { income: 0.30, defence: 0.20, attack: 0.10 }
 };
 
+// Leaders: picked once per player, in seat order, before Age 1 begins.
+// NOTE on Cleopatra and Gandhi: the original brief for these two referenced
+// Victory Points, which this ruleset removed entirely a few iterations ago
+// (see CHANGELOG v1.7.0). There is no VP left to heal from or generate, so
+// both bonuses below are a reinterpretation onto the current mechanics
+// rather than a literal implementation — flagged here and in the release
+// notes so they're easy to adjust.
+const LEADERS = [
+  { key: 'cleopatra', name: 'Cleopatra', attribute: 'Nemes-hoofdtooi', bonus: '+5 start Goud. Religie en Cultuur beginnen al met hun eerste upgrade.' },
+  { key: 'alexander', name: 'Alexander de Grote', attribute: 'Korinthische helm', bonus: 'Attack-gebouwen krijgen +2 Attack.' },
+  { key: 'einstein', name: 'Einstein', attribute: 'Wilde haardos', bonus: 'Je Observatorium geeft een blijvende +2 Defence.' },
+  { key: 'gandhi', name: 'Gandhi', attribute: 'Ronde bril', bonus: `Je Stad kan nooit meer dan ${GANDHI_DAMAGE_CAP} schade oplopen per aanvalsgolf.` },
+  { key: 'bismarck', name: 'Bismarck', attribute: 'Pickelhaube', bonus: 'Upgrades kosten 25% minder goud.' },
+  { key: 'lincoln', name: 'Lincoln', attribute: 'Hoge hoed', bonus: 'Je Stad geneest automatisch +10 HP als ze na een aanvalsgolf onder 30 zakt.' },
+  { key: 'achilles', name: 'Achilles', attribute: 'Pluimhelm', bonus: '+50% Attack, maar je loopt ook 50% meer schade op.' }
+];
+
 function makeCard(type, age, name) {
   switch (type) {
     case 'attack': return { type, name, cost: age + 1, attack: age + 3, defence: 0, income: 0 };
@@ -103,12 +113,21 @@ function tileStat(base, level) {
   return base > 0 ? Math.round(base * (1 + 0.25 * (level - 1))) : 0;
 }
 
-function flexibleUpgradeCost(age, type) {
-  return makeCard(type, age, '').cost * UPGRADE_COST_MULTIPLIER;
+function withLeaderCostDiscount(player, cost) {
+  return player.leaderKey === 'bismarck' ? Math.round(cost * 0.75) : cost;
 }
 
-function civicUpgradeCost(age) {
-  return (age + 1) * 3;
+function flexibleUpgradeCost(age, type, player) {
+  return withLeaderCostDiscount(player, makeCard(type, age, '').cost * UPGRADE_COST_MULTIPLIER);
+}
+
+// upcomingStep is the step number this purchase would advance the civic
+// building to (i.e. current upgradeCount + 1). Steps that are a multiple of
+// 3 fire the event, and cost EVENT_STEP_COST_MULTIPLIER times as much.
+function civicUpgradeCost(age, upcomingStep, player) {
+  const base = (age + 1) * 3;
+  const cost = upcomingStep % 3 === 0 ? base * EVENT_STEP_COST_MULTIPLIER : base;
+  return withLeaderCostDiscount(player, cost);
 }
 
 function discardGold(age) { return age + 2; }
@@ -125,7 +144,10 @@ function buildPool(age, player) {
   const pool = [];
   CATEGORIES.forEach((type) => {
     const name = NAMES[type][age - 1];
-    if (!player.built.has(name)) pool.push(makeCard(type, age, name));
+    if (player.built.has(name)) return;
+    const card = makeCard(type, age, name);
+    if (type === 'attack' && player.leaderKey === 'alexander') card.attack += 2;
+    pool.push(card);
   });
   if (age >= 2 && !player.wonderBuilt) pool.push(makeCard('wonder', age, ERAS[age - 1].wonder));
   return pool;
@@ -136,7 +158,7 @@ function drawCards(age, player) {
 }
 
 function dealHands(game) {
-  Object.values(game.players).forEach((p) => { p.hand = drawCards(game.age, p); });
+  aliveIds(game).forEach((id) => { const p = game.players[id]; p.hand = drawCards(game.age, p); });
 }
 
 function applyCivicEvent(player, key) {
@@ -154,14 +176,17 @@ function totals(player) {
     defence += tileStat(tile.base.defence, tile.level);
     income += tileStat(tile.base.income, tile.level);
   });
-  return {
-    attack: Math.round(attack * player.eventMultipliers.attack),
-    defence: Math.round(defence * player.eventMultipliers.defence),
-    income: Math.round(income * player.eventMultipliers.income)
-  };
+  attack = attack * player.eventMultipliers.attack;
+  defence = defence * player.eventMultipliers.defence;
+  income = income * player.eventMultipliers.income;
+  if (player.leaderKey === 'achilles') attack *= 1.5;
+  if (player.leaderKey === 'einstein') defence += 2;
+  return { attack: Math.round(attack), defence: Math.round(defence), income: Math.round(income) };
 }
 
 function cardValue(card) { return (card.attack || 0) + (card.defence || 0) + (card.income || 0) * 2; }
+
+function aliveIds(game) { return game.order.filter((id) => game.players[id].hp > 0); }
 
 /* ---------------- lifecycle ---------------- */
 
@@ -172,6 +197,7 @@ function createGame(roomPlayers) {
       id: rp.id,
       name: rp.name,
       isNpc: Boolean(rp.isNpc),
+      leaderKey: null,
       gold: START_GOLD,
       hp: START_HP,
       grid: Array(GRID_SIZE).fill(null),
@@ -194,7 +220,8 @@ function createGame(roomPlayers) {
     resultText: '',
     age: 1,
     turnInAge: 1,
-    phase: 'draft', // 'draft' | 'wave' | 'ended'
+    phase: 'picking', // 'picking' | 'draft' | 'wave' | 'ended'
+    pickIndex: 0,
     players,
     order: roomPlayers.map((rp) => rp.id),
     log: [],
@@ -206,14 +233,46 @@ function createGame(roomPlayers) {
     finalScores: null
   };
 
-  dealHands(game);
-  game.log.push(`Age 1 begins: ${ERAS[0].name}.`);
+  game.log.push(`${game.players[game.order[0]].name} kiest als eerste een leider.`);
   return game;
+}
+
+function assignLeader(player, key) {
+  player.leaderKey = key;
+  if (key === 'cleopatra') {
+    player.gold += 5;
+    player.civic.religion.upgradeCount = 1;
+    player.civic.culture.upgradeCount = 1;
+  }
+}
+
+function beginAges(game) {
+  game.phase = 'draft';
+  dealHands(game);
+  game.turnDeadline = Date.now() + TURN_TIME_MS;
+  game.log.push(`Age 1 begins: ${ERAS[0].name}.`);
 }
 
 /* ---------------- actions ---------------- */
 
 function handleAction(game, playerId, action, payload) {
+  if (game.phase === 'picking') {
+    if (action !== 'pickLeader') throw new Error('Kies eerst een leider.');
+    const expectedId = game.order[game.pickIndex];
+    if (playerId !== expectedId) throw new Error('Een andere speler is aan de beurt om te kiezen.');
+    const p = game.players[playerId];
+    const key = payload && payload.leaderKey;
+    const leader = LEADERS.find((l) => l.key === key);
+    if (!leader) throw new Error('Onbekende leider.');
+    if (Object.values(game.players).some((pl) => pl.leaderKey === key)) throw new Error('Deze leider is al gekozen.');
+
+    assignLeader(p, key);
+    game.log.push(`${p.name} kiest ${leader.name}.`);
+    game.pickIndex += 1;
+    if (game.pickIndex >= game.order.length) beginAges(game);
+    return;
+  }
+
   if (game.phase !== 'draft' || game.gameOver) throw new Error('Je kunt nu geen actie kiezen.');
   const p = game.players[playerId];
   if (!p || p.acted || p.isNpc) throw new Error('Je hebt al gekozen.');
@@ -238,12 +297,12 @@ function handleAction(game, playerId, action, payload) {
       const key = payload.civic;
       const civic = p.civic[key];
       if (!civic) throw new Error('Onbekend gebouw.');
-      if (civic.upgradeCount >= game.age) throw new Error('Dit gebouw kan dit tijdperk niet verder groeien.');
-      const cost = civicUpgradeCost(game.age);
+      const upcomingStep = civic.upgradeCount + 1;
+      const cost = civicUpgradeCost(game.age, upcomingStep, p);
       if (p.gold < cost) throw new Error('Je hebt niet genoeg goud.');
 
       p.gold -= cost;
-      civic.upgradeCount += 1;
+      civic.upgradeCount = upcomingStep;
       if (civic.upgradeCount % 3 === 0) {
         applyCivicEvent(p, key);
         civic.eventsFired += 1;
@@ -257,7 +316,7 @@ function handleAction(game, playerId, action, payload) {
       const tile = p.grid[slot];
       if (!tile) throw new Error('Ongeldig gebouw.');
       if (tile.level >= game.age) throw new Error('Dit gebouw kan dit tijdperk niet verder groeien.');
-      const cost = flexibleUpgradeCost(game.age, tile.type);
+      const cost = flexibleUpgradeCost(game.age, tile.type, p);
       if (p.gold < cost) throw new Error('Je hebt niet genoeg goud.');
 
       p.gold -= cost;
@@ -277,13 +336,13 @@ function handleAction(game, playerId, action, payload) {
     throw new Error('Onbekende actie.');
   }
 
-  if (game.order.every((id) => game.players[id].acted)) completeTurn(game);
+  if (aliveIds(game).every((id) => game.players[id].acted)) completeTurn(game);
 }
 
 /* ---------------- phase transitions ---------------- */
 
 function completeTurn(game) {
-  game.order.forEach((id) => {
+  aliveIds(game).forEach((id) => {
     const p = game.players[id];
     p.gold += totals(p).income;
   });
@@ -292,7 +351,7 @@ function completeTurn(game) {
     resolveWave(game);
   } else {
     game.turnInAge += 1;
-    game.order.forEach((id) => { game.players[id].acted = false; });
+    aliveIds(game).forEach((id) => { game.players[id].acted = false; });
     dealHands(game);
     game.turnDeadline = Date.now() + TURN_TIME_MS;
     game.log.push(`Age ${game.age}, beurt ${game.turnInAge}/${TURNS_PER_AGE} begint.`);
@@ -300,30 +359,36 @@ function completeTurn(game) {
 }
 
 function resolveWave(game) {
+  const ids = aliveIds(game);
+  const n = ids.length;
   const totalsById = {};
-  game.order.forEach((id) => { totalsById[id] = totals(game.players[id]); });
+  ids.forEach((id) => { totalsById[id] = totals(game.players[id]); });
 
   const results = {};
-  game.order.forEach((id) => {
+  ids.forEach((id, i) => {
+    const attackerId = ids[(i - 1 + n) % n];
+    const targetId = ids[(i + 1) % n];
+    let dmg = Math.max(0, totalsById[attackerId].attack - totalsById[id].defence);
+    if (game.players[id].leaderKey === 'achilles') dmg = Math.round(dmg * 1.5);
+    if (game.players[id].leaderKey === 'gandhi') dmg = Math.min(dmg, GANDHI_DAMAGE_CAP);
+    results[id] = { attack: totalsById[id].attack, defence: totalsById[id].defence, incoming: totalsById[attackerId].attack, attackerId, targetId, damage: dmg };
+  });
+  ids.forEach((id) => {
     const p = game.players[id];
-    const opponentId = game.order.find((oid) => oid !== id);
-    const dmg = Math.max(0, totalsById[opponentId].attack - totalsById[id].defence);
-    p.hp = Math.max(0, p.hp - dmg);
-    results[id] = { attack: totalsById[id].attack, defence: totalsById[id].defence, incoming: totalsById[opponentId].attack, damage: dmg };
+    p.hp = Math.max(0, p.hp - results[id].damage);
+    if (p.hp > 0 && p.hp < 30 && p.leaderKey === 'lincoln') p.hp = Math.min(START_HP, p.hp + 10);
   });
 
   game.waveResult = { age: game.age, results };
   game.phase = 'wave';
   game.log.push(`Age ${game.age} aanval verwerkt.`);
 
-  const deadIds = game.order.filter((id) => game.players[id].hp <= 0);
-  if (deadIds.length > 0) {
+  const stillAlive = ids.filter((id) => game.players[id].hp > 0);
+  if (stillAlive.length <= 1) {
     game.phase = 'ended';
     game.gameOver = true;
     game.endedSuddenDeath = true;
-    game.winnerId = deadIds.length === game.order.length
-      ? null
-      : game.order.find((id) => !deadIds.includes(id));
+    game.winnerId = stillAlive.length === 1 ? stillAlive[0] : null;
     finalizeScores(game);
     setResultText(game);
   } else {
@@ -337,8 +402,9 @@ function advanceAfterWave(game) {
     game.gameOver = true;
     game.endedSuddenDeath = false;
     finalizeScores(game);
-    const maxHp = Math.max(...game.order.map((id) => game.players[id].hp));
-    const hpLeaders = game.order.filter((id) => game.players[id].hp === maxHp);
+    const ids = aliveIds(game);
+    const maxHp = Math.max(...ids.map((id) => game.players[id].hp));
+    const hpLeaders = ids.filter((id) => game.players[id].hp === maxHp);
     let winners = hpLeaders;
     if (hpLeaders.length > 1) {
       const scores = game.finalScores;
@@ -351,7 +417,7 @@ function advanceAfterWave(game) {
   }
   game.age += 1;
   game.turnInAge = 1;
-  game.order.forEach((id) => { game.players[id].acted = false; });
+  aliveIds(game).forEach((id) => { game.players[id].acted = false; });
   dealHands(game);
   game.phase = 'draft';
   game.waveResult = null;
@@ -387,24 +453,25 @@ function playNpc(game, player) {
   } else {
     const flexOptions = player.grid
       .map((tile, slot) => ({ kind: 'flex', slot, tile }))
-      .filter(({ tile }) => tile && tile.level < game.age && flexibleUpgradeCost(game.age, tile.type) <= player.gold);
+      .filter(({ tile }) => tile && tile.level < game.age && flexibleUpgradeCost(game.age, tile.type, player) <= player.gold);
     const civicOptions = CIVIC_CATEGORIES
       .map((key) => ({ kind: 'civic', key }))
-      .filter(({ key }) => player.civic[key].upgradeCount < game.age && civicUpgradeCost(game.age) <= player.gold);
+      .filter(({ key }) => civicUpgradeCost(game.age, player.civic[key].upgradeCount + 1, player) <= player.gold);
     const options = [...flexOptions, ...civicOptions];
 
     if (options.length) {
       const choice = options[Math.floor(Math.random() * options.length)];
       if (choice.kind === 'flex') {
         const tile = choice.tile;
-        player.gold -= flexibleUpgradeCost(game.age, tile.type);
+        player.gold -= flexibleUpgradeCost(game.age, tile.type, player);
         tile.level += 1;
         tile.name = tile.type === 'wonder' ? ERAS[game.age - 1].wonder : NAMES[tile.type][game.age - 1];
         game.log.push(`${player.name} upgrade ${tile.name}.`);
       } else {
         const civic = player.civic[choice.key];
-        player.gold -= civicUpgradeCost(game.age);
-        civic.upgradeCount += 1;
+        const upcomingStep = civic.upgradeCount + 1;
+        player.gold -= civicUpgradeCost(game.age, upcomingStep, player);
+        civic.upgradeCount = upcomingStep;
         if (civic.upgradeCount % 3 === 0) {
           applyCivicEvent(player, choice.key);
           civic.eventsFired += 1;
@@ -425,13 +492,29 @@ function playNpc(game, player) {
 /* ---------------- optional: timers / auto-progress ---------------- */
 
 function tick(game, now) {
+  if (game.phase === 'picking') {
+    const currentId = game.order[game.pickIndex];
+    const current = currentId ? game.players[currentId] : null;
+    if (current && current.isNpc) {
+      const takenKeys = new Set(Object.values(game.players).map((pl) => pl.leaderKey).filter(Boolean));
+      const available = LEADERS.filter((l) => !takenKeys.has(l.key));
+      const choice = available[Math.floor(Math.random() * available.length)];
+      assignLeader(current, choice.key);
+      game.log.push(`${current.name} kiest ${choice.name}.`);
+      game.pickIndex += 1;
+      if (game.pickIndex >= game.order.length) beginAges(game);
+      return true;
+    }
+    return false;
+  }
+
   if (game.phase === 'draft') {
-    const npc = game.order.map((id) => game.players[id]).find((player) => player.isNpc && !player.acted);
-    if (npc) { playNpc(game, npc); if (game.order.every((id) => game.players[id].acted)) completeTurn(game); return true; }
+    const npc = aliveIds(game).map((id) => game.players[id]).find((player) => player.isNpc && !player.acted);
+    if (npc) { playNpc(game, npc); if (aliveIds(game).every((id) => game.players[id].acted)) completeTurn(game); return true; }
   }
   if (game.phase === 'draft' && now >= game.turnDeadline) {
     let changed = false;
-    game.order.forEach((id) => {
+    aliveIds(game).forEach((id) => {
       const p = game.players[id];
       if (!p.acted) {
         p.gold += discardGold(game.age);
@@ -440,7 +523,7 @@ function tick(game, now) {
         game.log.push(`${p.name} was te laat en past automatisch.`);
       }
     });
-    if (game.order.every((id) => game.players[id].acted)) completeTurn(game);
+    if (aliveIds(game).every((id) => game.players[id].acted)) completeTurn(game);
     return changed || true;
   }
 
@@ -454,7 +537,7 @@ function tick(game, now) {
 
 /* ---------------- serialize (per-requester view) ---------------- */
 
-function serializeCivic(civic, age) {
+function serializeCivic(civic, age, player) {
   const out = {};
   CIVIC_CATEGORIES.forEach((key) => {
     const c = civic[key];
@@ -462,8 +545,8 @@ function serializeCivic(civic, age) {
       name: CIVIC_NAMES[key],
       upgradeCount: c.upgradeCount,
       eventsFired: c.eventsFired,
-      upgradeCost: civicUpgradeCost(age),
-      maxed: c.upgradeCount >= age
+      upgradeCost: civicUpgradeCost(age, c.upgradeCount + 1, player),
+      isEventStep: (c.upgradeCount + 1) % 3 === 0
     };
   });
   return out;
@@ -478,11 +561,14 @@ function serialize(game, requesterId, connected) {
       id,
       name: p.name,
       isNpc: p.isNpc,
+      leaderKey: p.leaderKey,
+      leaderName: p.leaderKey ? LEADERS.find((l) => l.key === p.leaderKey).name : null,
       gold: p.gold,
       attack: t.attack,
       defence: t.defence,
       income: t.income,
       hp: Math.max(0, p.hp),
+      alive: p.hp > 0,
       grid: p.grid.map((tile) => tile ? {
         type: tile.type,
         name: tile.name,
@@ -490,10 +576,10 @@ function serialize(game, requesterId, connected) {
         attack: tileStat(tile.base.attack, tile.level),
         defence: tileStat(tile.base.defence, tile.level),
         income: tileStat(tile.base.income, tile.level),
-        upgradeCost: flexibleUpgradeCost(game.age, tile.type),
+        upgradeCost: flexibleUpgradeCost(game.age, tile.type, p),
         maxed: tile.level >= game.age
       } : null),
-      civic: serializeCivic(p.civic, game.age),
+      civic: serializeCivic(p.civic, game.age, p),
       wonderBuilt: p.wonderBuilt,
       acted: p.acted,
       isYou: id === requesterId,
@@ -502,6 +588,7 @@ function serialize(game, requesterId, connected) {
   });
 
   const you = game.players[requesterId];
+  const takenKeys = new Set(Object.values(game.players).map((pl) => pl.leaderKey).filter(Boolean));
 
   return {
     kind: game.gameKey,
@@ -519,6 +606,9 @@ function serialize(game, requesterId, connected) {
       : (game.phase === 'wave' ? game.waveShownUntil : null),
     order: game.order,
     players,
+    leaders: LEADERS.map((l) => ({ key: l.key, name: l.name, attribute: l.attribute, bonus: l.bonus, taken: takenKeys.has(l.key) })),
+    pickerId: game.phase === 'picking' ? game.order[game.pickIndex] : null,
+    isYourPick: game.phase === 'picking' && game.order[game.pickIndex] === requesterId,
     yourHand: you && !you.acted && game.phase === 'draft'
       ? you.hand.map((c, i) => ({ idx: i, type: c.type, name: c.name, cost: c.cost, attack: c.attack, defence: c.defence, income: c.income, desc: cardDesc(c) }))
       : [],

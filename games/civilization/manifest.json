@@ -1,13 +1,13 @@
 {
   "key": "civilization",
   "name": "Age of Civilization",
-  "description": "Bouw door zeven tijdperken je stad, upgrade vaste en vrije gebouwen en verdedig je toren.",
-  "version": "3",
+  "description": "Kies een leider, bouw door zeven tijdperken je stad en versla je buren in de kring.",
+  "version": "4",
   "icon": "🏛️",
-  "badge": "2",
+  "badge": "2-7",
   "actionLabel": "Nieuw spel",
   "minPlayers": 2,
-  "maxPlayers": 2,
+  "maxPlayers": 7,
   "supportsNpc": true,
   "realtime": false,
   "solo": false

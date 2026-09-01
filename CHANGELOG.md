@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.9.0 — Leiders en 2-7 spelers
+
+- Age of Civilization is speelbaar voor 2 tot 7 spelers; voor tijdperk 1 kiest iedereen op zetvolgorde een unieke leider uit een pool van zeven, elk met een vaste bonus (Cleopatra, Alexander de Grote, Einstein, Gandhi, Bismarck, Lincoln, Achilles).
+- Aanvalsgolven verwerken nu een kloksgewijze ring: elke speler valt zijn buur aan terwijl hij zelf wordt aangevallen. Sneuvelt een speler, dan speelt de rest door; pas bij nog maar één overlevende (of na tijdperk 7) eindigt het spel.
+- Vaste gebouwen zijn niet langer beperkt door het huidige tijdperk: ze zijn altijd upgradebaar. De derde upgrade (en opnieuw de zesde) kost voortaan 3x zoveel als een gewone stap.
+- Elke kaart en elk gebouw toont nu zijn actuele bonus (goud, Attack, Defence) rechtstreeks op de tegel, niet pas na selectie.
+- Elk tijdperk heeft een eigen kleur- en icoonpalet per categorie in plaats van één vlakke accentkleur.
+- De spelweergave is herschikt tot een compacte, mobielvriendelijke lay-out met een spelersbalk bovenaan voor alle deelnemers.
+- Nieuwe regressietests bewaken de leiderskeuzefase, de kloksgewijze ring bij meer dan twee spelers, de altijd-upgradebare vaste gebouwen en de duurdere gebeurtenisstap.
+
 ## v1.8.0 — Vaste gebouwen en gebeurtenissen
 
 - Science, Religie en Cultuur zijn geen bouwkaarten meer; elke speler start voortaan met een vast Observatorium, Grote Tempel en Academie die nooit vervangen worden, alleen geüpgraded.

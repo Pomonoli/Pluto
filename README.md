@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.8.0
+## Nieuw in versie 1.9.0
 
-Age of Civilization heeft nu vaste gebouwen: elke speler start met een Observatorium, Grote Tempel en Academie die nooit vervangen worden, alleen geüpgraded. De stad heeft zes vrije plekken (was negen) voor Attack-, Defence-, Economy-kaarten en het Wonder. Upgraden kost meer en een gebouw kan nooit verder groeien dan het huidige tijdperk toelaat. Een vrije kaart upgraden geeft blijvend +25% van zijn basiswaarde per niveau; de derde upgrade van een vast gebouw (en opnieuw de zesde) ontketent een stapelbare gebeurtenis die je Attack, Defence en Inkomen permanent vermenigvuldigt.
+Age of Civilization is nu speelbaar voor 2 tot 7 spelers. Voor tijdperk 1 kiest iedereen op zetvolgorde een unieke leider — Cleopatra, Alexander de Grote, Einstein, Gandhi, Bismarck, Lincoln of Achilles — die elk een vaste bonus geven. Aanvalsgolven verwerken voortaan een kloksgewijze ring: sneuvelt een speler, dan speelt de rest gewoon door. Vaste gebouwen zijn altijd upgradebaar, kaarten tonen hun bonus meteen op de tegel, en elk tijdperk heeft zijn eigen kleur- en iconenpalet.
 
 ## Nieuw in versie 1.0.0
 
