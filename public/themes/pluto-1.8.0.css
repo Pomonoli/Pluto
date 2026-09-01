@@ -40,6 +40,9 @@ html[data-theme="pluto-1-8-0"] body::before{
 html[data-theme="pluto-1-8-0"] body::after{display:none}
 
 html[data-theme="pluto-1-8-0"] .topbar{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
   min-height:104px;
   background:linear-gradient(135deg,rgba(183,73,20,.97),rgba(236,127,38,.97));
   border:0;
@@ -49,6 +52,35 @@ html[data-theme="pluto-1-8-0"] .topbar{
   backdrop-filter:none;
   -webkit-backdrop-filter:none;
 }
+html[data-theme="pluto-1-8-0"] body:not(.game-active) .topbar::before{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  inset:-65% -8% -70% 31%;
+  pointer-events:none;
+  opacity:.78;
+  background:
+    radial-gradient(circle at 68% 47%,rgba(255,221,166,.12) 0 2.5%,transparent 3.2%),
+    radial-gradient(circle at 62% 50%,rgba(255,198,112,.30) 0 23%,rgba(239,119,35,.18) 35%,rgba(119,39,13,.15) 43%,transparent 44%),
+    radial-gradient(ellipse 68% 18% at 62% 52%,transparent 0 54%,rgba(255,220,160,.24) 55% 56%,transparent 57% 62%,rgba(255,210,142,.13) 63% 64%,transparent 65%);
+  transform:rotate(-5deg);
+}
+html[data-theme="pluto-1-8-0"] body:not(.game-active) .topbar::after{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  inset:0;
+  pointer-events:none;
+  opacity:.72;
+  background:
+    radial-gradient(circle at 12% 76%,rgba(255,231,190,.45) 0 1px,transparent 1.6px),
+    radial-gradient(circle at 29% 31%,rgba(255,229,181,.55) 0 1px,transparent 1.7px),
+    radial-gradient(circle at 47% 72%,rgba(255,237,202,.34) 0 1px,transparent 1.5px),
+    radial-gradient(circle at 58% 24%,rgba(255,241,212,.62) 0 1.2px,transparent 1.9px),
+    radial-gradient(circle at 91% 70%,rgba(255,225,177,.40) 0 1px,transparent 1.6px),
+    linear-gradient(118deg,transparent 5%,rgba(255,220,168,.08) 38%,transparent 62%);
+}
+html[data-theme="pluto-1-8-0"] body:not(.game-active) .topbar>*{position:relative;z-index:1}
 html[data-theme="pluto-1-8-0"] .brand-copy strong{color:#fff;font-size:1.9rem}
 html[data-theme="pluto-1-8-0"] .brand-copy small{display:block;color:rgba(255,255,255,.88);font-size:13px;letter-spacing:.06em}
 html[data-theme="pluto-1-8-0"] .brand-mark,
@@ -116,6 +148,137 @@ html[data-theme="pluto-1-8-0"] .ghost{
   background:#f5ebe4;
   border-color:rgba(86,59,42,.12);
 }
+
+/* Active rooms belong to the preview skin too. Keep the actual boards/game art intact. */
+html[data-theme="pluto-1-8-0"] body.room-active #lobbySection,
+html[data-theme="pluto-1-8-0"] body.game-active .game-panel{
+  color:var(--text);
+  background:rgba(255,250,246,.97);
+  border-color:rgba(86,59,42,.11);
+  box-shadow:0 13px 34px rgba(97,66,45,.10),inset 0 1px rgba(255,255,255,.86);
+  backdrop-filter:none;
+}
+html[data-theme="pluto-1-8-0"] body.room-active .lobby-player,
+html[data-theme="pluto-1-8-0"] body.game-active .score-row,
+html[data-theme="pluto-1-8-0"] body.game-active .turn-banner,
+html[data-theme="pluto-1-8-0"] body.game-active .table-surface,
+html[data-theme="pluto-1-8-0"] body.game-active .stat-grid>div{
+  color:var(--text);
+  background:#fffdf9;
+  border-color:rgba(86,59,42,.13);
+  box-shadow:none;
+}
+html[data-theme="pluto-1-8-0"] body.room-active .lobby-player strong,
+html[data-theme="pluto-1-8-0"] body.room-active .lobby-player .player-name{color:var(--text)}
+html[data-theme="pluto-1-8-0"] body.room-active #lobbySection{
+  width:100%;
+  margin:0;
+}
+html[data-theme="pluto-1-8-0"] body.game-active .game-panel{
+  background:linear-gradient(180deg,#fffaf6 0%,#f8efe8 100%);
+  border:0;
+  box-shadow:none;
+}
+html[data-theme="pluto-1-8-0"] body.game-active .result-modal-card{
+  color:var(--text);
+  background:#fffaf6;
+  border-color:rgba(86,59,42,.14);
+  box-shadow:0 24px 70px rgba(86,49,28,.24);
+}
+html[data-theme="pluto-1-8-0"] body.game-active .result-modal-copy{color:var(--muted)}
+
+/* Light-theme contrast: scores and player labels must remain readable everywhere. */
+html[data-theme="pluto-1-8-0"] .head-to-head-side strong,
+html[data-theme="pluto-1-8-0"] .blackjack-wallet strong,
+html[data-theme="pluto-1-8-0"] body.game-active :is(.game-player-score,.kingdomino-player-score,.cascadia-score-pill,.duel-final-score,.carc-final-score td.total){
+  color:#b84f17;
+  font-weight:900;
+}
+html[data-theme="pluto-1-8-0"] .head-to-head-side span,
+html[data-theme="pluto-1-8-0"] .head-to-head-middle small,
+html[data-theme="pluto-1-8-0"] body.game-active :is(.game-player-name,.player-name,.blackjack-wallet span,.blackjack-wallet small){
+  color:#374154;
+  opacity:1;
+}
+html[data-theme="pluto-1-8-0"] .head-to-head-middle{color:#6b6570}
+html[data-theme="pluto-1-8-0"] .head-to-head-score{background:#fffaf6;border-color:rgba(86,59,42,.13)}
+html[data-theme="pluto-1-8-0"] body.game-active .game-player-chip{
+  color:var(--text);
+  background:#fffdf9;
+  border-color:rgba(86,59,42,.13);
+}
+
+/* Shared game chrome becomes paper-light; coloured cards and actual board materials stay coloured. */
+html[data-theme="pluto-1-8-0"] body.game-active :is(
+  .blackjack-player,.blackjack-wallet,.blackjack-settlement,
+  .carc-player,.carc-controls,.carc-final-score-wrap,
+  .cluedo-last,.cluedo-reveal,.cluedo-eliminated,.cluedo-form,.cluedo-notes,
+  .trick-seat,.kingdomino-player,.kingdomino-overview,.kingdomino-turn-tools,.kingdomino-mini-card,
+  .quoridor-player,.quoridor-help,.quoridor-orientation,
+  .santorini-player,.santorini-help,.stratego-player,.stratego-help,
+  .ttr-player,.ttr-route-detail,.ttr-panel,
+  .duel-player,.duel-military,.duel-board-wrap,.duel-side-panel,
+  .minigolf-hint,.minigolf-hole-summary,.minigolf-scorecard
+){
+  color:var(--text);
+  background:#fffdf9;
+  border-color:rgba(86,59,42,.15);
+  box-shadow:none;
+}
+html[data-theme="pluto-1-8-0"] body.game-active :is(.blackjack-wallet,.blackjack-settlement,.carc-controls,.ttr-route-detail,.duel-board-wrap){background:#fbf1e9}
+html[data-theme="pluto-1-8-0"] body.game-active :is(.blackjack-settlement strong,.blackjack-settlement span,.blackjack-settlement small,.blackjack-total,.blackjack-round-result){color:#8f411b}
+html[data-theme="pluto-1-8-0"] body.game-active :is(.cluedo-field select,.kingdomino-direction){color:var(--text);background:#fffaf6;border-color:rgba(86,59,42,.17)}
+html[data-theme="pluto-1-8-0"] body.game-active .cluedo-note{border-bottom-color:rgba(86,59,42,.12)}
+html[data-theme="pluto-1-8-0"] body.game-active .cluedo-note strong{color:#625d62}
+html[data-theme="pluto-1-8-0"] body.game-active .clue-card{
+  color:var(--text);
+  background:#fffaf6;
+  border-color:rgba(86,59,42,.16);
+  box-shadow:0 4px 12px rgba(86,59,42,.06);
+}
+html[data-theme="pluto-1-8-0"] body.game-active .clue-card.suspect{background:#f7e8e0}
+html[data-theme="pluto-1-8-0"] body.game-active .clue-card.weapon{background:#eee9e4}
+html[data-theme="pluto-1-8-0"] body.game-active .clue-card.room{background:#e7eee2}
+html[data-theme="pluto-1-8-0"] body.game-active .clue-card .clue-category{color:#775f55}
+html[data-theme="pluto-1-8-0"] body.game-active .danger-button{
+  color:#fff;
+  background:#b64f38;
+  border-color:#a64330;
+  box-shadow:0 7px 16px rgba(153,60,39,.17);
+}
+html[data-theme="pluto-1-8-0"] body.game-active .danger-button:disabled{color:#746c6b;background:#e7d8d1;border-color:#d8c5bc}
+
+html[data-theme="pluto-1-8-0"] .rules-content,
+html[data-theme="pluto-1-8-0"] .rules-content :is(p,li,span,strong){color:#344054}
+html[data-theme="pluto-1-8-0"] .rules-content h3{color:#17243a}
+
+/* Game-specific play surfaces that were hard-coded for the dark skin. */
+html[data-theme="pluto-1-8-0"] body.game-active .civ-root{
+  --civ-accent:#c45b1d;
+  --civ-bg-panel:#fffaf6;
+  --civ-bg-panel-2:#f0dfd2;
+  --civ-text:#17243a;
+  --civ-text-dim:#69646a;
+  --civ-danger:#a83f3f;
+  --civ-good:#55783c;
+}
+html[data-theme="pluto-1-8-0"] body.game-active .carc-viewport{
+  border-color:rgba(86,59,42,.18);
+  background-color:#e8ddcf;
+  background-image:linear-gradient(rgba(91,67,49,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(91,67,49,.08) 1px,transparent 1px);
+}
+html[data-theme="pluto-1-8-0"] body.game-active .carc-burger-modal{color:var(--text);background:#fffaf6;border-color:rgba(86,59,42,.16)}
+html[data-theme="pluto-1-8-0"] body.game-active .carc-choice-icon{background:#f2e2d6}
+html[data-theme="pluto-1-8-0"] body.game-active .carc-final-score-title,
+html[data-theme="pluto-1-8-0"] body.game-active .carc-final-score thead th{color:#544d4e}
+html[data-theme="pluto-1-8-0"] body.game-active .hof-board{background:#e9e0d5;border-color:rgba(86,59,42,.18)}
+html[data-theme="pluto-1-8-0"] body.game-active .kingdomino-board{background:#e7ddcf;border-color:rgba(86,59,42,.18)}
+html[data-theme="pluto-1-8-0"] body.game-active .kingdomino-board-cell{background:rgba(86,59,42,.07)}
+html[data-theme="pluto-1-8-0"] body.game-active .quoridor-board{background:#d6c2a2;border-color:rgba(86,59,42,.22);box-shadow:0 12px 28px rgba(86,59,42,.16)}
+html[data-theme="pluto-1-8-0"] body.game-active .ttr-map-wrap{background:#e8e1d5;border-color:rgba(86,59,42,.18)}
+html[data-theme="pluto-1-8-0"] body.game-active .ttr-map-bg{fill:#e8e1d5}
+html[data-theme="pluto-1-8-0"] body.game-active .ttr-city-label rect{fill:rgba(255,250,246,.94);stroke:rgba(86,59,42,.2)}
+html[data-theme="pluto-1-8-0"] body.game-active .ttr-city-label text{fill:#17243a;stroke:#fffaf6}
 
 html[data-theme="pluto-1-8-0"] .game-card{
   position:relative;
@@ -219,6 +382,18 @@ html[data-theme="pluto-1-8-0"] .head-to-head-score{
   border-color:rgba(86,59,42,.10);
 }
 html[data-theme="pluto-1-8-0"] .profile-link{color:#c45c1d}
+html[data-theme="pluto-1-8-0"] .open-room-player{
+  color:#8f411b;
+  background:#f8e5d7;
+  border-color:#edcbb7;
+}
+html[data-theme="pluto-1-8-0"] .lobby-rooms-heading #refreshRoomsButton{
+  color:#9e4719;
+  background:#fffaf6;
+  border-color:#dfbda8;
+  opacity:1;
+}
+html[data-theme="pluto-1-8-0"] .lobby-rooms-heading #refreshRoomsButton:hover{color:#fff;background:#c75a1c;border-color:#c75a1c}
 
 html[data-theme="pluto-1-8-0"] .mobile-nav{
   color:#6d7480;
@@ -243,26 +418,43 @@ html[data-theme="pluto-1-8-0"] .mobile-nav-item.active::after{background:#cb5d1b
 
 @media(max-width:760px){
   html[data-theme="pluto-1-8-0"] body{background:#f6f0ea}
-  html[data-theme="pluto-1-8-0"] .app-shell{width:100%;padding:0 14px 96px}
+  html[data-theme="pluto-1-8-0"] body:not(.room-active){padding-bottom:calc(62px + env(safe-area-inset-bottom))}
+  html[data-theme="pluto-1-8-0"] .app-shell{width:100%;padding:0 14px calc(70px + env(safe-area-inset-bottom))}
   html[data-theme="pluto-1-8-0"] .topbar{
-    position:relative;
-    top:auto;
+    position:sticky;
+    top:0;
+    z-index:900;
     width:100vw;
-    min-height:154px;
-    margin:0 0 18px calc(50% - 50vw);
-    padding:calc(max(18px,env(safe-area-inset-top)) + 8px) max(20px,env(safe-area-inset-right)) 30px max(20px,env(safe-area-inset-left));
-    border-radius:0 0 30px 30px;
+    min-height:126px;
+    margin:0 0 14px calc(50% - 50vw);
+    padding:calc(max(12px,env(safe-area-inset-top)) + 6px) max(18px,env(safe-area-inset-right)) 22px max(18px,env(safe-area-inset-left));
+    border-radius:0 0 26px 26px;
     background:
       radial-gradient(80% 68% at 72% 105%,rgba(255,175,84,.28),transparent 70%),
       linear-gradient(135deg,#b74b18 0%,#d56620 52%,#ed8129 100%);
     box-shadow:0 12px 28px rgba(113,57,25,.15);
   }
+  html[data-theme="pluto-1-8-0"] body:not(.game-active) .topbar::before{inset:-38% -24% -43% 23%;opacity:.86}
+  html[data-theme="pluto-1-8-0"] body.game-active .mobile-game-header{
+    color:#fff;
+    background:
+      radial-gradient(80% 68% at 72% 105%,rgba(255,175,84,.28),transparent 70%),
+      linear-gradient(135deg,#b74b18 0%,#d56620 52%,#ed8129 100%);
+    border-bottom-color:rgba(255,255,255,.16);
+    box-shadow:0 7px 20px rgba(113,57,25,.20);
+  }
+  html[data-theme="pluto-1-8-0"] body.game-active :is(.mobile-game-leave,.mobile-game-menu-button){
+    color:#fff;
+    background:rgba(255,255,255,.13);
+    border-color:rgba(255,255,255,.24);
+    box-shadow:none;
+  }
   html[data-theme="pluto-1-8-0"] .brand-button{gap:14px}
   html[data-theme="pluto-1-8-0"] .brand-mark,
-  html[data-theme="pluto-1-8-0"] .brand-mark-img{width:60px;height:60px}
-  html[data-theme="pluto-1-8-0"] .brand-copy strong{font-size:2rem;line-height:1}
-  html[data-theme="pluto-1-8-0"] .brand-copy small{display:block!important;margin-top:7px;font-size:13px}
-  html[data-theme="pluto-1-8-0"] .top-actions>#soundButton{display:grid!important;width:52px;min-width:52px;height:52px;min-height:52px;padding:0;border-radius:50%}
+  html[data-theme="pluto-1-8-0"] .brand-mark-img{width:52px;height:52px}
+  html[data-theme="pluto-1-8-0"] .brand-copy strong{font-size:1.8rem;line-height:1}
+  html[data-theme="pluto-1-8-0"] .brand-copy small{display:block!important;margin-top:6px;font-size:12px}
+  html[data-theme="pluto-1-8-0"] .top-actions>#soundButton{display:grid!important;width:46px;min-width:46px;height:46px;min-height:46px;padding:0;border-radius:50%}
   html[data-theme="pluto-1-8-0"] .top-actions>#installButton{color:#fff;background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.18)}
   html[data-theme="pluto-1-8-0"] .section-heading{margin-top:24px}
   html[data-theme="pluto-1-8-0"] .section-heading .eyebrow{color:#17243a;font-size:15px;letter-spacing:0;text-transform:none}
@@ -275,4 +467,35 @@ html[data-theme="pluto-1-8-0"] .mobile-nav-item.active::after{background:#cb5d1b
   html[data-theme="pluto-1-8-0"] .recent-game-row{gap:10px}
   html[data-theme="pluto-1-8-0"] .recent-game-button{min-width:165px;border-radius:18px}
   html[data-theme="pluto-1-8-0"] .theme-settings-row{grid-template-columns:1fr;gap:12px}
+  html[data-theme="pluto-1-8-0"] .mobile-nav{
+    left:0;
+    right:0;
+    bottom:0;
+    transform:none;
+    width:100%;
+    min-height:calc(62px + env(safe-area-inset-bottom));
+    padding:5px max(6px,env(safe-area-inset-right)) max(5px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));
+    border-right:0;
+    border-bottom:0;
+    border-left:0;
+    border-radius:18px 18px 0 0;
+  }
+  html[data-theme="pluto-1-8-0"] body.room-active .app-shell{padding-bottom:env(safe-area-inset-bottom)}
+  html[data-theme="pluto-1-8-0"] body.game-active .app-shell{padding-left:0;padding-right:0}
+  html[data-theme="pluto-1-8-0"] body.game-active .topbar{margin-bottom:0}
+  html[data-theme="pluto-1-8-0"] body.game-active .game-panel{border-radius:0}
+  html[data-theme="pluto-1-8-0"] .profile-grid>*,
+  html[data-theme="pluto-1-8-0"] #profileGames,
+  html[data-theme="pluto-1-8-0"] #profileRecent{min-width:0;max-width:100%}
+  html[data-theme="pluto-1-8-0"] #profileGames{overflow-x:auto;overscroll-behavior-inline:contain}
+  html[data-theme="pluto-1-8-0"] #profileGames .stats-table{width:100%;table-layout:fixed;font-size:10px}
+  html[data-theme="pluto-1-8-0"] #profileGames .stats-table th,
+  html[data-theme="pluto-1-8-0"] #profileGames .stats-table td{padding:8px 4px}
+  html[data-theme="pluto-1-8-0"] #profileGames .stats-table th:first-child,
+  html[data-theme="pluto-1-8-0"] #profileGames .stats-table td:first-child{width:26px}
+  html[data-theme="pluto-1-8-0"] #profileGames .stats-table th:nth-child(2),
+  html[data-theme="pluto-1-8-0"] #profileGames .stats-table td:nth-child(2){width:31%;white-space:normal;overflow-wrap:anywhere}
+  html[data-theme="pluto-1-8-0"] #profileRecent .recent-match{grid-template-columns:minmax(0,1fr) auto;max-width:100%}
+  html[data-theme="pluto-1-8-0"] #profileRecent .recent-match strong,
+  html[data-theme="pluto-1-8-0"] #profileRecent .recent-match small{min-width:0;overflow-wrap:anywhere}
 }

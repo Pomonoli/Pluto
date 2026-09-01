@@ -1,3 +1,4 @@
+@media(min-width:761px){#gameStage:has(.solitaire-board){max-width:900px}}
 .solitaire-board{--sol-card-step:25px;--sol-column-height:390px;width:100%;max-width:100%;overflow:hidden}
 .sol-top{display:flex;justify-content:space-between;gap:clamp(6px,2vw,18px);min-width:0;margin-bottom:22px}
 .sol-stock-zone,.sol-foundations{display:flex;gap:clamp(4px,1.4vw,10px);min-width:0}

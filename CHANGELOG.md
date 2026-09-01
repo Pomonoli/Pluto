@@ -1,5 +1,88 @@
 # Changelog
 
+## v1.11.13 — Passende gamebreedtes voor browser en tablet
+
+- Alle actieve games gebruiken vanaf 761px een gecentreerde gamecanvas van maximaal 1180px.
+- Panelen, handen, kaarten en actierijen blijven binnen de beschikbare schermbreedte.
+- Compacte spellen zoals Age of Civilization, Santorini, Stratego, Quoridor en Solitaire gebruiken kleinere spel-eigen maxima.
+- Brede bordspellen behouden voldoende ruimte zonder over ultrabrede schermen uit te rekken.
+- De mobiele layout tot en met 760px blijft volledig ongewijzigd.
+
+## v1.11.12 — Consistente lobbyterminologie
+
+- Alle zichtbare lobbyteksten gebruiken voortaan `game` en `games` in plaats van `room` en `rooms`.
+- Het lobbyoverzicht, lege toestand, uitnodigingen, hervatbare games en join-knoppen zijn aangepast.
+- Gamecodes, vertrekbevestigingen, navigatiemeldingen en serverfouten gebruiken dezelfde terminologie.
+- Interne roomroutes en socket-events blijven ongewijzigd voor technische compatibiliteit.
+
+## v1.11.11 — Carcassonne-burgers en uniforme lobbybanner
+
+- De Carcassonne-lobby heeft onder de tegelkeuze een slider voor het aantal burgers per speler.
+- De slider gebruikt standaard 7 burgers en kan door de host worden ingesteld van 1 tot 12.
+- De gekozen hoeveelheid geldt voor menselijke spelers en NPC's en blijft behouden bij een rematch.
+- Alle game-lobby's gebruiken nu dezelfde hoogte, branding en subtiele ruimteachtergrond als de Home-banner.
+- Actieve games behouden hun bestaande compacte gameheader.
+
+## v1.11.10 — Carcassonne spelduur en Home-banner
+
+- De Carcassonne-host kan in de lobby kiezen uit 72 tegels (standaard), 36 tegels (short) of 18 tegels (blitz).
+- De gekozen tegelset blijft behouden bij het starten en bij een rematch.
+- Iedere wachtende speler ziet vanaf de beurt direct na zijn eigen beurt al de verwachte volgende tegel.
+- De tegelpreview toont compact hoeveel spelers nog voor jou aan de beurt komen.
+- De oranje Home-banner heeft een subtiele planeet, ringen, gloed en sterren gekregen zonder de bestaande hoogte te wijzigen.
+
+## v1.11.9 — Mobiele spelervaring
+
+- Actieve games gebruiken op mobiel één compacte oranje header met terugknop, gamenaam en een menu voor spelregels en geluid.
+- Interne vertrekacties tonen een visuele Pluto-bevestiging met duidelijke keuzes om te blijven of het spel te verlaten.
+- Hervatbare games verschijnen prominent op Home als `Doorgaan met spelen`.
+- Recente games scrollen vloeiender met horizontale snap en de spelersfilter heeft een touch-target van minstens 44 × 44 px.
+- Profielstatistieken gebruiken compacte mobiele kaarten en leaderboards passen zonder horizontaal scrollen.
+- Op mobiel staat inloggen centraal en is `Account maken` een secundaire flow.
+- Safe areas, modals, spacing, interne game-scroll en algemene mobiele touch-targets zijn verder verfijnd.
+
+## v1.11.8 — Carcassonne vult schermhoogte
+
+- Het Carcassonne-speelveld gebruikt op mobiel alle resterende hoogte van de gamecontainer.
+- De oude vaste `100dvh - 300px`-hoogte en 430px-limiet zijn verwijderd voor actieve mobiele games.
+- Titel, spelers en tegelbediening blijven vast; alleen het bord groeit of krimpt met de beschikbare schermruimte.
+
+## v1.11.7 — Minimale game-header
+
+- Tijdens actieve games op mobiel klapt de oranje header terug tot een minimale exit-strip.
+- Alleen het klikbare Pluto-logo blijft zichtbaar zodat spelers snel naar Home kunnen terugkeren en de game vrijwel het volledige scherm gebruikt.
+
+## v1.11.6 — Compactere mobiele Light-header
+
+- De oranje banner op mobiele niet-game-schermen is lager gemaakt zodat Home meer verticale ruimte overhoudt.
+- Logo, titel en verticale padding zijn licht verkleind; actieve rooms en games behouden hun bestaande headerhoogte.
+
+## v1.11.5 — Recente gamekaarten zonder schaduw
+
+- De schaduw onder de recente gamekaarten op Home is verwijderd in het Light theme.
+
+## v1.11.4 — Minor carcassonne fixes
+
+- Landbouwer placement in Carcassonne verbeterd.
+
+## v1.11.3 — Light theme en schermvullende games
+
+- Het oranje Light theme is volledig afgewerkt en voortaan standaard; Classic blijft beschikbaar via Instellingen.
+- Lobby's en actieve games gebruiken de lichte stijl, waarbij gamepanelen de beschikbare ruimte onder de header volledig benutten.
+- De mobiele header is compacter en blijft staan; de onderste navigatie sluit schermbreed aan op de onderrand.
+- Scores, chips, spelersnamen en spelregels hebben sterker contrast in het Light theme.
+- Donkere vaste spelpanelen en speelvelden in onder meer Age of Civilization, Carcassonne, Cluedo, Blackjack en Ticket to Ride zijn aangepast aan het Light theme.
+- Cluedo-kaarten en de definitieve beschuldigingsknop zijn beter leesbaar.
+- Profielstatistieken en recente matches blijven op mobiel binnen het scherm en scrollen alleen wanneer dat echt nodig is.
+
+## v1.11.2 — Homefilter hersteld
+
+- Een zichzelf activerende `MutationObserver` in de spelersfilter is idempotent gemaakt.
+- Gamecards, navigatieknoppen en responsive device emulation blokkeren niet langer na het renderen van Home.
+- Alle frontend-cacheverwijzingen zijn verhoogd zodat browsers het defecte 1.11.1-filterbestand niet hergebruiken.
+- Een regressietest bewaakt dat de heading-observer alleen een werkelijk aanwezige klasse verwijdert.
+- Releasechecks zijn bijgewerkt voor alle zeventien games.
+
 ## v1.11.1 — PWA-updatepopup
 
 - De geïnstalleerde PWA controleert bij openen welke gebruikersrelevante wijzigingen sinds het vorige bezoek zijn toegevoegd.

@@ -1,6 +1,8 @@
 /* Age of Civilization — scoped entirely under .civ-root so it can't leak
    into the rest of the Pluto shell or other game plugins. */
 
+@media(min-width:761px){#gameStage:has(.civ-root){max-width:640px}}
+
 .civ-root {
   --civ-accent: #B8895A;
   --civ-bg-panel: #211c17;

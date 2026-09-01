@@ -6,7 +6,7 @@ const path=require('node:path');
 test('één mens plus NPCs wordt niet als ranked match opgeslagen',()=>{
   const realtime=fs.readFileSync(path.join(__dirname,'../src/server/realtime.js'),'utf8');
   assert.match(realtime,/humanCount = room\.players\.filter\(\(player\) => !player\.isNpc\)\.length/);
-  assert.match(realtime,/if \(humanCount < 2\)/);
+  assert.match(realtime,/if \(humanCount < 2 && !gameModule\(room\)\.meta\.solo\)/);
   assert.match(realtime,/room\.matchRecorded = true/);
 });
 

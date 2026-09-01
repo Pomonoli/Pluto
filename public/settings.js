@@ -29,4 +29,4 @@
   });
 })();
 
-import('/whats-new.js?v=1.11.1').catch(() => {});
+import('/whats-new.js?v=1.11.3').catch(() => {});

@@ -14,7 +14,7 @@ export function mount(api){
   [els.mapNameInput,els.mapDifficultySelect,els.mapMaxStrokesInput].forEach(input=>input.addEventListener('change',()=>{editorInstance.syncEditorMetaToMap();editorInstance.editorMarkDirty()}));
   editorInstance.bindMapCanvasEvents();
 }
-export function openTool({state,setRoute,toast}){if(state.room)return toast('Verlaat eerst de room.');if(!editorInstance)return toast('Minigolf-editor kon niet laden.');setRoute('/minigolf/editor');editorInstance.showMinigolfEditor()}
+export function openTool({state,setRoute,toast}){if(state.room)return toast('Verlaat eerst de game.');if(!editorInstance)return toast('Minigolf-editor kon niet laden.');setRoute('/minigolf/editor');editorInstance.showMinigolfEditor()}
 export function handleRoute({path}){if(!/^\/minigolf\/editor\/?$/.test(path)||!editorInstance)return false;editorInstance.showMinigolfEditor();return true}
 export const roomOptions={bodyClass:'minigolf-mode'};
 

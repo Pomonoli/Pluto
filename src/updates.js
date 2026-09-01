@@ -57,6 +57,70 @@ const RELEASES = [
     features:[
       'Een compacte updatepopup toont voortaan alleen wat nieuw is sinds je vorige bezoek.'
     ]
+  },
+  {
+    version:'1.11.2',
+    improvements:[
+      'De spelersfilter blokkeert Home, knoppen en mobiele layout niet langer.'
+    ]
+  },
+  {
+    version:'1.11.3',
+    features:[
+      'Het afgewerkte Light theme is voortaan standaard; Classic blijft beschikbaar via Instellingen.'
+    ],
+    improvements:[
+      'Lobby\'s en games gebruiken een lichte, schermvullende layout met betere contrasten.',
+      'De mobiele header, ondernavigatie en profieltabellen benutten kleine schermen beter.'
+    ]
+  },
+  {
+    version:'1.11.4',
+    improvements:[
+      'Carcassonne landbouwer-plaatsing verbeterd.'
+    ]
+  },
+  {
+    version:'1.11.9',
+    features:[
+      'Actieve games hebben op mobiel een compacte oranje gameheader en een visuele bevestiging bij het verlaten.',
+      'Lopende games kunnen prominent via Doorgaan met spelen worden hervat.'
+    ],
+    improvements:[
+      'Recent, profielen en leaderboards zijn compacter en beter bruikbaar op kleine schermen.',
+      'De mobiele loginflow, safe areas en touch-targets zijn verbeterd.'
+    ]
+  },
+  {
+    version:'1.11.10',
+    features:[
+      'Carcassonne kan in de lobby met 72, 36 of 18 tegels worden gestart.',
+      'Wachtende Carcassonne-spelers zien eerder hun verwachte volgende tegel en hoeveel spelers nog voor hen komen.'
+    ],
+    improvements:[
+      'De oranje Home-banner heeft een subtiele planeet-, ringen- en sterrenachtergrond.'
+    ]
+  },
+  {
+    version:'1.11.11',
+    features:[
+      'De Carcassonne-host kan het aantal burgers per speler instellen van 1 tot 12, met 7 als standaard.'
+    ],
+    improvements:[
+      'Game-lobby’s gebruiken dezelfde compacte oranje ruimtebanner als Home.'
+    ]
+  },
+  {
+    version:'1.11.12',
+    improvements:[
+      'De lobby gebruikt overal game en games in plaats van room en rooms.'
+    ]
+  },
+  {
+    version:'1.11.13',
+    improvements:[
+      'Games blijven in browser en tablet binnen een passende, gecentreerde breedte zonder de mobiele layout te wijzigen.'
+    ]
   }
 ];
 

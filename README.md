@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.11.1
+## Nieuw in versie 1.11.13
 
-De geïnstalleerde PWA toont voortaan alleen wanneer er effectief iets nieuws is een compacte popup met wijzigingen sinds het vorige bezoek. Nieuwe games, nieuwe features en verbeteringen worden over gemiste releases heen samengevoegd; ingelogde accounts bewaren de laatst geziene versie centraal en gasten lokaal op hun toestel.
+Actieve games gebruiken in browser- en tabletweergave voortaan een begrensde, gecentreerde werkbreedte. Brede spellen blijven ruim en overzichtelijk, terwijl compacte bord- en kaartspellen kleinere passende maxima gebruiken. De mobiele weergave tot en met 760px blijft ongewijzigd.
 
 ## Nieuw in versie 1.11.0
 

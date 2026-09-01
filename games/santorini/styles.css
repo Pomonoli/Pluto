@@ -1,3 +1,4 @@
+@media(min-width:761px){#gameStage:has(.santorini-board){max-width:700px}}
 .santorini-players{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:min(100%,540px);margin:10px auto}
 .santorini-players.count-3,.santorini-players.count-4{grid-template-columns:repeat(2,minmax(0,1fr))}
 .santorini-player{display:grid;grid-template-columns:auto 1fr;gap:1px 8px;align-items:center;padding:9px 11px;border:1px solid rgba(255,255,255,.12);border-radius:13px;background:rgba(10,20,42,.48)}

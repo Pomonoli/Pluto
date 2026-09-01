@@ -3,16 +3,16 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 
-const dataDir=fs.mkdtempSync(path.join(os.tmpdir(),'pluto-updates-'));
+const dataDir=fs.mkdtempSync(path.join(__dirname,'tmp-updates-'));
 process.env.DATA_DIR=dataDir;
 
 const updates=require('../src/updates');
 
 test.after(() => {
-  fs.rmSync(dataDir,{recursive:true,force:true});
+  require('../src/db').db.close();
+  fs.rmSync(dataDir,{recursive:true,force:true,maxRetries:3,retryDelay:50});
 });
 
 test('current version has no unseen changes', () => {
@@ -35,6 +35,14 @@ test('first guest visit establishes a silent baseline', () => {
 test('guest with an older seen version gets only relevant grouped changes', () => {
   const payload=updates.payloadFor({since:'1.11.0'});
   assert.deepEqual(payload.changes.games,[]);
-  assert.equal(payload.changes.features.length,1);
-  assert.deepEqual(payload.changes.improvements,[]);
+  assert.equal(payload.changes.features.length,7);
+  assert.equal(payload.changes.improvements.length,10);
+  assert.ok(payload.changes.features.some((item)=>item.includes('Light theme')));
+  assert.ok(payload.changes.features.some((item)=>item.includes('gameheader')));
+  assert.ok(payload.changes.features.some((item)=>item.includes('72, 36 of 18 tegels')));
+  assert.ok(payload.changes.features.some((item)=>item.includes('burgers per speler')));
+  assert.ok(payload.changes.improvements.some((item)=>item.includes('planeet-')));
+  assert.ok(payload.changes.improvements.some((item)=>item.includes('ruimtebanner')));
+  assert.ok(payload.changes.improvements.some((item)=>item.includes('in plaats van room')));
+  assert.ok(payload.changes.improvements.some((item)=>item.includes('passende, gecentreerde breedte')));
 });
