@@ -149,6 +149,15 @@ const RELEASES = [
     improvements:[
       'Age of Civilization past op één vast scherm en gebruikt verzorgde kaart- en upgradepopups met compacte statverschillen.'
     ]
+  },
+  {
+    version:'1.12.3',
+    features:[
+      'Games kunnen alfabetisch of volgens je persoonlijke speelgeschiedenis worden gesorteerd.'
+    ],
+    improvements:[
+      '7 Wonders Duel, Hartenjagen en Hofslag gebruiken compactere vaste spelweergaves met duidelijkere kaarten, spelers en scores.'
+    ]
   }
 ];
 

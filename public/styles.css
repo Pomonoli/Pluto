@@ -874,7 +874,7 @@ body::after{
   background:linear-gradient(90deg, #86d7ff 0%, #a9b8ff 48%, #8de2be 100%);
 }
 .recent-game-button strong{color:#f6f9ff;}
-#recentGames .primary,#recentGames .secondary,.recent-game-button{
+.recent-game-button{
   color:#f7fbff;
 }
 input,select,textarea{

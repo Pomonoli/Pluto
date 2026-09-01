@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.12.3 — Persoonlijke sortering en compactere games
+
+- De kaart `Recent` is van Home verwijderd.
+- Games kunnen alfabetisch of volgens de persoonlijk meest gespeelde games worden gesorteerd; voor accounts blijft die keuze bewaard.
+- 7 Wonders Duel gebruikt één vast spelscherm met aparte tabbladen voor kaarten en voor wonders/vooruitgang.
+- De twee spelerspanelen in 7 Wonders Duel staan naast elkaar en zijn beter leesbaar, terwijl de centrale gamekaarten compacter zijn.
+- Hartenjagen gebruikt vaste, grotere spelersvakken die tijdens alle rondes even groot blijven; de score opent via een knop in een centrale popup.
+- Hofslag centreert de kaarten in `Jouw hand`, schaalt het bord naar de resterende schermhoogte en toont vier spelers in een raster van twee bij twee.
+
 ## v1.12.2 — Fixed-screen Age of Civilization
 
 - Age of Civilization gebruikt één vast spelscherm zonder paginascroll of spellog.

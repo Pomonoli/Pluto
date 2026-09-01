@@ -18,7 +18,8 @@ db.exec(`
     username TEXT NOT NULL,
     username_key TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
-    created_at INTEGER NOT NULL
+    created_at INTEGER NOT NULL,
+    game_sort TEXT NOT NULL DEFAULT 'alphabetical'
   );
 
   CREATE TABLE IF NOT EXISTS sessions (
@@ -79,6 +80,9 @@ db.exec(`
 
 if (!db.prepare("PRAGMA table_info(users)").all().some((column) => column.name === 'blackjack_chips')) {
   db.exec('ALTER TABLE users ADD COLUMN blackjack_chips INTEGER NOT NULL DEFAULT 100');
+}
+if (!db.prepare("PRAGMA table_info(users)").all().some((column) => column.name === 'game_sort')) {
+  db.exec("ALTER TABLE users ADD COLUMN game_sort TEXT NOT NULL DEFAULT 'alphabetical'");
 }
 
 function applyDataMigrations() {
@@ -180,7 +184,7 @@ function clearExpiredSessions() {
 function getUserBySessionToken(token) {
   if (!token) return null;
   const row = db.prepare(`
-    SELECT u.id, u.username, u.created_at AS createdAt, s.expires_at AS expiresAt
+    SELECT u.id, u.username, u.created_at AS createdAt, u.game_sort AS gameSort, s.expires_at AS expiresAt
     FROM sessions s
     JOIN users u ON u.id = s.user_id
     WHERE s.token_hash = ? AND s.expires_at > ?
@@ -205,7 +209,7 @@ function register(usernameValue, passwordValue) {
       'INSERT INTO users(username,username_key,password_hash,created_at) VALUES(?,?,?,?)'
     ).run(userCheck.username, userCheck.key, hashPassword(passCheck.password), now);
 
-    const user = { id: Number(result.lastInsertRowid), username: userCheck.username, createdAt: now };
+    const user = { id: Number(result.lastInsertRowid), username: userCheck.username, createdAt: now, gameSort:'alphabetical' };
     const session = createSession(user.id);
     return { ok: true, user, session };
   } catch (error) {
@@ -218,7 +222,7 @@ function login(usernameValue, passwordValue) {
   const username = normalizeUsername(usernameValue);
   const password = String(passwordValue || '');
   const row = db.prepare(
-    'SELECT id,username,password_hash,created_at AS createdAt FROM users WHERE username_key = ?'
+    'SELECT id,username,password_hash,created_at AS createdAt,game_sort AS gameSort FROM users WHERE username_key = ?'
   ).get(username.toLocaleLowerCase('nl-BE'));
 
   if (!row || !verifyPassword(password, row.password_hash)) {
@@ -228,7 +232,7 @@ function login(usernameValue, passwordValue) {
   const session = createSession(row.id);
   return {
     ok: true,
-    user: { id: row.id, username: row.username, createdAt: row.createdAt },
+    user: { id: row.id, username: row.username, createdAt: row.createdAt, gameSort:row.gameSort },
     session
   };
 }
@@ -365,6 +369,24 @@ function leaderboard(gameKey = null, limit = 100) {
   `).all(...params);
 
   return rows;
+}
+
+function gamePopularity(userId) {
+  if (!userId) return [];
+  return db.prepare(`
+    SELECT m.game_key AS gameKey, COUNT(*) AS games
+    FROM match_players mp
+    JOIN matches m ON m.id = mp.match_id
+    WHERE mp.user_id = ?
+    GROUP BY m.game_key
+    ORDER BY games DESC, m.game_key ASC
+  `).all(userId);
+}
+
+function setGameSort(userId, value) {
+  const gameSort=value==='popular'?'popular':'alphabetical';
+  db.prepare('UPDATE users SET game_sort = ? WHERE id = ?').run(gameSort,userId);
+  return gameSort;
 }
 
 function getProfile(usernameValue) {
@@ -670,6 +692,8 @@ module.exports = {
   clearExpiredSessions,
   recordMatch,
   leaderboard,
+  gamePopularity,
+  setGameSort,
   getProfile,
   getOwnStats,
   getBlackjackChips,

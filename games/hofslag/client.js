@@ -36,7 +36,7 @@ function renderHofslag(room, game) {
   center.append(stats); board.append(center);
   els.gameStage.append(board);
 
-  const handArea=E('div','hand-area');
+  const handArea=E('div','hand-area hof-hand');
   const row=E('div','card-row');
   (me?.hand||[]).forEach(v=>{
     const c=cardNode({rank:valueLabel(v),suit:me.suit},{legal:!me.pending&&!game.gameOver&&!offline&&!animating});
@@ -45,7 +45,9 @@ function renderHofslag(room, game) {
     row.append(c);
   });
   handArea.append(E('span','eyebrow','JOUW HAND'),row);
-  els.gameStage.append(handArea, scoreList(game.players,p=>`${p.score} pt`), logBox(game.log));
+  const scores=scoreList(game.players,p=>`${p.score} pt`);
+  scores.classList.add('hof-score-list',`hof-score-list-${game.players.length}`);
+  els.gameStage.append(handArea,scores,logBox(game.log));
 
   if (shouldAnimate) startHofAnimation(board, game);
   else requestAnimationFrame(()=>renderHofBoard(board,game));

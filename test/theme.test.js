@@ -40,7 +40,7 @@ test('preview skin launches games from the full card and shows arrows', () => {
   assert.match(theme, /launch\.click\(\)/);
   assert.match(css, /html\[data-theme="pluto-1-8-0"\] \.game-launch\{display:none!important\}/);
   assert.match(css, /\.game-card\.theme-card-launchable::after/);
-  assert.match(css, /#recentGames \.recent-game-button span\{display:none\}/);
+  assert.doesNotMatch(css, /#recentGames/);
 });
 
 test('settings gear opens and closes the popup on desktop and mobile', () => {

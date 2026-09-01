@@ -350,8 +350,6 @@ html[data-theme="pluto-1-8-0"] .recent-game-button{
   text-align:left;
 }
 html[data-theme="pluto-1-8-0"] .recent-game-button::before{display:none}
-html[data-theme="pluto-1-8-0"] #recentGames .recent-game-button span{display:none}
-html[data-theme="pluto-1-8-0"] #recentGames .recent-game-button::after,
 html[data-theme="pluto-1-8-0"] .home-open-lobby-button::after{
   content:"›";
   position:absolute;

@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.12.2
+## Nieuw in versie 1.12.3
 
-Age of Civilization past nu volledig binnen één vast spelscherm. Kaarten en upgrades gebruiken centrale bevestigingspopups, stadsupgrades tonen compacte statverschillen en `Jouw stad` schakelt automatisch tussen één compacte rij en twee grotere rijen naargelang de beschikbare schermhoogte.
+Home toont geen recente-gameskaart meer en kan games alfabetisch of volgens je persoonlijke speelgeschiedenis sorteren. 7 Wonders Duel, Hartenjagen en Hofslag gebruiken compactere vaste spelweergaves: Duel heeft twee tabbladen, Hartenjagen opent scores in een popup en Hofslag houdt ook met vier spelers alles binnen één scherm.
 
 ## Nieuw in versie 1.11.0
 

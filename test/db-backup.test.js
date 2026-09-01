@@ -34,6 +34,14 @@ test('SQLite backup maakt een bruikbare snapshot', () => {
     }]
   });
 
+  const popularity=db.gamePopularity(user.user.id);
+  assert.equal(popularity.length,1);
+  assert.equal(popularity[0].gameKey,'hofslag');
+  assert.equal(popularity[0].games,1);
+  assert.equal(db.setGameSort(user.user.id,'popular'),'popular');
+  const refreshed=db.getUserFromCookieHeader(`${db.SESSION_COOKIE}=${user.session.token}`);
+  assert.equal(refreshed.gameSort,'popular');
+
   const backup = db.backupDatabase();
   const target = path.join(dir, 'backups', backup.filename);
   assert.equal(fs.existsSync(target), true);

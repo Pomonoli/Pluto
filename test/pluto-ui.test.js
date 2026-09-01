@@ -78,6 +78,21 @@ test('Age of Civilization blijft fixed en gebruikt overlays voor kaartinfo en up
   assert.doesNotMatch(client,/civ-detail-slot/);
 });
 
+test('7 Wonders Duel gebruikt een fixed scherm met kaarten- en rijk-tabs',()=>{
+  const client=fs.readFileSync(path.join(root,'games/seven-wonders-duel/client.js'),'utf8');
+  const css=fs.readFileSync(path.join(root,'games/seven-wonders-duel/styles.css'),'utf8');
+  assert.match(client,/state\.duelTab/);
+  assert.match(client,/Kaarten/);
+  assert.match(client,/Jouw wonders/);
+  assert.match(client,/Vooruitgang/);
+  assert.doesNotMatch(client,/logBox\(game\.log\)/);
+  assert.match(css,/#gameStage:has\(\.duel-shell\)\{[^}]*overflow:hidden!important/);
+  assert.match(css,/\.duel-tabs\{[^}]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(css,/\.duel-science-line\{[^}]*font-size:\.9rem/);
+  assert.match(css,/\.duel-card\{[^}]*max-height:61px/);
+  assert.match(css,/@media\(max-width:470px\)\{[\s\S]*?\.duel-header\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+});
+
 test('homescreen bevat geen kaart meer om via een code te joinen',()=>{
   const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
   const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
@@ -94,6 +109,13 @@ test('homescreen toont alleen beschikbare open lobbykaarten',()=>{
   assert.match(app,/homeOpenLobbiesSection\.classList\.toggle\('hidden',!open\.length\)/);
   assert.match(app,/button\.onclick=\(\)=>joinRoom\(room\.id\)/);
   assert.match(app,/canResume\?'Ga terug':room\.resumable\?'Lopend'/);
+});
+
+test('homescreen bevat geen Recent-sectie meer',()=>{
+  const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
+  const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
+  assert.doesNotMatch(html,/id="recentGames(?:Section)?"|>RECENT</);
+  assert.doesNotMatch(app,/recentGamesList|rememberRecentGame|renderRecentGames/);
 });
 
 test('lobby gebruikt game en games als zichtbare benaming',()=>{
@@ -156,9 +178,28 @@ test('settings en mobiele gameheader tonen compacte consistente metadata',()=>{
   const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
   const css=fs.readFileSync(path.join(root,'public/styles.css'),'utf8');
   const light=fs.readFileSync(path.join(root,'public/themes/pluto-1.8.0.css'),'utf8');
-  assert.match(html,/class="settings-version"[^>]*>Pluto v1\.12\.2</);
+  assert.match(html,/class="settings-version"[^>]*>Pluto v1\.12\.3</);
   assert.match(css,/\.connection-pill,\.badge\{[^}]*white-space:nowrap;[^}]*flex-shrink:0/);
   assert.match(css,/\.mobile-game-leave,\.mobile-game-menu-button\{[^}]*border:0;[^}]*background:transparent/);
   assert.match(css,/\.mobile-game-name\{[^}]*height:44px;[^}]*place-items:center;[^}]*line-height:1/);
   assert.match(light,/body\.game-active :is\(\.mobile-game-leave,\.mobile-game-menu-button\)\{[^}]*background:transparent;[^}]*border-color:transparent/);
+});
+
+test('Hartenjagen houdt het speelveld fixed en toont de score in een popup',()=>{
+  const client=fs.readFileSync(path.join(root,'games/hartenjagen/client.js'),'utf8');
+  const css=fs.readFileSync(path.join(root,'games/hartenjagen/styles.css'),'utf8');
+  assert.match(client,/hearts-score-button/);
+  assert.match(client,/function openScorePopup/);
+  assert.match(client,/hearts-score-backdrop/);
+  assert.doesNotMatch(client,/els\.gameStage\.append\(scores,logBox/);
+  assert.match(css,/#gameStage:has\(\.hearts-table\)\{[^}]*overflow:hidden!important/);
+  assert.match(css,/\.hearts-score-backdrop\{position:absolute/);
+});
+
+test('Hartenjagen houdt alle spelersvakken even groot zonder ze uit te rekken',()=>{
+  const css=fs.readFileSync(path.join(root,'games/hartenjagen/styles.css'),'utf8');
+  assert.match(css,/#gameStage:has\(\.hearts-table\)\{--hearts-trick-height:clamp\(320px,38dvh,380px\)/);
+  assert.match(css,/\.hearts-trick\{[^}]*flex:0 0 var\(--hearts-trick-height\);[^}]*height:var\(--hearts-trick-height\);[^}]*grid-template-rows:repeat\(2,minmax\(0,1fr\)\);[^}]*align-items:stretch/);
+  assert.match(css,/\.trick-seat\{[^}]*height:100%;[^}]*grid-template-rows:auto minmax\(0,1fr\)/);
+  assert.match(css,/\.trick-seat \.playing-card\{[^}]*align-self:center/);
 });

@@ -1,8 +1,8 @@
-import { createGameUi } from './js/game-ui.js?v=1.12.2';
+import { createGameUi } from './js/game-ui.js?v=1.12.3';
 const socket = window.io();
   const $ = (id) => document.getElementById(id);
   const els = {};
-  ['brandButton','lobbyBrowserButton','leaderboardButton','soundButton','installButton','accountButton','mobileNav','mobilePlayButton','mobileLobbyButton','mobileLeaderboardButton','mobileProfileButton','mobileGameHeader','mobileGameLeaveButton','mobileGameName','mobileGameMenuButton','mobileGameMenu','mobileGameRulesButton','mobileGameSoundButton','mobileGameLeaveMenuButton','rulesButton','homeView','lobbyBrowserView','leaderboardView','profileView','roomView','homeGuestBar','guestName','homeAccountButton','inviteBox','inviteText','joinInviteButton','resumeGameSection','resumeGames','recentGamesSection','recentGames','homeOpenLobbiesSection','homeOpenLobbies','gamesHeading','gameGrid','refreshRoomsButton','lobbyIdentityBar','lobbyIdentityText','lobbyGuestWrap','lobbyGuestName','openRoomCount','openRoomsContent','leaderboardGame','leaderboardContent','profileUsername','profileSummary','profileGames','profileRecent','headToHeadCard','headToHeadGame','headToHeadContent','roomLayout','lobbySection','gameSection','playerCountBadge','lobbyPlayers','gameLobbyOptions','hostControls','addNpcButton','startGameButton','lobbyHint','gameStage','gameResult','accountModal','closeAccountButton','loggedOutAccount','loggedInAccount','loginForm','loginUsername','loginPassword','showRegisterButton','showLoginButton','registerForm','registerUsername','registerPassword','accountUsername','accountGames','accountWins','accountWinRate','myProfileButton','logoutButton','rulesModal','rulesGameName','rulesContent','closeRulesButton','leaveGameModal','leaveGameTitle','leaveGamePromptText','cancelLeaveGameButton','confirmLeaveGameButton','toast'].forEach((id) => els[id] = $(id));
+  ['brandButton','lobbyBrowserButton','leaderboardButton','soundButton','installButton','accountButton','mobileNav','mobilePlayButton','mobileLobbyButton','mobileLeaderboardButton','mobileProfileButton','mobileGameHeader','mobileGameLeaveButton','mobileGameName','mobileGameMenuButton','mobileGameMenu','mobileGameRulesButton','mobileGameSoundButton','mobileGameLeaveMenuButton','rulesButton','homeView','lobbyBrowserView','leaderboardView','profileView','roomView','homeGuestBar','guestName','homeAccountButton','inviteBox','inviteText','joinInviteButton','resumeGameSection','resumeGames','homeOpenLobbiesSection','homeOpenLobbies','gamesHeading','gameGrid','refreshRoomsButton','lobbyIdentityBar','lobbyIdentityText','lobbyGuestWrap','lobbyGuestName','openRoomCount','openRoomsContent','leaderboardGame','leaderboardContent','profileUsername','profileSummary','profileGames','profileRecent','headToHeadCard','headToHeadGame','headToHeadContent','roomLayout','lobbySection','gameSection','playerCountBadge','lobbyPlayers','gameLobbyOptions','hostControls','addNpcButton','startGameButton','lobbyHint','gameStage','gameResult','accountModal','closeAccountButton','loggedOutAccount','loggedInAccount','loginForm','loginUsername','loginPassword','showRegisterButton','showLoginButton','registerForm','registerUsername','registerPassword','accountUsername','accountGames','accountWins','accountWinRate','myProfileButton','logoutButton','rulesModal','rulesGameName','rulesContent','closeRulesButton','leaveGameModal','leaveGameTitle','leaveGamePromptText','cancelLeaveGameButton','confirmLeaveGameButton','toast'].forEach((id) => els[id] = $(id));
 
   const state = {
     room: null,
@@ -115,7 +115,6 @@ const socket = window.io();
     const target = getRoomFromPath(); state.directRoomId = target;
     els.inviteBox.classList.toggle('hidden', !target); if (target) els.inviteText.textContent = `Je bent uitgenodigd voor game ${target}`;
     updateIdentityUi();
-    renderRecentGames();
     loadHomeOpenLobbies();
   }
   async function showOpenLobby() {
@@ -164,31 +163,8 @@ const socket = window.io();
       els.headToHeadCard.classList.remove('hidden');await loadHeadToHead(data.profile.user.username);
     }
   }
-  function recentGamesList() {
-    try { return JSON.parse(localStorage.getItem('minigames.recentGames') || '[]').filter(k=>GAME_NAMES[k]).slice(0,4); }
-    catch { return []; }
-  }
-  function rememberRecentGame(gameKey) {
-    if (!GAME_NAMES[gameKey]) return;
-    const list = [gameKey, ...recentGamesList().filter(k=>k!==gameKey)].slice(0,4);
-    localStorage.setItem('minigames.recentGames', JSON.stringify(list));
-    if (!els.homeView.classList.contains('hidden')) renderRecentGames();
-  }
-  function renderRecentGames() {
-    const list = recentGamesList();
-    els.recentGamesSection.classList.toggle('hidden', !list.length);
-    els.recentGames.replaceChildren();
-    list.forEach(gameKey=>{
-      const b=E('button','recent-game-button');
-      b.type='button';
-      b.append(E('strong','',GAME_NAMES[gameKey]),E('span','', 'Nieuw spel'));
-      b.onclick=()=>createRoom(gameKey);
-      els.recentGames.append(b);
-    });
-    updateHomeGamesHeading();
-  }
   function updateHomeGamesHeading() {
-    const hasExtraSections=!els.resumeGameSection.classList.contains('hidden')||!els.recentGamesSection.classList.contains('hidden')||!els.homeOpenLobbiesSection.classList.contains('hidden');
+    const hasExtraSections=!els.resumeGameSection.classList.contains('hidden')||!els.homeOpenLobbiesSection.classList.contains('hidden');
     els.gamesHeading.classList.toggle('hidden',!hasExtraSections);
   }
   async function loadHomeOpenLobbies() {
@@ -346,7 +322,6 @@ const socket = window.io();
   function handlePluginRoute(){return Object.values(state.gamePlugins).some(plugin=>plugin.handleRoute?.({path:location.pathname,state,setRoute,toast})===true)}
   function createRoom(gameKey) {
     const name = saveGuestName(); if (!name) return;
-    rememberRecentGame(gameKey);
     state.roomStateBlocked = true;
     state.expectedRoomId = null;
     socket.emit('room:create', { name, token: state.token, gameKey }, (result) => {
@@ -491,7 +466,7 @@ const socket = window.io();
     const previous=state.previousRoom;
     handleRoomEffects(previous,room);
     if(state.renderedRoomId!==room.id){state.renderedRoomId=room.id;state.renderedGameRevision=-1;state.scoreMemory={};}
-    state.room = room; state.previousRoom=room; rememberRecentGame(room.gameKey); showRoom();
+    state.room = room; state.previousRoom=room; showRoom();
     const roomOptions=state.gamePlugins[room.gameKey]?.roomOptions||{};if(state.activeGameBodyClass&&state.activeGameBodyClass!==roomOptions.bodyClass)document.body.classList.remove(state.activeGameBodyClass);state.activeGameBodyClass=room.status!=='lobby'?roomOptions.bodyClass||null:null;if(state.activeGameBodyClass)document.body.classList.add(state.activeGameBodyClass);
     document.body.classList.toggle('game-active',room.status!=='lobby');
     els.mobileGameName.textContent=room.gameMeta?.name||GAME_NAMES[room.gameKey]||'Spel';
@@ -642,7 +617,7 @@ const socket = window.io();
   if('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.12.2', {
+        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.12.3', {
           updateViaCache:'none'
         });
         await registration.update();
