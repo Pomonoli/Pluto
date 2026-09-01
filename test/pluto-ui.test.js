@@ -178,7 +178,7 @@ test('settings en mobiele gameheader tonen compacte consistente metadata',()=>{
   const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
   const css=fs.readFileSync(path.join(root,'public/styles.css'),'utf8');
   const light=fs.readFileSync(path.join(root,'public/themes/pluto-1.8.0.css'),'utf8');
-  assert.match(html,/class="settings-version"[^>]*>Pluto v1\.12\.3</);
+  assert.match(html,/class="settings-version"[^>]*>Pluto v1\.12\.4</);
   assert.match(css,/\.connection-pill,\.badge\{[^}]*white-space:nowrap;[^}]*flex-shrink:0/);
   assert.match(css,/\.mobile-game-leave,\.mobile-game-menu-button\{[^}]*border:0;[^}]*background:transparent/);
   assert.match(css,/\.mobile-game-name\{[^}]*height:44px;[^}]*place-items:center;[^}]*line-height:1/);

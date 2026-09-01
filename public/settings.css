@@ -1,19 +1,19 @@
 .settings-toggle{
-  width:46px;
-  min-width:46px;
-  height:46px;
-  min-height:46px;
+  width:44px;
+  min-width:44px;
+  height:44px;
+  min-height:44px;
   padding:0;
   display:grid;
   place-items:center;
   border-radius:50%;
 }
 .settings-toggle svg{
-  width:21px;
-  height:21px;
+  width:19px;
+  height:19px;
   fill:none;
   stroke:currentColor;
-  stroke-width:1.9;
+  stroke-width:1.75;
   stroke-linecap:round;
   stroke-linejoin:round;
 }
@@ -45,12 +45,13 @@
 .settings-sound-button .sound-icon svg{width:21px;height:21px}
 .settings-version{margin:14px 0 0;text-align:center;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:.06em;opacity:.72}
 
-html[data-theme="pluto-1-8-0"] .settings-toggle{
-  background:rgba(255,250,246,.92);
-  border-color:rgba(105,66,42,.12);
-  color:#273244;
-  box-shadow:0 8px 24px rgba(99,54,25,.12);
+html[data-theme="pluto-1-8-0"] .top-actions .settings-toggle{
+  background:rgba(255,250,246,.86);
+  border-color:rgba(255,255,255,.48);
+  color:#9b4318;
+  box-shadow:0 5px 16px rgba(99,54,25,.11),inset 0 1px rgba(255,255,255,.42);
 }
+html[data-theme="pluto-1-8-0"] .top-actions .settings-toggle:hover{background:#fffaf6;color:#7f3514;border-color:rgba(255,255,255,.72)}
 html[data-theme="pluto-1-8-0"] .settings-modal{
   background:#fffaf6;
   color:#17243a;

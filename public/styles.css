@@ -394,7 +394,7 @@ body{padding-bottom:env(safe-area-inset-bottom)}
 #installButton{font-weight:800}
 .mobile-nav{display:none}
 @media(max-width:760px){
-body{padding-bottom:calc(66px + env(safe-area-inset-bottom))}
+body{padding-bottom:calc(74px + env(safe-area-inset-bottom))}
 body.room-active{padding-bottom:env(safe-area-inset-bottom)}
 .app-shell{padding-bottom:14px}
 .topbar{
@@ -419,7 +419,7 @@ body.room-active{padding-bottom:env(safe-area-inset-bottom)}
     bottom:max(7px,env(safe-area-inset-bottom));
     transform:translateX(-50%);
     width:min(430px,calc(100% - 18px));
-    min-height:57px;
+    min-height:65px;
     display:grid;
     grid-template-columns:repeat(4,1fr);
     padding:5px 6px;
@@ -432,7 +432,7 @@ body.room-active{padding-bottom:env(safe-area-inset-bottom)}
 body.room-active .mobile-nav{display:none}
 .mobile-nav-item{
     min-width:0;
-    min-height:46px;
+    min-height:52px;
     border:0;
     border-radius:13px;
     background:transparent;
@@ -443,14 +443,14 @@ body.room-active .mobile-nav{display:none}
     gap:2px;
     color:#8f9aaa
   }
-.mobile-nav-item svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mobile-nav-item svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;shape-rendering:geometricPrecision}
 .mobile-nav-item[data-nav="play"] svg{fill:currentColor;stroke:none}
-.mobile-nav-item span{font-size:8.5px;font-weight:800;white-space:nowrap;letter-spacing:-.01em}
+.mobile-nav-item span{font-size:10px;font-weight:850;line-height:1.1;white-space:nowrap;letter-spacing:0;text-rendering:geometricPrecision}
 .mobile-nav-item.active{color:var(--accent);background:rgba(231,198,111,.07)}
-.mobile-nav-item.active::after{content:"";width:14px;height:2px;border-radius:999px;background:var(--accent);position:absolute;margin-top:44px}
+.mobile-nav-item.active::after{content:"";width:16px;height:2px;border-radius:999px;background:var(--accent);position:absolute;margin-top:50px}
 .mobile-nav-item{position:relative}
-.toast{bottom:calc(76px + env(safe-area-inset-bottom))}
-.modal-backdrop{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+.toast{bottom:calc(84px + env(safe-area-inset-bottom))}
+.modal-backdrop{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
 body.room-active .toast{bottom:max(20px,env(safe-area-inset-bottom))}
 body.room-active .modal-backdrop{padding-bottom:env(safe-area-inset-bottom)}
 }

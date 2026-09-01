@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.12.3
+## Nieuw in versie 1.12.4
 
-Home toont geen recente-gameskaart meer en kan games alfabetisch of volgens je persoonlijke speelgeschiedenis sorteren. 7 Wonders Duel, Hartenjagen en Hofslag gebruiken compactere vaste spelweergaves: Duel heeft twee tabbladen, Hartenjagen opent scores in een popup en Hofslag houdt ook met vier spelers alles binnen één scherm.
+De gedeelde Light-header is compacter op Home, lobby, leaderboard en profiel. De mobiele ondernavigatie is iets ruimer en scherper met grotere iconen en labels, terwijl de instellingenknop voortaan een subtiele transparante stijl met een fijner tandwiel gebruikt.
 
 ## Nieuw in versie 1.11.0
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.12.4 — Verfijnde mobiele navigatie
+
+- De gedeelde Light-header is compacter gemaakt op Home, lobby, leaderboard en profiel.
+- Logo, titel en tussenruimte schalen proportioneel mee; de compacte in-game header blijft ongewijzigd.
+- De mobiele ondernavigatie is verhoogd naar 70 px plus safe-area met grotere iconen, labels en touchzones.
+- De onderbalk gebruikt een effen achtergrond zonder blurfilter, met scherpere iconlijnen en een duidelijkere bovenrand.
+- De instellingenknop gebruikt een subtiele transparante stijl met een kleiner, fijner wit tandwiel.
+
 ## v1.12.3 — Persoonlijke sortering en compactere games
 
 - De kaart `Recent` is van Home verwijderd.

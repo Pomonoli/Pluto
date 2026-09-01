@@ -158,6 +158,12 @@ const RELEASES = [
     improvements:[
       '7 Wonders Duel, Hartenjagen en Hofslag gebruiken compactere vaste spelweergaves met duidelijkere kaarten, spelers en scores.'
     ]
+  },
+  {
+    version:'1.12.4',
+    improvements:[
+      'De gedeelde Light-header is compacter en de mobiele ondernavigatie is ruimer, scherper en beter leesbaar met een vernieuwde instellingenknop.'
+    ]
   }
 ];
 

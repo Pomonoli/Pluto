@@ -43,7 +43,7 @@ html[data-theme="pluto-1-8-0"] .topbar{
   position:relative;
   isolation:isolate;
   overflow:hidden;
-  min-height:104px;
+  min-height:92px;
   background:linear-gradient(135deg,rgba(183,73,20,.97),rgba(236,127,38,.97));
   border:0;
   border-radius:0 0 28px 28px;
@@ -81,10 +81,10 @@ html[data-theme="pluto-1-8-0"] body:not(.game-active) .topbar::after{
     linear-gradient(118deg,transparent 5%,rgba(255,220,168,.08) 38%,transparent 62%);
 }
 html[data-theme="pluto-1-8-0"] body:not(.game-active) .topbar>*{position:relative;z-index:1}
-html[data-theme="pluto-1-8-0"] .brand-copy strong{color:#fff;font-size:1.9rem}
-html[data-theme="pluto-1-8-0"] .brand-copy small{display:block;color:rgba(255,255,255,.88);font-size:13px;letter-spacing:.06em}
+html[data-theme="pluto-1-8-0"] .brand-copy strong{color:#fff;font-size:1.75rem}
+html[data-theme="pluto-1-8-0"] .brand-copy small{display:block;color:rgba(255,255,255,.88);font-size:12px;letter-spacing:.06em}
 html[data-theme="pluto-1-8-0"] .brand-mark,
-html[data-theme="pluto-1-8-0"] .brand-mark-img{width:62px;height:62px}
+html[data-theme="pluto-1-8-0"] .brand-mark-img{width:56px;height:56px}
 html[data-theme="pluto-1-8-0"] .brand-mark-img{filter:drop-shadow(0 8px 14px rgba(91,40,18,.28))}
 html[data-theme="pluto-1-8-0"] .top-actions .ghost,
 html[data-theme="pluto-1-8-0"] .top-actions button,
@@ -95,6 +95,18 @@ html[data-theme="pluto-1-8-0"] .sound-toggle{
   box-shadow:0 8px 20px rgba(102,48,20,.13);
 }
 html[data-theme="pluto-1-8-0"] #soundButton{border-radius:50%}
+html[data-theme="pluto-1-8-0"] .top-actions>#settingsButton{
+  width:44px;
+  min-width:44px;
+  height:44px;
+  min-height:44px;
+  padding:0;
+  color:#fff;
+  background:rgba(255,255,255,.14);
+  border-color:rgba(255,255,255,.24);
+  box-shadow:inset 0 1px rgba(255,255,255,.12);
+}
+html[data-theme="pluto-1-8-0"] .top-actions>#settingsButton:hover{color:#fff;background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.34)}
 
 html[data-theme="pluto-1-8-0"] body:not(.room-active) .home-guest-bar,
 html[data-theme="pluto-1-8-0"] body:not(.room-active) .invite-box,
@@ -395,10 +407,11 @@ html[data-theme="pluto-1-8-0"] .lobby-rooms-heading #refreshRoomsButton:hover{co
 
 html[data-theme="pluto-1-8-0"] .mobile-nav{
   color:#6d7480;
-  background:rgba(255,250,246,.96);
-  border-top-color:rgba(88,60,42,.10);
-  box-shadow:0 -10px 26px rgba(83,58,41,.08);
-  backdrop-filter:blur(14px);
+  background:#fffaf6;
+  border-top-color:rgba(88,60,42,.16);
+  box-shadow:0 -5px 16px rgba(83,58,41,.10);
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
 }
 html[data-theme="pluto-1-8-0"] .mobile-nav-item{color:#717783;background:transparent}
 html[data-theme="pluto-1-8-0"] .mobile-nav-item.active{color:#cb5d1b;background:transparent}
@@ -416,16 +429,16 @@ html[data-theme="pluto-1-8-0"] .mobile-nav-item.active::after{background:#cb5d1b
 
 @media(max-width:760px){
   html[data-theme="pluto-1-8-0"] body{background:#f6f0ea}
-  html[data-theme="pluto-1-8-0"] body:not(.room-active){padding-bottom:calc(62px + env(safe-area-inset-bottom))}
-  html[data-theme="pluto-1-8-0"] .app-shell{width:100%;padding:0 14px calc(70px + env(safe-area-inset-bottom))}
+  html[data-theme="pluto-1-8-0"] body:not(.room-active){padding-bottom:calc(70px + env(safe-area-inset-bottom))}
+  html[data-theme="pluto-1-8-0"] .app-shell{width:100%;padding:0 14px calc(78px + env(safe-area-inset-bottom))}
   html[data-theme="pluto-1-8-0"] .topbar{
     position:sticky;
     top:0;
     z-index:900;
     width:100vw;
-    min-height:126px;
+    min-height:100px;
     margin:0 0 14px calc(50% - 50vw);
-    padding:calc(max(12px,env(safe-area-inset-top)) + 6px) max(18px,env(safe-area-inset-right)) 22px max(18px,env(safe-area-inset-left));
+    padding:calc(max(8px,env(safe-area-inset-top)) + 2px) max(18px,env(safe-area-inset-right)) 12px max(18px,env(safe-area-inset-left));
     border-radius:0 0 26px 26px;
     background:
       radial-gradient(80% 68% at 72% 105%,rgba(255,175,84,.28),transparent 70%),
@@ -447,11 +460,11 @@ html[data-theme="pluto-1-8-0"] .mobile-nav-item.active::after{background:#cb5d1b
     border-color:transparent;
     box-shadow:none;
   }
-  html[data-theme="pluto-1-8-0"] .brand-button{gap:14px}
+  html[data-theme="pluto-1-8-0"] .brand-button{gap:12px}
   html[data-theme="pluto-1-8-0"] .brand-mark,
-  html[data-theme="pluto-1-8-0"] .brand-mark-img{width:52px;height:52px}
-  html[data-theme="pluto-1-8-0"] .brand-copy strong{font-size:1.8rem;line-height:1}
-  html[data-theme="pluto-1-8-0"] .brand-copy small{display:block!important;margin-top:6px;font-size:12px}
+  html[data-theme="pluto-1-8-0"] .brand-mark-img{width:44px;height:44px}
+  html[data-theme="pluto-1-8-0"] .brand-copy strong{font-size:1.6rem;line-height:1}
+  html[data-theme="pluto-1-8-0"] .brand-copy small{display:block!important;margin-top:4px;font-size:11px}
   html[data-theme="pluto-1-8-0"] .top-actions>#soundButton{display:grid!important;width:46px;min-width:46px;height:46px;min-height:46px;padding:0;border-radius:50%}
   html[data-theme="pluto-1-8-0"] .top-actions>#installButton{color:#fff;background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.18)}
   html[data-theme="pluto-1-8-0"] .section-heading{margin-top:24px}
@@ -471,8 +484,8 @@ html[data-theme="pluto-1-8-0"] .mobile-nav-item.active::after{background:#cb5d1b
     bottom:0;
     transform:none;
     width:100%;
-    min-height:calc(62px + env(safe-area-inset-bottom));
-    padding:5px max(6px,env(safe-area-inset-right)) max(5px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));
+    min-height:calc(70px + env(safe-area-inset-bottom));
+    padding:6px max(6px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));
     border-right:0;
     border-bottom:0;
     border-left:0;
