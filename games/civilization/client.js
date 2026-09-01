@@ -1,4 +1,5 @@
-const ICONS={attack:'⚔️',defence:'🛡️',science:'🔬',economy:'💰',religion:'⛩️',culture:'🏛️',wonder:'✨'};
+const ICONS={attack:'⚔️',defence:'🛡️',economy:'💰',wonder:'✨'};
+const CIVIC_ICONS={science:'🔬',religion:'⛩️',culture:'🏛️'};
 const ACCENTS=['#B8895A','#C9A961','#9C4A55','#3E8067','#7A8062','#3E9BC9','#9D6FEF'];
 
 export function render(api){renderCivilization(api)}
@@ -12,7 +13,7 @@ function renderCivilization({game,state,els,E,action,titlebar,logBox,sound}) {
     :you.acted?`Tijdperk ${game.age}/${game.totalAges} · beurt ${game.turnInAge}/${game.turnsPerAge} · wachten`:`Tijdperk ${game.age}/${game.totalAges} · beurt ${game.turnInAge}/${game.turnsPerAge} · kies een actie`;
   const root=E('div','civ-root');
   root.style.setProperty('--civ-accent',ACCENTS[(game.age-1)%ACCENTS.length]);
-  root.append(renderMonument(E,game),renderEraBanner(E,game),renderStats(E,you,true),renderStats(E,opponent,false),renderYourGrid(E,action,sound,game,you));
+  root.append(renderMonument(E,game),renderEraBanner(E,game),renderStats(E,you,true),renderStats(E,opponent,false),renderCivicRow(E,action,sound,game,you),renderYourGrid(E,action,sound,game,you));
 
   if(game.phase==='draft'){
     if(!you.acted&&game.yourHand.length)root.append(renderDraft(E,action,sound,state,game,you));
@@ -39,6 +40,26 @@ function renderStats(E,player,isYou){
 }
 function statBox(E,label,value){const box=E('div','civ-stat-box');box.append(E('div','civ-stat-label',label),E('div','civ-stat-value',String(value)));return box;}
 
+function renderCivicRow(E,action,sound,game,you){
+  const wrap=E('div','civ-grid-block'),row=E('div','civ-civic-row');
+  wrap.append(E('div','civ-grid-label','Vaste gebouwen'));
+  const canAct=game.phase==='draft'&&!you.acted;
+  for(const key of ['science','religion','culture']){
+    const civic=you.civic[key];
+    const node=E('button','civ-tile civ-civic filled');node.type='button';
+    node.append(E('div','civ-tile-icon',CIVIC_ICONS[key]),E('div','civ-tile-name',civic.name),E('div','civ-tile-level',`Niv. ${civic.upgradeCount}${civic.eventsFired?` · ${civic.eventsFired}x gebeurtenis`:''}`));
+    if(canAct&&!civic.maxed){
+      const afford=you.gold>=civic.upgradeCost;
+      node.append(E('div','civ-tile-upgrade',`Upgrade (${civic.upgradeCost}g)`));
+      node.disabled=!afford;
+      node.onclick=()=>{sound('score');action('upgrade',{civic:key})};
+    } else node.disabled=true;
+    row.append(node);
+  }
+  wrap.append(row);
+  return wrap;
+}
+
 function renderYourGrid(E,action,sound,game,you){
   const wrap=E('div','civ-grid-block'),grid=E('div','civ-grid');
   wrap.append(E('div','civ-grid-label','Jouw stad'));
@@ -47,7 +68,7 @@ function renderYourGrid(E,action,sound,game,you){
     if(!tile){grid.append(E('div','civ-tile'));return}
     const node=E('button','civ-tile filled');node.type='button';
     node.append(E('div','civ-tile-icon',ICONS[tile.type]||''),E('div','civ-tile-name',tile.name),E('div','civ-tile-level',`Niv. ${tile.level}`));
-    if(canAct){
+    if(canAct&&!tile.maxed){
       const afford=you.gold>=tile.upgradeCost;
       node.append(E('div','civ-tile-upgrade',`Upgrade (${tile.upgradeCost}g)`));
       node.disabled=!afford;

@@ -73,6 +73,11 @@ button.civ-tile.filled:not(:disabled):hover { background: var(--civ-bg-panel-2);
 .civ-tile-upgrade { font-size: 0.4rem; color: var(--civ-accent); margin-top: 1px; }
 button.civ-tile.filled:disabled .civ-tile-upgrade { color: var(--civ-text-dim); }
 
+/* ---- civic row (fixed, permanent buildings) ---- */
+.civ-civic-row { display: flex; gap: 5px; }
+.civ-civic { flex: 1; aspect-ratio: auto; min-height: 62px; border-style: dashed; border-color: var(--civ-accent); }
+.civ-civic .civ-tile-name { font-size: 0.5rem; font-weight: 600; }
+
 /* ---- draft ---- */
 .civ-draft-label { font-size: 0.65rem; color: var(--civ-text-dim); text-transform: uppercase; text-align: center; margin-bottom: 4px; }
 .civ-hand { display: flex; gap: 6px; }

@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.8.0 — Vaste gebouwen en gebeurtenissen
+
+- Science, Religie en Cultuur zijn geen bouwkaarten meer; elke speler start voortaan met een vast Observatorium, Grote Tempel en Academie die nooit vervangen worden, alleen geüpgraded.
+- De stad heeft nu zes vrije plekken (was negen) voor Attack-, Defence- en Economy-kaarten en het Wonder.
+- Upgraden kost meer, en een gebouw kan nooit verder groeien dan het huidige tijdperk toelaat.
+- Een vrije kaart upgraden geeft er blijvend +25% van zijn oorspronkelijke waarde bij per niveau.
+- De eerste twee upgrades van een vast gebouw doen op zichzelf niets; de derde (en opnieuw de zesde) ontketent een stapelbare gebeurtenis die Attack, Defence en Inkomen permanent vermenigvuldigt. Science geeft +30% Attack/+20% Inkomen/+10% Defence; Religie en Cultuur geven allebei +30% Inkomen/+20% Defence/+10% Attack.
+- Nieuwe regressietests bewaken de tijdperkgrens op upgrades, de +25%-schaling en de stapelbare gebeurtenis.
+
 ## v1.7.1 — Winnen op levenspunten
 
 - Overleven beide torens alle zeven tijdperken, dan wint voortaan wie de meeste levenspunten over heeft, niet het meeste goud.

@@ -2,13 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.7.1
+## Nieuw in versie 1.8.0
 
-Wie in Age of Civilization alle zeven tijdperken overleeft, wint voortaan op de meeste levenspunten van zijn toren. Goud beslist alleen nog bij een exacte gelijke stand in levenspunten.
-
-## Nieuw in versie 1.7.0
-
-Age of Civilization is grondig herzien. Victory Points zijn verdwenen: Religie- en Cultuurkaarten verdelen hun bonus nu over Attack, Defence en goud per beurt. Gebouwen kun je voortaan ook upgraden — elke stat schaalt met factor 1,5 en het gebouw krijgt een naam passend bij het huidige tijdperk. Een tijdperk telt drie beurten en de aanvalsgolf wordt alleen op de derde beurt verwerkt. Torens beginnen op 100 in plaats van 20 levenspunten.
+Age of Civilization heeft nu vaste gebouwen: elke speler start met een Observatorium, Grote Tempel en Academie die nooit vervangen worden, alleen geüpgraded. De stad heeft zes vrije plekken (was negen) voor Attack-, Defence-, Economy-kaarten en het Wonder. Upgraden kost meer en een gebouw kan nooit verder groeien dan het huidige tijdperk toelaat. Een vrije kaart upgraden geeft blijvend +25% van zijn basiswaarde per niveau; de derde upgrade van een vast gebouw (en opnieuw de zesde) ontketent een stapelbare gebeurtenis die je Attack, Defence en Inkomen permanent vermenigvuldigt.
 
 ## Nieuw in versie 1.0.0
 

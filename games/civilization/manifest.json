@@ -1,8 +1,8 @@
 {
   "key": "civilization",
   "name": "Age of Civilization",
-  "description": "Bouw door zeven tijdperken je stad, upgrade je gebouwen en verdedig je toren.",
-  "version": "2",
+  "description": "Bouw door zeven tijdperken je stad, upgrade vaste en vrije gebouwen en verdedig je toren.",
+  "version": "3",
   "icon": "🏛️",
   "badge": "2",
   "actionLabel": "Nieuw spel",

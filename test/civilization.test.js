@@ -14,7 +14,7 @@ function buildFirstAffordable(game,playerId){
   return idx;
 }
 
-test('Age of Civilization start met twee geheime handen en 21 beurten',()=>{
+test('Age of Civilization start met twee geheime handen, 21 beurten en drie vaste gebouwen',()=>{
   const game=civilization.createGame(players());
   const view=civilization.serialize(game,'a',new Map([['a',true],['b',true]]));
   assert.equal(view.kind,'civilization');
@@ -24,6 +24,12 @@ test('Age of Civilization start met twee geheime handen en 21 beurten',()=>{
   assert.equal(view.turnInAge,1);
   assert.equal(view.players.some((player)=>Object.hasOwn(player,'hand')),false);
   assert.equal(view.players.some((player)=>Object.hasOwn(player,'vp')),false);
+  const you=view.players.find((player)=>player.isYou);
+  assert.equal(you.grid.length,6);
+  assert.equal(you.civic.science.upgradeCount,0);
+  assert.equal(you.civic.religion.upgradeCount,0);
+  assert.equal(you.civic.culture.upgradeCount,0);
+  assert.ok(view.yourHand.every((card)=>['attack','defence','economy','wonder'].includes(card.type)));
 });
 
 test('bouwen en weggooien blijven in draft totdat de derde beurt de aanval verwerkt',()=>{
@@ -47,19 +53,60 @@ test('bouwen en weggooien blijven in draft totdat de derde beurt de aanval verwe
   assert.ok(Object.hasOwn(game.waveResult.results.a,'defence'));
 });
 
-test('upgraden schaalt stats met 1,5x, behalve de uitzondering dat 1 altijd 2 wordt',()=>{
+test('vrije gebouwen kunnen pas het volgende tijdperk upgraden, en krijgen dan +25% van hun basiswaarde',()=>{
   const game=civilization.createGame(players());
   const p=game.players.a;
-  const idx=buildFirstAffordable(game,'a');
-  const tile=p.grid.find(Boolean);
-  const before={attack:tile.attack,defence:tile.defence,income:tile.income};
-  p.gold=99;
+  const attackIdx=p.hand.findIndex((card)=>card.type==='attack');
+  const baseAttack=p.hand[attackIdx].attack;
+  civilization.handleAction(game,'a','build',{handIndex:attackIdx});
+  const slot=p.grid.findIndex(Boolean);
+
   civilization.handleAction(game,'b','discard',{handIndex:0});
-  civilization.handleAction(game,'a','upgrade',{slot:p.grid.indexOf(tile)});
-  if(before.attack)assert.equal(tile.attack,before.attack===1?2:Math.floor(before.attack*1.5));
-  if(before.defence)assert.equal(tile.defence,before.defence===1?2:Math.floor(before.defence*1.5));
-  if(before.income)assert.equal(tile.income,before.income===1?2:Math.floor(before.income*1.5));
+  assert.equal(game.age,1);
+  assert.throws(()=>civilization.handleAction(game,'a','upgrade',{slot}),/tijdperk/);
+
+  civilization.handleAction(game,'a','discard',{handIndex:0});
+  civilization.handleAction(game,'b','discard',{handIndex:0});
+  civilization.handleAction(game,'a','discard',{handIndex:0});
+  civilization.handleAction(game,'b','discard',{handIndex:0});
+  assert.equal(game.phase,'wave');
+  civilization.tick(game,game.waveShownUntil+1);
+  assert.equal(game.age,2);
+  assert.equal(game.phase,'draft');
+
+  p.gold=999;
+  const goldBefore=p.gold;
+  const upgradeCostAtAge2=(2+1)*2; // flexible upgrade cost = fresh build cost at current age, x2
+  civilization.handleAction(game,'a','upgrade',{slot});
+  assert.equal(goldBefore-p.gold,upgradeCostAtAge2);
+  const view=civilization.serialize(game,'a',new Map([['a',true],['b',true]]));
+  const tile=view.players.find((player)=>player.isYou).grid[slot];
   assert.equal(tile.level,2);
+  assert.equal(tile.attack,Math.round(baseAttack*1.25));
+});
+
+test('een vast gebouw upgraden doet niets tot de derde upgrade, die een stapelbare gebeurtenis ontketent',()=>{
+  const game=civilization.createGame(players());
+  const p=game.players.a;
+  p.gold=999;
+  game.age=3;
+
+  civilization.handleAction(game,'a','upgrade',{civic:'science'});
+  civilization.handleAction(game,'b','discard',{handIndex:0});
+  assert.equal(p.civic.science.upgradeCount,1);
+  assert.equal(p.eventMultipliers.attack,1);
+
+  civilization.handleAction(game,'a','upgrade',{civic:'science'});
+  civilization.handleAction(game,'b','discard',{handIndex:0});
+  assert.equal(p.civic.science.upgradeCount,2);
+  assert.equal(p.eventMultipliers.attack,1);
+
+  civilization.handleAction(game,'a','upgrade',{civic:'science'});
+  assert.equal(p.civic.science.upgradeCount,3);
+  assert.equal(p.civic.science.eventsFired,1);
+  assert.ok(Math.abs(p.eventMultipliers.attack-1.3)<1e-9);
+  assert.ok(Math.abs(p.eventMultipliers.income-1.2)<1e-9);
+  assert.ok(Math.abs(p.eventMultipliers.defence-1.1)<1e-9);
 });
 
 test('gebouwen zijn uniek: dezelfde kaart wordt niet opnieuw aangeboden in hetzelfde tijdperk',()=>{

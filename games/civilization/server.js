@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Age of Civilization — server-authoritative logic (v4).
+ * Age of Civilization — server-authoritative logic (v5).
  *
  * Follows the Pluto plugin server contract (see games/README.md):
  *   createGame(roomPlayers)
@@ -13,19 +13,25 @@
  * Nothing here trusts the client: hands, gold, grid state, and phase
  * transitions all live only in `game` and are only ever mutated here.
  *
- * v4 rules:
- *   - 7 Ages x 3 turns = 21 turns. Combat resolves only on turn 3 of each Age.
- *   - Each turn: build a new tile from a private 3-card draft hand, upgrade
- *     an existing tile, or discard the hand for gold.
- *   - 6 categories: Attack, Defence, Science (feeds Defence), Economy (gold
- *     per turn), Religion and Culture (both split a bonus across Attack,
- *     Defence and Economy — there is no VP any more). Wonders are a rare
- *     one-off hybrid, available from Age 2, one per player.
- *   - Attack always outscales Defence at the same age/cost tier.
- *   - Upgrading a tile multiplies each of its stats by 1.5 (floored), except
- *     a stat of 1 always becomes 2 rather than staying at 1. The tile is
- *     re-skinned to that category's current-age flavor name. Buildings are
- *     unique — you can never build the same named card twice.
+ * v5 rules (on top of v4's 21-turn / combat-on-turn-3 structure):
+ *   - Science, Religion and Culture are no longer draftable cards. Every
+ *     player instead starts with one fixed, permanent building of each
+ *     (never built or replaced, only upgraded).
+ *   - The flexible city grid drops from 9 to 6 slots, drafted from Attack,
+ *     Defence and Economy cards (plus a Wonder from Age 2).
+ *   - Upgrading a flexible tile adds +25% of its BASE stat per level,
+ *     linearly (level 2 = 125% of base, level 3 = 150%, ...).
+ *   - Upgrading a fixed civic building does nothing on its own until the
+ *     3rd upgrade (and again the 6th, 9th, ...): that "event" permanently
+ *     multiplies the player's Attack/Defence/Income by a civic-specific
+ *     split (Science: +30% attack/+20% income/+10% defence; Culture and
+ *     Religion: +30% income/+20% defence/+10% attack), stacking each time
+ *     it fires.
+ *   - Every upgrade (flexible or civic) costs more than before, and its
+ *     counter (tile level, or civic upgrade count) can never exceed the
+ *     current Age — a building can't be pushed further than "its Age"
+ *     allows, so nothing built or upgraded this Age can upgrade again
+ *     until the Age advances.
  *   - City HP starts at 100 (no VP, so no healing). A tower hitting 0 is an
  *     instant loss. If both towers survive all 21 turns, the higher HP wins;
  *     gold only breaks a tie in HP.
@@ -38,8 +44,11 @@ const TURN_TIME_MS = 40000;  // soft deadline per turn for drafting/building
 const WAVE_DISPLAY_MS = 4000; // how long the wave-result screen stays up before auto-advancing
 const START_GOLD = 4;
 const START_HP = 100;
+const GRID_SIZE = 6;
+const UPGRADE_COST_MULTIPLIER = 2;
 
-const CATEGORIES = ['attack', 'defence', 'science', 'economy', 'religion', 'culture'];
+const CATEGORIES = ['attack', 'defence', 'economy'];
+const CIVIC_CATEGORIES = ['science', 'religion', 'culture'];
 
 const ERAS = [
   { name: 'Cavemen to Egyptians', wonder: 'Great Pyramid' },
@@ -57,20 +66,25 @@ const ERAS = [
 const NAMES = {
   attack: ['Sharpened Spear', 'Phalanx Legion', 'Musketeer Vanguard', 'Grand Army Corps', 'Armored Blitz Division', 'Stealth Strike Wing', 'Drone Swarm Offensive'],
   defence: ['Stone Palisade', 'City Rampart', 'Castle Bastion', 'Great Wall Garrison', 'Trench Fortress', 'Cyber Defense Shield', 'Orbital Defense Platform'],
-  science: ['Flint Toolworks', 'Bronze Forge', 'Gunsmith Workshop', 'Engineering Bureau', 'Radar Research Lab', 'Cyber Research Division', 'Quantum Defense Lab'],
-  economy: ['Grain Store', 'Trade Galley', 'Banking House', 'Continental Bank', 'Factory Assembly Line', 'Stock Exchange Floor', 'Quantum Bank'],
-  religion: ['Sun Ritual Circle', 'Marble Temple', 'Gothic Cathedral', 'Imperial Exam Hall', 'National Broadcast Shrine', 'Viral Faith Movement', 'Galactic Council'],
-  culture: ['Cave Painting', 'Olympic Games', 'Renaissance Workshop', 'Forbidden City', 'War Memorial', 'Blockbuster Studio', 'Mars Colony Archive']
+  economy: ['Grain Store', 'Trade Galley', 'Banking House', 'Continental Bank', 'Factory Assembly Line', 'Stock Exchange Floor', 'Quantum Bank']
+};
+
+// Fixed civic buildings: one each, present from the start, never rebuilt.
+const CIVIC_NAMES = { science: 'Observatory', religion: 'Grand Temple', culture: 'Academy' };
+
+// Permanent multiplier split applied to the player's Attack/Defence/Income
+// every time a civic building's upgrade count hits a multiple of 3.
+const CIVIC_SPLITS = {
+  science: { attack: 0.30, income: 0.20, defence: 0.10 },
+  culture: { income: 0.30, defence: 0.20, attack: 0.10 },
+  religion: { income: 0.30, defence: 0.20, attack: 0.10 }
 };
 
 function makeCard(type, age, name) {
   switch (type) {
     case 'attack': return { type, name, cost: age + 1, attack: age + 3, defence: 0, income: 0 };
     case 'defence': return { type, name, cost: age + 1, attack: 0, defence: age + 2, income: 0 };
-    case 'science': return { type, name, cost: age, attack: 0, defence: age + 1, income: 0 };
     case 'economy': return { type, name, cost: age, attack: 0, defence: 0, income: age + 1 };
-    case 'religion':
-    case 'culture': return { type, name, cost: age + 1, attack: age, defence: Math.max(0, age - 1), income: 1 };
     case 'wonder': return { type, name, cost: age * 2, attack: age * 2, defence: age * 2 - 1, income: age };
     default: throw new Error('unknown card type: ' + type);
   }
@@ -79,20 +93,22 @@ function makeCard(type, age, name) {
 function cardDesc(c) {
   if (c.type === 'attack') return `+${c.attack} Attack.`;
   if (c.type === 'defence') return `+${c.defence} Defence.`;
-  if (c.type === 'science') return `+${c.defence} Defence (Science).`;
   if (c.type === 'economy') return `+${c.income} Goud per beurt.`;
-  if (c.type === 'religion' || c.type === 'culture') return `+${c.attack} Attack, +${c.defence} Defence, +${c.income} Goud per beurt.`;
   if (c.type === 'wonder') return `Wonder: +${c.attack} Attack, +${c.defence} Defence, +${c.income} Goud per beurt. Eenmalig.`;
   return '';
 }
 
-function upgradeValue(v) {
-  if (!v) return 0;
-  return Math.max(v + 1, Math.floor(v * 1.5));
+// Effective stat for a flexible tile: base, +25% of base per level beyond 1.
+function tileStat(base, level) {
+  return base > 0 ? Math.round(base * (1 + 0.25 * (level - 1))) : 0;
 }
 
-function upgradeCost(age, type) {
-  return makeCard(type, age, '').cost;
+function flexibleUpgradeCost(age, type) {
+  return makeCard(type, age, '').cost * UPGRADE_COST_MULTIPLIER;
+}
+
+function civicUpgradeCost(age) {
+  return (age + 1) * 3;
 }
 
 function discardGold(age) { return age + 2; }
@@ -123,15 +139,26 @@ function dealHands(game) {
   Object.values(game.players).forEach((p) => { p.hand = drawCards(game.age, p); });
 }
 
+function applyCivicEvent(player, key) {
+  const split = CIVIC_SPLITS[key];
+  player.eventMultipliers.attack *= (1 + (split.attack || 0));
+  player.eventMultipliers.defence *= (1 + (split.defence || 0));
+  player.eventMultipliers.income *= (1 + (split.income || 0));
+}
+
 function totals(player) {
   let attack = 0, defence = 0, income = 0;
   player.grid.forEach((tile) => {
     if (!tile) return;
-    attack += tile.attack || 0;
-    defence += tile.defence || 0;
-    income += tile.income || 0;
+    attack += tileStat(tile.base.attack, tile.level);
+    defence += tileStat(tile.base.defence, tile.level);
+    income += tileStat(tile.base.income, tile.level);
   });
-  return { attack, defence, income };
+  return {
+    attack: Math.round(attack * player.eventMultipliers.attack),
+    defence: Math.round(defence * player.eventMultipliers.defence),
+    income: Math.round(income * player.eventMultipliers.income)
+  };
 }
 
 function cardValue(card) { return (card.attack || 0) + (card.defence || 0) + (card.income || 0) * 2; }
@@ -147,9 +174,15 @@ function createGame(roomPlayers) {
       isNpc: Boolean(rp.isNpc),
       gold: START_GOLD,
       hp: START_HP,
-      grid: Array(9).fill(null),
+      grid: Array(GRID_SIZE).fill(null),
       built: new Set(),
       wonderBuilt: false,
+      civic: {
+        science: { upgradeCount: 0, eventsFired: 0 },
+        religion: { upgradeCount: 0, eventsFired: 0 },
+        culture: { upgradeCount: 0, eventsFired: 0 }
+      },
+      eventMultipliers: { attack: 1, defence: 1, income: 1 },
       acted: false,
       hand: []
     };
@@ -195,26 +228,44 @@ function handleAction(game, playerId, action, payload) {
     if (p.gold < card.cost) throw new Error('Je hebt niet genoeg goud.');
 
     p.gold -= card.cost;
-    p.grid[slot] = { type: card.type, name: card.name, level: 1, attack: card.attack, defence: card.defence, income: card.income };
+    p.grid[slot] = { type: card.type, name: card.name, level: 1, base: { attack: card.attack, defence: card.defence, income: card.income } };
     p.built.add(card.name);
     if (card.type === 'wonder') p.wonderBuilt = true;
     p.acted = true;
     game.log.push(`${p.name} bouwt ${card.name}.`);
   } else if (action === 'upgrade') {
-    const slot = payload && Number.isInteger(payload.slot) ? payload.slot : -1;
-    const tile = p.grid[slot];
-    if (!tile) throw new Error('Ongeldig gebouw.');
-    const cost = upgradeCost(game.age, tile.type);
-    if (p.gold < cost) throw new Error('Je hebt niet genoeg goud.');
+    if (payload && typeof payload.civic === 'string') {
+      const key = payload.civic;
+      const civic = p.civic[key];
+      if (!civic) throw new Error('Onbekend gebouw.');
+      if (civic.upgradeCount >= game.age) throw new Error('Dit gebouw kan dit tijdperk niet verder groeien.');
+      const cost = civicUpgradeCost(game.age);
+      if (p.gold < cost) throw new Error('Je hebt niet genoeg goud.');
 
-    p.gold -= cost;
-    tile.attack = upgradeValue(tile.attack);
-    tile.defence = upgradeValue(tile.defence);
-    tile.income = upgradeValue(tile.income);
-    tile.level += 1;
-    tile.name = tile.type === 'wonder' ? ERAS[game.age - 1].wonder : NAMES[tile.type][game.age - 1];
-    p.acted = true;
-    game.log.push(`${p.name} upgrade ${tile.name} (niveau ${tile.level}).`);
+      p.gold -= cost;
+      civic.upgradeCount += 1;
+      if (civic.upgradeCount % 3 === 0) {
+        applyCivicEvent(p, key);
+        civic.eventsFired += 1;
+        game.log.push(`${p.name} ontketent een ${CIVIC_NAMES[key]}-gebeurtenis!`);
+      } else {
+        game.log.push(`${p.name} upgrade ${CIVIC_NAMES[key]} (niveau ${civic.upgradeCount}).`);
+      }
+      p.acted = true;
+    } else {
+      const slot = payload && Number.isInteger(payload.slot) ? payload.slot : -1;
+      const tile = p.grid[slot];
+      if (!tile) throw new Error('Ongeldig gebouw.');
+      if (tile.level >= game.age) throw new Error('Dit gebouw kan dit tijdperk niet verder groeien.');
+      const cost = flexibleUpgradeCost(game.age, tile.type);
+      if (p.gold < cost) throw new Error('Je hebt niet genoeg goud.');
+
+      p.gold -= cost;
+      tile.level += 1;
+      tile.name = tile.type === 'wonder' ? ERAS[game.age - 1].wonder : NAMES[tile.type][game.age - 1];
+      game.log.push(`${p.name} upgrade ${tile.name} (niveau ${tile.level}).`);
+      p.acted = true;
+    }
   } else if (action === 'discard') {
     const idx = payload && Number.isInteger(payload.handIndex) ? payload.handIndex : -1;
     const card = p.hand[idx];
@@ -329,21 +380,39 @@ function playNpc(game, player) {
     const { card } = affordable[0];
     const slot = player.grid.findIndex((v) => v === null);
     player.gold -= card.cost;
-    player.grid[slot] = { type: card.type, name: card.name, level: 1, attack: card.attack, defence: card.defence, income: card.income };
+    player.grid[slot] = { type: card.type, name: card.name, level: 1, base: { attack: card.attack, defence: card.defence, income: card.income } };
     player.built.add(card.name);
     if (card.type === 'wonder') player.wonderBuilt = true;
     game.log.push(`${player.name} bouwt ${card.name}.`);
   } else {
-    const upgradable = player.grid.filter((tile) => tile && upgradeCost(game.age, tile.type) <= player.gold);
-    if (upgradable.length) {
-      const tile = upgradable[Math.floor(Math.random() * upgradable.length)];
-      player.gold -= upgradeCost(game.age, tile.type);
-      tile.attack = upgradeValue(tile.attack);
-      tile.defence = upgradeValue(tile.defence);
-      tile.income = upgradeValue(tile.income);
-      tile.level += 1;
-      tile.name = tile.type === 'wonder' ? ERAS[game.age - 1].wonder : NAMES[tile.type][game.age - 1];
-      game.log.push(`${player.name} upgrade ${tile.name}.`);
+    const flexOptions = player.grid
+      .map((tile, slot) => ({ kind: 'flex', slot, tile }))
+      .filter(({ tile }) => tile && tile.level < game.age && flexibleUpgradeCost(game.age, tile.type) <= player.gold);
+    const civicOptions = CIVIC_CATEGORIES
+      .map((key) => ({ kind: 'civic', key }))
+      .filter(({ key }) => player.civic[key].upgradeCount < game.age && civicUpgradeCost(game.age) <= player.gold);
+    const options = [...flexOptions, ...civicOptions];
+
+    if (options.length) {
+      const choice = options[Math.floor(Math.random() * options.length)];
+      if (choice.kind === 'flex') {
+        const tile = choice.tile;
+        player.gold -= flexibleUpgradeCost(game.age, tile.type);
+        tile.level += 1;
+        tile.name = tile.type === 'wonder' ? ERAS[game.age - 1].wonder : NAMES[tile.type][game.age - 1];
+        game.log.push(`${player.name} upgrade ${tile.name}.`);
+      } else {
+        const civic = player.civic[choice.key];
+        player.gold -= civicUpgradeCost(game.age);
+        civic.upgradeCount += 1;
+        if (civic.upgradeCount % 3 === 0) {
+          applyCivicEvent(player, choice.key);
+          civic.eventsFired += 1;
+          game.log.push(`${player.name} ontketent een ${CIVIC_NAMES[choice.key]}-gebeurtenis!`);
+        } else {
+          game.log.push(`${player.name} upgrade ${CIVIC_NAMES[choice.key]}.`);
+        }
+      }
     } else if (player.hand.length) {
       const card = player.hand[0];
       player.gold += discardGold(game.age);
@@ -385,6 +454,21 @@ function tick(game, now) {
 
 /* ---------------- serialize (per-requester view) ---------------- */
 
+function serializeCivic(civic, age) {
+  const out = {};
+  CIVIC_CATEGORIES.forEach((key) => {
+    const c = civic[key];
+    out[key] = {
+      name: CIVIC_NAMES[key],
+      upgradeCount: c.upgradeCount,
+      eventsFired: c.eventsFired,
+      upgradeCost: civicUpgradeCost(age),
+      maxed: c.upgradeCount >= age
+    };
+  });
+  return out;
+}
+
 function serialize(game, requesterId, connected) {
   const players = [];
   game.order.forEach((id) => {
@@ -399,7 +483,17 @@ function serialize(game, requesterId, connected) {
       defence: t.defence,
       income: t.income,
       hp: Math.max(0, p.hp),
-      grid: p.grid.map((tile) => tile ? { ...tile, upgradeCost: upgradeCost(game.age, tile.type) } : null),
+      grid: p.grid.map((tile) => tile ? {
+        type: tile.type,
+        name: tile.name,
+        level: tile.level,
+        attack: tileStat(tile.base.attack, tile.level),
+        defence: tileStat(tile.base.defence, tile.level),
+        income: tileStat(tile.base.income, tile.level),
+        upgradeCost: flexibleUpgradeCost(game.age, tile.type),
+        maxed: tile.level >= game.age
+      } : null),
+      civic: serializeCivic(p.civic, game.age),
       wonderBuilt: p.wonderBuilt,
       acted: p.acted,
       isYou: id === requesterId,
