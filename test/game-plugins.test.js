@@ -22,7 +22,7 @@ test('game-plugin loader ontdekt een zelfstandige gamemap',()=>{
 
 test('alle bestaande games zijn plugins en de template wordt overgeslagen',()=>{
   const plugins=listGamePlugins();
-  assert.equal(plugins.length,19);
+  assert.equal(plugins.length,20);
   assert.ok(plugins.every((plugin)=>plugin.key!=='_template'&&plugin.clientUrl));
 });
 
