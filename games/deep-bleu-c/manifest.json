@@ -1,0 +1,14 @@
+{
+  "key": "deep-bleu-c",
+  "name": "The Deep Bleu C",
+  "version": "1",
+  "description": "Verken een gestileerde 200x200 kaart van Europa, vang vis en verkoop je vangst bij De Vishandel.",
+  "icon": "🎣",
+  "badge": "Solo",
+  "actionLabel": "Uitvaren",
+  "minPlayers": 1,
+  "maxPlayers": 1,
+  "supportsNpc": false,
+  "realtime": true,
+  "solo": true
+}

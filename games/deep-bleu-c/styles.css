@@ -1,0 +1,41 @@
+.dbc-wrap{display:flex;flex-direction:column;gap:12px;padding:4px 0 16px}
+
+.dbc-hud{display:flex;gap:10px;flex-wrap:wrap}
+.dbc-hud>div{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:6px 12px;font-weight:600}
+
+.dbc-map-wrap{border-radius:14px;overflow:hidden;border:1px solid var(--border);background:#1f5a8a;line-height:0}
+.dbc-map{width:100%;height:auto;display:block;touch-action:manipulation}
+.dbc-tile{cursor:pointer;stroke:rgba(0,0,0,.06);stroke-width:1}
+.dbc-tile:hover{filter:brightness(1.08)}
+.dbc-building-bg{fill:#2b2320;stroke:var(--accent);stroke-width:2}
+.dbc-building.locked .dbc-building-bg{opacity:.55}
+.dbc-building-icon{font-size:16px;text-anchor:middle;pointer-events:none}
+.dbc-player-shadow{fill:rgba(0,0,0,.25)}
+.dbc-player-dot{fill:var(--accent);stroke:#fff;stroke-width:2}
+
+.dbc-loading,.dbc-hint{padding:14px;text-align:center;color:var(--muted);background:var(--panel);border:1px solid var(--border);border-radius:12px}
+
+.dbc-fishing{display:flex;flex-direction:column;gap:8px;align-items:center;padding:14px;background:var(--panel);border:1px solid var(--accent);border-radius:12px;text-align:center}
+.dbc-fishing-text{font-weight:700}
+.dbc-fishing-result .dbc-fishing-text{font-weight:600}
+.dbc-timer-track{width:100%;max-width:280px;height:10px;border-radius:6px;background:var(--panel2,rgba(255,255,255,.08));overflow:hidden}
+.dbc-timer-fill{height:100%;background:var(--accent);transition-property:width;transition-timing-function:linear}
+.dbc-fishing-button{min-width:180px}
+
+.dbc-building-panel{display:flex;flex-direction:column;gap:6px;padding:12px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px}
+.dbc-building-panel p{margin:0;color:var(--muted)}
+
+.dbc-sets h4,.dbc-inventory h4{margin:0 0 8px}
+.dbc-set-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.dbc-set-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:10px}
+.dbc-set-title{font-weight:700;margin-bottom:6px}
+.dbc-set-fish{display:flex;flex-wrap:wrap;gap:6px}
+.dbc-fish-chip{font-size:12px;padding:3px 8px;border-radius:999px;background:var(--panel2,rgba(255,255,255,.06));border:1px solid var(--border)}
+.dbc-fish-chip.discovered{color:var(--success);border-color:var(--success)}
+.dbc-fish-chip.unknown{color:var(--muted)}
+
+.dbc-inventory-list{display:flex;flex-direction:column;gap:6px}
+.dbc-inventory-row{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:6px 10px}
+.dbc-empty{color:var(--muted);margin:0}
+
+@media(min-width:761px){#gameStage:has(.dbc-wrap){width:min(100%,880px);max-width:880px}}
