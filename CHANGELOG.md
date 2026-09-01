@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.9.1 — Lichter thema en goedkopere upgrades
+
+- Upgraden is iets goedkoper: vrije gebouwen kosten nu 1,75x de bouwprijs in plaats van 2x, en de basisprijs van vaste gebouwen daalt van 3x naar 2,5x per tijdperk.
+- De derde (en zesde) upgrade van een vast gebouw, die de gebeurtenis ontketent, kost nog maar 2x een gewone stap in plaats van 3x.
+- Age of Civilization heeft een lichter, warmer kleurenthema gekregen in plaats van het donkere thema, met meer kleur per categorie op tegels en kaarten.
+- Tekst en symbolen in de spelweergave zijn iets groter voor betere leesbaarheid.
+
 ## v1.9.0 — Leiders en 2-7 spelers
 
 - Age of Civilization is speelbaar voor 2 tot 7 spelers; voor tijdperk 1 kiest iedereen op zetvolgorde een unieke leider uit een pool van zeven, elk met een vaste bonus (Cleopatra, Alexander de Grote, Einstein, Gandhi, Bismarck, Lincoln, Achilles).

@@ -130,7 +130,7 @@ test('vrije gebouwen kunnen pas het volgende tijdperk upgraden, en krijgen dan +
 
   p.gold=999;
   const goldBefore=p.gold;
-  const upgradeCostAtAge2=(2+1)*2; // flexible upgrade cost = fresh build cost at current age, x2
+  const upgradeCostAtAge2=Math.round((2+1)*1.75); // flexible upgrade cost = fresh build cost at current age, x1.75
   civilization.handleAction(game,'a','upgrade',{slot});
   assert.equal(goldBefore-p.gold,upgradeCostAtAge2);
   const view=civilization.serialize(game,'a',new Map([['a',true],['b',true]]));
@@ -163,7 +163,7 @@ test('een vast gebouw upgraden doet niets tot de derde upgrade, die een duurdere
   const step3Cost=goldBeforeStep3-p.gold;
   assert.equal(p.civic.science.upgradeCount,3);
   assert.equal(p.civic.science.eventsFired,1);
-  assert.equal(step3Cost,step2Cost*3); // the event step costs 3x a normal step
+  assert.equal(step3Cost,step2Cost*2); // the event step costs 2x a normal step
   assert.ok(Math.abs(p.eventMultipliers.attack-1.3)<1e-9);
   assert.ok(Math.abs(p.eventMultipliers.income-1.2)<1e-9);
   assert.ok(Math.abs(p.eventMultipliers.defence-1.1)<1e-9);

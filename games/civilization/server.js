@@ -24,7 +24,7 @@
  *     or all 21 turns elapse.
  *   - Civic buildings (Science/Religion/Culture) have no Age ceiling
  *     any more — always upgradable — but the 3rd/6th upgrade (the one
- *     that fires the stacking event) costs 3x the normal civic upgrade
+ *     that fires the stacking event) costs 2x the normal civic upgrade
  *     price instead of the same price as steps 1 and 2.
  */
 
@@ -36,8 +36,9 @@ const WAVE_DISPLAY_MS = 4000; // how long the wave-result screen stays up before
 const START_GOLD = 4;
 const START_HP = 100;
 const GRID_SIZE = 6;
-const UPGRADE_COST_MULTIPLIER = 2;
-const EVENT_STEP_COST_MULTIPLIER = 3;
+const UPGRADE_COST_MULTIPLIER = 1.75;
+const CIVIC_BASE_COST_MULTIPLIER = 2.5;
+const EVENT_STEP_COST_MULTIPLIER = 2;
 const GANDHI_DAMAGE_CAP = 25;
 
 const CATEGORIES = ['attack', 'defence', 'economy'];
@@ -118,14 +119,14 @@ function withLeaderCostDiscount(player, cost) {
 }
 
 function flexibleUpgradeCost(age, type, player) {
-  return withLeaderCostDiscount(player, makeCard(type, age, '').cost * UPGRADE_COST_MULTIPLIER);
+  return withLeaderCostDiscount(player, Math.round(makeCard(type, age, '').cost * UPGRADE_COST_MULTIPLIER));
 }
 
 // upcomingStep is the step number this purchase would advance the civic
 // building to (i.e. current upgradeCount + 1). Steps that are a multiple of
 // 3 fire the event, and cost EVENT_STEP_COST_MULTIPLIER times as much.
 function civicUpgradeCost(age, upcomingStep, player) {
-  const base = (age + 1) * 3;
+  const base = Math.round((age + 1) * CIVIC_BASE_COST_MULTIPLIER);
   const cost = upcomingStep % 3 === 0 ? base * EVENT_STEP_COST_MULTIPLIER : base;
   return withLeaderCostDiscount(player, cost);
 }
