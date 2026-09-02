@@ -12,6 +12,10 @@
 .dbc-building.locked .dbc-building-bg{opacity:.55}
 .dbc-building-icon{font-size:16px;text-anchor:middle;pointer-events:none}
 .dbc-angler-shadow{fill:rgba(0,0,0,.25)}
+.dbc-boat-shadow{fill:rgba(0,0,0,.2)}
+.dbc-boat-hull{fill:#7a5636;stroke:#4a3220;stroke-width:.6}
+.dbc-boat-mast{stroke:#4a3220;stroke-width:1}
+.dbc-boat-sail{fill:#f4ede0;stroke:#c9bfa8;stroke-width:.5}
 .dbc-fish-line{fill:none;stroke:#2b2320;stroke-width:1;stroke-linecap:round}
 .dbc-fish-hook{fill:none;stroke:#2b2320;stroke-width:1.2}
 .dbc-player-other{opacity:.95}

@@ -286,6 +286,24 @@ function findTownSpot(tiles) {
   return null;
 }
 
+// Zoekt een dokrand die daadwerkelijk aan de opgegeven zee grenst, vanaf een
+// gekozen startpunt naar buiten toe — gebruikt om de haven specifiek aan de
+// Middellandse Zee (zuiden) te plaatsen in plaats van een willekeurige kust.
+function findCoastalSpot(tiles, seaChar, startX, startY) {
+  const cx = clamp(Math.round(startX), 0, WIDTH - 1), cy = clamp(Math.round(startY), 0, HEIGHT - 1);
+  for (let r = 0; r < WIDTH + HEIGHT; r += 1) {
+    for (const [x, y] of hexRing(cx, cy, r)) {
+      if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT) continue;
+      if (tiles[y * WIDTH + x] !== 'B') continue;
+      const nearSea = hexNeighbors(x, y).some(([nx, ny]) => (
+        nx >= 0 && nx < WIDTH && ny >= 0 && ny < HEIGHT && tiles[ny * WIDTH + nx] === seaChar
+      ));
+      if (nearSea) return { x, y };
+    }
+  }
+  return null;
+}
+
 function placeNear(tiles, used, cx, cy, minR, maxR, rng) {
   for (let attempt = 0; attempt < 300; attempt += 1) {
     const angle = rng() * Math.PI * 2;
@@ -322,15 +340,36 @@ function buildWorld() {
   const aquarium = placeNear(tiles, used, spawn.x, spawn.y, 3, 6, rng);
   const markt = placeNear(tiles, used, spawn.x, spawn.y, 3, 7, rng);
   const monument = placeNear(tiles, used, spawn.x, spawn.y, 4, 8, rng);
+  // Werkplaatsen horen thematisch bij het Aquarium-Museum: hout en steen
+  // worden net als visvangst daar tentoongesteld.
+  const lumberyard = placeNear(tiles, used, aquarium.x, aquarium.y, 2, 5, rng);
+  const quarry = placeNear(tiles, used, aquarium.x, aquarium.y, 2, 5, rng);
+
+  // De haven hoort specifiek aan de Middellandse Zee (zuiden) te liggen, niet
+  // toevallig ergens aan een willekeurige kust bij het dorp.
+  const harborSpot = findCoastalSpot(tiles, 'm', WIDTH * 0.55, HEIGHT * 0.86)
+    || findCoastalSpot(tiles, 'm', WIDTH * 0.5, HEIGHT - 1)
+    || placeNear(tiles, used, spawn.x, spawn.y, 10, 18, rng);
+  used.add(harborSpot.y * WIDTH + harborSpot.x);
+
+  // Een handvol bootjes die letterlijk in het water bij de haven liggen —
+  // puur decoratief, de bootupgrade zelf koop je op de Handelsmarkt.
+  const boats = hexNeighbors(harborSpot.x, harborSpot.y)
+    .filter(([x, y]) => x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT && tiles[y * WIDTH + x] === 'm')
+    .slice(0, 3)
+    .map(([x, y]) => ({ x, y }));
 
   const buildings = [
     { id: 'vishandel', type: 'vishandel', name: 'De Vishandel', icon: '🐟', x: spawn.x, y: spawn.y, active: true },
-    { id: 'aquarium', type: 'aquarium', name: 'Aquarium-Museum', icon: '🏛️', x: aquarium.x, y: aquarium.y, active: false },
-    { id: 'markt', type: 'markt', name: 'Handelsmarkt', icon: '⚖️', x: markt.x, y: markt.y, active: false },
-    { id: 'monument', type: 'monument', name: 'Hall of Fame', icon: '🏆', x: monument.x, y: monument.y, active: false }
+    { id: 'aquarium', type: 'aquarium', name: 'Aquarium-Museum', icon: '🏛️', x: aquarium.x, y: aquarium.y, active: true },
+    { id: 'markt', type: 'markt', name: 'Handelsmarkt', icon: '⚖️', x: markt.x, y: markt.y, active: true },
+    { id: 'monument', type: 'monument', name: 'Hall of Fame', icon: '🏆', x: monument.x, y: monument.y, active: true },
+    { id: 'lumberyard', type: 'lumberyard', name: 'Houthakkerij', icon: '🪵', x: lumberyard.x, y: lumberyard.y, active: true },
+    { id: 'quarry', type: 'quarry', name: 'Steengroeve', icon: '⛏️', x: quarry.x, y: quarry.y, active: true },
+    { id: 'haven', type: 'haven', name: 'De Haven', icon: '⚓', x: harborSpot.x, y: harborSpot.y, active: true }
   ];
 
-  return { width: WIDTH, height: HEIGHT, tiles, buildings, spawn, tileString: tiles.join('') };
+  return { width: WIDTH, height: HEIGHT, tiles, buildings, boats, spawn, tileString: tiles.join('') };
 }
 
 let cached = null;
@@ -346,6 +385,16 @@ function isWalkable(world, x, y, extra = null) {
 }
 function isWater(world, x, y) { const tile = tileAt(world, x, y); return Boolean(tile) && WATER.has(tile); }
 function biomeAt(world, x, y) { const tile = tileAt(world, x, y); return tile ? (BIOME_BY_TILE[tile] || null) : null; }
+
+// Hout groeit op bostegels ('f' — ook gewoon beloopbaar). Steen zit in de
+// onbeloopbare bergpieken ('p'): je verzamelt 'm vanaf een aangrenzende
+// heuvel of stuk land, net zoals vissen vanaf de kant.
+function resourceAt(world, x, y) {
+  const tile = tileAt(world, x, y);
+  if (tile === 'f') return 'wood';
+  if (tile === 'p') return 'rock';
+  return null;
+}
 
 function nearestWalkable(world, tx, ty, extra = null, maxRadius = 8) {
   if (isWalkable(world, tx, ty, extra)) return { x: tx, y: ty };
@@ -446,5 +495,5 @@ function findPath(world, startX, startY, goalX, goalY, extra = null, maxNodes = 
 
 module.exports = {
   WIDTH, HEIGHT, WALKABLE, WATER,
-  getWorld, buildWorld, tileAt, isWalkable, isWater, biomeAt, nearestWalkable, findPath, hexDistance
+  getWorld, buildWorld, tileAt, isWalkable, isWater, biomeAt, resourceAt, nearestWalkable, findPath, hexDistance
 };
