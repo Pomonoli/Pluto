@@ -2,14 +2,13 @@ import { ERA_THEMES } from './themes.js';
 
 const LEADER_ATTRIBUTES = {
   cleopatra: '👑', alexander: '🪖', einstein: '🌀', gandhi: '👓',
-  bismarck: '⛑️', lincoln: '🎩', achilles: '⚔️'
+  bismarck: '⛑️', lincoln: '🎩', achilles: '⚔️', harald: '🛡️'
 };
 
-const CIVIC_PREVIEW = {
-  science: '+30% ATK · +20% Goud · +10% DEF',
-  culture: '+30% Goud · +20% DEF · +10% ATK',
-  religion: '+30% Goud · +20% DEF · +10% ATK'
-};
+// Static hint shown on the tile before it has fired: the exact percentage
+// depends on the Age it's bought in (10% per Age), so only the targeted
+// stat is named here — the precise number appears in the confirm popup.
+function civicPreviewText(civic) { return `+10%×Tijdperk ${civic.statLabel}`; }
 
 function theme(age) { return ERA_THEMES[(age - 1) % ERA_THEMES.length]; }
 function buildingTheme(age, type) { return theme(age).buildings[type] || { color: '#B8895A', icon: '' }; }
@@ -118,7 +117,7 @@ function renderCivicRow(E,action,sound,game,you,openModal){
     const node=E('button','civ-tile civ-civic filled');node.type='button';
     node.style.setProperty('--tile-accent',bt.color);
     node.append(E('div','civ-tile-icon',bt.icon),E('div','civ-tile-name',civic.name),E('div','civ-tile-level',`Niv. ${civic.upgradeCount}`));
-    node.append(E('div','civ-tile-perk',civic.eventsFired?`×${civic.eventsFired} gebeurtenis actief`:CIVIC_PREVIEW[key]));
+    node.append(E('div','civ-tile-perk',civic.eventsFired?`×${civic.eventsFired} gebeurtenis actief`:civicPreviewText(civic)));
     if(canAct){
       const afford=you.gold>=civic.upgradeCost;
       node.append(E('div',`civ-tile-upgrade${civic.isEventStep?' event':''}`,`${civic.isEventStep?'Ontketen':'Upgrade'} (${civic.upgradeCost}g)`));
@@ -127,7 +126,7 @@ function renderCivicRow(E,action,sound,game,you,openModal){
         eyebrow:'Vast gebouw',
         title:`${bt.icon} ${civic.name}`,
         body:civic.isEventStep
-          ? `Niveau ${civic.upgradeCount} → ${civic.upgradeCount+1}. Deze upgrade ontketent: ${CIVIC_PREVIEW[key]}.`
+          ? `Niveau ${civic.upgradeCount} → ${civic.upgradeCount+1}. Deze upgrade ontketent: +${civic.eventBonusPct}% ${civic.statLabel} — eenmalig, blijvend toegepast op je huidige ${civic.statLabel}.`
           : `Niveau ${civic.upgradeCount} → ${civic.upgradeCount+1}. Deze stap bereidt de volgende gebeurtenis voor en geeft nog geen directe statbonus.`,
         cost:civic.upgradeCost,
         confirmLabel:civic.isEventStep?'Ontketen':'Upgrade',

@@ -76,6 +76,12 @@ db.exec(`
     state_json TEXT NOT NULL,
     updated_at INTEGER NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS deep_bleu_c_players (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    state_json TEXT NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
 `);
 
 if (!db.prepare("PRAGMA table_info(users)").all().some((column) => column.name === 'blackjack_chips')) {
@@ -321,6 +327,9 @@ function leaderboard(gameKey = null, limit = 100) {
   if (gameKey === 'cycclub') {
     return cycclubLeaderboard(safeLimit);
   }
+  if (gameKey === 'deep-bleu-c') {
+    return deepBleuCLeaderboard(safeLimit);
+  }
   if (gameKey === 'solitaire') {
     return db.prepare(`
       SELECT
@@ -525,6 +534,46 @@ function saveCycClubTeam(userId, state) {
   `).run(userId, JSON.stringify(state), Date.now());
 }
 
+function getDeepBleuCPlayer(userId) {
+  const row = db.prepare('SELECT state_json AS stateJson FROM deep_bleu_c_players WHERE user_id = ?').get(userId);
+  if (!row) return null;
+  try {
+    return JSON.parse(row.stateJson);
+  } catch {
+    return null;
+  }
+}
+
+function saveDeepBleuCPlayer(userId, state) {
+  db.prepare(`
+    INSERT INTO deep_bleu_c_players(user_id,state_json,updated_at) VALUES(?,?,?)
+    ON CONFLICT(user_id) DO UPDATE SET state_json=excluded.state_json, updated_at=excluded.updated_at
+  `).run(userId, JSON.stringify(state), Date.now());
+}
+
+function deepBleuCLeaderboard(limit = 100) {
+  const safeLimit = Math.max(1, Math.min(100, Number(limit) || 100));
+  const rows = db.prepare(`
+    SELECT u.username, p.state_json AS stateJson FROM deep_bleu_c_players p JOIN users u ON u.id = p.user_id
+  `).all();
+  return rows.map((row) => {
+    let state;
+    try {
+      state = JSON.parse(row.stateJson);
+    } catch {
+      return null;
+    }
+    return {
+      username: row.username,
+      cash: Math.round(Number(state?.cash || 0)),
+      discovered: Array.isArray(state?.discovered) ? state.discovered.length : 0,
+      heaviestKg: Math.round(Number(state?.heaviestKg || 0) * 10) / 10
+    };
+  }).filter(Boolean)
+    .sort((a, b) => b.cash - a.cash || b.discovered - a.discovered || a.username.localeCompare(b.username, 'nl-BE', { sensitivity: 'base' }))
+    .slice(0, safeLimit);
+}
+
 function cycclubLeaderboard(limit = 100) {
   const safeLimit = Math.max(1, Math.min(100, Number(limit) || 100));
   const rows = db.prepare(`
@@ -546,6 +595,7 @@ function cycclubLeaderboard(limit = 100) {
         victories: Number(career.victories || 0),
         podiums: Number(career.podiums || 0),
         monumentsWon: Number(career.monumentsWon || 0),
+        grandToursWon: Number(career.grandToursWon || 0),
         gtStagesWon: Number(career.gtStagesWon || 0),
         prizeMoney: Math.round(Number(career.prizeMoney || 0))
       };
@@ -728,6 +778,9 @@ module.exports = {
   getCycClubTeam,
   saveCycClubTeam,
   cycclubLeaderboard,
+  getDeepBleuCPlayer,
+  saveDeepBleuCPlayer,
+  deepBleuCLeaderboard,
   headToHead,
   validateUsername,
   listMinigolfMaps,

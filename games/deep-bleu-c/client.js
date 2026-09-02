@@ -1,19 +1,60 @@
-const TILE = 32;
-const COLS = 19;
-const ROWS = 13;
+import { hexToPixel, hexCorners, hexDistance } from './hex-client.js';
+
+const HEX_SIZE = 18;
+const HEX_DRAW_SIZE = HEX_SIZE * 1.03; // iets groter dan de rasterpitch: verbergt anti-aliasing-naden tussen tegels
+const COLS = 17;
+const ROWS = 11;
+
+// Exacte omvattende rechthoek van de zichtbare COLS x ROWS tegels (in de
+// eigen hex-pixelruimte). De viewBox hierop baseren — i.p.v. een handmatig
+// geschatte marge — garandeert dat de rand-tegels het venster volledig
+// vullen: elke marge-mismatch liet eerder een reep achtergrondkleur zien
+// (het "blauwe randje") aan één kant van de kaart.
+function computeCoreBounds() {
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (let row = 0; row < ROWS; row += 1) {
+    for (let col = 0; col < COLS; col += 1) {
+      const { x, y } = hexToPixel(col, row, HEX_SIZE);
+      for (const [cx, cy] of hexCorners(x, y, HEX_SIZE)) {
+        if (cx < minX) minX = cx;
+        if (cx > maxX) maxX = cx;
+        if (cy < minY) minY = cy;
+        if (cy > maxY) maxY = cy;
+      }
+    }
+  }
+  return { minX, minY, width: maxX - minX, height: maxY - minY };
+}
+const VIEW_BOX = computeCoreBounds();
 const HOOK_WINDOW_MS = 900;
 const REEL_WINDOW_MS = 1300;
-const TILE_COLORS = { L: '#8fc26c', B: '#e3cd93', r: '#5fb3da', k: '#3f8fc4', a: '#22557f', m: '#1f9a8f', z: '#dce8f0' };
+const TILE_COLORS = {
+  L: '#8fc26c', B: '#e3cd93', f: '#3f7a3a', h: '#8a7f6b', p: '#5c5648',
+  r: '#5fb3da', k: '#3f8fc4', a: '#22557f', m: '#1f9a8f', z: '#dce8f0'
+};
+const MINIMAP_RGB = {
+  L: [143, 194, 108], B: [227, 205, 147], f: [63, 122, 58], h: [138, 127, 107], p: [92, 86, 72],
+  r: [95, 179, 218], k: [63, 143, 196], a: [34, 85, 127], m: [31, 154, 143], z: [220, 232, 240]
+};
 const WATER_CHARS = new Set(['r', 'k', 'a', 'm', 'z']);
+const GEAR_LABELS = { rod: { icon: '🎣', label: 'Hengel', help: 'Ruimer tijdvenster om aan te slaan bij een beet.' },
+  bait: { icon: '🪱', label: 'Aas', help: 'Grotere kans op zeldzame en epische vis.' },
+  boat: { icon: '🚤', label: 'Boot', help: 'Vaar verder over rivieren, kust en open zee.' } };
 
 let state, els, E, action, titlebar, logBox, renderGame;
 function bind(api) { ({ state, els, E, action, titlebar, logBox, renderGame } = api); }
+
+// Bump whenever worldgen.js changes shape/size — the API response is served
+// with a long-lived immutable cache header, so without a version query a
+// browser that already loaded an older map would keep serving it from cache
+// for up to a day even after the server restarts with new world-gen code.
+const WORLD_VERSION = 5;
 
 let world = null;
 let worldPromise = null;
 function ensureWorld() {
   if (world || worldPromise) return world;
-  worldPromise = fetch('/api/deep-bleu-c/world')
+  worldPromise = fetch(`/api/deep-bleu-c/world?wv=${WORLD_VERSION}`)
     .then((response) => response.json())
     .then((data) => {
       if (!data.ok) throw new Error(data.error || 'Kaart kon niet laden.');
@@ -22,6 +63,38 @@ function ensureWorld() {
     })
     .catch((error) => { console.error('Deep Bleu C wereld laden mislukt:', error); worldPromise = null; });
   return null;
+}
+
+let activePanel = 'map';
+let leaderboardData = null;
+let leaderboardPromise = null;
+function loadLeaderboard() {
+  leaderboardPromise = fetch('/api/leaderboard?game=deep-bleu-c')
+    .then((response) => response.json())
+    .then((data) => {
+      leaderboardData = data.ok ? (data.leaderboard || []) : [];
+      if (state?.room) renderGame(state.room);
+    })
+    .catch((error) => { console.error('Deep Bleu C leaderboard laden mislukt:', error); leaderboardData = []; })
+    .finally(() => { leaderboardPromise = null; });
+}
+
+let minimapBase = null;
+let minimapWorldRef = null;
+function buildMinimapBase(worldData) {
+  const canvas = document.createElement('canvas');
+  canvas.width = worldData.width;
+  canvas.height = worldData.height;
+  const ctx = canvas.getContext('2d');
+  const img = ctx.createImageData(worldData.width, worldData.height);
+  for (let i = 0; i < worldData.tiles.length; i += 1) {
+    const [r, g, b] = MINIMAP_RGB[worldData.tiles[i]] || MINIMAP_RGB.L;
+    const o = i * 4;
+    img.data[o] = r; img.data[o + 1] = g; img.data[o + 2] = b; img.data[o + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  minimapBase = canvas;
+  minimapWorldRef = worldData;
 }
 
 function svgEl(tag, attrs = {}) {
@@ -54,17 +127,41 @@ function renderDeepBleuC(room, game) {
   const wrap = E('div', 'dbc-wrap');
   wrap.append(renderHud(you));
 
-  const loadedWorld = ensureWorld();
-  wrap.append(loadedWorld ? renderMap(you, loadedWorld) : E('div', 'dbc-loading', 'Kaart wordt geladen...'));
-
-  const fishingPanel = renderFishingPanel(you.fishing);
-  if (fishingPanel) wrap.append(fishingPanel);
-  else wrap.append(renderBuildingPanel(you));
-
-  wrap.append(renderSets(you));
-  wrap.append(renderInventory(you));
+  if (activePanel !== 'map') {
+    wrap.append(renderDetailScreen(you));
+  } else {
+    const loadedWorld = ensureWorld();
+    wrap.append(loadedWorld ? renderPlayArea(you, loadedWorld) : E('div', 'dbc-loading', 'Kaart wordt geladen...'));
+  }
 
   els.gameStage.append(wrap, logBox(game.log));
+}
+
+function renderDetailScreen(you) {
+  const screen = E('div', 'dbc-detail-screen');
+  const back = E('button', 'secondary dbc-back-button', '← Terug naar de kaart');
+  back.type = 'button';
+  back.onclick = () => { activePanel = 'map'; renderGame(state.room); };
+  screen.append(back);
+  screen.append(renderActivePanel(you));
+  return screen;
+}
+
+function renderPlayArea(you, worldData) {
+  const camX = clampInt(you.x - Math.floor(COLS / 2), 0, worldData.width - COLS);
+  const camY = clampInt(you.y - Math.floor(ROWS / 2), 0, worldData.height - ROWS);
+
+  const area = E('div', 'dbc-play-area');
+  area.append(renderMapWrap(you, worldData, camX, camY));
+  area.append(renderSidebar(you, worldData, camX, camY));
+  return area;
+}
+
+function renderSidebar(you, worldData, camX, camY) {
+  const sidebar = E('div', 'dbc-sidebar');
+  sidebar.append(renderMinimap(you, worldData, camX, camY));
+  sidebar.append(renderActionBar());
+  return sidebar;
 }
 
 function renderHud(you) {
@@ -76,59 +173,119 @@ function renderHud(you) {
 
 function handleTileClick(wx, wy, tile, you) {
   if (you.fishing && you.fishing.phase !== 'result' && you.fishing.phase !== 'cast') return;
-  if (WATER_CHARS.has(tile) && Math.max(Math.abs(you.x - wx), Math.abs(you.y - wy)) <= 1) {
+  if (WATER_CHARS.has(tile) && hexDistance(you.x, you.y, wx, wy) <= 1) {
     action('cast', { x: wx, y: wy });
   } else {
     action('move', { x: wx, y: wy });
   }
 }
 
-function renderMap(you, worldData) {
-  const camX = clampInt(you.x - Math.floor(COLS / 2), 0, worldData.width - COLS);
-  const camY = clampInt(you.y - Math.floor(ROWS / 2), 0, worldData.height - ROWS);
+function hexPoints(localCol, localRow) {
+  const { x, y } = hexToPixel(localCol, localRow, HEX_SIZE);
+  return { cx: x, cy: y };
+}
 
+let lastFacingAngle = 0;
+function facingAngle(you) {
+  const next = you.path && you.path[0];
+  if (next) {
+    const cur = hexToPixel(you.x, you.y, HEX_SIZE);
+    const tgt = hexToPixel(next.x, next.y, HEX_SIZE);
+    const dx = tgt.x - cur.x, dy = tgt.y - cur.y;
+    if (dx !== 0 || dy !== 0) lastFacingAngle = Math.atan2(dy, dx) * (180 / Math.PI);
+  }
+  return lastFacingAngle;
+}
+
+function renderMapWrap(you, worldData, camX, camY) {
   const svg = svgEl('svg', {
-    viewBox: `0 0 ${COLS * TILE} ${ROWS * TILE}`,
+    viewBox: `${VIEW_BOX.minX} ${VIEW_BOX.minY} ${VIEW_BOX.width} ${VIEW_BOX.height}`,
     class: 'dbc-map',
     role: 'img',
     'aria-label': 'Kaart van The Deep Bleu C'
   });
 
-  for (let row = 0; row < ROWS; row += 1) {
-    for (let col = 0; col < COLS; col += 1) {
+  // Eén extra ring tegels buiten het zichtbare venster tekenen: de SVG clipt
+  // alles buiten de viewBox vanzelf, maar zonder deze rand tonen de rechte
+  // viewBox-hoeken een zaagtandpatroon met de achtergrondkleur erdoorheen
+  // (het "blauwe randje"). De rand vult die hoeken op met echte tegels.
+  for (let row = -1; row <= ROWS; row += 1) {
+    for (let col = -1; col <= COLS; col += 1) {
       const wx = camX + col, wy = camY + row;
+      if (wx < 0 || wx >= worldData.width || wy < 0 || wy >= worldData.height) continue;
       const tile = worldData.tiles[wy * worldData.width + wx] || 'L';
-      const rect = svgEl('rect', {
-        x: col * TILE, y: row * TILE, width: TILE, height: TILE,
-        fill: TILE_COLORS[tile] || '#8fc26c', class: 'dbc-tile'
-      });
-      rect.onclick = () => handleTileClick(wx, wy, tile, you);
-      svg.append(rect);
+      const { cx, cy } = hexPoints(col, row);
+      const points = hexCorners(cx, cy, HEX_DRAW_SIZE).map(([px, py]) => `${px},${py}`).join(' ');
+      const hex = svgEl('polygon', { points, fill: TILE_COLORS[tile] || '#8fc26c', class: 'dbc-tile' });
+      if (row >= 0 && row < ROWS && col >= 0 && col < COLS) hex.onclick = () => handleTileClick(wx, wy, tile, you);
+      svg.append(hex);
     }
   }
 
   worldData.buildings.forEach((building) => {
     if (building.x < camX || building.x >= camX + COLS || building.y < camY || building.y >= camY + ROWS) return;
+    const { cx, cy } = hexPoints(building.x - camX, building.y - camY);
     const g = svgEl('g', {
       class: `dbc-building ${building.active ? 'active' : 'locked'}`,
-      transform: `translate(${(building.x - camX) * TILE},${(building.y - camY) * TILE})`
+      transform: `translate(${cx},${cy})`
     });
-    g.append(svgEl('rect', { x: 2, y: 2, width: TILE - 4, height: TILE - 4, rx: 6, class: 'dbc-building-bg' }));
-    const label = svgEl('text', { x: TILE / 2, y: TILE / 2 + 6, class: 'dbc-building-icon' });
+    g.append(svgEl('rect', { x: -14, y: -14, width: 28, height: 28, rx: 6, class: 'dbc-building-bg' }));
+    const label = svgEl('text', { x: 0, y: 6, class: 'dbc-building-icon' });
     label.textContent = building.icon;
     g.append(label);
     svg.append(g);
   });
 
-  const px = (you.x - camX) * TILE + TILE / 2, py = (you.y - camY) * TILE + TILE / 2;
-  const player = svgEl('g', { class: 'dbc-player', transform: `translate(${px},${py})` });
-  player.append(svgEl('circle', { r: 11, cy: 5, class: 'dbc-player-shadow' }));
-  player.append(svgEl('circle', { r: 10, class: 'dbc-player-dot' }));
+  const { cx: px, cy: py } = hexPoints(you.x - camX, you.y - camY);
+  const angle = facingAngle(you);
+  const player = svgEl('g', { class: 'dbc-player', transform: `translate(${px},${py}) rotate(${angle})` });
+  player.append(svgEl('ellipse', { cx: 1, cy: 4, rx: 12, ry: 6, class: 'dbc-fish-shadow' }));
+  player.append(svgEl('path', { d: 'M -13 0 L -19 -6 L -16 0 L -19 6 Z', class: 'dbc-fish-tail' }));
+  player.append(svgEl('path', {
+    d: 'M -13 0 Q -9 -9 0 -8 Q 9 -7 13 0 Q 9 7 0 8 Q -9 9 -13 0 Z',
+    class: 'dbc-fish-body'
+  }));
+  player.append(svgEl('path', { d: 'M -2 -7 L -6 -13 L 2 -8 Z', class: 'dbc-fish-fin' }));
+  player.append(svgEl('path', { d: 'M -2 7 L -6 13 L 2 8 Z', class: 'dbc-fish-fin' }));
+  player.append(svgEl('circle', { cx: 7, cy: -2, r: 1.5, class: 'dbc-fish-eye' }));
+  player.append(svgEl('path', { d: 'M 13 0 Q 20 3 23 11', class: 'dbc-fish-line' }));
+  player.append(svgEl('circle', { cx: 23, cy: 12, r: 1.4, class: 'dbc-fish-hook' }));
   svg.append(player);
 
   const wrapDiv = E('div', 'dbc-map-wrap');
   wrapDiv.append(svg);
+
+  const fishingPanel = renderFishingPanel(you.fishing);
+  if (fishingPanel) {
+    const overlay = E('div', 'dbc-fishing-overlay');
+    overlay.append(fishingPanel);
+    wrapDiv.append(overlay);
+  }
   return wrapDiv;
+}
+
+function renderMinimap(you, worldData, camX, camY) {
+  if (!minimapBase || minimapWorldRef !== worldData) buildMinimapBase(worldData);
+  const canvas = document.createElement('canvas');
+  canvas.className = 'dbc-minimap';
+  canvas.width = worldData.width;
+  canvas.height = worldData.height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(minimapBase, 0, 0);
+  ctx.strokeStyle = 'rgba(255,255,255,.9)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(camX, camY, COLS, ROWS);
+  ctx.fillStyle = '#ff5c5c';
+  ctx.beginPath();
+  ctx.arc(you.x, you.y, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  canvas.onclick = (event) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.round(((event.clientX - rect.left) / rect.width) * worldData.width);
+    const y = Math.round(((event.clientY - rect.top) / rect.height) * worldData.height);
+    action('move', { x, y });
+  };
+  return canvas;
 }
 
 function timerBar(msRemaining) {
@@ -168,32 +325,111 @@ function renderFishingPanel(fishing) {
   return panel;
 }
 
-function renderBuildingPanel(you) {
-  if (!you.nearBuilding) {
-    return E('div', 'dbc-hint', 'Tik op de kaart om te wandelen, of op water vlak naast je om te vissen.');
+function renderActionBar() {
+  const bar = E('div', 'dbc-action-bar');
+  const buttons = [
+    { id: 'vishandel', icon: '🐟', label: 'Vishandel' },
+    { id: 'aquarium', icon: '🏛️', label: 'Aquarium' },
+    { id: 'markt', icon: '⚖️', label: 'Markt' },
+    { id: 'monument', icon: '🏆', label: 'Hall of Fame' }
+  ];
+  buttons.forEach((b) => {
+    const btn = E('button', 'dbc-action-btn', `${b.icon} ${b.label}`);
+    btn.type = 'button';
+    btn.onclick = () => {
+      activePanel = b.id;
+      if (b.id === 'monument') loadLeaderboard();
+      renderGame(state.room);
+    };
+    bar.append(btn);
+  });
+  return bar;
+}
+
+function renderActivePanel(you) {
+  if (activePanel === 'vishandel') return renderVishandelPanel(you);
+  if (activePanel === 'aquarium') return renderAquariumPanel(you);
+  if (activePanel === 'markt') return renderMarktPanel(you);
+  if (activePanel === 'monument') return renderMonumentPanel(you);
+  return E('div', 'dbc-hint', 'Tik op de kaart om te wandelen, of op water vlak naast je om te vissen.');
+}
+
+function renderVishandelPanel(you) {
+  const wrap = E('div', 'dbc-panel');
+  wrap.append(E('h4', '', '🐟 Vishandel'));
+  wrap.append(E('p', 'dbc-panel-copy', 'Verkoop je vangst — vanaf overal, geen reis nodig.'));
+  wrap.append(renderInventory(you));
+  return wrap;
+}
+
+function renderAquariumPanel(you) {
+  const wrap = E('div', 'dbc-panel');
+  wrap.append(E('h4', '', '🏛️ Aquarium-Museum'));
+  wrap.append(E('p', 'dbc-panel-copy', 'Volledige sets geven een eenmalige bonus en een blijvend hogere verkoopprijs.'));
+  wrap.append(renderSets(you));
+  return wrap;
+}
+
+function renderMarktPanel(you) {
+  const wrap = E('div', 'dbc-panel');
+  wrap.append(E('h4', '', '⚖️ Handelsmarkt'));
+  wrap.append(E('p', 'dbc-panel-copy', 'Investeer in betere uitrusting.'));
+  const grid = E('div', 'dbc-gear-grid');
+  Object.keys(GEAR_LABELS).forEach((key) => {
+    const info = GEAR_LABELS[key];
+    const level = you.gear[key];
+    const maxed = level >= you.gearMaxLevel;
+    const card = E('div', 'dbc-gear-card');
+    card.append(E('div', 'dbc-gear-title', `${info.icon} ${info.label} · niveau ${level}/${you.gearMaxLevel}`));
+    card.append(E('p', 'dbc-gear-help', info.help));
+    const button = E('button', 'secondary', maxed ? 'Maximum bereikt' : `Upgraden (€${you.gearCosts[level]})`);
+    button.disabled = maxed || you.cash < you.gearCosts[level];
+    button.onclick = () => action('buyUpgrade', { category: key });
+    card.append(button);
+    grid.append(card);
+  });
+  wrap.append(grid);
+  return wrap;
+}
+
+function renderMonumentPanel() {
+  const wrap = E('div', 'dbc-panel');
+  wrap.append(E('h4', '', '🏆 Hall of Fame'));
+  if (leaderboardData === null) {
+    wrap.append(E('p', 'dbc-panel-copy', 'Leaderboard wordt geladen...'));
+    if (!leaderboardPromise) loadLeaderboard();
+    return wrap;
   }
-  const building = you.nearBuilding;
-  const panel = E('div', 'dbc-building-panel');
-  panel.append(E('strong', '', building.name));
-  if (building.type === 'vishandel') {
-    panel.append(E('p', '', 'Verkoop hier je vangst voor geld.'));
-    const sellAll = E('button', 'primary', 'Verkoop alles');
-    sellAll.disabled = !you.inventory.length;
-    sellAll.onclick = () => action('sell', { uid: 'all' });
-    panel.append(sellAll);
-  } else {
-    panel.append(E('p', '', 'Nog niet beschikbaar — volgt in een latere fase.'));
+  if (!leaderboardData.length) {
+    wrap.append(E('p', 'dbc-panel-copy', 'Nog geen resultaten — verkoop wat vis!'));
+    return wrap;
   }
-  return panel;
+  const table = E('table', 'dbc-leaderboard');
+  const head = E('tr');
+  ['#', 'Speler', 'Geld', 'Soorten'].forEach((label) => head.append(E('th', '', label)));
+  table.append(head);
+  leaderboardData.forEach((row, index) => {
+    const tr = E('tr');
+    tr.append(E('td', '', String(index + 1)));
+    tr.append(E('td', '', row.username));
+    tr.append(E('td', '', `€${row.cash}`));
+    tr.append(E('td', '', String(row.discovered)));
+    table.append(tr);
+  });
+  wrap.append(table);
+  return wrap;
 }
 
 function renderSets(you) {
   const wrap = E('div', 'dbc-sets');
-  wrap.append(E('h4', '', 'Vissets'));
   const grid = E('div', 'dbc-set-grid');
   you.sets.forEach((set) => {
     const card = E('div', 'dbc-set-card');
-    card.append(E('div', 'dbc-set-title', `${set.icon} ${set.name} (${set.caught}/${set.total})`));
+    const titleText = `${set.icon} ${set.name} (${set.caught}/${set.total})${set.bonusActive ? ' · +15% ✔' : ''}`;
+    card.append(E('div', 'dbc-set-title', titleText));
+    if (!set.bonusActive && set.rewardGearLabel) {
+      card.append(E('p', 'dbc-set-reward', `Beloning bij voltooien: gratis ${set.rewardGearLabel}-upgrade`));
+    }
     const row = E('div', 'dbc-set-fish');
     set.fish.forEach((fish) => {
       const chip = E('span', `dbc-fish-chip ${fish.discovered ? 'discovered' : 'unknown'}`,
@@ -207,6 +443,8 @@ function renderSets(you) {
   return wrap;
 }
 
+let selectedUids = new Set();
+
 function renderInventory(you) {
   const wrap = E('div', 'dbc-inventory');
   wrap.append(E('h4', '', `Vangst (${you.inventory.length})`));
@@ -214,13 +452,34 @@ function renderInventory(you) {
     wrap.append(E('p', 'dbc-empty', 'Nog niets gevangen.'));
     return wrap;
   }
+
+  const validUids = new Set(you.inventory.map((item) => item.uid));
+  for (const uid of selectedUids) if (!validUids.has(uid)) selectedUids.delete(uid);
+
+  const actionsRow = E('div', 'dbc-inventory-actions');
+  const sellSelected = E('button', 'primary', `Verkoop geselecteerde (${selectedUids.size})`);
+  sellSelected.disabled = !selectedUids.size;
+  sellSelected.onclick = () => { action('sell', { uids: [...selectedUids] }); selectedUids.clear(); };
+  const sellAll = E('button', 'secondary', 'Verkoop alles');
+  sellAll.onclick = () => { action('sell', { uid: 'all' }); selectedUids.clear(); };
+  actionsRow.append(sellSelected, sellAll);
+  wrap.append(actionsRow);
+
   const list = E('div', 'dbc-inventory-list');
   you.inventory.forEach((item) => {
     const row = E('div', 'dbc-inventory-row');
-    row.append(E('span', '', `${item.fish.icon} ${item.fish.name} · ${item.weightKg.toFixed(1)} kg`));
+    const checkbox = E('input', 'dbc-inventory-check');
+    checkbox.type = 'checkbox';
+    checkbox.checked = selectedUids.has(item.uid);
+    checkbox.onchange = () => {
+      if (checkbox.checked) selectedUids.add(item.uid); else selectedUids.delete(item.uid);
+      renderGame(state.room);
+    };
+    row.append(checkbox);
+    row.append(E('span', 'dbc-inventory-label', `${item.fish.icon} ${item.fish.name} · ${item.weightKg.toFixed(1)} kg`));
+    row.append(E('span', 'dbc-inventory-price', `€${item.price}`));
     const sellButton = E('button', 'secondary', 'Verkoop');
-    sellButton.disabled = you.nearBuilding?.type !== 'vishandel';
-    sellButton.onclick = () => action('sell', { uid: item.uid });
+    sellButton.onclick = () => { action('sell', { uid: item.uid }); selectedUids.delete(item.uid); };
     row.append(sellButton);
     list.append(row);
   });

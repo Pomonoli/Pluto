@@ -1,8 +1,8 @@
 {
   "key": "deep-bleu-c",
   "name": "The Deep Bleu C",
-  "version": "1",
-  "description": "Verken een gestileerde 200x200 kaart van Europa, vang vis en verkoop je vangst bij De Vishandel.",
+  "version": "6",
+  "description": "Verken een hexagonale kaart van Europa, vang vis en bouw je fortuin op bij De Vishandel, het Aquarium-Museum, de Handelsmarkt en de Hall of Fame.",
   "icon": "🎣",
   "badge": "Solo",
   "actionLabel": "Uitvaren",

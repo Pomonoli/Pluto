@@ -1,6 +1,6 @@
 'use strict';
 
-const { getWorld, isWalkable, isWater, biomeAt, nearestWalkable, findPath } = require('./worldgen');
+const { getWorld, isWalkable, isWater, biomeAt, nearestWalkable, findPath, hexDistance } = require('./worldgen');
 const { SETS, fishForBiome, getFish, priceFor } = require('./fish');
 
 const STEP_MS = 170;
@@ -13,13 +13,57 @@ const RESULT_DISPLAY_MS = 3500;
 const STARTING_CASH = 25;
 const RARITY_WEIGHT = { common: 60, uncommon: 27, rare: 11, epic: 2 };
 
-function chebyshev(x1, y1, x2, y2) { return Math.max(Math.abs(x1 - x2), Math.abs(y1 - y2)); }
+const GEAR_KEYS = ['rod', 'bait', 'boat'];
+const GEAR_COSTS = [150, 400, 900, 1800];
+const GEAR_MAX_LEVEL = GEAR_COSTS.length;
+const ROD_HOOK_BONUS_MS = 150;
+const BAIT_RARE_MULTIPLIER = 1.3;
+const WATER_TIERS = [[], ['r'], ['r', 'k'], ['r', 'k', 'a', 'm']];
+const SET_COMPLETE_BONUS = 600;
+const SET_BONUS_MULTIPLIER = 1.15;
+const GEAR_LABEL = { rod: 'hengel', bait: 'aas', boat: 'boot' };
 
-function weightedFish(list) {
-  const total = list.reduce((sum, fish) => sum + (RARITY_WEIGHT[fish.rarity] || 1), 0);
+function boatWaterSet(player) {
+  const tier = Math.min(player.gear.boat, WATER_TIERS.length - 1);
+  return new Set(WATER_TIERS[tier] || []);
+}
+
+function defaultGear() { return { rod: 0, bait: 0, boat: 0 }; }
+function defaultSetBonuses() { return Object.fromEntries(SETS.map((set) => [set.id, false])); }
+
+function sanitizeSaved(saved) {
+  const knownFish = new Set(SETS.flatMap((set) => set.fish.map((fish) => fish.id)));
+  const discovered = Array.isArray(saved?.discovered) ? saved.discovered.filter((id) => knownFish.has(id)) : [];
+  const inventory = Array.isArray(saved?.inventory)
+    ? saved.inventory.filter((item) => item && knownFish.has(item.speciesId) && Number.isFinite(item.weightKg))
+    : [];
+  const gear = { ...defaultGear() };
+  for (const key of GEAR_KEYS) {
+    const level = Number(saved?.gear?.[key]);
+    if (Number.isFinite(level)) gear[key] = Math.max(0, Math.min(GEAR_MAX_LEVEL, Math.round(level)));
+  }
+  const setBonuses = { ...defaultSetBonuses() };
+  for (const set of SETS) setBonuses[set.id] = Boolean(saved?.setBonuses?.[set.id]);
+  return {
+    cash: Math.max(0, Number(saved?.cash) || 0),
+    discovered,
+    inventory,
+    gear,
+    setBonuses,
+    heaviestKg: Math.max(0, Number(saved?.heaviestKg) || 0)
+  };
+}
+
+function weightedFish(list, player) {
+  const raretyMultiplier = BAIT_RARE_MULTIPLIER ** (player?.gear?.bait || 0);
+  const weightFor = (fish) => {
+    const base = RARITY_WEIGHT[fish.rarity] || 1;
+    return fish.rarity === 'rare' || fish.rarity === 'epic' ? base * raretyMultiplier : base;
+  };
+  const total = list.reduce((sum, fish) => sum + weightFor(fish), 0);
   let roll = Math.random() * total;
   for (const fish of list) {
-    roll -= RARITY_WEIGHT[fish.rarity] || 1;
+    roll -= weightFor(fish);
     if (roll <= 0) return fish;
   }
   return list[list.length - 1];
@@ -30,28 +74,55 @@ function rollWeight(fish) {
   return Math.round((fish.minKg + (fish.maxKg - fish.minKg) * t) * 100) / 100;
 }
 
+function preparePlayers(players, { db }) {
+  return players.map((player) => ({ ...player, dbcState: player.userId ? db.getDeepBleuCPlayer(player.userId) : null }));
+}
+
 function createGame(roomPlayers) {
   const world = getWorld();
-  const players = roomPlayers.map((roomPlayer) => ({
-    id: roomPlayer.id,
-    name: roomPlayer.name,
-    isNpc: false,
-    x: world.spawn.x,
-    y: world.spawn.y,
-    path: [],
-    nextStepAt: 0,
-    cash: STARTING_CASH,
-    inventory: [],
-    discovered: [],
-    fishing: null,
-    nextUid: 1
-  }));
+  const players = roomPlayers.map((roomPlayer) => {
+    const saved = roomPlayer.dbcState ? sanitizeSaved(roomPlayer.dbcState) : null;
+    return {
+      id: roomPlayer.id,
+      name: roomPlayer.name,
+      isNpc: false,
+      x: world.spawn.x,
+      y: world.spawn.y,
+      path: [],
+      nextStepAt: 0,
+      cash: saved ? saved.cash : STARTING_CASH,
+      inventory: saved ? saved.inventory : [],
+      discovered: saved ? saved.discovered : [],
+      gear: saved ? saved.gear : defaultGear(),
+      setBonuses: saved ? saved.setBonuses : defaultSetBonuses(),
+      heaviestKg: saved ? saved.heaviestKg : 0,
+      fishing: null,
+      nextUid: 1
+    };
+  });
   return {
     gameOver: false,
     resultText: '',
     log: ['Je staat bij De Vishandel, klaar om uit te varen.'],
     players
   };
+}
+
+function afterStateChange(room, { db }) {
+  const game = room.gameState;
+  if (!game) return;
+  for (const player of game.players) {
+    const roomPlayer = room.players.find((candidate) => candidate.id === player.id);
+    if (!roomPlayer?.userId) continue;
+    db.saveDeepBleuCPlayer(roomPlayer.userId, {
+      cash: player.cash,
+      discovered: player.discovered,
+      inventory: player.inventory,
+      gear: player.gear,
+      setBonuses: player.setBonuses,
+      heaviestKg: player.heaviestKg
+    });
+  }
 }
 
 function doMove(game, player, payload) {
@@ -62,10 +133,11 @@ function doMove(game, player, payload) {
     throw new Error('Ongeldige bestemming.');
   }
   if (player.fishing) player.fishing = null;
-  const target = isWalkable(world, tx, ty) ? { x: tx, y: ty } : nearestWalkable(world, tx, ty, 6);
+  const extra = boatWaterSet(player);
+  const target = isWalkable(world, tx, ty, extra) ? { x: tx, y: ty } : nearestWalkable(world, tx, ty, extra);
   if (!target) throw new Error('Daar kun je niet naartoe lopen.');
   if (target.x === player.x && target.y === player.y) { player.path = []; return; }
-  const path = findPath(world, player.x, player.y, target.x, target.y);
+  const path = findPath(world, player.x, player.y, target.x, target.y, extra);
   if (!path || !path.length) throw new Error('Geen pad gevonden naar die plek.');
   player.path = path;
   player.nextStepAt = Date.now();
@@ -77,7 +149,7 @@ function doCast(game, player, payload) {
   if (player.fishing && player.fishing.phase !== 'result') throw new Error('Je hengel ligt al uit.');
   const tx = Math.round(Number(payload.x));
   const ty = Math.round(Number(payload.y));
-  if (chebyshev(player.x, player.y, tx, ty) > 1) throw new Error('Dat water is te ver weg.');
+  if (hexDistance(player.x, player.y, tx, ty) > 1) throw new Error('Dat water is te ver weg.');
   const biome = biomeAt(world, tx, ty);
   if (!isWater(world, tx, ty) || !biome) throw new Error('Daar kun je niet vissen.');
   const now = Date.now();
@@ -93,7 +165,7 @@ function doHook(game, player) {
     throw new Error(fishing?.phase === 'cast' ? 'Nog geen beet, wacht even.' : 'Te laat! De vis is ontsnapt.');
   }
   const species = fishForBiome(fishing.biome);
-  const fish = weightedFish(species);
+  const fish = weightedFish(species, player);
   const weightKg = rollWeight(fish);
   player.fishing = {
     phase: 'reel',
@@ -114,6 +186,7 @@ function doReel(game, player) {
   const fish = getFish(fishing.speciesId);
   const isNew = !player.discovered.includes(fishing.speciesId);
   if (isNew) player.discovered.push(fishing.speciesId);
+  if (fishing.weightKg > player.heaviestKg) player.heaviestKg = fishing.weightKg;
   player.inventory.push({
     uid: `${player.id}-${player.nextUid++}`,
     speciesId: fishing.speciesId,
@@ -128,27 +201,73 @@ function doReel(game, player) {
     resultUntil: now + RESULT_DISPLAY_MS
   };
   game.log.unshift(`Gevangen: ${fish.name} (${fishing.weightKg.toFixed(1)} kg)${isNew ? ' — nieuwe soort!' : ''}`);
+
+  if (isNew) {
+    for (const set of SETS) {
+      if (player.setBonuses[set.id]) continue;
+      if (set.fish.every((setFish) => player.discovered.includes(setFish.id))) {
+        player.setBonuses[set.id] = true;
+        player.cash += SET_COMPLETE_BONUS;
+        let gearMsg = '';
+        const gearKey = set.rewardGear;
+        if (gearKey && player.gear[gearKey] < GEAR_MAX_LEVEL) {
+          player.gear[gearKey] += 1;
+          gearMsg = ` + gratis ${GEAR_LABEL[gearKey]}-upgrade (niveau ${player.gear[gearKey]})`;
+        }
+        game.log.unshift(`Set voltooid: ${set.name}! Bonus €${SET_COMPLETE_BONUS}${gearMsg} + permanent 15% hogere verkoopprijs voor deze set.`);
+      }
+    }
+  }
+}
+
+function bonusFor(player, item) {
+  const fish = getFish(item.speciesId);
+  return player.setBonuses[fish.setId] ? SET_BONUS_MULTIPLIER : 1;
 }
 
 function doSell(game, player, payload) {
-  const world = getWorld();
-  const shop = world.buildings.find((building) => building.type === 'vishandel');
-  if (chebyshev(player.x, player.y, shop.x, shop.y) > 1) throw new Error('Je moet bij De Vishandel staan.');
+  if (!player.inventory.length) throw new Error('Je inventaris is leeg.');
   const uid = String(payload.uid || '');
+  const uids = Array.isArray(payload.uids) ? payload.uids.map(String) : null;
+
   if (uid === 'all') {
-    if (!player.inventory.length) throw new Error('Je inventaris is leeg.');
-    const total = player.inventory.reduce((sum, item) => sum + priceFor(item.speciesId, item.weightKg), 0);
+    const total = player.inventory.reduce((sum, item) => sum + priceFor(item.speciesId, item.weightKg, bonusFor(player, item)), 0);
     player.cash += total;
     player.inventory = [];
     game.log.unshift(`Je verkoopt je hele vangst voor €${total}.`);
     return;
   }
+
+  if (uids) {
+    const wanted = new Set(uids);
+    if (!wanted.size) throw new Error('Selecteer minstens één vis om te verkopen.');
+    const toSell = player.inventory.filter((item) => wanted.has(item.uid));
+    if (!toSell.length) throw new Error('Die vissen heb je niet (meer).');
+    const total = toSell.reduce((sum, item) => sum + priceFor(item.speciesId, item.weightKg, bonusFor(player, item)), 0);
+    player.cash += total;
+    player.inventory = player.inventory.filter((item) => !wanted.has(item.uid));
+    game.log.unshift(`Verkocht: ${toSell.length} vis${toSell.length === 1 ? '' : 'sen'} voor €${total}.`);
+    return;
+  }
+
   const index = player.inventory.findIndex((item) => item.uid === uid);
   if (index === -1) throw new Error('Die vis heb je niet.');
   const [item] = player.inventory.splice(index, 1);
-  const price = priceFor(item.speciesId, item.weightKg);
+  const price = priceFor(item.speciesId, item.weightKg, bonusFor(player, item));
   player.cash += price;
   game.log.unshift(`Verkocht: ${getFish(item.speciesId).name} voor €${price}.`);
+}
+
+function doBuyUpgrade(game, player, payload) {
+  const category = String(payload.category || '');
+  if (!GEAR_KEYS.includes(category)) throw new Error('Onbekende upgrade.');
+  const level = player.gear[category];
+  if (level >= GEAR_MAX_LEVEL) throw new Error('Deze upgrade zit al op het maximum.');
+  const cost = GEAR_COSTS[level];
+  if (player.cash < cost) throw new Error('Onvoldoende geld.');
+  player.cash -= cost;
+  player.gear[category] += 1;
+  game.log.unshift(`Upgrade gekocht: ${category} niveau ${player.gear[category]}.`);
 }
 
 function handleAction(game, playerId, action, payload = {}) {
@@ -159,6 +278,7 @@ function handleAction(game, playerId, action, payload = {}) {
   if (action === 'hook') return doHook(game, player);
   if (action === 'reel') return doReel(game, player);
   if (action === 'sell') return doSell(game, player, payload);
+  if (action === 'buyUpgrade') return doBuyUpgrade(game, player, payload);
   throw new Error('Onbekende actie.');
 }
 
@@ -175,7 +295,8 @@ function tick(game, now = Date.now()) {
     const fishing = player.fishing;
     if (!fishing) continue;
     if (fishing.phase === 'cast' && now >= fishing.bitesAt) {
-      player.fishing = { ...fishing, phase: 'bite', hookDeadline: now + HOOK_WINDOW_MS };
+      const hookWindow = HOOK_WINDOW_MS + player.gear.rod * ROD_HOOK_BONUS_MS;
+      player.fishing = { ...fishing, phase: 'bite', hookDeadline: now + hookWindow };
       game.log.unshift('Beet! Trek nu aan!');
       changed = true;
     } else if (fishing.phase === 'bite' && now > fishing.hookDeadline) {
@@ -216,7 +337,7 @@ function serialize(game, requesterId) {
   const world = getWorld();
   const player = game.players.find((candidate) => candidate.id === requesterId) || game.players[0];
   const now = Date.now();
-  const nearBuilding = world.buildings.find((building) => chebyshev(player.x, player.y, building.x, building.y) <= 1) || null;
+  const nearBuilding = world.buildings.find((building) => hexDistance(player.x, player.y, building.x, building.y) <= 1) || null;
   return {
     kind: game.gameKey,
     gameOver: false,
@@ -226,7 +347,14 @@ function serialize(game, requesterId) {
       y: player.y,
       path: player.path,
       cash: player.cash,
-      inventory: player.inventory.map((item) => ({ ...item, fish: getFish(item.speciesId) })),
+      gear: player.gear,
+      gearCosts: GEAR_COSTS,
+      gearMaxLevel: GEAR_MAX_LEVEL,
+      inventory: player.inventory.map((item) => ({
+        ...item,
+        fish: getFish(item.speciesId),
+        price: priceFor(item.speciesId, item.weightKg, bonusFor(player, item))
+      })),
       discovered: player.discovered,
       sets: SETS.map((set) => ({
         id: set.id,
@@ -235,6 +363,9 @@ function serialize(game, requesterId) {
         description: set.description,
         total: set.fish.length,
         caught: set.fish.filter((fish) => player.discovered.includes(fish.id)).length,
+        bonusActive: Boolean(player.setBonuses[set.id]),
+        rewardGear: set.rewardGear,
+        rewardGearLabel: GEAR_LABEL[set.rewardGear] || null,
         fish: set.fish.map((fish) => ({ ...fish, discovered: player.discovered.includes(fish.id) }))
       })),
       fishing: serializeFishing(player.fishing, now),
@@ -261,4 +392,4 @@ function configureHttp({ app }) {
   });
 }
 
-module.exports = { createGame, handleAction, serialize, tick, configureHttp };
+module.exports = { createGame, handleAction, serialize, tick, configureHttp, preparePlayers, afterStateChange };

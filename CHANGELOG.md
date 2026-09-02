@@ -1,5 +1,42 @@
 # Changelog
 
+## v1.14.0 — The Deep Bleu C: hexkaart, gebouwen en minimap
+
+- De kaart van The Deep Bleu C is omgezet naar een hexagonaal tegelraster met meer rivieren, grotere meren en een uitgestrekte binnenzee.
+- Aquarium-Museum, Handelsmarkt en Hall of Fame zijn nu speelbaar, samen met De Vishandel bereikbaar via een vaste knoppenbalk — je hoeft er niet meer naartoe te lopen.
+- De Handelsmarkt verkoopt upgrades voor hengel, aas en boot; een boot is nodig om de uitgebreide waterlopen over te steken.
+- Volledige visverzamelingen in het Aquarium-Museum geven een geldbonus en een blijvend hogere verkoopprijs.
+- De Hall of Fame toont een leaderboard op geld en ontdekte soorten.
+- Een minimap toont altijd je positie op de wereldkaart.
+- Ingelogde spelers behouden voortaan hun geld, vangst en uitrusting tussen speelsessies.
+- CycClub toont je ploeg nu als een overzichtstabel (naam, leeftijd, specialisme, eigenschappen, status, kostprijs, vermoeidheid en verkoopoptie), zodat je hele team in één oogopslag te zien is. Een ploeg telt voortaan maximaal 10 renners.
+- CycClub: de tabellen "Ploeg" (5 kolommen, 3 rijen per renner) en "Scoutingmarkt" (4 kolommen, 3 rijen per renner) zijn versmald zodat ze ook op mobiel goed passen — alle info blijft zichtbaar, alleen anders ingedeeld.
+- CycClub: de Scoutingmarkt heeft nu een ververs-knop om meteen nieuwe renners in te laden.
+- CycClub: de statistieken van elke renner zijn nu individueel afgestemd op hun echte specialiteiten (in lijn met hun profiel op ProCyclingStats), met een veel groter statistiek- en prijsbereik tussen budgetrenners en topsterren.
+- CycClub: de upgrade-status staat nu compact bovenaan; Shop, Scoutingmarkt en Koerskalender openen als aparte tabs in plaats van altijd zichtbare panelen — de Ploeg blijft het standaardtabblad.
+- CycClub: de Koerskalender maakt nu onderscheid tussen monumenten, Vlaamse klassiekers, grote ritten en grote rondes (eindklassement van Tour, Giro en Vuelta). Het prijzengeld stijgt voortaan mee met de moeilijkheidsgraad van de rit.
+- CycClub: je start voortaan met €100.000 budget en een lege ploeg — alle renners moeten via de Scoutingmarkt worden aangekocht.
+- CycClub heeft nu een "Opnieuw beginnen"-knop waarmee je (na bevestiging) je volledige voortgang — budget, renners, upgrades en carrièrestats — definitief kan wissen.
+- CycClub: de 7 statistiekvakken bovenaan zijn samengevoegd tot één compacte, smalle balk, zodat je hele statistiekenrij in één oogopslag te zien is.
+- CycClub heeft een nieuw koersmodel: elke rit bestaat uit 8 segmenten met dobbelstenen plus bonussen van je ploegstatus (net als bij D&D) — pech, een val, een opportuniteit (voorsprong) of een topdag. Het resultaatscherm toont per renner een segment-voor-segment logboek.
+- CycClub: de Scoutingmarkt staat nu ook in tabelvorm, net als je ploeg, en vult zichzelf altijd meteen aan — er staat altijd een nieuwe renner klaar om aan te kopen.
+- Het speelveld van The Deep Bleu C is herwerkt: de kaart vult nu het volledige zichtbare veld zonder blauwe rand, met een reliëfachtige achtergrond van gebergte en bebossing die de kaart meer op Europa laat lijken (ook zichtbaar op de minimap).
+- De hexagontegels van The Deep Bleu C sluiten naadlozer op elkaar aan, met een subtielere, vagere omranding.
+- Je speelfiguur in The Deep Bleu C is nu een vis in vogelvluchtperspectief met een hengellijn, die meedraait met je bewegingsrichting.
+- CycClub is herwerkt met de 10 grootste WorldTour-ploegen van het 2026-seizoen en hun actuele renners (incl. team in de ploeg- en scoutingtabel) in plaats van willekeurig gegenereerde namen. De Koerskalender is beperkt tot monumenten, Vlaamse klassiekers, grote ritten en de 3 grote rondes.
+- CycClub: Shop & Upgrades staat nu in een 2×2-veld dat op één scherm past, met een voortgangsbalk en de concrete bonus per upgradeniveau. Fietsen & Materiaal verhogen de snelheid en verlagen de pechkans, Voeding & Supplementen verbeteren het duurvermogen en verminderen vermoeidheid, Trainers & Analyse versterken specifiek de 3 beste statistieken van elke renner, en de Medische Staf verkort blessuretijd en verlaagt de kans op ziekte.
+- CycClub: de Scoutingmarkt toont voortaan altijd 10 renners tegelijk, heeft filters op statistiek en kostprijs, en is een eigen tabblad geworden (naast Ploeg, Shop en Koerskalender).
+- De kaart van The Deep Bleu C volgt nu een echte Europese kustlijn (Iberisch Schiereiland, Italië en de Balkan, de Oostzee, de Zwarte Zee, de Britse eilanden), met meer bos en gebergtes waarvan de hoogste pieken onbegaanbaar zijn.
+- The Deep Bleu C past nu volledig op één scherm: de 4 gebouwknoppen staan naast de kaart onder de minimap, vissen/hengelen/binnenhalen verschijnt als pop-up op de kaart zelf, en Vishandel, Aquarium-Museum, Handelsmarkt en Hall of Fame openen als apart scherm met een terugknop naar de kaart.
+- CycClub-ritten zijn nu echt speelbaar: je rolt zelf de dobbelsteen voor elk van de 8 segmenten en ziet je ploeg als gekleurde stippen vooruitgaan op een grafiek van het rittenprofiel. Per segment kies je: de multiplier die je via je ploeg hebt verdiend meteen toepassen, of opsparen voor het volgende segment — elke opsparing geeft 12,5% meer op je multiplier. Nadien volgt de vertrouwde uitslag met segment-logboek.
+- CycClub: alle ploegen rijden een segment gelijktijdig, maar de rit gaat pas naar het volgende segment zodra iedereen zijn worp voor het huidige segment heeft bevestigd (toegepast of opgespaard) — je ziet in de grafiek en de deelnemerslijst wie nog moet rollen.
+- The Deep Bleu C heeft nu 80 vissoorten verdeeld over 8 sets van elk 10 vissen (2 per watersoort in plaats van 1), met een eigen thema per set. Een set voltooien geeft naast de geldbonus en de blijvende verkoopprijsbonus nu ook een gratis niveau voor hengel, aas of boot.
+- De Vishandel toont voortaan de verkoopprijs per vis en laat je met selectievakjes precies kiezen welke (één of meerdere) vissen je verkoopt, zonder dat "Verkoop alles" verplicht is — die knop blijft gewoon beschikbaar.
+- Age of Civilization heeft een 8ste leider, King Harald Hardrada, die bij elke aanvalsgolf goud plundert van de speler die hij aanvalt.
+- Age of Civilization: het upgraden van een gebouw in je stad vermenigvuldigt de stat nu met x1.5 per niveau, waardoor upgraden duidelijk voordeliger is dan een nieuw gebouw kopen.
+- Age of Civilization: Observatorium, Grote Tempel en Academie geven nu elk een gerichte bonus per gebeurtenis — Wetenschap → Attack, Cultuur → Goud, Religie → Defence — die met 10% per tijdperk groeit, tot +70% in tijdperk 7.
+- Age of Civilization: de bevestigingspopup bij een vaste-gebouw-gebeurtenis (Observatorium, Grote Tempel, Academie) toont voortaan het exacte bonuspercentage voor de betrokken stat.
+
 ## v1.13.3 — Multiplayer en lobby-QOL
 
 - Speleracties en NPC-ticks gaan door als een andere human offline is. Benodigde menselijke keuzes blijven wachten; volledig verlaten games blijven gepauzeerd en behouden de opruimtermijn van twee uur.

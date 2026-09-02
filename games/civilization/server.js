@@ -39,6 +39,7 @@ const UPGRADE_COST_MULTIPLIER = 1.75;
 const CIVIC_BASE_COST_MULTIPLIER = 2.5;
 const EVENT_STEP_COST_MULTIPLIER = 2;
 const GANDHI_DAMAGE_CAP = 25;
+const HARALD_RAID_GOLD = 3;
 
 const CATEGORIES = ['attack', 'defence', 'economy'];
 const CIVIC_CATEGORIES = ['science', 'religion', 'culture'];
@@ -65,13 +66,10 @@ const NAMES = {
 // Fixed civic buildings: one each, present from the start, never rebuilt.
 const CIVIC_NAMES = { science: 'Observatory', religion: 'Grand Temple', culture: 'Academy' };
 
-// Permanent multiplier split applied to the player's Attack/Defence/Income
-// every time a civic building's upgrade count hits a multiple of 3.
-const CIVIC_SPLITS = {
-  science: { attack: 0.30, income: 0.20, defence: 0.10 },
-  culture: { income: 0.30, defence: 0.20, attack: 0.10 },
-  religion: { income: 0.30, defence: 0.20, attack: 0.10 }
-};
+// Each civic building's event boosts exactly one stat: Science -> Attack,
+// Culture -> Income, Religion -> Defence.
+const CIVIC_EVENT_STAT = { science: 'attack', culture: 'income', religion: 'defence' };
+const CIVIC_STAT_LABEL = { attack: 'Attack', income: 'Goud', defence: 'Defence' };
 
 // Leaders: picked once per player, in seat order, before Age 1 begins.
 // NOTE on Cleopatra and Gandhi: the original brief for these two referenced
@@ -87,7 +85,8 @@ const LEADERS = [
   { key: 'gandhi', name: 'Gandhi', attribute: 'Ronde bril', bonus: `Je Stad kan nooit meer dan ${GANDHI_DAMAGE_CAP} schade oplopen per aanvalsgolf.` },
   { key: 'bismarck', name: 'Bismarck', attribute: 'Pickelhaube', bonus: 'Upgrades kosten 25% minder goud.' },
   { key: 'lincoln', name: 'Lincoln', attribute: 'Hoge hoed', bonus: 'Je Stad geneest automatisch +10 HP als ze na een aanvalsgolf onder 30 zakt.' },
-  { key: 'achilles', name: 'Achilles', attribute: 'Pluimhelm', bonus: '+50% Attack, maar je loopt ook 50% meer schade op.' }
+  { key: 'achilles', name: 'Achilles', attribute: 'Pluimhelm', bonus: '+50% Attack, maar je loopt ook 50% meer schade op.' },
+  { key: 'harald', name: 'King Harald Hardrada', attribute: 'Gehoornde helm', bonus: `Bij elke aanvalsgolf plunder je tot ${HARALD_RAID_GOLD} Goud van de speler die jij aanvalt.` }
 ];
 
 function makeCard(type, age, name) {
@@ -108,9 +107,12 @@ function cardDesc(c) {
   return '';
 }
 
-// Effective stat for a flexible tile: base, +25% of base per level beyond 1.
+// Effective stat for a flexible tile: each upgrade level multiplies the
+// stat by x1.5 over the previous level (base, base*1.5, base*1.5^2, ...) —
+// upgrading an existing building is deliberately worth more than its
+// up-front cost would buy in a fresh building of the same type.
 function tileStat(base, level) {
-  return base > 0 ? Math.round(base * (1 + 0.25 * (level - 1))) : 0;
+  return base > 0 ? Math.round(base * Math.pow(1.5, level - 1)) : 0;
 }
 
 function withLeaderCostDiscount(player, cost) {
@@ -161,11 +163,14 @@ function dealHands(game) {
   aliveIds(game).forEach((id) => { const p = game.players[id]; p.hand = drawCards(game.age, p); });
 }
 
-function applyCivicEvent(player, key) {
-  const split = CIVIC_SPLITS[key];
-  player.eventMultipliers.attack *= (1 + (split.attack || 0));
-  player.eventMultipliers.defence *= (1 + (split.defence || 0));
-  player.eventMultipliers.income *= (1 + (split.income || 0));
+// Bonus grows with the Age it fires in: 10% + 10% per Age (Age 1 = +10%,
+// Age 7 = +70%), applied once as a permanent multiplier on the single stat
+// the civic building governs.
+function civicEventBonus(age) { return 0.10 * age; }
+
+function applyCivicEvent(player, key, age) {
+  const stat = CIVIC_EVENT_STAT[key];
+  player.eventMultipliers[stat] *= (1 + civicEventBonus(age));
 }
 
 function totals(player) {
@@ -302,9 +307,11 @@ function handleAction(game, playerId, action, payload) {
       p.gold -= cost;
       civic.upgradeCount = upcomingStep;
       if (civic.upgradeCount % 3 === 0) {
-        applyCivicEvent(p, key);
+        applyCivicEvent(p, key, game.age);
         civic.eventsFired += 1;
-        game.log.push(`${p.name} ontketent een ${CIVIC_NAMES[key]}-gebeurtenis!`);
+        const stat = CIVIC_EVENT_STAT[key];
+        const pct = Math.round(civicEventBonus(game.age) * 100);
+        game.log.push(`${p.name} ontketent een ${CIVIC_NAMES[key]}-gebeurtenis! (+${pct}% ${CIVIC_STAT_LABEL[stat]})`);
       } else {
         game.log.push(`${p.name} upgrade ${CIVIC_NAMES[key]} (niveau ${civic.upgradeCount}).`);
       }
@@ -374,6 +381,16 @@ function resolveWave(game) {
     const p = game.players[id];
     p.hp = Math.max(0, p.hp - results[id].damage);
     if (p.hp > 0 && p.hp < 30 && p.leaderKey === 'lincoln') p.hp = Math.min(START_HP, p.hp + 10);
+  });
+  ids.forEach((id) => {
+    const p = game.players[id];
+    if (p.leaderKey !== 'harald') return;
+    const target = game.players[results[id].targetId];
+    const raided = Math.min(HARALD_RAID_GOLD, target.gold);
+    if (raided <= 0) return;
+    target.gold -= raided;
+    p.gold += raided;
+    game.log.push(`${p.name} plundert ${raided} Goud van ${target.name}.`);
   });
 
   game.waveResult = { age: game.age, results };
@@ -469,9 +486,11 @@ function playNpc(game, player) {
         player.gold -= civicUpgradeCost(game.age, upcomingStep, player);
         civic.upgradeCount = upcomingStep;
         if (civic.upgradeCount % 3 === 0) {
-          applyCivicEvent(player, choice.key);
+          applyCivicEvent(player, choice.key, game.age);
           civic.eventsFired += 1;
-          game.log.push(`${player.name} ontketent een ${CIVIC_NAMES[choice.key]}-gebeurtenis!`);
+          const stat = CIVIC_EVENT_STAT[choice.key];
+          const pct = Math.round(civicEventBonus(game.age) * 100);
+          game.log.push(`${player.name} ontketent een ${CIVIC_NAMES[choice.key]}-gebeurtenis! (+${pct}% ${CIVIC_STAT_LABEL[stat]})`);
         } else {
           game.log.push(`${player.name} upgrade ${CIVIC_NAMES[choice.key]}.`);
         }
@@ -524,12 +543,17 @@ function serializeCivic(civic, age, player) {
   const out = {};
   CIVIC_CATEGORIES.forEach((key) => {
     const c = civic[key];
+    const isEventStep = (c.upgradeCount + 1) % 3 === 0;
+    const stat = CIVIC_EVENT_STAT[key];
     out[key] = {
       name: CIVIC_NAMES[key],
       upgradeCount: c.upgradeCount,
       eventsFired: c.eventsFired,
       upgradeCost: civicUpgradeCost(age, c.upgradeCount + 1, player),
-      isEventStep: (c.upgradeCount + 1) % 3 === 0
+      isEventStep,
+      statKey: stat,
+      statLabel: CIVIC_STAT_LABEL[stat],
+      eventBonusPct: isEventStep ? Math.round(civicEventBonus(age) * 100) : null
     };
   });
   return out;

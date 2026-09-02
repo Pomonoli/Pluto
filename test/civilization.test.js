@@ -25,7 +25,7 @@ test('nieuw spel start in de leiderskeuzefase',()=>{
   assert.equal(game.phase,'picking');
   const view=civilization.serialize(game,'a',new Map([['a',true],['b',true]]));
   assert.equal(view.phase,'picking');
-  assert.equal(view.leaders.length,7);
+  assert.equal(view.leaders.length,8);
   assert.equal(view.pickerId,'a');
   assert.equal(view.isYourPick,true);
 });
@@ -108,7 +108,7 @@ test('civiele gebouwen zijn altijd upgradebaar (geen tijdperk-limiet)',()=>{
   assert.equal(p.civic.science.upgradeCount,2);
 });
 
-test('vrije gebouwen kunnen pas het volgende tijdperk upgraden, en krijgen dan +25% van hun basiswaarde',()=>{
+test('vrije gebouwen kunnen pas het volgende tijdperk upgraden, en krijgen dan x1.5 van hun basiswaarde per niveau',()=>{
   const game=civilization.createGame(players());
   pickLeaders(game);
   const p=game.players.a;
@@ -138,8 +138,8 @@ test('vrije gebouwen kunnen pas het volgende tijdperk upgraden, en krijgen dan +
   const view=civilization.serialize(game,'a',new Map([['a',true],['b',true]]));
   const tile=view.players.find((player)=>player.isYou).grid[slot];
   assert.equal(tile.level,2);
-  assert.equal(tile.attack,Math.round(baseAttack*1.25));
-  assert.equal(tile.nextAttack,Math.round(baseAttack*1.5));
+  assert.equal(tile.attack,Math.round(baseAttack*1.5)); // level 2 = base * 1.5^(2-1)
+  assert.equal(tile.nextAttack,Math.round(baseAttack*2.25)); // level 3 = base * 1.5^(3-1)
   assert.equal(tile.nextDefence,0);
   assert.equal(tile.nextIncome,0);
 });
@@ -169,9 +169,10 @@ test('een vast gebouw upgraden doet niets tot de derde upgrade, die een duurdere
   assert.equal(p.civic.science.upgradeCount,3);
   assert.equal(p.civic.science.eventsFired,1);
   assert.equal(step3Cost,step2Cost*2); // the event step costs 2x a normal step
+  // Science boosts Attack only, by 10% per Age (Age 3 => +30%); Income/Defence untouched.
   assert.ok(Math.abs(p.eventMultipliers.attack-1.3)<1e-9);
-  assert.ok(Math.abs(p.eventMultipliers.income-1.2)<1e-9);
-  assert.ok(Math.abs(p.eventMultipliers.defence-1.1)<1e-9);
+  assert.equal(p.eventMultipliers.income,1);
+  assert.equal(p.eventMultipliers.defence,1);
 });
 
 test('gebouwen zijn uniek: dezelfde kaart wordt niet opnieuw aangeboden in hetzelfde tijdperk',()=>{

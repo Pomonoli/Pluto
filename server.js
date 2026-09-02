@@ -26,6 +26,6 @@ runtime.startMaintenance();
 startDatabaseBackups();
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Pluto v1.13.3 draait op poort ${PORT}`);
+  console.log(`Pluto v1.14.0 draait op poort ${PORT}`);
   console.log(`SQLite: ${authDb.DB_PATH}`);
 });
