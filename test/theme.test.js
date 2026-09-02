@@ -40,7 +40,7 @@ test('preview skin launches games from the full card and shows arrows', () => {
   assert.match(theme, /launch\.click\(\)/);
   assert.match(css, /html\[data-theme="pluto-1-8-0"\] \.game-launch\{display:none!important\}/);
   assert.match(css, /\.game-card\.theme-card-launchable::after/);
-  assert.match(css, /#recentGames \.recent-game-button span\{display:none\}/);
+  assert.doesNotMatch(css, /#recentGames/);
 });
 
 test('settings gear opens and closes the popup on desktop and mobile', () => {
@@ -66,8 +66,9 @@ test('light home header has a subtle space background without growing taller', (
   const html = read('public/index.html');
   assert.match(css, /body:not\(\.game-active\) \.topbar::before\{[\s\S]*?radial-gradient\(ellipse 68% 18%/);
   assert.match(css, /body:not\(\.game-active\) \.topbar::after\{[\s\S]*?radial-gradient\(circle at 58% 24%/);
-  assert.match(css, /\.topbar\{[\s\S]*?min-height:104px/);
-  assert.match(html, /body:not\(\.game-active\) \.topbar\{[\s\S]*?min-height:112px/);
+  assert.match(css, /\.topbar\{[\s\S]*?min-height:92px/);
+  assert.match(css, /@media\(max-width:760px\)\{[\s\S]*?\.topbar\{[\s\S]*?min-height:100px/);
+  assert.doesNotMatch(html, /body:not\(\.game-active\) \.topbar\{/);
 });
 
 test('game lobby keeps the same light banner as Home until the game starts', () => {
@@ -75,16 +76,29 @@ test('game lobby keeps the same light banner as Home until the game starts', () 
   const html = read('public/index.html');
   assert.match(css, /body:not\(\.game-active\) \.topbar::before/);
   assert.match(css, /body:not\(\.game-active\) \.topbar::after/);
-  assert.match(html, /body:not\(\.game-active\) \.brand-mark/);
+  assert.match(css, /\.brand-mark-img\{width:44px;height:44px\}/);
   assert.doesNotMatch(css, /body:not\(\.room-active\) \.topbar::/);
 });
 
 test('preview skin uses a compact header and edge-to-edge mobile navigation', () => {
   const css = read('public/themes/pluto-1.8.0.css');
-  assert.match(css, /min-height:126px/);
+  const shared = read('public/styles.css');
+  assert.match(css, /min-height:100px/);
+  assert.match(css, /min-height:calc\(70px \+ env\(safe-area-inset-bottom\)\)/);
+  assert.match(shared, /\.mobile-nav-item svg\{width:22px;height:22px;[^}]*stroke-width:2/);
+  assert.match(shared, /\.mobile-nav-item span\{font-size:10px/);
+  assert.match(css, /\.mobile-nav\{[\s\S]*?background:#fffaf6;[\s\S]*?backdrop-filter:none/);
   assert.match(css, /body\.game-active \.mobile-game-header\{[\s\S]*?linear-gradient\(135deg,#b74b18 0%,#d56620 52%,#ed8129 100%\)/);
   assert.match(css, /\.mobile-nav\{[\s\S]*?left:0;[\s\S]*?bottom:0;[\s\S]*?width:100%;/);
   assert.match(css, /border-radius:18px 18px 0 0/);
+});
+
+test('light settings button is compact with a refined warm gear', () => {
+  const settings = read('public/settings.css');
+  const theme = read('public/themes/pluto-1.8.0.css');
+  assert.match(settings, /\.settings-toggle\{[\s\S]*?width:44px;[\s\S]*?height:44px/);
+  assert.match(settings, /\.settings-toggle svg\{[\s\S]*?width:19px;[\s\S]*?stroke-width:1\.75/);
+  assert.match(theme, /\.top-actions>#settingsButton\{[\s\S]*?color:#fff;[\s\S]*?background:rgba\(255,255,255,\.14\)/);
 });
 
 test('light theme has strong score contrast and light game surfaces', () => {

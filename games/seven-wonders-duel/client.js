@@ -41,7 +41,7 @@ function wonderEffectText(wonder){
 
 export function render(api){renderDuel(api)}
 
-function renderDuel({room,game,els,E,action,titlebar,logBox}){
+function renderDuel({room,game,state,els,E,action,titlebar}){
   const me=game.players.find(player=>player.id===room.meId);
   const turn=game.players.find(player=>player.id===game.turnPlayerId);
   let status=game.gameOver?game.resultText:game.canChooseProgress?'Kies een vooruitgangstoken.':game.canAct?'Jij bent aan zet. Kies een vrije kaart.':`${turn?.name||'Tegenstander'} is aan zet.`;
@@ -54,9 +54,11 @@ function renderDuel({room,game,els,E,action,titlebar,logBox}){
 
   shell.append(militaryTrack(E,game));
 
-  if(game.canChooseProgress){
-    shell.append(progressPicker(E,game,action));
-  }
+  const selectedTab=game.canChooseProgress?'realm':(state.duelTab==='realm'?'realm':'cards');
+  state.duelTab=selectedTab;
+  const content=E('div','duel-tab-content');
+  const cardsPanel=E('section',`duel-tab-panel duel-cards-panel${selectedTab==='cards'?' active':''}`);
+  const realmPanel=E('section',`duel-tab-panel duel-realm-panel${selectedTab==='realm'?' active':''}`);
 
   const boardWrap=E('div','duel-board-wrap');
   const boardHead=E('div','duel-board-head');
@@ -80,14 +82,30 @@ function renderDuel({room,game,els,E,action,titlebar,logBox}){
     board.append(node);
   });
   boardWrap.append(board);
-  shell.append(boardWrap);
+  cardsPanel.append(boardWrap);
 
+  if(game.canChooseProgress)realmPanel.append(progressPicker(E,game,action));
   const lower=E('div','duel-lower');
   lower.append(wondersPanel(E,me,game));
   lower.append(progressOverview(E,game));
-  shell.append(lower);
+  realmPanel.append(lower);
+  content.append(cardsPanel,realmPanel);
+  shell.append(content);
 
-  els.gameStage.append(shell,logBox(game.log));
+  const tabs=E('nav','duel-tabs');
+  const cardsTab=E('button',`duel-tab${selectedTab==='cards'?' active':''}`);
+  cardsTab.type='button';cardsTab.append(E('strong','','Kaarten'),E('small','',`Leeftijd ${game.age}/3`));
+  const realmTab=E('button',`duel-tab${selectedTab==='realm'?' active':''}`);
+  realmTab.type='button';realmTab.append(E('strong','','Jouw wonders'),E('small','','Vooruitgang'));
+  const selectTab=(name)=>{
+    state.duelTab=name;
+    cardsPanel.classList.toggle('active',name==='cards');realmPanel.classList.toggle('active',name==='realm');
+    cardsTab.classList.toggle('active',name==='cards');realmTab.classList.toggle('active',name==='realm');
+  };
+  cardsTab.onclick=()=>selectTab('cards');realmTab.onclick=()=>selectTab('realm');
+  tabs.append(cardsTab,realmTab);shell.append(tabs);
+
+  els.gameStage.append(shell);
 }
 
 function playerPanel(E,player,game){

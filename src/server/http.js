@@ -12,7 +12,7 @@ function isSecureRequest(req) {
 }
 
 function publicUser(user) {
-  return user ? { id: user.id, username: user.username, createdAt: user.createdAt } : null;
+  return user ? { id: user.id, username: user.username, createdAt: user.createdAt, gameSort:user.gameSort||'alphabetical' } : null;
 }
 
 function requireUser(req, res) {
@@ -29,9 +29,22 @@ function configureHttp(app, runtime) {
   app.disable('x-powered-by');
   app.use(express.json({ limit:'128kb' }));
 
-  app.get('/api/game-plugins', (_req, res) => {
+  app.get('/api/game-plugins', (req, res) => {
     res.setHeader('Cache-Control','no-store');
-    res.json({ ok:true, games:listGamePlugins() });
+    const user=authDb.getUserFromCookieHeader(req.headers.cookie);
+    const counts=new Map(authDb.gamePopularity(user?.id).map((row)=>[row.gameKey,Number(row.games)||0]));
+    res.json({
+      ok:true,
+      gameSort:user?.gameSort||null,
+      games:listGamePlugins().map((game)=>({...game,playCount:counts.get(game.key)||0}))
+    });
+  });
+
+  app.post('/api/preferences/game-sort', (req,res)=>{
+    const user=requireUser(req,res);if(!user)return;
+    const gameSort=String(req.body?.gameSort||'');
+    if(!['alphabetical','popular'].includes(gameSort))return res.status(400).json({ok:false,error:'Ongeldige sorteerkeuze.'});
+    res.json({ok:true,gameSort:authDb.setGameSort(user.id,gameSort)});
   });
 
   for (const game of modules) game.configureHttp?.({ app, db:authDb, requireUser });
@@ -138,9 +151,24 @@ function configureHttp(app, runtime) {
     });
   });
 
-  app.get('/api/rooms', (_req, res) => {
+  app.get('/api/rooms', (req, res) => {
     res.setHeader('Cache-Control','no-store');
-    res.json({ ok:true, rooms:runtime.openRoomSummaries() });
+    const user=authDb.getUserFromCookieHeader(req.headers.cookie);
+    const token=String(req.get('x-pluto-player-token')||'').trim();
+    res.json({ ok:true, rooms:runtime.openRoomSummaries({token,userId:user?.id||null}) });
+  });
+
+  app.put('/api/account/username', (req, res) => {
+    const user = requireUser(req, res); if (!user) return;
+    try {
+      const result = authDb.changeUsername(user.id, req.body?.username);
+      if (!result.ok) return res.status(400).json(result);
+      const refreshed = authDb.getUserFromCookieHeader(req.headers.cookie);
+      res.json({ ok:true, user:publicUser(refreshed) });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ ok:false, error:'Naam wijzigen mislukt.' });
+    }
   });
 
   app.get('/health', (_req, res) => {

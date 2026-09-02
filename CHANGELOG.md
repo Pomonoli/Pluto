@@ -1,13 +1,75 @@
 # Changelog
 
-## v1.12.0 — The Deep Bleu C (fase 1: kaart en vissen)
+## v1.13.0 — Accountnamen en responsive polish
 
-- **The Deep Bleu C** is toegevoegd: een solo vis-RPG op een gestileerde, procedureel gegenereerde 200x200 kaart van Europa.
-- Tik op de kaart om automatisch te wandelen; de route wordt server-side met A* berekend.
-- Tik op water vlak naast je om je hengel uit te werpen, trek op tijd aan bij een beet en haal de vis binnen voor de lijn breekt.
-- De eerste vier vissets zijn speelbaar: Polderrivieren, Kustwateren, Atlantische Diepzee en Middellandse Zee, elk met vier vissoorten.
-- De Vishandel staat op de kaart en koopt je volledige vangst of losse vissen op, met een prijs die meeschaalt met het gewicht.
-- Het Aquarium-Museum, de Handelsmarkt en het Hall of Fame-monument staan al zichtbaar op de kaart als voorproefje van latere fases.
+- Ingelogde gebruikers zien na refresh direct hun homescreen zonder login-flash tijdens de sessiecheck.
+- Profielen hebben een veilige optie `Naam wijzigen`; username en unieke sleutel wijzigen op hetzelfde account terwijl sessies, statistieken, historie, teams en maps behouden blijven.
+- Minigolf toont de Map editor voortaan in de spellobby in plaats van op de Home-gamekaart.
+- Homescreen, navigatie, gamekaarten, lobby's, profielen, leaderboards en modals gebruiken op tablet en desktop compactere gecentreerde breedtes.
+- Alle speelvelden houden realistische maximale breedtes en benutten extra ruimte gericht, zonder de mobiele touch-layout te verslechteren.
+- `Jouw kaarten` in Presidenten verdeelt kaarten automatisch over responsieve rijen en scrollt niet langer horizontaal.
+
+## v1.12.5 — Hervatbare verlaten games
+
+- Verlaten actieve games blijven maximaal twee uur hervatbaar, ook bij singleplayergames zonder verbonden speler.
+- `Doorgaan met spelen` blijft na het verlaten zichtbaar en krijgt een klein kruisje om een lege game definitief te sluiten.
+- De sluitactie is alleen beschikbaar voor een deelnemer met dezelfde spelerstoken of hetzelfde account.
+- Bij multiplayer verschijnt het kruisje uitsluitend wanneer niemand meer verbonden is, zodat een lopende game niet per ongeluk wordt gesloten.
+- De lobby blijft automatisch iedere vijf seconden verversen; de overbodige knop `Vernieuwen` is verwijderd.
+
+## v1.12.4 — Verfijnde mobiele navigatie
+
+- De gedeelde Light-header is compacter gemaakt op Home, lobby, leaderboard en profiel.
+- Logo, titel en tussenruimte schalen proportioneel mee; de compacte in-game header blijft ongewijzigd.
+- De mobiele ondernavigatie is verhoogd naar 70 px plus safe-area met grotere iconen, labels en touchzones.
+- De onderbalk gebruikt een effen achtergrond zonder blurfilter, met scherpere iconlijnen en een duidelijkere bovenrand.
+- De instellingenknop gebruikt een subtiele transparante stijl met een kleiner, fijner wit tandwiel.
+
+## v1.12.3 — Persoonlijke sortering en compactere games
+
+- De kaart `Recent` is van Home verwijderd.
+- Games kunnen alfabetisch of volgens de persoonlijk meest gespeelde games worden gesorteerd; voor accounts blijft die keuze bewaard.
+- 7 Wonders Duel gebruikt één vast spelscherm met aparte tabbladen voor kaarten en voor wonders/vooruitgang.
+- De twee spelerspanelen in 7 Wonders Duel staan naast elkaar en zijn beter leesbaar, terwijl de centrale gamekaarten compacter zijn.
+- Hartenjagen gebruikt vaste, grotere spelersvakken die tijdens alle rondes even groot blijven; de score opent via een knop in een centrale popup.
+- Hofslag centreert de kaarten in `Jouw hand`, schaalt het bord naar de resterende schermhoogte en toont vier spelers in een raster van twee bij twee.
+
+## v1.12.2 — Fixed-screen Age of Civilization
+
+- Age of Civilization gebruikt één vast spelscherm zonder paginascroll of spellog.
+- Kaartinformatie opent centraal met duidelijke acties voor bouwen, weggooien en teruggaan.
+- Upgrades van stadskaarten en vaste gebouwen vragen voortaan bevestiging in een verzorgde popup.
+- Stadsupgrades tonen compacte verschillen zoals `ATK +1`, `DEF +1` en `Inkomen +1`.
+- De zes stadstegels staan op lage schermen in één compacte rij en schakelen bij voldoende hoogte naar twee grotere rijen van drie.
+- De server levert exacte volgende statwaarden zodat de upgradepreview overeenkomt met de spelberekening.
+
+## v1.12.1 — Compactere gameheader en versie-info
+
+- De instellingenpopup toont subtiel de huidige Pluto-versie.
+- De terugpijl en menupuntjes in de mobiele gameheader hebben geen zichtbare omlijning of achtergrond meer.
+- De gamenaam staat verticaal gecentreerd in de mobiele bovenbanner.
+- Spelersaantallen zoals `2-7` blijven op Home altijd op één regel staan.
+- De headeracties behouden hun volledige touch-target en toegankelijke toetsenbordfocus.
+
+## v1.12.0 — Isle of Skye, The Deep Bleu C en CycClub
+
+- Isle of Skye is toegevoegd voor 2 tot 4 spelers, met tegelprijzen, afleggen, onderlinge aankopen, eilandbouw en NPC's.
+- The Deep Bleu C is toegevoegd als solospel met een grote Europese kaart, routezoeking, vissen en verkoop bij De Vishandel.
+- CycClub is toegevoegd voor 1 tot 6 spelers, met ploegopbouw, renners kopen en trainen, races, NPC's en prijzengeld.
+- Ingelogde CycClub-spelers behouden hun ploeg tussen games; hun clubprestaties verschijnen op een eigen leaderboard.
+- Alle drie games zijn als zelfstandige plugins geïntegreerd en vallen onder de bestaande lobby-, room- en hervatlogica.
+- De Ragnarok-branch is mee samengevoegd als ontwerpdocument; een speelbare plugin volgt pas zodra client- en servercode beschikbaar zijn.
+
+## v1.11.14 — Uitgebreid Age of Civilization
+
+- Age of Civilization ondersteunt nu 2 tot 7 spelers in plaats van uitsluitend twee spelers.
+- Voor het eerste tijdperk kiest iedere speler een unieke leider met een eigen permanente bonus.
+- Aanvalsgolven verlopen kloksgewijs in een kring; uitgeschakelde spelers vallen af en de rest speelt door.
+- Observatorium, Grote Tempel en Academie zijn vaste gebouwen met stapelbare gebeurtenissen bij mijlpalen.
+- Vrije gebouwen, vaste gebouwen en gebeurtenisstappen hebben herwerkte upgradeprijzen en bonussen.
+- Kaarten en gebouwen tonen hun actuele effecten direct en gebruiken duidelijkere categorie- en tijdperkkleuren.
+- De Civilization-interface is lichter, leesbaarder en compact ingericht voor grotere spelersgroepen.
+- Extra regressietests bewaken leiders, multiplayergevechten, eliminatie, upgrades en gebeurtenissen.
 
 ## v1.11.13 — Passende gamebreedtes voor browser en tablet
 

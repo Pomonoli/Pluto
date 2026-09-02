@@ -1,8 +1,8 @@
-import { createGameUi } from './js/game-ui.js?v=1.12.0';
+import { createGameUi } from './js/game-ui.js?v=1.13.0';
 const socket = window.io();
   const $ = (id) => document.getElementById(id);
   const els = {};
-  ['brandButton','lobbyBrowserButton','leaderboardButton','soundButton','installButton','accountButton','mobileNav','mobilePlayButton','mobileLobbyButton','mobileLeaderboardButton','mobileProfileButton','mobileGameHeader','mobileGameLeaveButton','mobileGameName','mobileGameMenuButton','mobileGameMenu','mobileGameRulesButton','mobileGameSoundButton','mobileGameLeaveMenuButton','rulesButton','homeView','lobbyBrowserView','leaderboardView','profileView','roomView','homeGuestBar','guestName','homeAccountButton','inviteBox','inviteText','joinInviteButton','resumeGameSection','resumeGames','recentGamesSection','recentGames','homeOpenLobbiesSection','homeOpenLobbies','gamesHeading','gameGrid','refreshRoomsButton','lobbyIdentityBar','lobbyIdentityText','lobbyGuestWrap','lobbyGuestName','openRoomCount','openRoomsContent','leaderboardGame','leaderboardContent','profileUsername','profileSummary','profileGames','profileRecent','headToHeadCard','headToHeadGame','headToHeadContent','roomLayout','lobbySection','gameSection','playerCountBadge','lobbyPlayers','gameLobbyOptions','hostControls','addNpcButton','startGameButton','lobbyHint','gameStage','gameResult','accountModal','closeAccountButton','loggedOutAccount','loggedInAccount','loginForm','loginUsername','loginPassword','showRegisterButton','showLoginButton','registerForm','registerUsername','registerPassword','accountUsername','accountGames','accountWins','accountWinRate','myProfileButton','logoutButton','rulesModal','rulesGameName','rulesContent','closeRulesButton','leaveGameModal','leaveGameTitle','leaveGamePromptText','cancelLeaveGameButton','confirmLeaveGameButton','toast'].forEach((id) => els[id] = $(id));
+  ['brandButton','lobbyBrowserButton','leaderboardButton','soundButton','installButton','accountButton','mobileNav','mobilePlayButton','mobileLobbyButton','mobileLeaderboardButton','mobileProfileButton','mobileGameHeader','mobileGameLeaveButton','mobileGameName','mobileGameMenuButton','mobileGameMenu','mobileGameRulesButton','mobileGameSoundButton','mobileGameLeaveMenuButton','rulesButton','homeView','lobbyBrowserView','leaderboardView','profileView','roomView','homeGuestBar','guestName','homeAccountButton','inviteBox','inviteText','joinInviteButton','resumeGameSection','resumeGames','homeOpenLobbiesSection','homeOpenLobbies','gamesHeading','gameGrid','lobbyIdentityBar','lobbyIdentityText','lobbyGuestWrap','lobbyGuestName','openRoomCount','openRoomsContent','leaderboardGame','leaderboardContent','profileUsername','profileSummary','profileGames','profileRecent','showRenameButton','renameForm','renameUsername','cancelRenameButton','headToHeadCard','headToHeadGame','headToHeadContent','roomLayout','lobbySection','gameSection','playerCountBadge','lobbyPlayers','gameLobbyOptions','hostControls','addNpcButton','startGameButton','lobbyHint','gameStage','gameResult','accountModal','closeAccountButton','loggedOutAccount','loggedInAccount','loginForm','loginUsername','loginPassword','showRegisterButton','showLoginButton','registerForm','registerUsername','registerPassword','accountUsername','accountGames','accountWins','accountWinRate','myProfileButton','logoutButton','rulesModal','rulesGameName','rulesContent','closeRulesButton','leaveGameModal','leaveGameTitle','leaveGamePromptText','cancelLeaveGameButton','confirmLeaveGameButton','toast'].forEach((id) => els[id] = $(id));
 
   const state = {
     room: null,
@@ -115,7 +115,6 @@ const socket = window.io();
     const target = getRoomFromPath(); state.directRoomId = target;
     els.inviteBox.classList.toggle('hidden', !target); if (target) els.inviteText.textContent = `Je bent uitgenodigd voor game ${target}`;
     updateIdentityUi();
-    renderRecentGames();
     loadHomeOpenLobbies();
   }
   async function showOpenLobby() {
@@ -164,54 +163,32 @@ const socket = window.io();
       els.headToHeadCard.classList.remove('hidden');await loadHeadToHead(data.profile.user.username);
     }
   }
-  function recentGamesList() {
-    try { return JSON.parse(localStorage.getItem('minigames.recentGames') || '[]').filter(k=>GAME_NAMES[k]).slice(0,4); }
-    catch { return []; }
-  }
-  function rememberRecentGame(gameKey) {
-    if (!GAME_NAMES[gameKey]) return;
-    const list = [gameKey, ...recentGamesList().filter(k=>k!==gameKey)].slice(0,4);
-    localStorage.setItem('minigames.recentGames', JSON.stringify(list));
-    if (!els.homeView.classList.contains('hidden')) renderRecentGames();
-  }
-  function renderRecentGames() {
-    const list = recentGamesList();
-    els.recentGamesSection.classList.toggle('hidden', !list.length);
-    els.recentGames.replaceChildren();
-    list.forEach(gameKey=>{
-      const b=E('button','recent-game-button');
-      b.type='button';
-      b.append(E('strong','',GAME_NAMES[gameKey]),E('span','', 'Nieuw spel'));
-      b.onclick=()=>createRoom(gameKey);
-      els.recentGames.append(b);
-    });
-    updateHomeGamesHeading();
-  }
   function updateHomeGamesHeading() {
-    const hasExtraSections=!els.resumeGameSection.classList.contains('hidden')||!els.recentGamesSection.classList.contains('hidden')||!els.homeOpenLobbiesSection.classList.contains('hidden');
+    const hasExtraSections=!els.resumeGameSection.classList.contains('hidden')||!els.homeOpenLobbiesSection.classList.contains('hidden');
     els.gamesHeading.classList.toggle('hidden',!hasExtraSections);
   }
   async function loadHomeOpenLobbies() {
     try {
-      const response=await fetch('/api/rooms',{cache:'no-store'});
+      const response=await fetch('/api/rooms',{cache:'no-store',headers:{'X-Pluto-Player-Token':state.token}});
       const data=await response.json();
       if(!data.ok)throw new Error(data.error||'Kon games niet laden.');
-      const identity=(state.authUser?.username||state.guestName||els.guestName.value||'').toLocaleLowerCase('nl-BE');
-      renderHomeOpenLobbies((data.rooms||[]).filter(room=>room.joinable||(room.resumable&&room.playerNames.some(name=>name.toLocaleLowerCase('nl-BE')===identity))));
+      renderHomeOpenLobbies((data.rooms||[]).filter(room=>room.joinable||room.canResume));
     } catch {
       renderHomeOpenLobbies([]);
     }
   }
   function renderHomeOpenLobbies(rooms) {
-    const identity=(state.authUser?.username||state.guestName||els.guestName.value||'').toLocaleLowerCase('nl-BE');
-    const resumable=rooms.filter(room=>room.resumable&&room.playerNames.some(name=>name.toLocaleLowerCase('nl-BE')===identity));
+    const resumable=rooms.filter(room=>room.resumable&&room.canResume);
     const open=rooms.filter(room=>!resumable.includes(room));
     els.resumeGames.replaceChildren();
     els.resumeGameSection.classList.toggle('hidden',!resumable.length);
     resumable.forEach(room=>{
+      const card=E('div','resume-game-card');
       const button=E('button','resume-game-button');button.type='button';
       const copy=E('span','resume-game-copy');copy.append(E('small','',room.gameName),E('strong','','Doorgaan met spelen'),E('span','',`Game ${room.id} · ${room.playerCount}/${room.maxPlayers} spelers`));
-      button.append(copy,E('span','resume-game-arrow','→'));button.onclick=()=>joinRoom(room.id);els.resumeGames.append(button)
+      button.append(copy,E('span','resume-game-arrow','→'));button.onclick=()=>joinRoom(room.id);card.append(button);
+      if(room.connectedHumanCount===0){const close=E('button','resume-game-close','×');close.type='button';close.setAttribute('aria-label',`${room.gameName} definitief sluiten`);close.onclick=()=>{close.disabled=true;socket.emit('room:close',{roomId:room.id,token:state.token},response=>{if(!response?.ok){close.disabled=false;return handleAck(response)}loadHomeOpenLobbies()})};card.append(close)}
+      els.resumeGames.append(card)
     });
     els.homeOpenLobbies.replaceChildren();
     els.homeOpenLobbiesSection.classList.toggle('hidden',!open.length);
@@ -243,10 +220,10 @@ const socket = window.io();
   async function loadOpenRooms() {
     if (els.lobbyBrowserView.classList.contains('hidden')) return;
     try {
-      const response=await fetch('/api/rooms',{cache:'no-store'});
+      const response=await fetch('/api/rooms',{cache:'no-store',headers:{'X-Pluto-Player-Token':state.token}});
       const data=await response.json();
       if(!data.ok)throw new Error(data.error||'Kon games niet laden.');
-      renderOpenRooms(data.rooms||[]);
+      renderOpenRooms((data.rooms||[]).filter(room=>room.connectedHumanCount>0||room.canResume));
     } catch(error) {
       els.openRoomsContent.replaceChildren(E('div','panel',error.message));
     }
@@ -269,8 +246,7 @@ const socket = window.io();
       room.playerNames.forEach(name=>players.append(E('span','open-room-player',name)));
       const meta=E('div','open-room-meta');
       meta.append(E('span','',`Host: ${room.hostName}`),E('span','',relativeAge(room.createdAt)));
-      const identity=(state.authUser?.username||state.guestName||els.lobbyGuestName.value||'').toLocaleLowerCase('nl-BE');
-      const canResume=Boolean(room.resumable&&room.playerNames.some(name=>name.toLocaleLowerCase('nl-BE')===identity));
+      const canResume=Boolean(room.resumable&&room.canResume);
       const canEnter=room.joinable||canResume;
       const join=E('button',canEnter?'primary':'secondary',canResume?'Ga terug':room.resumable?'Lopend':room.joinable?'Join game':'Vol');
       join.type='button';join.disabled=!canEnter;
@@ -346,7 +322,6 @@ const socket = window.io();
   function handlePluginRoute(){return Object.values(state.gamePlugins).some(plugin=>plugin.handleRoute?.({path:location.pathname,state,setRoute,toast})===true)}
   function createRoom(gameKey) {
     const name = saveGuestName(); if (!name) return;
-    rememberRecentGame(gameKey);
     state.roomStateBlocked = true;
     state.expectedRoomId = null;
     socket.emit('room:create', { name, token: state.token, gameKey }, (result) => {
@@ -418,6 +393,10 @@ const socket = window.io();
     const {user,totals,perGame,recent}=profile;
     els.profileUsername.textContent=user.username;
     els.profileSummary.textContent=`${totals.games} games · ${totals.wins} wins · ${totals.winRate}% winrate`;
+    const isOwnProfile=state.authUser?.id===user.id;
+    els.showRenameButton.classList.toggle('hidden',!isOwnProfile);
+    els.renameForm.classList.add('hidden');
+    if(isOwnProfile)els.renameUsername.value=user.username;
     els.profileGames.replaceChildren();
     if(!perGame.length) els.profileGames.append(E('p','muted','Nog geen gespeelde matches.'));
     else {
@@ -471,6 +450,7 @@ const socket = window.io();
       const data=await response.json();
       state.authUser=data.user||null; state.authStats=data.stats||null; updateIdentityUi();
     } catch { state.authUser=null; state.authStats=null; updateIdentityUi(); }
+    finally { document.body.classList.remove('auth-pending');document.body.removeAttribute('aria-busy'); }
   }
   function openAccount() {
     els.accountModal.classList.remove('hidden');els.accountModal.setAttribute('aria-hidden','false');
@@ -491,7 +471,7 @@ const socket = window.io();
     const previous=state.previousRoom;
     handleRoomEffects(previous,room);
     if(state.renderedRoomId!==room.id){state.renderedRoomId=room.id;state.renderedGameRevision=-1;state.scoreMemory={};}
-    state.room = room; state.previousRoom=room; rememberRecentGame(room.gameKey); showRoom();
+    state.room = room; state.previousRoom=room; showRoom();
     const roomOptions=state.gamePlugins[room.gameKey]?.roomOptions||{};if(state.activeGameBodyClass&&state.activeGameBodyClass!==roomOptions.bodyClass)document.body.classList.remove(state.activeGameBodyClass);state.activeGameBodyClass=room.status!=='lobby'?roomOptions.bodyClass||null:null;if(state.activeGameBodyClass)document.body.classList.add(state.activeGameBodyClass);
     document.body.classList.toggle('game-active',room.status!=='lobby');
     els.mobileGameName.textContent=room.gameMeta?.name||GAME_NAMES[room.gameKey]||'Spel';
@@ -538,7 +518,7 @@ const socket = window.io();
     state.roomStateBlocked=true;state.expectedRoomId=null;state.directRoomId=null;
     if(state.activeGameBodyClass)document.body.classList.remove(state.activeGameBodyClass);state.activeGameBodyClass=null;state.room=null;state.previousRoom=null;state.selection=null;state.renderedRoomId=null;state.renderedGameRevision=-1;
     history.replaceState({},'', '/');showHome();
-    socket.emit('room:leave',{},()=>{state.roomStateBlocked=false});return true;
+    socket.emit('room:leave',{},()=>{state.roomStateBlocked=false;if(!els.homeView.classList.contains('hidden'))loadHomeOpenLobbies()});return true;
   }
   function requestRematch(button){
     if(button){button.disabled=true;button.textContent='Starten…'}
@@ -595,7 +575,6 @@ const socket = window.io();
   };
 
   els.lobbyBrowserButton.onclick=()=>{if(state.room)return toast('Verlaat eerst de game.');setRoute('/lobby');showOpenLobby()};
-  els.refreshRoomsButton.onclick=loadOpenRooms;
   els.lobbyGuestName.oninput=()=>{if(!state.authUser){state.guestName=normalizeName(els.lobbyGuestName.value);els.lobbyIdentityText.textContent=state.guestName||'Guest'}};
   els.soundButton.onclick=toggleSound;
   els.mobileGameSoundButton.onclick=()=>{toggleSound();closeMobileGameMenu()};
@@ -631,6 +610,17 @@ const socket = window.io();
     try{await authPost('/api/auth/logout',{});location.reload()}catch(error){toast(error.message)}
   };
   els.myProfileButton.onclick=()=>{if(!state.authUser)return;closeAccount();setRoute(`/profile/${encodeURIComponent(state.authUser.username)}`);showProfile(state.authUser.username)};
+  els.showRenameButton.onclick=()=>{els.showRenameButton.classList.add('hidden');els.renameForm.classList.remove('hidden');els.renameUsername.value=state.authUser?.username||'';els.renameUsername.focus()};
+  els.cancelRenameButton.onclick=()=>{els.renameForm.classList.add('hidden');els.showRenameButton.classList.remove('hidden')};
+  els.renameForm.onsubmit=async(e)=>{
+    e.preventDefault();
+    const submit=els.renameForm.querySelector('[type="submit"]');submit.disabled=true;
+    try{
+      const response=await fetch('/api/account/username',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:els.renameUsername.value})});
+      const data=await response.json();if(!data.ok)throw new Error(data.error||'Naam wijzigen mislukt.');
+      state.authUser=data.user;history.replaceState({},'',`/profile/${encodeURIComponent(data.user.username)}`);location.reload();
+    }catch(error){submit.disabled=false;toast(error.message)}
+  };
 
   document.addEventListener('pointerdown',()=>ensureAudio(),{once:true});
   document.addEventListener('click',(event)=>{if(!els.mobileGameHeader.contains(event.target))closeMobileGameMenu()});
@@ -642,7 +632,7 @@ const socket = window.io();
   if('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.12.0', {
+        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.13.0', {
           updateViaCache:'none'
         });
         await registration.update();
@@ -677,7 +667,7 @@ const socket = window.io();
     showHome();
   });
 
-  loadGamePlugins().then(()=>loadAuth()).then(()=>{
+  Promise.all([loadGamePlugins(),loadAuth()]).then(()=>{
     if(!socket.connected) return;
     const target=getRoomFromPath();
     if(target){state.expectedRoomId=target;state.roomStateBlocked=false;}
@@ -687,4 +677,3 @@ const socket = window.io();
     else if(isLeaderboardPath()) showLeaderboard('');
     else {const profile=getProfileFromPath();if(profile)showProfile(profile);else showHome()}
   });
-  showHome();

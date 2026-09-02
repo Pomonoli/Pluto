@@ -6,7 +6,6 @@
   "icon": "⛳",
   "badge": "1-4",
   "actionLabel": "Nieuw spel",
-  "toolLabel": "Map Editor",
   "minPlayers": 1,
   "maxPlayers": 4,
   "supportsNpc": true,

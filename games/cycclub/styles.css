@@ -1,0 +1,46 @@
+@media(min-width:761px){#gameStage:has(.cc-dashboard){max-width:1100px}}
+.cc-panel{margin-top:14px}
+.cc-summary{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-top:14px}
+.cc-summary-item{border:1px solid var(--border);border-radius:12px;background:var(--panel2);padding:10px;display:flex;flex-direction:column;gap:4px}
+.cc-summary-item span{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+.cc-summary-item strong{font-size:16px}
+
+.cc-rider-list{display:grid;gap:8px}
+.cc-rider-row{border:1px solid #252b34;border-radius:11px;background:#11151b;padding:10px 12px;display:grid;gap:8px;grid-template-columns:minmax(0,1fr) auto auto;align-items:center}
+.cc-rider-row.cc-selectable{grid-template-columns:auto minmax(0,1fr) auto;cursor:pointer}
+.cc-rider-head{display:flex;flex-direction:column;gap:2px;min-width:0}
+.cc-rider-head strong{font-size:14px}
+.cc-rider-meta{display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-size:12px;color:var(--muted)}
+.cc-rider-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+
+.cc-stat-row{display:flex;flex-wrap:wrap;gap:6px}
+.cc-stat-chip{border:1px solid var(--border);border-radius:8px;padding:3px 6px;display:flex;flex-direction:column;align-items:center;min-width:34px}
+.cc-stat-chip b{font-size:9px;color:var(--muted);font-weight:800}
+.cc-stat-chip small{font-size:12px;font-weight:800}
+
+.cc-status{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 8px;font-size:11px;font-weight:800}
+.cc-status-active{background:rgba(85,180,110,.16);color:#4fa96b}
+.cc-status-injured{background:rgba(214,90,80,.16);color:#d65a50}
+.cc-status-sick{background:rgba(214,160,60,.16);color:#c9932f}
+
+.cc-shop-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.cc-shop-item{border:1px solid var(--border);border-radius:12px;background:#11151b;padding:12px;display:flex;flex-direction:column;gap:8px}
+.cc-level-dots{display:flex;gap:5px}
+.cc-dot{width:12px;height:12px;border-radius:50%;border:1px solid var(--border);background:transparent}
+.cc-dot.filled{background:var(--accent);border-color:var(--accent)}
+
+.cc-race-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:14px}
+.cc-race-card{border:1px solid var(--border);border-radius:12px;background:#11151b;padding:10px;display:flex;flex-direction:column;gap:6px}
+.cc-category-title{margin:14px 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+
+.cc-ready-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.cc-ready-chip{border:1px solid var(--border);border-radius:999px;padding:5px 10px;font-size:12px;color:var(--muted)}
+.cc-ready-chip.ready{color:#4fa96b;border-color:#4fa96b}
+
+@media(max-width:760px){
+  .cc-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cc-shop-grid{grid-template-columns:1fr}
+  .cc-rider-row{grid-template-columns:1fr}
+  .cc-rider-row.cc-selectable{grid-template-columns:auto 1fr}
+  .cc-rider-meta{align-items:flex-start}
+}

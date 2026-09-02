@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.12.0
+## Nieuw in versie 1.13.0
 
-**The Deep Bleu C** is toegevoegd: een solo vis-RPG op een gestileerde, procedureel gegenereerde 200x200 kaart van Europa. Wandel tap-to-move via A*-pathfinding naar de kust, werp je lijn uit op water vlak naast je en haal je vangst binnen met tijdige taps. Verkoop vis bij De Vishandel en verzamel de eerste vier vissets (Polderrivieren, Kustwateren, Atlantische Diepzee en Middellandse Zee). Het Aquarium-Museum, de Handelsmarkt en het Hall of Fame-monument staan al zichtbaar op de kaart als voorproefje van latere fases.
+Accountnamen kunnen voortaan veilig vanuit het profiel worden gewijzigd zonder verlies van sessie, statistieken of match history. Pluto wacht bij refresh op de sessiecheck, gebruikt tablet- en desktopruimte compacter in de volledige app en alle games, en Presidenten verdeelt `Jouw kaarten` zonder horizontale scroll. De Minigolf Map editor staat nu in de spellobby.
 
 ## Nieuw in versie 1.0.0
 
@@ -16,13 +16,16 @@ Actieve spellen gebruiken zoveel mogelijk de volledige schermhoogte zonder pagin
 | Spel | Spelers | NPC's |
 | --- | ---: | :---: |
 | 7 Wonders Duel | 2 | Ja |
-| Age of Civilization | 2 | Ja |
+| Age of Civilization | 2-7 | Ja |
 | Blackjack | 1-4 | Ja |
 | Carcassonne | 2-5 | Ja |
 | Cascadia | 2-4 | Ja |
 | Cluedo | 2-6 | Ja |
+| CycClub | 1-6 | Ja |
+| The Deep Bleu C | 1 | Niet van toepassing |
 | Hartenjagen | 4 | Ja |
 | Hofslag | 2-4 | Ja |
+| Isle of Skye | 2-4 | Ja |
 | Kingdomino | 2-4 | Ja |
 | Minigolf | 1-4 | Ja |
 | Pesten | 2-4 | Ja |
@@ -31,7 +34,6 @@ Actieve spellen gebruiken zoveel mogelijk de volledige schermhoogte zonder pagin
 | Santorini | 2-4 | Ja |
 | Solitaire | 1 | Niet van toepassing |
 | Stratego | 2 | Ja |
-| The Deep Bleu C | 1 | Niet van toepassing |
 | Ticket to Ride | 2-5 | Ja |
 
 Minigolf bevat daarnaast een Map Editor voor eigen banen.

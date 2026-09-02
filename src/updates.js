@@ -123,9 +123,67 @@ const RELEASES = [
     ]
   },
   {
+    version:'1.11.14',
+    features:[
+      'Age of Civilization ondersteunt nu 2 tot 7 spelers, unieke leiders en gevechten in een kring.'
+    ],
+    improvements:[
+      'Age of Civilization heeft vernieuwde vaste gebouwen, gebeurtenissen, upgradeprijzen, kaartinformatie en een lichtere spelweergave.'
+    ]
+  },
+  {
     version:'1.12.0',
-    games:[
-      'The Deep Bleu C'
+    games:['Isle of Skye','The Deep Bleu C','CycClub'],
+    features:[
+      'CycClub bewaart de wielerploeg van ingelogde spelers en heeft een eigen clubleaderboard.'
+    ]
+  },
+  {
+    version:'1.12.1',
+    improvements:[
+      'De mobiele gameheader is strakker uitgelijnd, spelersaantallen blijven op één regel en Instellingen toont de huidige versie.'
+    ]
+  },
+  {
+    version:'1.12.2',
+    improvements:[
+      'Age of Civilization past op één vast scherm en gebruikt verzorgde kaart- en upgradepopups met compacte statverschillen.'
+    ]
+  },
+  {
+    version:'1.12.3',
+    features:[
+      'Games kunnen alfabetisch of volgens je persoonlijke speelgeschiedenis worden gesorteerd.'
+    ],
+    improvements:[
+      '7 Wonders Duel, Hartenjagen en Hofslag gebruiken compactere vaste spelweergaves met duidelijkere kaarten, spelers en scores.'
+    ]
+  },
+  {
+    version:'1.12.4',
+    improvements:[
+      'De gedeelde Light-header is compacter en de mobiele ondernavigatie is ruimer, scherper en beter leesbaar met een vernieuwde instellingenknop.'
+    ]
+  },
+  {
+    version:'1.12.5',
+    features:[
+      'Verlaten games blijven tijdelijk hervatbaar en kunnen via een kruisje op de kaart Doorgaan met spelen definitief worden gesloten.'
+    ],
+    improvements:[
+      'De automatisch verversende lobby heeft geen overbodige knop Vernieuwen meer.'
+    ]
+  },
+  {
+    version:'1.13.0',
+    features:[
+      'Je kunt je echte, unieke accountnaam voortaan veilig wijzigen vanuit je profiel.',
+      'De Minigolf Map editor staat voortaan in de spellobby.'
+    ],
+    improvements:[
+      'Ingelogde spelers zien bij refresh geen login-scherm meer tijdens de sessiecheck.',
+      'Tablet- en desktopweergaves zijn in Pluto en alle games compacter, evenwichtiger en beter gecentreerd.',
+      'Presidenten verdeelt Jouw kaarten responsief over meerdere rijen zonder horizontale scroll.'
     ]
   }
 ];

@@ -17,6 +17,8 @@ if (heading && grid) {
     .games-player-filter-value{margin-top:3px;color:var(--muted);font-size:11px}
     .games-player-filter-range{width:100%;min-height:30px;height:30px;margin:10px 0 1px;padding:0;border:0;border-radius:0;background:transparent;accent-color:var(--accent);box-shadow:none}
     .games-player-filter-scale{display:flex;justify-content:space-between;gap:4px;color:var(--muted);font-size:9px;font-weight:800}
+    .games-filter-divider{height:1px;margin:13px 0;background:var(--border)}
+    .games-sort-select{width:100%;min-height:44px;margin-top:8px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--panel2);color:var(--text);font:inherit}
     .games-player-filter-empty{grid-column:1/-1;margin:0;padding:18px;border:1px dashed var(--border);border-radius:14px;color:var(--muted);text-align:center;font-size:12px}
     @media(max-width:760px){.games-player-filter-button{width:44px;height:44px;min-width:44px;min-height:44px;border-radius:11px}}
   `;
@@ -34,6 +36,12 @@ if (heading && grid) {
       <div class="games-player-filter-value">Alle spelers</div>
       <input type="range" class="games-player-filter-range" min="0" max="6" step="1" value="0" aria-label="Aantal spelers">
       <div class="games-player-filter-scale"></div>
+      <div class="games-filter-divider"></div>
+      <strong>Sorteren</strong>
+      <select class="games-sort-select" aria-label="Sorteer games">
+        <option value="alphabetical">Alfabetisch</option>
+        <option value="popular">Meest gespeeld</option>
+      </select>
     </div>`;
   heading.append(filter);
 
@@ -42,12 +50,15 @@ if (heading && grid) {
   const value = filter.querySelector('.games-player-filter-value');
   const range = filter.querySelector('.games-player-filter-range');
   const scale = filter.querySelector('.games-player-filter-scale');
+  const sortSelect = filter.querySelector('.games-sort-select');
   const empty = document.createElement('p');
   empty.className = 'games-player-filter-empty hidden';
   grid.after(empty);
 
   let gamesByKey = new Map();
   let currentPlayers = 0;
+  let currentSort = 'alphabetical';
+  let accountPreference = false;
 
   function keepHeadingVisible() {
     if (grid.querySelector('.game-card') && heading.classList.contains('hidden')) {
@@ -71,8 +82,19 @@ if (heading && grid) {
 
   function applyFilter() {
     const cards = [...grid.querySelectorAll('.game-card')];
+    const sorted=[...cards].sort((left,right)=>{
+      const leftKey=left.querySelector('[data-game]')?.dataset.game||'';
+      const rightKey=right.querySelector('[data-game]')?.dataset.game||'';
+      const leftMeta=gamesByKey.get(leftKey),rightMeta=gamesByKey.get(rightKey);
+      if(currentSort==='popular'){
+        const countDifference=(Number(rightMeta?.playCount)||0)-(Number(leftMeta?.playCount)||0);
+        if(countDifference)return countDifference;
+      }
+      return String(leftMeta?.name||leftKey).localeCompare(String(rightMeta?.name||rightKey),'nl',{sensitivity:'base'});
+    });
+    if(sorted.some((card,index)=>card!==cards[index]))grid.append(...sorted);
     let visible = 0;
-    for (const card of cards) {
+    for (const card of sorted) {
       const key = card.querySelector('[data-game]')?.dataset.game;
       const meta = gamesByKey.get(key);
       const matches = !currentPlayers || !meta || (meta.minPlayers <= currentPlayers && meta.maxPlayers >= currentPlayers);
@@ -93,6 +115,15 @@ if (heading && grid) {
     currentPlayers = Number(range.value) || 0;
     applyFilter();
   });
+  sortSelect.addEventListener('change', async () => {
+    currentSort=sortSelect.value==='popular'?'popular':'alphabetical';
+    localStorage.setItem('pluto.gameSort',currentSort);
+    applyFilter();
+    if(accountPreference){
+      try{await fetch('/api/preferences/game-sort',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({gameSort:currentSort})})}
+      catch(error){console.error('Sorteerkeuze kon niet worden opgeslagen:',error)}
+    }
+  });
   document.addEventListener('click', (event) => {
     if (!filter.contains(event.target)) setPopover(false);
   });
@@ -111,6 +142,10 @@ if (heading && grid) {
     .then((data) => {
       if (!data.ok || !Array.isArray(data.games)) throw new Error(data.error || 'Gamegegevens konden niet laden.');
       gamesByKey = new Map(data.games.map((game) => [game.key, game]));
+      accountPreference=typeof data.gameSort==='string';
+      const saved=accountPreference?data.gameSort:localStorage.getItem('pluto.gameSort');
+      currentSort=saved==='popular'?'popular':'alphabetical';
+      sortSelect.value=currentSort;
       const maxPlayers = Math.max(1, ...data.games.map((game) => Number(game.maxPlayers) || 1));
       range.max = String(maxPlayers);
       renderScale(maxPlayers);

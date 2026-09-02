@@ -24,3 +24,19 @@ test('Hofslag eerste render dereferencet geen null animation',()=>{
  assert.match(client,/uiState\.animation\?\.active&&uiState\.animation\.round===game\.lastRound\?\.round/);
  assert.doesNotMatch(client,/state\.hofAnimation/);
 });
+
+test('Hofslag centreert de kaarten in jouw hand',()=>{
+ const client=read('hofslag');
+ const css=fs.readFileSync(path.join(__dirname,'..','games','hofslag','styles.css'),'utf8');
+ assert.match(client,/hand-area hof-hand/);
+ assert.match(css,/\.hof-hand \.card-row\{justify-content:center\}/);
+});
+
+test('Hofslag blijft fixed en toont vier spelers in een raster van twee bij twee',()=>{
+ const client=read('hofslag');
+ const css=fs.readFileSync(path.join(__dirname,'..','games','hofslag','styles.css'),'utf8');
+ assert.match(client,/hof-score-list-\$\{game\.players\.length\}/);
+ assert.match(css,/#gameStage:has\(\.hof-board\)\{[^}]*display:flex;[^}]*overflow:hidden!important/);
+ assert.match(css,/#gameStage:has\(\.hof-board\)>\.hof-board\{[^}]*flex:1;[^}]*height:auto/);
+ assert.match(css,/\.hof-score-list-4\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)\}/);
+});

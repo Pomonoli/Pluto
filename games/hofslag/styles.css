@@ -33,3 +33,25 @@
   background:rgba(7,9,17,.64);
   border-color:rgba(222,219,230,.12);
 }
+.hof-hand .card-row{justify-content:center}
+
+/* Let the board consume the remaining viewport instead of forcing page scroll. */
+#gameStage:has(.hof-board){display:flex;flex-direction:column;overflow:hidden!important}
+#gameStage:has(.hof-board)>.game-titlebar,
+#gameStage:has(.hof-board)>.hof-hand,
+#gameStage:has(.hof-board)>.hof-score-list{flex:none}
+#gameStage:has(.hof-board)>.hof-board{flex:1;min-height:0;height:auto}
+.hof-hand{margin-top:8px;padding-top:7px}
+.hof-score-list{margin-top:7px;gap:6px}
+.hof-score-list-4{grid-template-columns:repeat(2,minmax(0,1fr))}
+.hof-score-list .score-row{min-width:0;padding:7px 9px}
+.hof-score-list .player-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+@media(max-height:700px){
+  .hof-hand{margin-top:5px;padding-top:5px}
+  .hof-hand .playing-card{width:54px;height:76px}
+  .hof-hand .playing-card .rank{font-size:21px}
+  .hof-hand .playing-card .suit{font-size:17px}
+  .hof-score-list{margin-top:5px;gap:4px}
+  .hof-score-list .score-row{padding:5px 7px}
+}

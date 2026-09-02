@@ -1,4 +1,7 @@
+@media(min-width:761px){#gameStage:has(.golf-game-screen){max-width:1120px}}
 .minigolf-layout{display:grid;grid-template-columns:minmax(0,1fr) 285px;gap:14px;align-items:start}
+.golf-lobby-editor{margin-top:12px;padding:11px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--border);border-radius:12px;background:var(--panel2)}
+.golf-lobby-editor>div{min-width:0;display:grid;gap:3px}.golf-lobby-editor strong{font-size:12px}.golf-lobby-editor small{color:var(--muted);font-size:9px;line-height:1.35}.golf-lobby-editor button{flex:0 0 auto}
 .minigolf-main{min-width:0}
 .minigolf-course-wrap{border:1px solid var(--border);border-radius:16px;background:#172317;padding:8px;overflow:hidden}
 .minigolf-course{display:block;width:100%;height:auto;aspect-ratio:900/520;touch-action:none;user-select:none;-webkit-user-select:none}
@@ -52,6 +55,7 @@
 .minigolf-course-wrap{padding:5px}
 }
 @media(max-width:520px){
+.golf-lobby-editor{align-items:stretch;flex-direction:column}.golf-lobby-editor button{width:100%}
 .minigolf-course-wrap{margin-left:-5px;margin-right:-5px}
 .minigolf-scorecard{padding:10px}
 .minigolf-hint{font-size:10px}

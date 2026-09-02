@@ -15,6 +15,13 @@ export function mount(api){
   editorInstance.bindMapCanvasEvents();
 }
 export function openTool({state,setRoute,toast}){if(state.room)return toast('Verlaat eerst de game.');if(!editorInstance)return toast('Minigolf-editor kon niet laden.');setRoute('/minigolf/editor');editorInstance.showMinigolfEditor()}
+export function renderLobbyOptions({container,E}){
+  const section=E('section','golf-lobby-editor');
+  const copy=E('div');copy.append(E('strong','','Eigen baan maken'),E('small','','Bouw en test een custom minigolfmap zonder deze lobby te verlaten.'));
+  const button=E('button','secondary','Map editor');button.type='button';
+  button.onclick=()=>window.open('/minigolf/editor','pluto-minigolf-editor','noopener');
+  section.append(copy,button);container.append(section)
+}
 export function handleRoute({path}){if(!/^\/minigolf\/editor\/?$/.test(path)||!editorInstance)return false;editorInstance.showMinigolfEditor();return true}
 export const roomOptions={bodyClass:'minigolf-mode'};
 

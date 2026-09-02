@@ -1,3 +1,4 @@
+@media(min-width:761px){#gameStage:has(.cascadia-players){max-width:1050px}}
 #gameStage:has(.cascadia-players){display:flex;flex-direction:column;gap:10px;min-width:0}
 .cascadia-players{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:7px}
 .cascadia-player{min-width:0;padding:8px 10px;border:1px solid var(--border);border-radius:12px;background:var(--panel);color:inherit;text-align:left;display:grid;gap:3px}
