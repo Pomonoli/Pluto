@@ -2,10 +2,10 @@ import { hexToPixel, hexCorners, hexDistance } from './hex-client.js';
 
 const HEX_SIZE = 18;
 const HEX_DRAW_SIZE = HEX_SIZE * 1.03; // iets groter dan de rasterpitch: verbergt anti-aliasing-naden tussen tegels
-// Show a larger window into the world instead of scaling the original
-// 17x11 window to fill the fixed viewport. The tile geometry stays intact.
-const COLS = 29;
-const ROWS = 19;
+// Show a smaller window into the world so each hex renders roughly twice as
+// large on screen (half as many columns/rows fill the same fixed viewport).
+const COLS = 15;
+const ROWS = 10;
 
 // Exacte omvattende rechthoek van de zichtbare COLS x ROWS tegels (in de
 // eigen hex-pixelruimte). De viewBox hierop baseren — i.p.v. een handmatig
