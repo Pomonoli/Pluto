@@ -191,40 +191,62 @@ function hexPoints(localCol, localRow) {
   return { cx: x, cy: y };
 }
 
-const lastFacingAngleById = new Map();
-function facingAngleFor(id, entity) {
+// Karakters draaien niet volledig mee met de reisrichting (dat zou een
+// mensfiguur ondersteboven laten hangen) — enkel horizontaal spiegelen op
+// basis van de laatst gekozen links/rechts-richting, net als klassieke
+// top-down RPG-sprites.
+const lastFacingLeftById = new Map();
+function facingLeftFor(id, entity) {
   const next = entity.path && entity.path[0];
   if (next) {
     const cur = hexToPixel(entity.x, entity.y, HEX_SIZE);
     const tgt = hexToPixel(next.x, next.y, HEX_SIZE);
-    const dx = tgt.x - cur.x, dy = tgt.y - cur.y;
-    if (dx !== 0 || dy !== 0) lastFacingAngleById.set(id, Math.atan2(dy, dx) * (180 / Math.PI));
+    const dx = tgt.x - cur.x;
+    if (dx > 0.5) lastFacingLeftById.set(id, false);
+    else if (dx < -0.5) lastFacingLeftById.set(id, true);
   }
-  return lastFacingAngleById.get(id) || 0;
+  return lastFacingLeftById.get(id) || false;
 }
 
 const OTHER_PLAYER_COLORS = ['#ff9f43', '#4dd0e1', '#c77dff', '#ffe066'];
 
+// Kleine 2D visser-avatar (chibi trainer met pet, geïnspireerd op klassieke
+// top-down RPG-personages) — hengel-arm en vislijn wijzen standaard naar
+// rechts/voren; facingLeftFor spiegelt de hele groep bij het naar links lopen.
+function appendAnglerFigure(g, { accent = 'var(--accent)', skin = '#f2c199', jeans = '#33456a', hair = '#3a2a1a' } = {}) {
+  g.append(svgEl('ellipse', { cx: 0, cy: 10, rx: 9, ry: 3, class: 'dbc-angler-shadow' }));
+  g.append(svgEl('rect', { x: -4.5, y: 1, width: 4, height: 9, rx: 2, fill: jeans }));
+  g.append(svgEl('rect', { x: 0.5, y: 1, width: 4, height: 9, rx: 2, fill: jeans }));
+  g.append(svgEl('path', { d: 'M -5 -6 Q -9 -3 -8 2', fill: 'none', stroke: skin, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+  g.append(svgEl('rect', { x: -6, y: -9, width: 12, height: 12, rx: 4, fill: accent, stroke: '#fff', 'stroke-width': 1.2 }));
+  g.append(svgEl('path', { d: 'M 5 -5 Q 10 -6 12 -3', fill: 'none', stroke: skin, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+  g.append(svgEl('line', { x1: 12, y1: -3, x2: 22, y2: -13, stroke: '#7a5636', 'stroke-width': 1.4, 'stroke-linecap': 'round' }));
+  g.append(svgEl('path', { d: 'M 22 -13 Q 28 -5 26 6', class: 'dbc-fish-line' }));
+  g.append(svgEl('circle', { cx: 26, cy: 7, r: 1.6, class: 'dbc-fish-hook' }));
+  g.append(svgEl('circle', { cx: 0, cy: -13, r: 5.5, fill: skin, stroke: '#0d1117', 'stroke-width': 0.6 }));
+  g.append(svgEl('path', { d: 'M -5.5 -15 Q -6.5 -19 -2 -18', fill: hair }));
+  g.append(svgEl('path', { d: 'M -6 -15 Q -6 -22 0 -22 Q 6 -22 6 -15 Z', fill: accent, stroke: '#fff', 'stroke-width': 0.8 }));
+  g.append(svgEl('ellipse', { cx: 5, cy: -15, rx: 4, ry: 1.6, fill: accent, stroke: '#fff', 'stroke-width': 0.6 }));
+  g.append(svgEl('circle', { cx: 0, cy: -18.5, r: 1.5, fill: '#fff' }));
+}
+
 function renderOtherPlayerMarker(svg, p, camX, camY, colorIndex) {
   if (p.x < camX - 1 || p.x > camX + COLS || p.y < camY - 1 || p.y > camY + ROWS) return;
   const { cx, cy } = hexPoints(p.x - camX, p.y - camY);
-  const angle = facingAngleFor(p.id, p);
+  const facingLeft = facingLeftFor(p.id, p);
   const color = OTHER_PLAYER_COLORS[colorIndex % OTHER_PLAYER_COLORS.length];
-  const g = svgEl('g', { class: 'dbc-player dbc-player-other', transform: `translate(${cx},${cy}) rotate(${angle})` });
-  g.append(svgEl('ellipse', { cx: 1, cy: 4, rx: 12, ry: 6, class: 'dbc-fish-shadow' }));
-  g.append(svgEl('path', { d: 'M -13 0 L -19 -6 L -16 0 L -19 6 Z', fill: color, opacity: 0.85 }));
-  g.append(svgEl('path', {
-    d: 'M -13 0 Q -9 -9 0 -8 Q 9 -7 13 0 Q 9 7 0 8 Q -9 9 -13 0 Z',
-    fill: color, stroke: '#fff', 'stroke-width': 1.5, 'stroke-linejoin': 'round'
-  }));
-  g.append(svgEl('circle', { cx: 7, cy: -2, r: 1.5, class: 'dbc-fish-eye' }));
+  const g = svgEl('g', {
+    class: 'dbc-player dbc-player-other',
+    transform: `translate(${cx},${cy}) scale(${facingLeft ? -1 : 1},1)`
+  });
+  appendAnglerFigure(g, { accent: color });
   svg.append(g);
   if (p.fishingPhase) {
-    const rod = svgEl('text', { x: cx, y: cy - 20, class: 'dbc-player-fishing', 'text-anchor': 'middle' });
+    const rod = svgEl('text', { x: cx, y: cy - 32, class: 'dbc-player-fishing', 'text-anchor': 'middle' });
     rod.textContent = '🎣';
     svg.append(rod);
   }
-  const label = svgEl('text', { x: cx, y: cy - 14, class: 'dbc-player-label', 'text-anchor': 'middle' });
+  const label = svgEl('text', { x: cx, y: cy - 25, class: 'dbc-player-label', 'text-anchor': 'middle' });
   label.textContent = p.name;
   svg.append(label);
 }
@@ -259,6 +281,11 @@ function renderMapWrap(you, worldData, camX, camY, others = []) {
 
   worldData.buildings.forEach((building) => {
     if (building.x < camX || building.x >= camX + COLS || building.y < camY || building.y >= camY + ROWS) return;
+    // Sla het gebouwicoontje over als een speler er precies op staat — anders
+    // piept het zwarte icoonkader achter de visserfiguur uit.
+    const occupied = (you.x === building.x && you.y === building.y)
+      || others.some((other) => other.x === building.x && other.y === building.y);
+    if (occupied) return;
     const { cx, cy } = hexPoints(building.x - camX, building.y - camY);
     const g = svgEl('g', {
       class: `dbc-building ${building.active ? 'active' : 'locked'}`,
@@ -274,19 +301,12 @@ function renderMapWrap(you, worldData, camX, camY, others = []) {
   others.forEach((other, index) => renderOtherPlayerMarker(svg, other, camX, camY, index));
 
   const { cx: px, cy: py } = hexPoints(you.x - camX, you.y - camY);
-  const angle = facingAngleFor(you.id, you);
-  const player = svgEl('g', { class: 'dbc-player', transform: `translate(${px},${py}) rotate(${angle})` });
-  player.append(svgEl('ellipse', { cx: 1, cy: 4, rx: 12, ry: 6, class: 'dbc-fish-shadow' }));
-  player.append(svgEl('path', { d: 'M -13 0 L -19 -6 L -16 0 L -19 6 Z', class: 'dbc-fish-tail' }));
-  player.append(svgEl('path', {
-    d: 'M -13 0 Q -9 -9 0 -8 Q 9 -7 13 0 Q 9 7 0 8 Q -9 9 -13 0 Z',
-    class: 'dbc-fish-body'
-  }));
-  player.append(svgEl('path', { d: 'M -2 -7 L -6 -13 L 2 -8 Z', class: 'dbc-fish-fin' }));
-  player.append(svgEl('path', { d: 'M -2 7 L -6 13 L 2 8 Z', class: 'dbc-fish-fin' }));
-  player.append(svgEl('circle', { cx: 7, cy: -2, r: 1.5, class: 'dbc-fish-eye' }));
-  player.append(svgEl('path', { d: 'M 13 0 Q 20 3 23 11', class: 'dbc-fish-line' }));
-  player.append(svgEl('circle', { cx: 23, cy: 12, r: 1.4, class: 'dbc-fish-hook' }));
+  const facingLeft = facingLeftFor(you.id, you);
+  const player = svgEl('g', {
+    class: 'dbc-player',
+    transform: `translate(${px},${py}) scale(${facingLeft ? -1 : 1},1)`
+  });
+  appendAnglerFigure(player);
   svg.append(player);
 
   const wrapDiv = E('div', 'dbc-map-wrap');

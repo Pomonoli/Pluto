@@ -11,11 +11,7 @@
 .dbc-building-bg{fill:#2b2320;stroke:var(--accent);stroke-width:2}
 .dbc-building.locked .dbc-building-bg{opacity:.55}
 .dbc-building-icon{font-size:16px;text-anchor:middle;pointer-events:none}
-.dbc-fish-shadow{fill:rgba(0,0,0,.22)}
-.dbc-fish-body{fill:var(--accent);stroke:#fff;stroke-width:1.5;stroke-linejoin:round}
-.dbc-fish-tail{fill:var(--accent);opacity:.85}
-.dbc-fish-fin{fill:var(--accent);opacity:.7}
-.dbc-fish-eye{fill:#0d1117}
+.dbc-angler-shadow{fill:rgba(0,0,0,.25)}
 .dbc-fish-line{fill:none;stroke:#2b2320;stroke-width:1;stroke-linecap:round}
 .dbc-fish-hook{fill:none;stroke:#2b2320;stroke-width:1.2}
 .dbc-player-other{opacity:.95}
