@@ -84,7 +84,7 @@ test('verlaten actieve games blijven hervatbaar en krijgen een expliciete sluitk
   const realtime=fs.readFileSync(path.join(root,'src/server/realtime.js'),'utf8');
   assert.match(app,/resume-game-close/);
   assert.match(app,/socket\.emit\('room:close'/);
-  assert.match(app,/connectedHumanCount===0/);
+  assert.match(app,/niet meer hervatten/);
   assert.match(css,/\.resume-game-close\{position:absolute/);
   assert.match(realtime,/socket\.on\('room:close'/);
   assert.match(realtime,/ROOM_TTL_MS = 2 \* 60 \* 60 \* 1000/);

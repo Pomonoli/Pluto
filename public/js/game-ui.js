@@ -1,5 +1,5 @@
 export function createGameUi(ctx) {
-  const { state, els, E, action, profileButton, sound, socket, handleAck, cardNode, valueLabel, requestRematch } = ctx;
+  const { state, els, E, action, profileButton, sound, socket, handleAck, cardNode, valueLabel, requestRematch, requestReturnToLobby } = ctx;
   const pluginRenderers=new Map();
 
 function resultPresentation(room,game){
@@ -24,7 +24,7 @@ function renderGame(room) {
     els.gameResult.classList.add('result-pop');const presentation=resultPresentation(room,game),resultCard=E('div','result-modal-card');
     resultCard.append(E('span','eyebrow','SPEL AFGELOPEN'),E('h2','result-modal-title',presentation.title),E('p','result-modal-copy',presentation.copy));
     const details=plugin?.renderResultDetails?.({room,game,E});if(details){resultCard.classList.add('has-details');resultCard.append(details)}
-    const actions=E('div','result-modal-actions');if(room.isHost){const rematch=E('button','primary','Rematch');rematch.onclick=()=>requestRematch(rematch);actions.append(rematch)}
+    const actions=E('div','result-modal-actions');if(room.isHost){const rematch=E('button','primary','Rematch');rematch.onclick=()=>requestRematch(rematch);const lobby=E('button','secondary','Naar lobby');lobby.onclick=()=>requestReturnToLobby(lobby);actions.append(rematch,lobby)}
     const close=E('button','secondary','Sluiten');close.onclick=()=>{els.gameResult.classList.add('hidden');els.gameResult.setAttribute('aria-hidden','true')};actions.append(close);resultCard.append(actions);els.gameResult.append(resultCard);els.gameResult.setAttribute('aria-hidden','false');
   }
   if(!plugin?.render){els.gameStage.append(pluginError(game.kind,'Renderer wordt geladen…'));return}

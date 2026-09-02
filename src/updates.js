@@ -191,6 +191,19 @@ const RELEASES = [
     improvements:[
       'Age of Civilization wacht voortaan op jouw keuze: de verborgen timeout van 40 seconden is verwijderd.'
     ]
+  },
+  {
+    version:'1.13.3',
+    features:[
+      'De host kan elke andere speler uit de lobby verwijderen, ook online en offline humans.',
+      'Na afloop kun je met dezelfde spelers terug naar de lobby om instellingen aan te passen.',
+      'Tijdens actieve games blijft je scherm wakker waar je toestel dit ondersteunt.'
+    ],
+    improvements:[
+      'Andere beurten en NPC-acties gaan door wanneer een speler offline is; menselijke keuzes blijven wachten.',
+      'Na 15 seconden offline neemt een verbonden speler het hostbeheer over.',
+      'Het kruisje bij Doorgaan met spelen verwijdert jouw hervatkaart; de game sluit zodra de laatste human dit doet.'
+    ]
   }
 ];
 

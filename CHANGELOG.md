@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.13.3 — Multiplayer en lobby-QOL
+
+- Speleracties en NPC-ticks gaan door als een andere human offline is. Benodigde menselijke keuzes blijven wachten; volledig verlaten games blijven gepauzeerd en behouden de opruimtermijn van twee uur.
+- De host kan online humans, offline humans en NPCs uit de lobby verwijderen. Na 15 seconden offline gaat het hostbeheer over naar een verbonden human. Verwijderde en vervangen sockets verliezen hun roomrechten.
+- Naast Rematch staat na afloop Naar lobby: dezelfde room, spelers en instellingen blijven behouden, met een nieuwe game state bij de volgende start.
+- Het kruisje bij Doorgaan met spelen verwijdert alleen het eigen hervatrecht. Spelposities en resultaatgegevens blijven intact; zodra geen humans meer willen hervatten, wordt de room definitief verwijderd.
+- Screen Wake Lock houdt het scherm wakker tijdens een zichtbaar actief spel, geeft de lock vrij bij vertrek of afloop en vraagt opnieuw bij terugkeer uit de achtergrond. Ontbrekende ondersteuning of weigering blijft stil.
+- Regressietests bewaken offline beurten, NPC-ticks, hostoverdracht, spelers verwijderen, hervatrechten, terugkeer naar lobby en de wake-locklevenscyclus.
+
 ## v1.13.2 — Age of Civilization zonder human-timeout
 
 - De verborgen deadline van 40 seconden voor draft/build-beurten is verwijderd. Menselijke spelers handelen uitsluitend zelf, ook na lang wachten.
