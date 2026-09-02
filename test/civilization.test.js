@@ -67,9 +67,9 @@ test('Age of Civilization start met twee geheime handen, 21 beurten en drie vast
   assert.equal(view.players.some((player)=>Object.hasOwn(player,'vp')),false);
   const you=view.players.find((player)=>player.isYou);
   assert.equal(you.grid.length,6);
-  assert.equal(you.civic.science.upgradeCount,0);
-  assert.equal(you.civic.religion.upgradeCount,0);
-  assert.equal(you.civic.culture.upgradeCount,0);
+  assert.equal(you.civic.science.used,false);
+  assert.equal(you.civic.religion.used,false);
+  assert.equal(you.civic.culture.used,false);
   assert.ok(view.yourHand.every((card)=>['attack','defence','economy','wonder'].includes(card.type)));
 });
 
@@ -95,17 +95,14 @@ test('bouwen en weggooien blijven in draft totdat de derde beurt de aanval verwe
   assert.ok(Object.hasOwn(game.waveResult.results.a,'defence'));
 });
 
-test('civiele gebouwen zijn altijd upgradebaar (geen tijdperk-limiet)',()=>{
+test('civiele gebouwen zijn niet aan een tijdperk-limiet gebonden',()=>{
   const game=civilization.createGame(players());
   pickLeaders(game);
   const p=game.players.a;
   p.gold=999;
+  // still Age 1, but civic buildings can be designated regardless of Age
   civilization.handleAction(game,'a','upgrade',{civic:'science'});
-  assert.equal(p.civic.science.upgradeCount,1);
-  civilization.handleAction(game,'b','discard',{handIndex:0});
-  // still Age 1, but civic upgrades are never blocked by the Age
-  civilization.handleAction(game,'a','upgrade',{civic:'science'});
-  assert.equal(p.civic.science.upgradeCount,2);
+  assert.equal(p.civic.science.used,true);
 });
 
 test('vrije gebouwen kunnen pas het volgende tijdperk upgraden, en krijgen dan x1.5 van hun basiswaarde per niveau',()=>{
@@ -144,35 +141,51 @@ test('vrije gebouwen kunnen pas het volgende tijdperk upgraden, en krijgen dan x
   assert.equal(tile.nextIncome,0);
 });
 
-test('een vast gebouw upgraden doet niets tot de derde upgrade, die een duurdere stapelbare gebeurtenis ontketent',()=>{
+test('een vast gebouw aanduiden ontketent meteen zijn gebeurtenis, en kan daarna nooit meer',()=>{
   const game=civilization.createGame(players());
   pickLeaders(game);
   const p=game.players.a;
   p.gold=999;
   game.age=3;
 
+  const goldBefore=p.gold;
   civilization.handleAction(game,'a','upgrade',{civic:'science'});
-  civilization.handleAction(game,'b','discard',{handIndex:0});
-  assert.equal(p.civic.science.upgradeCount,1);
-  assert.equal(p.eventMultipliers.attack,1);
+  const cost=goldBefore-p.gold;
+  assert.equal(cost,Math.round((3+1)*2.5)*2); // one-time cost: base civic price x2
+  assert.equal(p.civic.science.used,true);
 
-  const goldBeforeStep2=p.gold;
-  civilization.handleAction(game,'a','upgrade',{civic:'science'});
-  const step2Cost=goldBeforeStep2-p.gold;
-  civilization.handleAction(game,'b','discard',{handIndex:0});
-  assert.equal(p.civic.science.upgradeCount,2);
-  assert.equal(p.eventMultipliers.attack,1);
+  const view=civilization.serialize(game,'a',new Map([['a',true],['b',true]]));
+  assert.equal(view.players.find((player)=>player.isYou).civic.science.maxed,true);
 
-  const goldBeforeStep3=p.gold;
+  // Designating it again — even in a later Age — is blocked forever.
+  civilization.handleAction(game,'b','discard',{handIndex:0});
+  assert.throws(()=>civilization.handleAction(game,'a','upgrade',{civic:'science'}),/al aangeduid/);
+});
+
+test('een vast gebouw geeft een eenmalige vlakke bonus (Tijdperk x 10% van je huidige stat), die daarna permanent blijft staan',()=>{
+  const game=civilization.createGame(players());
+  pickLeaders(game);
+  const p=game.players.a;
+  p.gold=999;
+  game.age=4;
+
+  p.hand[0]={type:'attack',name:'Test Spear',cost:2,attack:10,defence:0,income:0};
+  civilization.handleAction(game,'a','build',{handIndex:0});
+  civilization.handleAction(game,'b','discard',{handIndex:0});
+  const before=civilization.serialize(game,'a',new Map([['a',true],['b',true]])).players.find((pl)=>pl.isYou);
+  assert.equal(before.attack,10);
+
+  // Age 4 => 40% of the current 10 Attack = +4, applied once as a permanent flat bonus.
   civilization.handleAction(game,'a','upgrade',{civic:'science'});
-  const step3Cost=goldBeforeStep3-p.gold;
-  assert.equal(p.civic.science.upgradeCount,3);
-  assert.equal(p.civic.science.eventsFired,1);
-  assert.equal(step3Cost,step2Cost*2); // the event step costs 2x a normal step
-  // Science boosts Attack only, by 10% per Age (Age 3 => +30%); Income/Defence untouched.
-  assert.ok(Math.abs(p.eventMultipliers.attack-1.3)<1e-9);
-  assert.equal(p.eventMultipliers.income,1);
-  assert.equal(p.eventMultipliers.defence,1);
+  const afterEvent=civilization.serialize(game,'a',new Map([['a',true],['b',true]])).players.find((pl)=>pl.isYou);
+  assert.equal(afterEvent.attack,14);
+
+  // Building more Attack afterwards doesn't get re-multiplied — the +4 stays frozen.
+  civilization.handleAction(game,'b','discard',{handIndex:0});
+  p.hand[0]={type:'attack',name:'Test Spear 2',cost:2,attack:6,defence:0,income:0};
+  civilization.handleAction(game,'a','build',{handIndex:0});
+  const afterMoreBuilding=civilization.serialize(game,'a',new Map([['a',true],['b',true]])).players.find((pl)=>pl.isYou);
+  assert.equal(afterMoreBuilding.attack,20); // 10+6 base, plus the frozen +4
 });
 
 test('gebouwen zijn uniek: dezelfde kaart wordt niet opnieuw aangeboden in hetzelfde tijdperk',()=>{
@@ -226,7 +239,7 @@ for(const action of ['build','discard','upgrade']){
     assert.equal(game.turnInAge,2);
     if(action==='build') assert.ok(game.players.a.grid.some(Boolean));
     if(action==='discard') assert.equal(game.players.a.gold,103);
-    if(action==='upgrade') assert.equal(game.players.a.civic.science.upgradeCount,1);
+    if(action==='upgrade') assert.equal(game.players.a.civic.science.used,true);
   });
 }
 
@@ -245,7 +258,7 @@ for(const action of ['build','discard','upgrade']){
     assert.equal(game.turnInAge,1);
     if(action==='build') assert.ok(npc.grid.some(Boolean));
     if(action==='discard') assert.equal(npc.gold,3);
-    if(action==='upgrade') assert.equal(Object.values(npc.civic).reduce((sum,c)=>sum+c.upgradeCount,0),1);
+    if(action==='upgrade') assert.equal(Object.values(npc.civic).filter((c)=>c.used).length,1);
     const afterNpc=structuredClone(game);
     assert.equal(civilization.tick(game,now+86400000),false);
     assert.deepEqual(game,afterNpc);

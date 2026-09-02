@@ -22,7 +22,7 @@ const SCALE = HEIGHT / REF_SIZE;
 
 const WALKABLE = new Set(['L', 'B', 'f', 'h']);
 const WATER = new Set(['r', 'k', 'a', 'm', 'z']);
-const BIOME_BY_TILE = { r: 'rivier', k: 'kust', a: 'atlantisch', m: 'middellandse-zee', z: null };
+const BIOME_BY_TILE = { r: 'rivier', k: 'kust', a: 'atlantisch', m: 'middellandse-zee', z: 'atlantisch' };
 
 function mulberry32(seed) {
   let t = seed >>> 0;

@@ -15,6 +15,7 @@ export function metric({player}){return {text:euro(player.wallet), score:player.
 const STAT_LABELS={flat:'Vlak',mountain:'Berg',cobbles:'Kasseien',timeTrial:'Tijdrit',sprint:'Sprint',stamina:'Uithouding'};
 const STAT_SHORT={flat:'VLK',mountain:'BRG',cobbles:'KSW',timeTrial:'TT',sprint:'SPR',stamina:'UIT'};
 const SHOP_LABELS={bikes:'Fietsen & Materiaal',nutrition:'Voeding & Supplementen',trainers:'Trainers & Analyse',medical:'Medische Staf'};
+const SHOP_ICONS={bikes:'🚲',nutrition:'🍎',trainers:'📈',medical:'⚕️'};
 const CATEGORY_ORDER=['monument','classic','gt_stage','grand_tour'];
 const CATEGORY_LABELS={monument:'Monumenten',classic:'Vlaamse Klassiekers',gt_stage:'Grote Ritten',grand_tour:'Grote Rondes'};
 const STATUS_LABELS={active:'Fit',injured:'Geblesseerd',sick:'Ziek'};
@@ -108,10 +109,10 @@ function renderRosterPanel(me,maxRiders){
   me.riders.slice().sort((a,b) => b.marketValue-a.marketValue).forEach((rider) => {
     let rest;
     if(rider.status==='active'&&rider.fatigue>0){
-      rest=E('button','secondary',`Rust (${euro(600)})`);
+      rest=E('button','secondary',`💤 Rust (${euro(600)})`);
       rest.onclick=() => action('restRider',{riderId:rider.id});
     } else rest=E('span','muted','—');
-    const sell=E('button','secondary',euro(sellPrice(rider)));
+    const sell=E('button','secondary',`💰 ${euro(sellPrice(rider))}`);
     sell.onclick=() => action('sellRider',{riderId:rider.id});
 
     const row1=E('tr','cc-block-start');
@@ -156,7 +157,7 @@ function renderShopPanel(me){
   for(const category of Object.keys(SHOP_LABELS)){
     const level=me.shop[category];
     const box=E('div','cc-shop-item');
-    box.append(E('strong','',SHOP_LABELS[category]));
+    box.append(E('strong','',`${SHOP_ICONS[category]} ${SHOP_LABELS[category]}`));
     const progress=E('div','cc-progress');
     const fill=E('div','cc-progress-fill');
     fill.style.width=`${(level/SHOP_MAX_LEVEL)*100}%`;
@@ -166,7 +167,7 @@ function renderShopPanel(me){
     box.append(E('p','cc-shop-effect',effects[category]||'Geen bonus'));
     if(level<SHOP_MAX_LEVEL){
       const cost=SHOP_COSTS[level];
-      const buy=E('button','primary',`Upgrade (${euro(cost)})`);
+      const buy=E('button','primary',`⬆️ Upgrade (${euro(cost)})`);
       buy.disabled=me.wallet<cost;
       buy.onclick=() => action('buyUpgrade',{category});
       box.append(buy);
@@ -204,7 +205,7 @@ function renderScoutPanel(room,game,me){
   maxPriceInput.placeholder='Max. kostprijs';
   maxPriceInput.min='0';
   maxPriceInput.value=scoutFilterMaxPrice;
-  const resetFilter=E('button','secondary','Wis filters');
+  const resetFilter=E('button','secondary','✕ Wis filters');
   resetFilter.type='button';
   filterBar.append(statSelect,minStatInput,maxPriceInput,resetFilter);
   panel.append(filterBar);
@@ -213,7 +214,7 @@ function renderScoutPanel(room,game,me){
   const table=E('table','cc-roster-table cc-block-table');
   const blocks=[];
   market.forEach((candidate) => {
-    const buy=E('button','primary',euro(candidate.marketValue));
+    const buy=E('button','primary',`🛒 ${euro(candidate.marketValue)}`);
     buy.disabled=me.wallet<candidate.marketValue||me.riders.length>=maxRiders;
     buy.onclick=() => action('buyRider',{candidateId:candidate.id});
 
@@ -297,7 +298,7 @@ function renderRaceCatalogPanel(room,game,me){
       const terrain=Object.entries(race.terrain).sort((a,b) => b[1]-a[1]).map(([key]) => STAT_LABELS[key]).slice(0,2).join(' · ');
       card.append(E('small','',terrain));
       if(room.isHost){
-        const start=E('button','primary','Start koers');
+        const start=E('button','primary','🏁 Start koers');
         start.onclick=() => action('selectRace',{raceId:race.id});
         card.append(start);
       }
@@ -314,7 +315,7 @@ function renderShopStatusBar(me,onOpen){
     const level=me.shop[category];
     const btn=E('button','cc-shop-status-btn');
     btn.type='button';
-    btn.append(E('span','cc-shop-status-label',SHOP_LABELS[category]));
+    btn.append(E('span','cc-shop-status-label',`${SHOP_ICONS[category]} ${SHOP_LABELS[category]}`));
     const dots=E('span','cc-shop-status-dots');
     for(let i=0;i<5;i+=1)dots.append(E('i',i<level?'cc-mini-dot filled':'cc-mini-dot'));
     btn.append(dots);
@@ -367,16 +368,16 @@ function renderClub(room,game,me){
 
   const topBar=E('div','cc-top-tabs');
   topBar.append(renderShopStatusBar(me,() => applyTab('shop')));
-  const scoutOpenBtn=E('button','cc-tab-open-btn',`Scoutingmarkt (${(game.myScoutMarket||[]).length})`);
+  const scoutOpenBtn=E('button','cc-tab-open-btn',`🔍 Scoutingmarkt (${(game.myScoutMarket||[]).length})`);
   scoutOpenBtn.type='button';
   scoutOpenBtn.onclick=() => applyTab('scout');
   topBar.append(scoutOpenBtn);
-  const racesOpenBtn=E('button','cc-tab-open-btn',`Koerskalender (${game.raceCatalog.length})`);
+  const racesOpenBtn=E('button','cc-tab-open-btn',`📅 Koerskalender (${game.raceCatalog.length})`);
   racesOpenBtn.type='button';
   racesOpenBtn.onclick=() => applyTab('races');
   topBar.append(racesOpenBtn);
 
-  const resetBtn=E('button','cc-danger-btn','Opnieuw beginnen');
+  const resetBtn=E('button','cc-danger-btn','♻️ Opnieuw beginnen');
   resetBtn.type='button';
   resetBtn.onclick=() => {
     if(confirm('Weet je zeker dat je opnieuw wilt beginnen? Je budget, renners, upgrades en carrièrestats worden definitief gewist.')){
@@ -436,12 +437,12 @@ function renderLineup(room,game,me){
 
   const actionsRow=E('div','cc-rider-actions');
   if(!submitted){
-    const submit=E('button','primary',`Opstelling bevestigen (max ${game.squadSize})`);
+    const submit=E('button','primary',`✅ Opstelling bevestigen (max ${game.squadSize})`);
     submit.onclick=() => {action('submitLineup',{riderIds:[...selectedLineup]});};
     actionsRow.append(submit);
   } else actionsRow.append(E('span','muted','Wachten op de rest van het peloton…'));
   if(room.isHost){
-    const cancel=E('button','secondary','Annuleer koers');
+    const cancel=E('button','secondary','✕ Annuleer koers');
     cancel.onclick=() => action('cancelRace');
     actionsRow.append(cancel);
   }
@@ -484,6 +485,14 @@ function seededRandom(seed){
 
 function clampNum(v,min,max){return Math.max(min,Math.min(max,v))}
 
+function bikeIcon(cx,cy,cls){
+  const g=SVGEl('g',{class:cls,transform:`translate(${cx},${cy})`,fill:'none',stroke:'currentColor','stroke-width':'1.6','stroke-linecap':'round','stroke-linejoin':'round'});
+  g.append(SVGEl('circle',{cx:-6,cy:4,r:4}));
+  g.append(SVGEl('circle',{cx:6,cy:4,r:4}));
+  g.append(SVGEl('path',{d:'M-6,4 L-4,-5 L0,4 L6,4 M0,4 L4,-5 M-6,-5 L-2,-5 M4,-5 L6,-6'}));
+  return g;
+}
+
 function buildProfilePoints(raceId,terrain){
   const rng=seededRandom(hashString(raceId||''));
   const ruggedness=(terrain?.mountain||0)+(terrain?.cobbles||0)*0.6+0.15;
@@ -513,13 +522,14 @@ function buildProfileChart(race){
   const currentIndex=Math.min(race.segmentIndex||0,segs);
   const [baseX,baseY]=linePoints[currentIndex];
   progressList.forEach((entry,index) => {
-    const offset=(index-(progressList.length-1)/2)*11;
+    const offset=(index-(progressList.length-1)/2)*18;
     const waiting=entry.awaitingConfirmation;
-    const dot=SVGEl('circle',{cx:baseX+offset,cy:Math.max(8,baseY-8),r:6,class:`cc-profile-rider cc-profile-rider-${index%6}${waiting?'':' cc-profile-rider-confirmed'}`});
+    const cls=`cc-profile-rider cc-profile-rider-${index%6}${waiting?'':' cc-profile-rider-confirmed'}`;
+    const bike=bikeIcon(baseX+offset,Math.max(10,baseY-10),cls);
     const title=SVGEl('title');
     title.textContent=`${entry.playerName}${entry.isNpc?' (NPC)':''} — segment ${currentIndex}/${segs} · ${waiting?'moet nog rollen':'bevestigd'}`;
-    dot.append(title);
-    svg.append(dot);
+    bike.append(title);
+    svg.append(bike);
   });
 
   wrap.append(svg);
@@ -563,9 +573,9 @@ function renderRacing(room,game,me){
       actionsRow.append(rollBtn);
     } else {
       actionsRow.append(E('span','cc-roll-result',`Worp: ${myProgress.pendingRoll.roll}`));
-      const applyBtn=E('button','primary',`Toepassen (×${myProgress.multiplier.toFixed(3)})`);
+      const applyBtn=E('button','primary',`✅ Toepassen (×${myProgress.multiplier.toFixed(3)})`);
       applyBtn.onclick=() => action('resolveSegment',{apply:true});
-      const bankBtn=E('button','secondary','Opsparen (+12,5%)');
+      const bankBtn=E('button','secondary','🏦 Opsparen (+12,5%)');
       bankBtn.onclick=() => action('resolveSegment',{apply:false});
       actionsRow.append(applyBtn,bankBtn);
     }
@@ -593,7 +603,7 @@ function renderRacing(room,game,me){
 
   if(room.isHost){
     const actionsRow2=E('div','cc-rider-actions');
-    const cancel=E('button','secondary','Annuleer koers');
+    const cancel=E('button','secondary','✕ Annuleer koers');
     cancel.onclick=() => action('cancelRace');
     actionsRow2.append(cancel);
     panel.append(actionsRow2);
@@ -648,7 +658,7 @@ function renderResult(room,game,me){
   }
 
   const actionsRow=E('div','cc-rider-actions');
-  const back=E('button','primary','Terug naar club');
+  const back=E('button','primary','← Terug naar club');
   back.onclick=() => action('backToClub');
   actionsRow.append(back);
   panel.append(actionsRow);

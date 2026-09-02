@@ -238,6 +238,49 @@ const RELEASES = [
       'Age of Civilization: Observatorium, Grote Tempel en Academie geven nu elk een gerichte bonus per gebeurtenis — Wetenschap → Attack, Cultuur → Goud, Religie → Defence — die met 10% per tijdperk groeit, tot +70% in tijdperk 7.',
       'Age of Civilization: de bevestigingspopup bij een vaste-gebouw-gebeurtenis toont voortaan het exacte bonuspercentage voor de betrokken stat.'
     ]
+  },
+  {
+    version:'1.14.1',
+    improvements:[
+      'Age of Civilization: een gebouw in je stad upgraden geeft nu altijd minstens +2 op de stat per niveau, ook als x1.5 van een lage basiswaarde minder zou opleveren.',
+      'Age of Civilization: de gebeurtenis van een vast gebouw (Observatorium, Grote Tempel, Academie) kan nog maar één keer per spel ontketend worden — daarna is dat gebouw volledig geüpgraded.'
+    ]
+  },
+  {
+    version:'1.14.2',
+    improvements:[
+      'The Deep Bleu C: de vangst-pop-up is groter en toont de vissoort nu als apart, groot symbool boven de tekst, zodat naam en gewicht niet meer over elkaar heen kunnen vallen.'
+    ]
+  },
+  {
+    version:'1.14.3',
+    improvements:[
+      'The Deep Bleu C: arctisch ijswater (de lichtblauwe tegels in het noorden) telde geen watersoort en was daardoor onbevisbaar — het hoort nu bij de Atlantische watersoort, zodat je in elke blauwe tegel kunt vissen.'
+    ]
+  },
+  {
+    version:'1.14.4',
+    improvements:[
+      'Age of Civilization: Observatorium, Grote Tempel en Academie geven hun bonus nu meteen zodra je ze aanduidt, in plaats van pas na een derde upgrade-stap. Elk vast gebouw kan nog steeds maar één keer per spel aangeduid worden.'
+    ]
+  },
+  {
+    version:'1.14.5',
+    improvements:[
+      'Age of Civilization: de bonus van een vast gebouw (Observatorium, Grote Tempel, Academie) is nu Tijdperk × 10% van je huidige stat, als eenmalige, permanente optelling — 10 Inkomen wordt bijvoorbeeld 14 Inkomen bij het ontketenen in Tijdperk 4, en latere uitbreidingen vermenigvuldigen die bonus niet opnieuw mee.',
+      'Age of Civilization: Cleopatra duidt Religie en Cultuur voortaan gratis aan, in plaats van dat deze al bij spelstart nutteloos op 0 vuren.'
+    ]
+  },
+  {
+    version:'1.15.0',
+    features:[
+      'The Deep Bleu C is nu speelbaar met 1 tot 4 spelers in dezelfde wereld — nodig vrienden uit via de gamecode om samen te verkennen en te vissen.',
+      'The Deep Bleu C: een nieuwe knop Ruilen laat je vis en geld ruilen met medespelers — kies wat jij aanbiedt en wat je vraagt, en de andere speler accepteert of weigert het voorstel.'
+    ],
+    improvements:[
+      'The Deep Bleu C: andere spelers zijn zichtbaar op de kaart als gekleurde vis met naamlabel, met een hengelicoontje boven wie aan het vissen is.',
+      'The Deep Bleu C: de spelerslijst bovenaan toont voortaan iedereen in de wereld met hun geld en aantal ontdekte soorten.'
+    ]
   }
 ];
 

@@ -18,9 +18,12 @@
 .dbc-fish-eye{fill:#0d1117}
 .dbc-fish-line{fill:none;stroke:#2b2320;stroke-width:1;stroke-linecap:round}
 .dbc-fish-hook{fill:none;stroke:#2b2320;stroke-width:1.2}
+.dbc-player-other{opacity:.95}
+.dbc-player-label{font-size:9px;font-weight:700;fill:#fff;paint-order:stroke;stroke:#0d1117;stroke-width:2.5px;pointer-events:none}
+.dbc-player-fishing{font-size:11px;pointer-events:none}
 
 .dbc-fishing-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(10,14,20,.45)}
-.dbc-fishing-overlay .dbc-fishing{width:100%;max-width:280px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.dbc-fishing-overlay .dbc-fishing{width:100%;max-width:340px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
 
 .dbc-sidebar{width:150px;flex:0 0 150px;display:flex;flex-direction:column;gap:8px}
 .dbc-minimap{display:block;width:100%;aspect-ratio:1;image-rendering:pixelated;border:1px solid var(--border);border-radius:10px;cursor:pointer}
@@ -55,9 +58,11 @@
 .dbc-leaderboard th,.dbc-leaderboard td{padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)}
 .dbc-leaderboard th{color:var(--muted);font-size:12px;text-transform:uppercase}
 
-.dbc-fishing{display:flex;flex-direction:column;gap:8px;align-items:center;padding:14px;background:var(--panel);border:1px solid var(--accent);border-radius:12px;text-align:center}
-.dbc-fishing-text{font-weight:700}
-.dbc-fishing-result .dbc-fishing-text{font-weight:600}
+.dbc-fishing{display:flex;flex-direction:column;gap:8px;align-items:center;padding:18px;background:var(--panel);border:1px solid var(--accent);border-radius:12px;text-align:center}
+.dbc-fishing-text{font-weight:700;line-height:1.4;margin:0}
+.dbc-fishing-result{font-weight:600}
+.dbc-catch-icon{font-size:44px;line-height:1.2}
+.dbc-catch-detail{color:var(--muted);line-height:1.4;margin:0}
 .dbc-timer-track{width:100%;max-width:280px;height:10px;border-radius:6px;background:var(--panel2,rgba(255,255,255,.08));overflow:hidden}
 .dbc-timer-fill{height:100%;background:var(--accent);transition-property:width;transition-timing-function:linear}
 .dbc-fishing-button{min-width:180px}
@@ -82,5 +87,25 @@
 .dbc-inventory-label{flex:1;min-width:0}
 .dbc-inventory-price{flex:0 0 auto;font-weight:700;color:var(--accent)}
 .dbc-empty{color:var(--muted);margin:0}
+
+.dbc-trade-players{display:flex;flex-wrap:wrap;gap:8px}
+.dbc-trade-player-btn{background:var(--panel2,rgba(255,255,255,.04));border:1px solid var(--border);border-radius:999px;padding:6px 12px;cursor:pointer;color:var(--text);font-weight:600}
+.dbc-trade-player-btn.active{border-color:var(--accent);color:var(--accent)}
+.dbc-trade-builder{display:flex;flex-direction:column;gap:10px;padding:10px;background:var(--panel2,rgba(255,255,255,.04));border:1px solid var(--border);border-radius:10px}
+.dbc-trade-columns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dbc-trade-column h5{margin:0 0 6px}
+.dbc-trade-item{display:flex;align-items:center;gap:6px;font-size:13px;padding:2px 0;cursor:pointer}
+.dbc-trade-cash-row{display:flex;gap:14px;flex-wrap:wrap}
+.dbc-trade-cash{display:flex;align-items:center;gap:6px;font-size:13px}
+.dbc-trade-cash-input{width:80px;padding:4px 6px;border-radius:6px;border:1px solid var(--border);background:var(--panel);color:var(--text)}
+.dbc-trade-list{display:flex;flex-direction:column;gap:8px}
+.dbc-trade-card{background:var(--panel2,rgba(255,255,255,.04));border:1px solid var(--border);border-radius:10px;padding:10px}
+.dbc-trade-card-title{font-weight:700;margin-bottom:4px}
+.dbc-trade-card-line{margin:0;color:var(--muted);font-size:13px}
+.dbc-trade-card-actions{display:flex;gap:8px;margin-top:8px}
+
+@media(max-width:640px){
+  .dbc-trade-columns{grid-template-columns:1fr}
+}
 
 @media(min-width:761px){#gameStage:has(.dbc-wrap){width:min(100%,880px);max-width:880px}}

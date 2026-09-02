@@ -109,6 +109,10 @@ export function render(api) {
   bind(api);
   renderDeepBleuC(api.room, api.game);
 }
+export const playerStrip = true;
+export function metric({ player }) {
+  return { text: `€${player.cash} · ${player.discoveredCount} soorten`, score: player.discoveredCount };
+}
 
 function statusFor(you) {
   const fishing = you.fishing;
@@ -121,6 +125,7 @@ function statusFor(you) {
 
 function renderDeepBleuC(room, game) {
   const you = game.you;
+  const others = (game.players || []).filter((p) => p.id !== you.id);
   els.gameStage.replaceChildren();
   els.gameStage.append(titlebar('The Deep Bleu C', statusFor(you)));
 
@@ -128,31 +133,31 @@ function renderDeepBleuC(room, game) {
   wrap.append(renderHud(you));
 
   if (activePanel !== 'map') {
-    wrap.append(renderDetailScreen(you));
+    wrap.append(renderDetailScreen(you, others));
   } else {
     const loadedWorld = ensureWorld();
-    wrap.append(loadedWorld ? renderPlayArea(you, loadedWorld) : E('div', 'dbc-loading', 'Kaart wordt geladen...'));
+    wrap.append(loadedWorld ? renderPlayArea(you, loadedWorld, others) : E('div', 'dbc-loading', 'Kaart wordt geladen...'));
   }
 
   els.gameStage.append(wrap, logBox(game.log));
 }
 
-function renderDetailScreen(you) {
+function renderDetailScreen(you, others) {
   const screen = E('div', 'dbc-detail-screen');
   const back = E('button', 'secondary dbc-back-button', '← Terug naar de kaart');
   back.type = 'button';
   back.onclick = () => { activePanel = 'map'; renderGame(state.room); };
   screen.append(back);
-  screen.append(renderActivePanel(you));
+  screen.append(renderActivePanel(you, others));
   return screen;
 }
 
-function renderPlayArea(you, worldData) {
+function renderPlayArea(you, worldData, others) {
   const camX = clampInt(you.x - Math.floor(COLS / 2), 0, worldData.width - COLS);
   const camY = clampInt(you.y - Math.floor(ROWS / 2), 0, worldData.height - ROWS);
 
   const area = E('div', 'dbc-play-area');
-  area.append(renderMapWrap(you, worldData, camX, camY));
+  area.append(renderMapWrap(you, worldData, camX, camY, others));
   area.append(renderSidebar(you, worldData, camX, camY));
   return area;
 }
@@ -185,19 +190,45 @@ function hexPoints(localCol, localRow) {
   return { cx: x, cy: y };
 }
 
-let lastFacingAngle = 0;
-function facingAngle(you) {
-  const next = you.path && you.path[0];
+const lastFacingAngleById = new Map();
+function facingAngleFor(id, entity) {
+  const next = entity.path && entity.path[0];
   if (next) {
-    const cur = hexToPixel(you.x, you.y, HEX_SIZE);
+    const cur = hexToPixel(entity.x, entity.y, HEX_SIZE);
     const tgt = hexToPixel(next.x, next.y, HEX_SIZE);
     const dx = tgt.x - cur.x, dy = tgt.y - cur.y;
-    if (dx !== 0 || dy !== 0) lastFacingAngle = Math.atan2(dy, dx) * (180 / Math.PI);
+    if (dx !== 0 || dy !== 0) lastFacingAngleById.set(id, Math.atan2(dy, dx) * (180 / Math.PI));
   }
-  return lastFacingAngle;
+  return lastFacingAngleById.get(id) || 0;
 }
 
-function renderMapWrap(you, worldData, camX, camY) {
+const OTHER_PLAYER_COLORS = ['#ff9f43', '#4dd0e1', '#c77dff', '#ffe066'];
+
+function renderOtherPlayerMarker(svg, p, camX, camY, colorIndex) {
+  if (p.x < camX - 1 || p.x > camX + COLS || p.y < camY - 1 || p.y > camY + ROWS) return;
+  const { cx, cy } = hexPoints(p.x - camX, p.y - camY);
+  const angle = facingAngleFor(p.id, p);
+  const color = OTHER_PLAYER_COLORS[colorIndex % OTHER_PLAYER_COLORS.length];
+  const g = svgEl('g', { class: 'dbc-player dbc-player-other', transform: `translate(${cx},${cy}) rotate(${angle})` });
+  g.append(svgEl('ellipse', { cx: 1, cy: 4, rx: 12, ry: 6, class: 'dbc-fish-shadow' }));
+  g.append(svgEl('path', { d: 'M -13 0 L -19 -6 L -16 0 L -19 6 Z', fill: color, opacity: 0.85 }));
+  g.append(svgEl('path', {
+    d: 'M -13 0 Q -9 -9 0 -8 Q 9 -7 13 0 Q 9 7 0 8 Q -9 9 -13 0 Z',
+    fill: color, stroke: '#fff', 'stroke-width': 1.5, 'stroke-linejoin': 'round'
+  }));
+  g.append(svgEl('circle', { cx: 7, cy: -2, r: 1.5, class: 'dbc-fish-eye' }));
+  svg.append(g);
+  if (p.fishingPhase) {
+    const rod = svgEl('text', { x: cx, y: cy - 20, class: 'dbc-player-fishing', 'text-anchor': 'middle' });
+    rod.textContent = '🎣';
+    svg.append(rod);
+  }
+  const label = svgEl('text', { x: cx, y: cy - 14, class: 'dbc-player-label', 'text-anchor': 'middle' });
+  label.textContent = p.name;
+  svg.append(label);
+}
+
+function renderMapWrap(you, worldData, camX, camY, others = []) {
   const svg = svgEl('svg', {
     viewBox: `${VIEW_BOX.minX} ${VIEW_BOX.minY} ${VIEW_BOX.width} ${VIEW_BOX.height}`,
     class: 'dbc-map',
@@ -236,8 +267,10 @@ function renderMapWrap(you, worldData, camX, camY) {
     svg.append(g);
   });
 
+  others.forEach((other, index) => renderOtherPlayerMarker(svg, other, camX, camY, index));
+
   const { cx: px, cy: py } = hexPoints(you.x - camX, you.y - camY);
-  const angle = facingAngle(you);
+  const angle = facingAngleFor(you.id, you);
   const player = svgEl('g', { class: 'dbc-player', transform: `translate(${px},${py}) rotate(${angle})` });
   player.append(svgEl('ellipse', { cx: 1, cy: 4, rx: 12, ry: 6, class: 'dbc-fish-shadow' }));
   player.append(svgEl('path', { d: 'M -13 0 L -19 -6 L -16 0 L -19 6 Z', class: 'dbc-fish-tail' }));
@@ -317,10 +350,13 @@ function renderFishingPanel(fishing) {
     panel.append(button);
   } else if (fishing.phase === 'result') {
     const fish = fishing.fish;
-    const text = fish
-      ? `Gevangen: ${fish.icon} ${fish.name} · ${fishing.weightKg.toFixed(1)} kg${fishing.isNew ? ' · Nieuwe soort!' : ''}`
-      : 'De vis ontsnapte.';
-    panel.append(E('div', 'dbc-fishing-text dbc-fishing-result', text));
+    if (fish) {
+      panel.append(E('div', 'dbc-catch-icon', fish.icon));
+      panel.append(E('div', 'dbc-fishing-text dbc-fishing-result', `Gevangen: ${fish.name}`));
+      panel.append(E('div', 'dbc-catch-detail', `${fishing.weightKg.toFixed(1)} kg${fishing.isNew ? ' · Nieuwe soort!' : ''}`));
+    } else {
+      panel.append(E('div', 'dbc-fishing-text dbc-fishing-result', 'De vis ontsnapte.'));
+    }
   }
   return panel;
 }
@@ -331,6 +367,7 @@ function renderActionBar() {
     { id: 'vishandel', icon: '🐟', label: 'Vishandel' },
     { id: 'aquarium', icon: '🏛️', label: 'Aquarium' },
     { id: 'markt', icon: '⚖️', label: 'Markt' },
+    { id: 'ruilen', icon: '🤝', label: 'Ruilen' },
     { id: 'monument', icon: '🏆', label: 'Hall of Fame' }
   ];
   buttons.forEach((b) => {
@@ -346,10 +383,11 @@ function renderActionBar() {
   return bar;
 }
 
-function renderActivePanel(you) {
+function renderActivePanel(you, others) {
   if (activePanel === 'vishandel') return renderVishandelPanel(you);
   if (activePanel === 'aquarium') return renderAquariumPanel(you);
   if (activePanel === 'markt') return renderMarktPanel(you);
+  if (activePanel === 'ruilen') return renderRuilenPanel(you, others);
   if (activePanel === 'monument') return renderMonumentPanel(you);
   return E('div', 'dbc-hint', 'Tik op de kaart om te wandelen, of op water vlak naast je om te vissen.');
 }
@@ -389,6 +427,145 @@ function renderMarktPanel(you) {
     grid.append(card);
   });
   wrap.append(grid);
+  return wrap;
+}
+
+let tradeTargetId = null;
+let tradeOfferUids = new Set();
+let tradeRequestUids = new Set();
+
+function renderRuilenPanel(you, others) {
+  const wrap = E('div', 'dbc-panel dbc-trade-panel');
+  wrap.append(E('h4', '', '🤝 Ruilen'));
+  wrap.append(E('p', 'dbc-panel-copy', 'Ruil vis en geld met andere spelers in deze wereld.'));
+
+  if (!others.length) {
+    wrap.append(E('p', 'dbc-empty', 'Je bent alleen in deze wereld. Nodig vrienden uit via de gamecode om samen te vissen en te ruilen.'));
+    return wrap;
+  }
+
+  if (tradeTargetId && !others.some((p) => p.id === tradeTargetId)) tradeTargetId = null;
+
+  const playerList = E('div', 'dbc-trade-players');
+  others.forEach((p) => {
+    const btn = E('button', `dbc-trade-player-btn ${p.id === tradeTargetId ? 'active' : ''}`,
+      `${p.name} · €${p.cash} · ${p.inventory.length} vis`);
+    btn.type = 'button';
+    btn.onclick = () => {
+      tradeTargetId = p.id;
+      tradeOfferUids = new Set();
+      tradeRequestUids = new Set();
+      renderGame(state.room);
+    };
+    playerList.append(btn);
+  });
+  wrap.append(playerList);
+
+  const target = others.find((p) => p.id === tradeTargetId);
+  if (target) wrap.append(renderTradeBuilder(you, target));
+
+  wrap.append(renderTradeList(you));
+  return wrap;
+}
+
+function renderTradeItemPicker(title, items, selectedUids) {
+  const box = E('div', 'dbc-trade-column');
+  box.append(E('h5', '', title));
+  if (!items.length) {
+    box.append(E('p', 'dbc-empty', 'Geen vis beschikbaar.'));
+    return box;
+  }
+  items.forEach((item) => {
+    const row = E('label', 'dbc-trade-item');
+    const checkbox = E('input', '');
+    checkbox.type = 'checkbox';
+    checkbox.checked = selectedUids.has(item.uid);
+    checkbox.onchange = () => {
+      if (checkbox.checked) selectedUids.add(item.uid); else selectedUids.delete(item.uid);
+      renderGame(state.room);
+    };
+    row.append(checkbox, E('span', '', ` ${item.fish.icon} ${item.fish.name} · ${item.weightKg.toFixed(1)} kg`));
+    box.append(row);
+  });
+  return box;
+}
+
+function renderTradeBuilder(you, target) {
+  const wrap = E('div', 'dbc-trade-builder');
+  const validOfferUids = new Set(you.inventory.map((item) => item.uid));
+  for (const uid of tradeOfferUids) if (!validOfferUids.has(uid)) tradeOfferUids.delete(uid);
+  const validRequestUids = new Set(target.inventory.map((item) => item.uid));
+  for (const uid of tradeRequestUids) if (!validRequestUids.has(uid)) tradeRequestUids.delete(uid);
+
+  const columns = E('div', 'dbc-trade-columns');
+  columns.append(renderTradeItemPicker('Jij biedt', you.inventory, tradeOfferUids));
+  columns.append(renderTradeItemPicker(`${target.name} heeft`, target.inventory, tradeRequestUids));
+  wrap.append(columns);
+
+  const cashRow = E('div', 'dbc-trade-cash-row');
+  const offerCashLabel = E('label', 'dbc-trade-cash', 'Jij biedt ook: €');
+  const offerCashInput = E('input', 'dbc-trade-cash-input');
+  offerCashInput.type = 'number';
+  offerCashInput.min = '0';
+  offerCashInput.max = String(you.cash);
+  offerCashInput.value = '0';
+  offerCashLabel.append(offerCashInput);
+  const requestCashLabel = E('label', 'dbc-trade-cash', 'Jij vraagt ook: €');
+  const requestCashInput = E('input', 'dbc-trade-cash-input');
+  requestCashInput.type = 'number';
+  requestCashInput.min = '0';
+  requestCashInput.value = '0';
+  requestCashLabel.append(requestCashInput);
+  cashRow.append(offerCashLabel, requestCashLabel);
+  wrap.append(cashRow);
+
+  const submit = E('button', 'primary', `Voorstel sturen aan ${target.name}`);
+  submit.type = 'button';
+  submit.onclick = () => {
+    action('proposeTrade', {
+      toId: target.id,
+      offerUids: [...tradeOfferUids],
+      offerCash: Number(offerCashInput.value) || 0,
+      requestUids: [...tradeRequestUids],
+      requestCash: Number(requestCashInput.value) || 0
+    });
+    tradeOfferUids = new Set();
+    tradeRequestUids = new Set();
+  };
+  wrap.append(submit);
+  return wrap;
+}
+
+function renderTradeList(you) {
+  const wrap = E('div', 'dbc-trade-list');
+  if (!you.trades.length) return wrap;
+  wrap.append(E('h5', '', 'Voorstellen'));
+  you.trades.forEach((trade) => {
+    const card = E('div', 'dbc-trade-card');
+    const who = trade.incoming ? trade.fromName : trade.toName;
+    card.append(E('div', 'dbc-trade-card-title', trade.incoming ? `Voorstel van ${who}` : `Voorstel aan ${who}`));
+    const summarize = (side) => {
+      const parts = side.items.map((item) => `${item.fish.icon} ${item.fish.name}`);
+      if (side.cash) parts.push(`€${side.cash}`);
+      return parts.length ? parts.join(', ') : 'niets';
+    };
+    card.append(E('p', 'dbc-trade-card-line', `Aangeboden: ${summarize(trade.offer)}`));
+    card.append(E('p', 'dbc-trade-card-line', `Gevraagd: ${summarize(trade.request)}`));
+    const actionsRow = E('div', 'dbc-trade-card-actions');
+    if (trade.incoming) {
+      const accept = E('button', 'primary', 'Accepteren');
+      accept.onclick = () => action('respondTrade', { tradeId: trade.id, decision: 'accept' });
+      const decline = E('button', 'secondary', 'Weigeren');
+      decline.onclick = () => action('respondTrade', { tradeId: trade.id, decision: 'decline' });
+      actionsRow.append(accept, decline);
+    } else {
+      const cancel = E('button', 'secondary', 'Intrekken');
+      cancel.onclick = () => action('respondTrade', { tradeId: trade.id, decision: 'decline' });
+      actionsRow.append(cancel);
+    }
+    card.append(actionsRow);
+    wrap.append(card);
+  });
   return wrap;
 }
 

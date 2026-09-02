@@ -5,10 +5,9 @@ const LEADER_ATTRIBUTES = {
   bismarck: '⛑️', lincoln: '🎩', achilles: '⚔️', harald: '🛡️'
 };
 
-// Static hint shown on the tile before it has fired: the exact percentage
-// depends on the Age it's bought in (10% per Age), so only the targeted
-// stat is named here — the precise number appears in the confirm popup.
-function civicPreviewText(civic) { return `+10%×Tijdperk ${civic.statLabel}`; }
+// Hint shown on the tile before it's designated: the exact bonus for the
+// current Age (10% per Age), applied the instant the building is picked.
+function civicPreviewText(civic) { return `+${civic.eventBonusPct}% ${civic.statLabel} bij aanduiden`; }
 
 function theme(age) { return ERA_THEMES[(age - 1) % ERA_THEMES.length]; }
 function buildingTheme(age, type) { return theme(age).buildings[type] || { color: '#B8895A', icon: '' }; }
@@ -116,22 +115,24 @@ function renderCivicRow(E,action,sound,game,you,openModal){
     const bt=buildingTheme(game.age,key);
     const node=E('button','civ-tile civ-civic filled');node.type='button';
     node.style.setProperty('--tile-accent',bt.color);
-    node.append(E('div','civ-tile-icon',bt.icon),E('div','civ-tile-name',civic.name),E('div','civ-tile-level',`Niv. ${civic.upgradeCount}`));
-    node.append(E('div','civ-tile-perk',civic.eventsFired?`×${civic.eventsFired} gebeurtenis actief`:civicPreviewText(civic)));
-    if(canAct){
+    node.append(E('div','civ-tile-icon',bt.icon),E('div','civ-tile-name',civic.name));
+    node.append(E('div','civ-tile-perk',civic.used?'Gebeurtenis actief':civicPreviewText(civic)));
+    if(canAct&&!civic.used){
       const afford=you.gold>=civic.upgradeCost;
-      node.append(E('div',`civ-tile-upgrade${civic.isEventStep?' event':''}`,`${civic.isEventStep?'Ontketen':'Upgrade'} (${civic.upgradeCost}g)`));
+      node.append(E('div','civ-tile-upgrade event',`Ontketen (${civic.upgradeCost}g)`));
       node.disabled=!afford;
-      node.onclick=()=>openModal({
-        eyebrow:'Vast gebouw',
-        title:`${bt.icon} ${civic.name}`,
-        body:civic.isEventStep
-          ? `Niveau ${civic.upgradeCount} → ${civic.upgradeCount+1}. Deze upgrade ontketent: +${civic.eventBonusPct}% ${civic.statLabel} — eenmalig, blijvend toegepast op je huidige ${civic.statLabel}.`
-          : `Niveau ${civic.upgradeCount} → ${civic.upgradeCount+1}. Deze stap bereidt de volgende gebeurtenis voor en geeft nog geen directe statbonus.`,
-        cost:civic.upgradeCost,
-        confirmLabel:civic.isEventStep?'Ontketen':'Upgrade',
-        onConfirm:()=>{sound('score');action('upgrade',{civic:key})}
-      });
+      node.onclick=()=>{
+        const current=you[civic.statKey];
+        const delta=Math.round(current*civic.eventBonusPct/100);
+        openModal({
+          eyebrow:'Vast gebouw',
+          title:`${bt.icon} ${civic.name}`,
+          body:`Aanduiden geeft meteen een eenmalige, permanente bonus: +${civic.eventBonusPct}% van je huidige ${civic.statLabel} (${current} → ${current+delta}). Dit kan maar 1x per spel.`,
+          cost:civic.upgradeCost,
+          confirmLabel:'Ontketen',
+          onConfirm:()=>{sound('score');action('upgrade',{civic:key})}
+        });
+      };
     } else node.disabled=true;
     row.append(node);
   }

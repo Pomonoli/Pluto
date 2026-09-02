@@ -1,5 +1,34 @@
 # Changelog
 
+## v1.15.0 — The Deep Bleu C: samen vissen en ruilen
+
+- The Deep Bleu C is nu speelbaar met 1 tot 4 spelers in dezelfde wereld — nodig vrienden uit via de gamecode om samen te verkennen en te vissen.
+- Andere spelers in jouw wereld zijn zichtbaar op de kaart als gekleurde vis met naamlabel, en een hengelicoontje verschijnt boven wie aan het vissen is.
+- Een nieuwe knop "Ruilen" laat je vis en geld ruilen met medespelers: kies wat jij aanbiedt en wat je vraagt, en de andere speler accepteert of weigert het voorstel.
+- De spelerslijst bovenaan toont voortaan iedereen in de wereld met hun geld en aantal ontdekte soorten.
+
+## v1.14.5 — Age of Civilization: vlakke, permanente gebeurtenisbonus
+
+- Age of Civilization: de bonus van een vast gebouw (Observatorium, Grote Tempel, Academie) is nu Tijdperk × 10% van je huidige stat, als eenmalige, permanente optelling — 10 Inkomen wordt bijvoorbeeld 14 Inkomen bij het ontketenen in Tijdperk 4. Later meer van die stat bijbouwen vermenigvuldigt deze bonus niet opnieuw mee.
+- Age of Civilization: Cleopatra duidt Religie en Cultuur voortaan gratis aan (in plaats van dat deze al bij spelstart nutteloos op 0 vuren) — je kiest zelf het beste moment om haar gratis gebeurtenissen te ontketenen.
+
+## v1.14.4 — Age of Civilization: vaste gebouwen vuren meteen
+
+- Age of Civilization: Observatorium, Grote Tempel en Academie geven hun bonus nu meteen zodra je ze aanduidt, in plaats van pas na een derde upgrade-stap. Elk vast gebouw kan nog steeds maar één keer per spel aangeduid worden.
+
+## v1.14.3 — The Deep Bleu C: overal vissen in blauw water
+
+- Arctisch ijswater (de lichtblauwe tegels in het noorden) telde geen watersoort, waardoor je er niet kon vissen ondanks dat het gewoon water was. Dit water hoort nu bij de Atlantische watersoort en is overal bevisbaar.
+
+## v1.14.2 — The Deep Bleu C: duidelijker vangst-pop-up
+
+- De vangst-pop-up van The Deep Bleu C is groter en toont de vissoort nu als apart, groot symbool boven de tekst, zodat naam en gewicht niet meer over elkaar heen kunnen vallen.
+
+## v1.14.1 — Age of Civilization: gebalanceerde upgrades
+
+- Age of Civilization: een gebouw in je stad upgraden geeft nu minstens +2 op de stat per niveau, zelfs als x1.5 van een lage basiswaarde minder zou opleveren.
+- Age of Civilization: de gebeurtenis van een vast gebouw (Observatorium, Grote Tempel, Academie) kan nu maar één keer per spel ontketend worden — daarna is dat gebouw volledig geüpgraded en kost verder upgraden geen goud meer omdat het niet meer kan.
+
 ## v1.14.0 — The Deep Bleu C: hexkaart, gebouwen en minimap
 
 - De kaart van The Deep Bleu C is omgezet naar een hexagonaal tegelraster met meer rivieren, grotere meren en een uitgestrekte binnenzee.

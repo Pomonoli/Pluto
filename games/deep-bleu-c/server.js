@@ -104,7 +104,8 @@ function createGame(roomPlayers) {
     gameOver: false,
     resultText: '',
     log: ['Je staat bij De Vishandel, klaar om uit te varen.'],
-    players
+    players,
+    trades: []
   };
 }
 
@@ -270,6 +271,82 @@ function doBuyUpgrade(game, player, payload) {
   game.log.unshift(`Upgrade gekocht: ${category} niveau ${player.gear[category]}.`);
 }
 
+function doProposeTrade(game, player, payload) {
+  const target = game.players.find((candidate) => candidate.id === String(payload.toId || ''));
+  if (!target || target.id === player.id) throw new Error('Kies een andere speler om mee te ruilen.');
+
+  const offerUids = Array.isArray(payload.offerUids) ? [...new Set(payload.offerUids.map(String))] : [];
+  const requestUids = Array.isArray(payload.requestUids) ? [...new Set(payload.requestUids.map(String))] : [];
+  const offerCash = Math.max(0, Math.round(Number(payload.offerCash) || 0));
+  const requestCash = Math.max(0, Math.round(Number(payload.requestCash) || 0));
+  if (!offerUids.length && !requestUids.length && !offerCash && !requestCash) {
+    throw new Error('Kies iets om aan te bieden of te vragen.');
+  }
+  if (offerCash > player.cash) throw new Error('Je hebt niet genoeg geld om dat te bieden.');
+
+  const offerItems = offerUids.map((uid) => player.inventory.find((item) => item.uid === uid));
+  if (offerItems.some((item) => !item)) throw new Error('Je hebt niet (meer) al deze vissen.');
+  const requestItems = requestUids.map((uid) => target.inventory.find((item) => item.uid === uid));
+  if (requestItems.some((item) => !item)) throw new Error(`${target.name} heeft niet (meer) al deze vissen.`);
+
+  game.trades = game.trades.filter((t) => !(t.fromId === player.id && t.toId === target.id));
+  game.trades.push({
+    id: `${player.id}-${target.id}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    fromId: player.id,
+    fromName: player.name,
+    toId: target.id,
+    toName: target.name,
+    offerUids,
+    offerCash,
+    offerSnapshot: offerItems.map((item) => ({ uid: item.uid, speciesId: item.speciesId, weightKg: item.weightKg })),
+    requestUids,
+    requestCash,
+    requestSnapshot: requestItems.map((item) => ({ uid: item.uid, speciesId: item.speciesId, weightKg: item.weightKg })),
+    createdAt: Date.now()
+  });
+  game.log.unshift(`${player.name} stelt een ruil voor aan ${target.name}.`);
+}
+
+function doRespondTrade(game, player, payload) {
+  const tradeId = String(payload.tradeId || '');
+  const index = game.trades.findIndex((t) => t.id === tradeId);
+  if (index === -1) throw new Error('Dat ruilvoorstel bestaat niet meer.');
+  const trade = game.trades[index];
+  if (trade.fromId !== player.id && trade.toId !== player.id) throw new Error('Dit voorstel is niet voor jou.');
+
+  const decision = String(payload.decision || '');
+  if (decision === 'decline') {
+    game.trades.splice(index, 1);
+    game.log.unshift(`Ruilvoorstel tussen ${trade.fromName} en ${trade.toName} afgewezen.`);
+    return;
+  }
+  if (decision !== 'accept') throw new Error('Onbekende actie.');
+  if (trade.toId !== player.id) throw new Error('Alleen de ontvanger kan een voorstel accepteren.');
+
+  const from = game.players.find((candidate) => candidate.id === trade.fromId);
+  const to = game.players.find((candidate) => candidate.id === trade.toId);
+  if (!from || !to) { game.trades.splice(index, 1); throw new Error('De andere speler is niet meer beschikbaar.'); }
+
+  const offerItems = trade.offerUids.map((uid) => from.inventory.find((item) => item.uid === uid));
+  const requestItems = trade.requestUids.map((uid) => to.inventory.find((item) => item.uid === uid));
+  const valid = from.cash >= trade.offerCash && to.cash >= trade.requestCash &&
+    offerItems.every((item) => item) && requestItems.every((item) => item);
+  if (!valid) {
+    game.trades.splice(index, 1);
+    throw new Error('Dit voorstel is niet meer geldig — geld of vis is intussen niet meer beschikbaar.');
+  }
+
+  from.cash += trade.requestCash - trade.offerCash;
+  to.cash += trade.offerCash - trade.requestCash;
+  from.inventory = from.inventory.filter((item) => !trade.offerUids.includes(item.uid));
+  to.inventory = to.inventory.filter((item) => !trade.requestUids.includes(item.uid));
+  to.inventory.push(...offerItems);
+  from.inventory.push(...requestItems);
+
+  game.trades.splice(index, 1);
+  game.log.unshift(`${from.name} en ${to.name} hebben geruild.`);
+}
+
 function handleAction(game, playerId, action, payload = {}) {
   const player = game.players.find((candidate) => candidate.id === playerId);
   if (!player) throw new Error('Onbekende speler.');
@@ -279,6 +356,8 @@ function handleAction(game, playerId, action, payload = {}) {
   if (action === 'reel') return doReel(game, player);
   if (action === 'sell') return doSell(game, player, payload);
   if (action === 'buyUpgrade') return doBuyUpgrade(game, player, payload);
+  if (action === 'proposeTrade') return doProposeTrade(game, player, payload);
+  if (action === 'respondTrade') return doRespondTrade(game, player, payload);
   throw new Error('Onbekende actie.');
 }
 
@@ -342,7 +421,19 @@ function serialize(game, requesterId) {
     kind: game.gameKey,
     gameOver: false,
     world: { width: world.width, height: world.height, buildings: world.buildings },
+    players: game.players.map((p) => ({
+      id: p.id,
+      name: p.name,
+      x: p.x,
+      y: p.y,
+      path: p.path,
+      cash: p.cash,
+      discoveredCount: p.discovered.length,
+      fishingPhase: p.fishing ? p.fishing.phase : null,
+      inventory: p.inventory.map((item) => ({ uid: item.uid, speciesId: item.speciesId, weightKg: item.weightKg, fish: getFish(item.speciesId) }))
+    })),
     you: {
+      id: player.id,
       x: player.x,
       y: player.y,
       path: player.path,
@@ -371,7 +462,23 @@ function serialize(game, requesterId) {
       fishing: serializeFishing(player.fishing, now),
       nearBuilding: nearBuilding
         ? { id: nearBuilding.id, type: nearBuilding.type, name: nearBuilding.name, active: nearBuilding.active }
-        : null
+        : null,
+      trades: game.trades
+        .filter((t) => t.fromId === requesterId || t.toId === requesterId)
+        .map((t) => ({
+          id: t.id,
+          incoming: t.toId === requesterId,
+          fromName: t.fromName,
+          toName: t.toName,
+          offer: {
+            cash: t.offerCash,
+            items: t.offerSnapshot.map((item) => ({ ...item, fish: getFish(item.speciesId) }))
+          },
+          request: {
+            cash: t.requestCash,
+            items: t.requestSnapshot.map((item) => ({ ...item, fish: getFish(item.speciesId) }))
+          }
+        }))
     },
     log: game.log.slice(0, 20)
   };

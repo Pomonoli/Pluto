@@ -1,14 +1,14 @@
 {
   "key": "deep-bleu-c",
   "name": "The Deep Bleu C",
-  "version": "6",
-  "description": "Verken een hexagonale kaart van Europa, vang vis en bouw je fortuin op bij De Vishandel, het Aquarium-Museum, de Handelsmarkt en de Hall of Fame.",
+  "version": "9",
+  "description": "Verken samen een hexagonale kaart van Europa, vang vis, ruil met je medespelers en bouw je fortuin op bij De Vishandel, het Aquarium-Museum, de Handelsmarkt en de Hall of Fame.",
   "icon": "🎣",
-  "badge": "Solo",
+  "badge": "1-4",
   "actionLabel": "Uitvaren",
   "minPlayers": 1,
-  "maxPlayers": 1,
+  "maxPlayers": 4,
   "supportsNpc": false,
   "realtime": true,
-  "solo": true
+  "solo": false
 }
