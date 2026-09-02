@@ -7,7 +7,7 @@ Nieuwe spellen kunnen als zelfstandige map worden toegevoegd. De server ontdekt 
 1. Kopieer de map `_template` naar bijvoorbeeld `games/mijnspel`.
 2. Zet in `manifest.json` de `key` op exact dezelfde kleine mapnaam (`mijnspel`).
 3. Pas `server.js`, `client.js`, `styles.css` en `rules.html` aan.
-4. Herstart Pluto en voer `npm test` uit.
+4. Voeg gametests toe in `test/mijnspel.test.js` en voer `npm run check` uit. De nieuwe game en de algemene integratie worden automatisch geselecteerd.
 
 Een pluginmap bevat:
 

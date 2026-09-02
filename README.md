@@ -2,6 +2,10 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
+## Nieuw in versie 1.13.1
+
+Tests draaien standaard gericht op gewijzigde games, met algemene integratiechecks. Gedeelde wijzigingen activeren de volledige suite; die blijft ook handmatig beschikbaar.
+
 ## Nieuw in versie 1.13.0
 
 Accountnamen kunnen voortaan veilig vanuit het profiel worden gewijzigd zonder verlies van sessie, statistieken of match history. Pluto wacht bij refresh op de sessiecheck, gebruikt tablet- en desktopruimte compacter in de volledige app en alle games, en Presidenten verdeelt `Jouw kaarten` zonder horizontale scroll. De Minigolf Map editor staat nu in de spellobby.
@@ -69,6 +73,37 @@ npm install
 npm start
 npm test
 ```
+
+`npm test` selecteert de gewijzigde games plus de algemene tests voor accounts, lobby,
+rooms, frontend en pluginintegratie. Een nieuwe game vereist geen vaste gameteller meer.
+`npm run check` doet dezelfde selectie met syntaxcontrole.
+
+| Commando | Gebruik |
+| --- | --- |
+| `npm test` | Automatisch relevante tests |
+| `npm run check` | Relevante tests plus syntaxcontrole |
+| `npm test -- --game hartenjagen` | Bewust alleen deze game plus algemene tests |
+| `npm test -- --base origin/main` | Alle wijzigingen op de branch sinds de gemeenschappelijke basis |
+| `npm test -- --list` | Alleen de selectie tonen |
+| `npm run test:all` | Volledige testsuite |
+| `npm run check:all` | Volledige testsuite plus syntaxcontrole |
+
+Automatische selectie telt gecommitte branchwijzigingen, staged/unstaged wijzigingen
+én nieuwe bestanden mee. Op een schone main wordt de laatste commit bekeken.
+`--game` is een expliciete afbakening en kan herhaald worden; gebruik dit alleen als
+je zeker weet dat de wijziging geen gedeelde code raakt. `--base` gebruikt lokale Git-refs;
+voer zo nodig eerst `git fetch origin` uit.
+
+Wijzigingen aan gedeelde code (zoals registry, sockets, auth, templates, globale UI,
+dependencies of de testrunner) starten automatisch de volledige suite. Zuivere
+versiebumpjes en releasebeschrijvingen verbreden de selectie niet. Zonder bruikbare
+Git-historiek draait uit voorzorg de volledige suite. Een ongeldige expliciete
+`--base` of gamenaam geeft een fout.
+
+Plaats gametests in `test/<game>.test.js`, `test/<game>-*.test.js`,
+`test/<game>/` of `games/<game>/`, met de extensie `.test.js`, `.test.cjs` of `.test.mjs`.
+Andere bestanden onder `test/` vormen de algemene suite. De integratiechecks laden
+alle plugins en controleren manifests en HTTP-assets, zonder alle spellen uit te spelen.
 
 Zie [ARCHITECTURE.md](ARCHITECTURE.md) voor de opbouw en [CHANGELOG.md](CHANGELOG.md) voor releases.
 Nieuwe games kunnen vanuit de zelfstandige [gametemplate](games/README.md) worden toegevoegd.

@@ -60,3 +60,9 @@ Toon **geen** andere tussenliggende patch- of minorversies op de frontpage
 die daar in een eerdere release nog wel. Die blijven volledig terug te vinden
 in CHANGELOG.md — pas dus bij elke release de bestaande README-secties aan in
 plaats van er alleen maar één toe te voegen.
+
+## Testbeleid
+
+Volg het gerichte testbeleid in [AGENTS.md](AGENTS.md). `npm test` en
+`npm run check` bepalen zelf de relevante scope; voer niet standaard daarnaast
+`node --test` of de volledige suite uit.

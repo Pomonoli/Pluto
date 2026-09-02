@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const os=require('node:os');
 const path=require('node:path');
-const {loadPluginGames,listGamePlugins}=require('../src/games');
+const {loadPluginGames,listGamePlugins,listGames}=require('../src/games');
 
 test('game-plugin loader ontdekt een zelfstandige gamemap',()=>{
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'pluto-game-plugin-'));
@@ -22,7 +22,7 @@ test('game-plugin loader ontdekt een zelfstandige gamemap',()=>{
 
 test('alle bestaande games zijn plugins en de template wordt overgeslagen',()=>{
   const plugins=listGamePlugins();
-  assert.equal(plugins.length,20);
+  assert.equal(plugins.length,listGames().length);
   assert.ok(plugins.every((plugin)=>plugin.key!=='_template'&&plugin.clientUrl));
 });
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.13.1 — Gericht testen
+
+- `npm test` en `npm run check` selecteren gewijzigde games plus algemene integratiechecks; gedeelde wijzigingen starten de volledige suite.
+- De volledige suite blijft beschikbaar via `npm run test:all` en `npm run check:all`.
+- Gemengde game- en UI-tests opgesplitst zonder bestaande assertions te verwijderen. Pluginchecks ontdekken games dynamisch.
+- Werkwijze voor Codex en Claude vastgelegd; versiebumpjes activeren op zichzelf geen volledige testreeks.
+
 ## v1.13.0 — Accountnamen en responsive polish
 
 - Ingelogde gebruikers zien na refresh direct hun homescreen zonder login-flash tijdens de sessiecheck.
