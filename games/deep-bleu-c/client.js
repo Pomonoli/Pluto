@@ -2,8 +2,10 @@ import { hexToPixel, hexCorners, hexDistance } from './hex-client.js';
 
 const HEX_SIZE = 18;
 const HEX_DRAW_SIZE = HEX_SIZE * 1.03; // iets groter dan de rasterpitch: verbergt anti-aliasing-naden tussen tegels
-const COLS = 17;
-const ROWS = 11;
+// Show a larger window into the world instead of scaling the original
+// 17x11 window to fill the fixed viewport. The tile geometry stays intact.
+const COLS = 29;
+const ROWS = 19;
 
 // Exacte omvattende rechthoek van de zichtbare COLS x ROWS tegels (in de
 // eigen hex-pixelruimte). De viewBox hierop baseren — i.p.v. een handmatig
@@ -158,13 +160,12 @@ function renderPlayArea(you, worldData, others) {
 
   const area = E('div', 'dbc-play-area');
   area.append(renderMapWrap(you, worldData, camX, camY, others));
-  area.append(renderSidebar(you, worldData, camX, camY));
+  area.append(renderSidebar());
   return area;
 }
 
-function renderSidebar(you, worldData, camX, camY) {
+function renderSidebar() {
   const sidebar = E('div', 'dbc-sidebar');
-  sidebar.append(renderMinimap(you, worldData, camX, camY));
   sidebar.append(renderActionBar());
   return sidebar;
 }
@@ -231,6 +232,9 @@ function renderOtherPlayerMarker(svg, p, camX, camY, colorIndex) {
 function renderMapWrap(you, worldData, camX, camY, others = []) {
   const svg = svgEl('svg', {
     viewBox: `${VIEW_BOX.minX} ${VIEW_BOX.minY} ${VIEW_BOX.width} ${VIEW_BOX.height}`,
+    // Keep hexagons proportional while scaling the visible map just enough
+    // to cover the fixed game viewport without empty edges.
+    preserveAspectRatio: 'xMidYMid slice',
     class: 'dbc-map',
     role: 'img',
     'aria-label': 'Kaart van The Deep Bleu C'
@@ -368,10 +372,11 @@ function renderActionBar() {
     { id: 'aquarium', icon: '🏛️', label: 'Aquarium' },
     { id: 'markt', icon: '⚖️', label: 'Markt' },
     { id: 'ruilen', icon: '🤝', label: 'Ruilen' },
-    { id: 'monument', icon: '🏆', label: 'Hall of Fame' }
+    { id: 'monument', icon: '🏆', label: 'Hall of Fame' },
+    { id: 'world-map', label: 'Map' }
   ];
   buttons.forEach((b) => {
-    const btn = E('button', 'dbc-action-btn', `${b.icon} ${b.label}`);
+    const btn = E('button', 'dbc-action-btn', b.label);
     btn.type = 'button';
     btn.onclick = () => {
       activePanel = b.id;
@@ -389,7 +394,33 @@ function renderActivePanel(you, others) {
   if (activePanel === 'markt') return renderMarktPanel(you);
   if (activePanel === 'ruilen') return renderRuilenPanel(you, others);
   if (activePanel === 'monument') return renderMonumentPanel(you);
+  if (activePanel === 'world-map') return renderMapPanel(you);
   return E('div', 'dbc-hint', 'Tik op de kaart om te wandelen, of op water vlak naast je om te vissen.');
+}
+
+function renderMapPanel(you) {
+  const wrap = E('div', 'dbc-panel dbc-world-map-panel');
+  wrap.append(E('h4', '', 'Grote map'));
+  wrap.append(E('p', 'dbc-panel-copy', 'Een uitgezoomd overzicht van de volledige wereld. Je positie staat in het rood.'));
+
+  if (!world) {
+    wrap.append(E('p', 'dbc-empty', 'Kaart wordt geladen...'));
+    return wrap;
+  }
+
+  if (!minimapBase || minimapWorldRef !== world) buildMinimapBase(world);
+  const canvas = document.createElement('canvas');
+  canvas.className = 'dbc-world-map';
+  canvas.width = world.width;
+  canvas.height = world.height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(minimapBase, 0, 0);
+  ctx.fillStyle = '#ff5c5c';
+  ctx.beginPath();
+  ctx.arc(you.x, you.y, 1.8, 0, Math.PI * 2);
+  ctx.fill();
+  wrap.append(canvas);
+  return wrap;
 }
 
 function renderVishandelPanel(you) {

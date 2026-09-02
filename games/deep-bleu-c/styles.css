@@ -1,11 +1,11 @@
-.dbc-wrap{display:flex;flex-direction:column;gap:12px;padding:4px 0 16px}
+.dbc-wrap{display:flex;flex:1;min-height:0;overflow:hidden;flex-direction:column;gap:12px;padding:4px 0 16px}
 
 .dbc-hud{display:flex;gap:10px;flex-wrap:wrap}
 .dbc-hud>div{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:6px 12px;font-weight:600}
 
-.dbc-play-area{display:flex;gap:10px;align-items:flex-start}
-.dbc-map-wrap{position:relative;flex:1;min-width:0;border-radius:14px;overflow:hidden;border:1px solid var(--border);background:#1f5a8a;line-height:0}
-.dbc-map{width:100%;height:auto;display:block;touch-action:manipulation}
+.dbc-play-area{display:grid;flex:1;min-height:0;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:stretch;overflow:hidden}
+.dbc-map-wrap{position:relative;flex:1;min-width:0;min-height:0;border-radius:14px;overflow:hidden;border:1px solid var(--border);background:#1f5a8a;line-height:0}
+.dbc-map{width:100%;height:100%;display:block;touch-action:manipulation}
 .dbc-tile{cursor:pointer;stroke:rgba(15,25,10,.05);stroke-width:1.1;stroke-linejoin:round}
 .dbc-tile:hover{filter:brightness(1.08)}
 .dbc-building-bg{fill:#2b2320;stroke:var(--accent);stroke-width:2}
@@ -25,29 +25,31 @@
 .dbc-fishing-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(10,14,20,.45)}
 .dbc-fishing-overlay .dbc-fishing{width:100%;max-width:340px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
 
-.dbc-sidebar{width:150px;flex:0 0 150px;display:flex;flex-direction:column;gap:8px}
+.dbc-sidebar{display:flex;min-width:0;padding:12px;border:1px solid var(--border);border-radius:14px;background:var(--panel);align-items:stretch}
 .dbc-minimap{display:block;width:100%;aspect-ratio:1;image-rendering:pixelated;border:1px solid var(--border);border-radius:10px;cursor:pointer}
 
 .dbc-loading,.dbc-hint{padding:14px;text-align:center;color:var(--muted);background:var(--panel);border:1px solid var(--border);border-radius:12px}
 
-.dbc-action-bar{display:flex;flex-direction:column;gap:8px}
-.dbc-action-btn{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:9px 10px;font-weight:600;cursor:pointer;color:var(--text);text-align:left}
+.dbc-action-bar{display:grid;flex:1;grid-template-columns:1fr;gap:8px}
+.dbc-action-btn{background:var(--panel2,rgba(255,255,255,.04));border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-weight:600;cursor:pointer;color:var(--text);text-align:left}
 .dbc-action-btn:hover{border-color:var(--accent)}
 
 .dbc-detail-screen{display:flex;flex-direction:column;gap:12px}
 .dbc-back-button{align-self:flex-start}
 
 @media(max-width:640px){
-  .dbc-play-area{flex-direction:column}
-  .dbc-sidebar{width:100%;flex:none;flex-direction:row;flex-wrap:wrap}
-  .dbc-sidebar .dbc-minimap{width:96px;flex:0 0 96px}
-  .dbc-sidebar .dbc-action-bar{flex:1;min-width:160px;flex-direction:row;flex-wrap:wrap}
-  .dbc-sidebar .dbc-action-btn{flex:1;min-width:120px}
+  .dbc-play-area{display:flex;flex-direction:column}
+  .dbc-sidebar{padding:10px}
+  .dbc-action-bar{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dbc-sidebar .dbc-action-btn{min-width:0}
 }
 
 .dbc-panel{display:flex;flex-direction:column;gap:8px;padding:12px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px}
 .dbc-panel h4{margin:0}
 .dbc-panel-copy{margin:0;color:var(--muted)}
+.dbc-world-map-panel{align-items:center}
+.dbc-world-map-panel>h4,.dbc-world-map-panel>.dbc-panel-copy{align-self:stretch}
+.dbc-world-map{display:block;width:min(100%,680px);aspect-ratio:1;image-rendering:pixelated;border:1px solid var(--border);border-radius:10px;background:#1f5a8a}
 
 .dbc-gear-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
 .dbc-gear-card{display:flex;flex-direction:column;gap:6px;background:var(--panel2,rgba(255,255,255,.04));border:1px solid var(--border);border-radius:10px;padding:10px}
@@ -104,8 +106,12 @@
 .dbc-trade-card-line{margin:0;color:var(--muted);font-size:13px}
 .dbc-trade-card-actions{display:flex;gap:8px;margin-top:8px}
 
+/* The map is the fixed game viewport; the controls occupy the strip below it. */
+#gameStage:has(.dbc-wrap){display:flex;flex-direction:column;overflow:hidden!important}
+#gameStage:has(.dbc-wrap)>.dbc-wrap{width:100%;min-height:0}
+
 @media(max-width:640px){
   .dbc-trade-columns{grid-template-columns:1fr}
 }
 
-@media(min-width:761px){#gameStage:has(.dbc-wrap){width:min(100%,880px);max-width:880px}}
+@media(min-width:761px){#gameStage:has(.dbc-wrap){width:100%;max-width:1180px}}

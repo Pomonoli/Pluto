@@ -283,6 +283,12 @@ const RELEASES = [
     ]
   },
   {
+    version:'1.15.2',
+    improvements:[
+      'The Deep Bleu C toont een groter zichtbaar speelveld zonder de hexagonen uit te rekken, en heeft een aparte knop voor een volledige wereldkaart.'
+    ]
+  },
+  {
     version:'1.15.1',
     improvements:[
       'CycClub: het gelijktijdige segment-systeem tijdens een rit is gerepareerd — de segmentvoortgang werd voorheen onterecht per speler bijgehouden in plaats van gedeeld voor de hele rit, waardoor de rit niet correct verder ging zodra iedereen bevestigd had.'

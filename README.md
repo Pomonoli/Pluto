@@ -2,6 +2,10 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
+## Nieuw in versie 1.15.2
+
+The Deep Bleu C toont nu een grotere kaart met een aparte knop voor de volledige wereldkaart; de bediening is overzichtelijker naast de kaart geplaatst.
+
 ## Nieuw in versie 1.15.1
 
 CycClub: het gelijktijdige segment-systeem tijdens een rit (iedereen rijdt een segment, en de rit gaat pas verder zodra alle spelers hun worp voor dat segment bevestigd hebben) is gerepareerd — de segmentvoortgang werd voorheen onterecht per speler bijgehouden in plaats van gedeeld voor de hele rit.

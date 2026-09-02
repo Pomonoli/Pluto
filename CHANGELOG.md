@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.15.2 — The Deep Bleu C: grotere kaart en wereldkaart
+
+- The Deep Bleu C toont een groter zichtbaar speelveld zonder de hexagonen uit te rekken.
+- De minimap is vervangen door een aparte wereldkaart in het actiepaneel en de bediening is overzichtelijker naast de kaart geplaatst.
+
 ## v1.15.1 — CycClub: segment-synchronisatie hersteld
 
 - CycClub: het gelijktijdige segment-systeem (iedereen rijdt een segment en de rit gaat pas verder zodra alle spelers hun worp voor dat segment bevestigd hebben) werkte niet correct doordat de segmentvoortgang per speler bijgehouden werd in plaats van gedeeld voor de hele rit. Dit is nu gerepareerd.
