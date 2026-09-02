@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.13.2
+## Nieuw in versie 1.13.3
 
-Age of Civilization wacht bij menselijke keuzes onbeperkt op de speler. De verborgen timeout van 40 seconden is verwijderd; NPC-acties en aanvalsgolven blijven automatisch verlopen.
+Offline spelers blokkeren andere beurten en NPC-acties niet meer. De host kan elke andere speler uit de lobby verwijderen; na 15 seconden offline neemt een verbonden speler het hostbeheer over. Na afloop brengt **Naar lobby** dezelfde groep terug om instellingen en spelers aan te passen. Het scherm blijft tijdens actieve games wakker waar ondersteund. Het kruisje bij **Doorgaan met spelen** verwijdert alleen jouw hervatrecht; de room sluit zodra de laatste human dit doet.
 
 ## Nieuw in versie 1.13.0
 

@@ -6,6 +6,7 @@ const authDb = require('../db');
 const { resultsForGame } = require('../results');
 
 const ROOM_TTL_MS = 2 * 60 * 60 * 1000;
+const HOST_GRACE_MS = 15 * 1000;
 const ROOM_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 function createRealtime(io) {
@@ -42,17 +43,18 @@ function createRealtime(io) {
   function touch(room) { room.updatedAt = Date.now(); }
 
   function getHumanByToken(room, token) {
-    return room.players.find((p) => !p.isNpc && p.token === token);
+    return room.players.find((p) => !p.isNpc && !p.hasLeft && p.token === token);
   }
 
   function getHumanByUserId(room, userId) {
     if (!userId) return null;
-    return room.players.find((p) => !p.isNpc && p.userId === userId);
+    return room.players.find((p) => !p.isNpc && !p.hasLeft && p.userId === userId);
   }
 
   function getPlayerForSocket(socket) {
     const room = socket.data.roomId ? rooms.get(socket.data.roomId) : null;
-    return { room, player: room ? getHumanByToken(room, socket.data.token) || null : null };
+    const player = room ? getHumanByToken(room, socket.data.token) : null;
+    return { room, player: player?.socketId === socket.id ? player : null };
   }
 
   function connectedMap(room) {
@@ -70,7 +72,7 @@ function createRealtime(io) {
     return [...rooms.values()]
       .filter((room) => {
         const meta = gameModule(room).meta;
-        const humans=room.players.filter((p)=>!p.isNpc);
+        const humans=room.players.filter((p)=>!p.isNpc&&!p.hasLeft);
         const publiclyVisible=!meta.solo&&humans.some((p)=>p.connected);
         const ownedResumable=room.status!=='lobby'&&humans.some((p)=>
           (token&&p.token===token)||(userId&&p.userId===userId)
@@ -79,7 +81,7 @@ function createRealtime(io) {
       })
       .map((room) => {
         const meta = gameModule(room).meta;
-        const humans = room.players.filter((p) => !p.isNpc);
+        const humans = room.players.filter((p) => !p.isNpc && !p.hasLeft);
         const connectedHumans = humans.filter((p) => p.connected);
         const npcs = room.players.filter((p) => p.isNpc);
         const host = room.players.find((p) => !p.isNpc && p.token === room.hostToken);
@@ -154,14 +156,17 @@ function createRealtime(io) {
 
     player.socketId = socket.id;
     player.connected = true;
+    player.disconnectedAt = null;
     socket.data.roomId = room.id;
     socket.data.token = player.token;
     socket.join(room.id);
   }
 
   function promoteHostIfNeeded(room) {
-    if (room.players.some((p) => !p.isNpc && p.token === room.hostToken)) return;
-    room.hostToken = room.players.find((p) => !p.isNpc)?.token || null;
+    if (getHumanByToken(room, room.hostToken)) return;
+    const humans = room.players.filter((p) => !p.isNpc && !p.hasLeft);
+    room.hostToken = (humans.find((p) => p.connected) || humans[0])?.token || null;
+    room.gameRevision = (room.gameRevision || 0) + 1;
   }
 
   function removeLobbyHuman(room, player) {
@@ -186,6 +191,7 @@ function createRealtime(io) {
     if (player.socketId === socket.id) {
       player.socketId = null;
       player.connected = false;
+      player.disconnectedAt = Date.now();
     }
 
     socket.leave(room.id);
@@ -368,6 +374,7 @@ function createRealtime(io) {
           leaveCurrentRoom(socket, false);
 
           if (identity.userId && player.userId === identity.userId) {
+            if (room.hostToken === player.token) room.hostToken = token;
             player.token = token;
             player.name = identity.name;
           }
@@ -431,10 +438,14 @@ function createRealtime(io) {
       if(room.status==='lobby')return ackError(ack,'Een lobby sluit je door ze te verlaten.');
       const token=String(payload.token||'').trim();
       const userId=socket.data.authUser?.id||null;
-      const participant=room.players.some((p)=>!p.isNpc&&((token&&p.token===token)||(userId&&p.userId===userId)));
+      const participant=getHumanByToken(room,token)||getHumanByUserId(room,userId);
       if(!participant)return ackError(ack,'Je kunt deze game niet sluiten.');
-      if(room.players.some((p)=>!p.isNpc&&p.connected))return ackError(ack,'Deze game wordt nog gespeeld.');
-      rooms.delete(room.id);
+      if(participant.connected)return ackError(ack,'Verlaat eerst de game op je andere scherm.');
+      // Keep the original seat for game rules and match results, but revoke resuming.
+      participant.hasLeft=true;
+      promoteHostIfNeeded(room);
+      if(!room.players.some((p)=>!p.isNpc&&!p.hasLeft))rooms.delete(room.id);
+      else broadcastRoom(room);
       if(typeof ack==='function')ack({ok:true});
     });
 
@@ -478,6 +489,29 @@ function createRealtime(io) {
       if (typeof ack === 'function') ack({ ok: true });
     });
 
+    socket.on('room:removePlayer', (payload = {}, ack) => {
+      const { room, player } = getPlayerForSocket(socket);
+      if (!room || !player) return ackError(ack, 'Je zit niet in een lobby.');
+      if (room.status !== 'lobby' || player.token !== room.hostToken) {
+        return ackError(ack, 'Alleen de host kan dit in de lobby.');
+      }
+      const target = room.players.find((p) => p.id === payload.playerId);
+      if (!target || target.id === player.id) return ackError(ack, 'Kies een andere speler.');
+      if (target.socketId) {
+        const targetSocket = io.sockets.sockets.get(target.socketId);
+        if (targetSocket) {
+          targetSocket.leave(room.id);
+          targetSocket.data.roomId = null;
+          targetSocket.data.token = null;
+        }
+        io.to(target.socketId).emit('room:removed', { roomId: room.id });
+      }
+      room.players = room.players.filter((p) => p.id !== target.id);
+      addSystemMessage(room, `${target.name} is door de host verwijderd.`);
+      broadcastRoom(room);
+      if (typeof ack === 'function') ack({ ok: true });
+    });
+
     socket.on('room:setOptions', (payload = {}, ack) => {
       try {
         const { room, player } = getPlayerForSocket(socket);
@@ -511,7 +545,6 @@ function createRealtime(io) {
 
         if (!room || !player || !room.gameState) return ackError(ack, 'Geen actief spel.');
         if (room.status !== 'playing') return ackError(ack, 'Het spel is niet actief.');
-        if (!allHumansConnected(room)) return ackError(ack, 'Het spel wacht op een offline speler.');
 
         const module = gameModule(room);
         module.handleAction(
@@ -535,6 +568,22 @@ function createRealtime(io) {
         console.error(error);
         ackError(ack, error.message || 'Actie mislukt.');
       }
+    });
+
+    socket.on('room:returnToLobby', (_payload, ack) => {
+      const { room, player } = getPlayerForSocket(socket);
+      if (!room || !player) return ackError(ack, 'Je zit niet in een game.');
+      if (room.status !== 'finished') return ackError(ack, 'Het spel is nog niet afgelopen.');
+      if (player.token !== room.hostToken) return ackError(ack, 'Alleen de host kan terug naar de lobby.');
+      room.players = room.players.filter((p) => !p.hasLeft);
+      room.gameState = null;
+      room.status = 'lobby';
+      room.startedAt = null;
+      room.matchRecorded = false;
+      room.gameRevision = (room.gameRevision || 0) + 1;
+      addSystemMessage(room, 'Terug in de lobby. De host kan spelers en instellingen aanpassen.');
+      broadcastRoom(room);
+      if (typeof ack === 'function') ack({ ok: true });
     });
 
     socket.on('room:rematch', (_payload, ack) => {
@@ -599,6 +648,7 @@ function createRealtime(io) {
       if (player.socketId === socket.id) {
         player.socketId = null;
         player.connected = false;
+        player.disconnectedAt = Date.now();
         broadcastRoom(room);
       }
     });
@@ -611,7 +661,17 @@ function createRealtime(io) {
       const now = Date.now();
 
       for (const room of rooms.values()) {
-        if (room.status !== 'playing' || !room.gameState || !allHumansConnected(room)) continue;
+        const host = getHumanByToken(room, room.hostToken);
+        if (host && !host.connected && now - (host.disconnectedAt ?? now) >= HOST_GRACE_MS) {
+          const nextHost = room.players.find((p) => !p.isNpc && !p.hasLeft && p.connected);
+          if (nextHost) {
+            room.hostToken = nextHost.token;
+            room.gameRevision = (room.gameRevision || 0) + 1;
+            addSystemMessage(room, `${nextHost.name} is nu de host.`);
+            broadcastRoom(room);
+          }
+        }
+        if (room.status !== 'playing' || !room.gameState || !room.players.some((p) => !p.isNpc && p.connected)) continue;
 
         const module = gameModule(room);
         if (typeof module.tick !== 'function') continue;

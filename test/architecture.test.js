@@ -16,7 +16,9 @@ test('server bootstrap bevat geen room/socket businesslogica meer',()=>{
 });
 
 test('frontend controller en games zijn opgesplitst in modules',()=>{
- assert.ok(lines('public/app.js') < 700);
+ const app=fs.readFileSync(path.join(__dirname,'../public/app.js'),'utf8');
+ assert.match(app,/import \{ createGameUi \} from/);
+ assert.doesNotMatch(app,/function render(?:Hofslag|Blackjack|Solitaire|Presidenten|Pesten|Hartenjagen|Cluedo|Carcassonne|Minigolf)\(/);
  assert.ok(fs.existsSync(path.join(__dirname,'../public/js/game-ui.js')));
  for(const game of ['hofslag','blackjack','solitaire','presidenten','pesten','hartenjagen','cluedo','carcassonne','minigolf']){
   for(const file of ['manifest.json','server.js','client.js','rules.html','styles.css'])assert.ok(fs.existsSync(path.join(__dirname,'..','games',game,file)),`${game}/${file} ontbreekt`);

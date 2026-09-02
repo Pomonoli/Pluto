@@ -1,5 +1,7 @@
-import { createGameUi } from './js/game-ui.js?v=1.13.2';
+import { createGameUi } from './js/game-ui.js?v=1.13.3';
+import { createScreenWakeLock } from './js/screen-wake-lock.js?v=1.13.3';
 const socket = window.io();
+const screenWakeLock = createScreenWakeLock({ navigator, document, window });
   const $ = (id) => document.getElementById(id);
   const els = {};
   ['brandButton','lobbyBrowserButton','leaderboardButton','soundButton','installButton','accountButton','mobileNav','mobilePlayButton','mobileLobbyButton','mobileLeaderboardButton','mobileProfileButton','mobileGameHeader','mobileGameLeaveButton','mobileGameName','mobileGameMenuButton','mobileGameMenu','mobileGameRulesButton','mobileGameSoundButton','mobileGameLeaveMenuButton','rulesButton','homeView','lobbyBrowserView','leaderboardView','profileView','roomView','homeGuestBar','guestName','homeAccountButton','inviteBox','inviteText','joinInviteButton','resumeGameSection','resumeGames','homeOpenLobbiesSection','homeOpenLobbies','gamesHeading','gameGrid','lobbyIdentityBar','lobbyIdentityText','lobbyGuestWrap','lobbyGuestName','openRoomCount','openRoomsContent','leaderboardGame','leaderboardContent','profileUsername','profileSummary','profileGames','profileRecent','showRenameButton','renameForm','renameUsername','cancelRenameButton','headToHeadCard','headToHeadGame','headToHeadContent','roomLayout','lobbySection','gameSection','playerCountBadge','lobbyPlayers','gameLobbyOptions','hostControls','addNpcButton','startGameButton','lobbyHint','gameStage','gameResult','accountModal','closeAccountButton','loggedOutAccount','loggedInAccount','loginForm','loginUsername','loginPassword','showRegisterButton','showLoginButton','registerForm','registerUsername','registerPassword','accountUsername','accountGames','accountWins','accountWinRate','myProfileButton','logoutButton','rulesModal','rulesGameName','rulesContent','closeRulesButton','leaveGameModal','leaveGameTitle','leaveGamePromptText','cancelLeaveGameButton','confirmLeaveGameButton','toast'].forEach((id) => els[id] = $(id));
@@ -50,7 +52,7 @@ const socket = window.io();
   function toast(message) { els.toast.textContent = message; els.toast.classList.remove('hidden'); clearTimeout(state.toastTimer); state.toastTimer = setTimeout(() => els.toast.classList.add('hidden'), 2800); }
   function setRouteRoom(roomId) { history.pushState({},'',roomId ? `/room/${roomId}` : '/'); state.directRoomId = roomId || null; }
   function handleAck(result) { if (!result?.ok) toast(result?.error || 'Actie mislukt.'); }
-  function action(action, data = {}) { socket.emit('game:action', { action, data }, handleAck); }
+  function action(action, data = {}) { if (socket.connected) socket.emit('game:action', { action, data }, handleAck); }
   function isRed(card) { return card?.suit === '♥' || card?.suit === '♦'; }
   function cardNode(card, opts = {}) {
     const b = E(opts.button === false ? 'div' : 'button', `playing-card${opts.small ? ' small' : ''}${opts.selected ? ' selected' : ''}${opts.legal ? ' legal' : ''}${card?.hidden ? ' card-back' : ''}`);
@@ -72,6 +74,7 @@ const socket = window.io();
     });
   }
   function setRoomChrome(active) {
+    screenWakeLock.setActive(active && state.room?.status === 'playing');
     document.body.classList.toggle('room-active', active);
     if(!active)document.body.classList.remove('game-active');
     if(!active)closeMobileGameMenu();
@@ -187,7 +190,7 @@ const socket = window.io();
       const button=E('button','resume-game-button');button.type='button';
       const copy=E('span','resume-game-copy');copy.append(E('small','',room.gameName),E('strong','','Doorgaan met spelen'),E('span','',`Game ${room.id} · ${room.playerCount}/${room.maxPlayers} spelers`));
       button.append(copy,E('span','resume-game-arrow','→'));button.onclick=()=>joinRoom(room.id);card.append(button);
-      if(room.connectedHumanCount===0){const close=E('button','resume-game-close','×');close.type='button';close.setAttribute('aria-label',`${room.gameName} definitief sluiten`);close.onclick=()=>{close.disabled=true;socket.emit('room:close',{roomId:room.id,token:state.token},response=>{if(!response?.ok){close.disabled=false;return handleAck(response)}loadHomeOpenLobbies()})};card.append(close)}
+      const close=E('button','resume-game-close','×');close.type='button';close.setAttribute('aria-label',`${room.gameName} niet meer hervatten`);close.onclick=()=>{if(!socket.connected)return;close.disabled=true;socket.emit('room:close',{roomId:room.id,token:state.token},response=>{if(!response?.ok){close.disabled=false;return handleAck(response)}loadHomeOpenLobbies()})};card.append(close);
       els.resumeGames.append(card)
     });
     els.homeOpenLobbies.replaceChildren();
@@ -317,7 +320,7 @@ const socket = window.io();
     return b;
   }
   const gameUi = createGameUi({
-    state, els, E, action, profileButton, sound, socket, handleAck, cardNode, valueLabel, requestRematch
+    state, els, E, action, profileButton, sound, socket, handleAck, cardNode, valueLabel, requestRematch, requestReturnToLobby
   });
   function handlePluginRoute(){return Object.values(state.gamePlugins).some(plugin=>plugin.handleRoute?.({path:location.pathname,state,setRoute,toast})===true)}
   function createRoom(gameKey) {
@@ -472,10 +475,15 @@ const socket = window.io();
     handleRoomEffects(previous,room);
     if(state.renderedRoomId!==room.id){state.renderedRoomId=room.id;state.renderedGameRevision=-1;state.scoreMemory={};}
     state.room = room; state.previousRoom=room; showRoom();
-    const roomOptions=state.gamePlugins[room.gameKey]?.roomOptions||{};if(state.activeGameBodyClass&&state.activeGameBodyClass!==roomOptions.bodyClass)document.body.classList.remove(state.activeGameBodyClass);state.activeGameBodyClass=room.status!=='lobby'?roomOptions.bodyClass||null:null;if(state.activeGameBodyClass)document.body.classList.add(state.activeGameBodyClass);
+    const roomOptions=state.gamePlugins[room.gameKey]?.roomOptions||{},nextBodyClass=room.status!=='lobby'?roomOptions.bodyClass||null:null;if(state.activeGameBodyClass&&state.activeGameBodyClass!==nextBodyClass)document.body.classList.remove(state.activeGameBodyClass);state.activeGameBodyClass=nextBodyClass;if(state.activeGameBodyClass)document.body.classList.add(state.activeGameBodyClass);
     document.body.classList.toggle('game-active',room.status!=='lobby');
     els.mobileGameName.textContent=room.gameMeta?.name||GAME_NAMES[room.gameKey]||'Spel';
     if (room.status === 'lobby') {
+      if(previous?.status !== 'lobby'){
+        state.selection=null;state.scoreMemory={};gameUi.resetRoom();
+        els.gameStage.replaceChildren();els.gameResult.replaceChildren();
+        els.gameResult.classList.add('hidden');els.gameResult.setAttribute('aria-hidden','true');
+      }
       els.lobbySection.classList.remove('hidden'); els.gameSection.classList.add('hidden'); renderLobby(room);
       state.renderedGameRevision=-1;
     } else {
@@ -493,7 +501,7 @@ const socket = window.io();
       const nameLine=E('div','player-name');nameLine.append(profileButton(p.name,p.registered));if(p.isMe)nameLine.append(document.createTextNode(' (jij)'));if(p.isHost)nameLine.append(document.createTextNode(' · host'));if(p.registered)nameLine.append(document.createTextNode(' · account'));
       info.append(nameLine, E('div','player-note',p.isNpc ? 'NPC' : p.connected ? 'verbonden' : 'offline'));
       const act = E('div');
-      if (room.isHost && p.isNpc) { const rm = E('button','ghost','Verwijder'); rm.type='button'; rm.onclick=() => socket.emit('room:removeNpc',{playerId:p.id},handleAck); act.append(rm); }
+      if (room.isHost && !p.isMe) { const rm = E('button','ghost','Verwijder'); rm.type='button'; rm.setAttribute('aria-label',`${p.name} verwijderen`);rm.onclick=() => {if(socket.connected)socket.emit('room:removePlayer',{playerId:p.id},handleAck)}; act.append(rm); }
       row.append(dot,info,act); els.lobbyPlayers.append(row);
     });
     els.gameLobbyOptions.replaceChildren();state.gamePlugins[room.gameKey]?.renderLobbyOptions?.({room,container:els.gameLobbyOptions,E,socket,handleAck});
@@ -512,19 +520,29 @@ const socket = window.io();
   function closeRules(){els.rulesModal.classList.add('hidden');els.rulesModal.setAttribute('aria-hidden','true')}
   function closeLeavePrompt(){els.leaveGameModal.classList.add('hidden');els.leaveGameModal.setAttribute('aria-hidden','true')}
   function requestLeaveRoom(){if(!state.room)return false;closeMobileGameMenu();if(getRoomFromPath()!==state.room.id)history.pushState({},'',`/room/${state.room.id}`);const active=state.room.status!=='lobby',name=state.room.gameMeta?.name||GAME_NAMES[state.room.gameKey]||'dit spel';els.leaveGameTitle.textContent=active?'Spel verlaten?':'Game verlaten?';els.leaveGamePromptText.textContent=active?`Weet je zeker dat je ${name} wilt verlaten? Je kunt een lopend spel later via de lobby hervatten.`:`Weet je zeker dat je de game van ${name} wilt verlaten?`;els.leaveGameModal.classList.remove('hidden');els.leaveGameModal.setAttribute('aria-hidden','false');requestAnimationFrame(()=>els.cancelLeaveGameButton.focus());return false}
-  function leaveRoom({confirmed=false}={}){
+  function leaveRoom({confirmed=false,removed=false}={}){
     if(state.room&&!confirmed)return requestLeaveRoom();
     closeLeavePrompt();
     state.roomStateBlocked=true;state.expectedRoomId=null;state.directRoomId=null;
+    closeRules();gameUi.resetRoom();els.gameResult.classList.add('hidden');
     if(state.activeGameBodyClass)document.body.classList.remove(state.activeGameBodyClass);state.activeGameBodyClass=null;state.room=null;state.previousRoom=null;state.selection=null;state.renderedRoomId=null;state.renderedGameRevision=-1;
     history.replaceState({},'', '/');showHome();
+    if(removed)return true;
     socket.emit('room:leave',{},()=>{state.roomStateBlocked=false;if(!els.homeView.classList.contains('hidden'))loadHomeOpenLobbies()});return true;
   }
   function requestRematch(button){
+    if(!socket.connected)return;
     if(button){button.disabled=true;button.textContent='Starten…'}
     socket.emit('room:rematch',{},(response)=>{
       if(!response?.ok){if(button){button.disabled=false;button.textContent='Rematch'}return handleAck(response)}
       state.selection=null;gameUi.resetRoom();state.renderedGameRevision=-1;
+    });
+  }
+  function requestReturnToLobby(button){
+    if(!socket.connected)return;
+    if(button)button.disabled=true;
+    socket.emit('room:returnToLobby',{},response=>{
+      if(!response?.ok){if(button)button.disabled=false;handleAck(response)}
     });
   }
   socket.on('connect',()=>{
@@ -537,6 +555,10 @@ const socket = window.io();
     else { const profile=getProfileFromPath(); if(profile) showProfile(profile); else showHome(); }
   });
   socket.on('room:state',(room)=>renderRoom(room));
+  socket.on('room:removed',({roomId})=>{
+    if(roomId!==state.expectedRoomId&&roomId!==state.room?.id)return;
+    leaveRoom({confirmed:true,removed:true});toast('De host heeft je uit de lobby verwijderd.');
+  });
   socket.on('session:replaced',()=>toast('Deze speler is in een andere tab opnieuw verbonden.'));
 
   els.gameGrid.addEventListener('click',(e)=>{const info=e.target.closest('[data-rules-game]');if(info){openRules(info.dataset.rulesGame);return}const b=e.target.closest('.game-launch');if(b)createRoom(b.dataset.game)});
@@ -632,7 +654,7 @@ const socket = window.io();
   if('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.13.2', {
+        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.13.3', {
           updateViaCache:'none'
         });
         await registration.update();
