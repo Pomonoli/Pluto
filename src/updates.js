@@ -185,6 +185,12 @@ const RELEASES = [
       'Tablet- en desktopweergaves zijn in Pluto en alle games compacter, evenwichtiger en beter gecentreerd.',
       'Presidenten verdeelt Jouw kaarten responsief over meerdere rijen zonder horizontale scroll.'
     ]
+  },
+  {
+    version:'1.13.2',
+    improvements:[
+      'Age of Civilization wacht voortaan op jouw keuze: de verborgen timeout van 40 seconden is verwijderd.'
+    ]
   }
 ];
 

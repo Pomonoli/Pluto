@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.13.1
+## Nieuw in versie 1.13.2
 
-Tests draaien standaard gericht op gewijzigde games, met algemene integratiechecks. Gedeelde wijzigingen activeren de volledige suite; die blijft ook handmatig beschikbaar.
+Age of Civilization wacht bij menselijke keuzes onbeperkt op de speler. De verborgen timeout van 40 seconden is verwijderd; NPC-acties en aanvalsgolven blijven automatisch verlopen.
 
 ## Nieuw in versie 1.13.0
 

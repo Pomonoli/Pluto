@@ -44,7 +44,9 @@ test('leiders kiezen: op volgorde, uniek, en spel start pas als iedereen gekozen
 
 test('NPC kiest zelfstandig een leider tijdens de leiderskeuzefase',()=>{
   const game=civilization.createGame(players(true));
-  assert.equal(civilization.tick(game,Date.now()),false); // waiting on human 'a'
+  const before=structuredClone(game);
+  assert.equal(civilization.tick(game,Date.now()+86400000),false); // still waiting on human 'a'
+  assert.deepEqual(game,before);
   civilization.handleAction(game,'a','pickLeader',{leaderKey:'cleopatra'});
   assert.equal(civilization.tick(game,Date.now()),true);
   assert.ok(game.players.b.leaderKey);
@@ -188,6 +190,105 @@ test('Age of Civilization NPC kiest zelfstandig een actie',()=>{
   pickLeaders(game);
   assert.equal(civilization.tick(game,Date.now()),true);
   assert.equal(game.players.b.acted,true);
+});
+
+test('human draft wacht onbeperkt zonder automatische acties of deadline',()=>{
+  const game=civilization.createGame(players());
+  pickLeaders(game);
+  const before=structuredClone(game);
+  const now=Date.now();
+  for(const elapsed of [40001,120000,86400000]){
+    assert.equal(civilization.tick(game,now+elapsed),false);
+    assert.deepEqual(game,before);
+  }
+  const view=civilization.serialize(game,'a',new Map([['a',false],['b',true]]));
+  assert.equal(view.deadline,null);
+  assert.equal(view.yourHand.length,game.players.a.hand.length);
+  assert.equal(view.players.find(p=>p.id==='a').acted,false);
+});
+
+for(const action of ['build','discard','upgrade']){
+  test(`een oude deadline overschrijden blokkeert de eigen human-actie ${action} niet`,()=>{
+    const game=civilization.createGame(players());
+    pickLeaders(game);
+    game.players.a.gold=100;
+    civilization.handleAction(game,'b','discard',{handIndex:0});
+    // Even an existing state with an expired legacy deadline must wait.
+    game.turnDeadline=1;
+    const before=structuredClone(game);
+    assert.equal(civilization.tick(game,Date.now()+86400000),false);
+    assert.deepEqual(game,before);
+    assert.equal(civilization.serialize(game,'a').deadline,null);
+
+    civilization.handleAction(game,'a',action,action==='upgrade'?{civic:'science'}:{handIndex:0});
+    assert.equal(game.phase,'draft');
+    assert.equal(game.turnInAge,2);
+    if(action==='build') assert.ok(game.players.a.grid.some(Boolean));
+    if(action==='discard') assert.equal(game.players.a.gold,103);
+    if(action==='upgrade') assert.equal(game.players.a.civic.science.upgradeCount,1);
+  });
+}
+
+for(const action of ['build','discard','upgrade']){
+  test(`NPC blijft via tick ${action} uitvoeren terwijl human wacht`,()=>{
+    const game=civilization.createGame(players(true));
+    pickLeaders(game);
+    const npc=game.players.b;
+    if(action==='discard') npc.gold=0;
+    if(action==='upgrade') { npc.hand=[]; npc.gold=100; }
+    const humanBefore=structuredClone(game.players.a);
+    const now=Date.now()+86400000;
+    assert.equal(civilization.tick(game,now),true);
+    assert.equal(npc.acted,true);
+    assert.deepEqual(game.players.a,humanBefore);
+    assert.equal(game.turnInAge,1);
+    if(action==='build') assert.ok(npc.grid.some(Boolean));
+    if(action==='discard') assert.equal(npc.gold,3);
+    if(action==='upgrade') assert.equal(Object.values(npc.civic).reduce((sum,c)=>sum+c.upgradeCount,0),1);
+    const afterNpc=structuredClone(game);
+    assert.equal(civilization.tick(game,now+86400000),false);
+    assert.deepEqual(game,afterNpc);
+    civilization.handleAction(game,'a','discard',{handIndex:0});
+    assert.equal(game.turnInAge,2);
+  });
+}
+
+test('laatste NPC-actie voltooit de beurt, maar neemt de volgende human-beurt niet over',()=>{
+  const game=civilization.createGame(players(true));
+  pickLeaders(game);
+  civilization.handleAction(game,'a','discard',{handIndex:0});
+  const now=Date.now()+86400000;
+  assert.equal(civilization.tick(game,now),true);
+  assert.equal(game.turnInAge,2);
+  assert.equal(game.players.a.acted,false);
+  const humanBefore=structuredClone(game.players.a);
+  assert.equal(civilization.tick(game,now+1),true);
+  assert.deepEqual(game.players.a,humanBefore);
+  const afterNpc=structuredClone(game);
+  assert.equal(civilization.tick(game,now+86400000),false);
+  assert.deepEqual(game,afterNpc);
+});
+
+test('wave-weergave gaat automatisch verder en wacht daarna opnieuw op human input',()=>{
+  const game=civilization.createGame(players());
+  pickLeaders(game);
+  for(let turn=0;turn<3;turn++){
+    for(const id of game.order) civilization.handleAction(game,id,'discard',{handIndex:0});
+  }
+  assert.equal(game.phase,'wave');
+  const until=game.waveShownUntil;
+  assert.equal(civilization.serialize(game,'a').deadline,until);
+  const before=structuredClone(game);
+  assert.equal(civilization.tick(game,until-1),false);
+  assert.deepEqual(game,before);
+  assert.equal(civilization.tick(game,until),true);
+  assert.equal(game.phase,'draft');
+  assert.equal(game.age,2);
+  assert.equal(game.turnInAge,1);
+  assert.equal(civilization.serialize(game,'a').deadline,null);
+  const nextDraft=structuredClone(game);
+  assert.equal(civilization.tick(game,until+86400000),false);
+  assert.deepEqual(game,nextDraft);
 });
 
 test('een ingestorte toren bepaalt ook het opgeslagen wedstrijdresultaat',()=>{

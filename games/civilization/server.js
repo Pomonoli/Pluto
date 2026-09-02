@@ -31,7 +31,6 @@
 const TOTAL_AGES = 7;
 const TURNS_PER_AGE = 3;
 const TOTAL_TURNS = TOTAL_AGES * TURNS_PER_AGE;
-const TURN_TIME_MS = 40000;  // soft deadline per turn for drafting/building
 const WAVE_DISPLAY_MS = 4000; // how long the wave-result screen stays up before auto-advancing
 const START_GOLD = 4;
 const START_HP = 100;
@@ -226,7 +225,6 @@ function createGame(roomPlayers) {
     players,
     order: roomPlayers.map((rp) => rp.id),
     log: [],
-    turnDeadline: Date.now() + TURN_TIME_MS,
     waveShownUntil: null,
     waveResult: null,
     winnerId: null,       // null = draw (only meaningful once phase === 'ended')
@@ -250,7 +248,6 @@ function assignLeader(player, key) {
 function beginAges(game) {
   game.phase = 'draft';
   dealHands(game);
-  game.turnDeadline = Date.now() + TURN_TIME_MS;
   game.log.push(`Age 1 begins: ${ERAS[0].name}.`);
 }
 
@@ -354,7 +351,6 @@ function completeTurn(game) {
     game.turnInAge += 1;
     aliveIds(game).forEach((id) => { game.players[id].acted = false; });
     dealHands(game);
-    game.turnDeadline = Date.now() + TURN_TIME_MS;
     game.log.push(`Age ${game.age}, beurt ${game.turnInAge}/${TURNS_PER_AGE} begint.`);
   }
 }
@@ -422,7 +418,6 @@ function advanceAfterWave(game) {
   dealHands(game);
   game.phase = 'draft';
   game.waveResult = null;
-  game.turnDeadline = Date.now() + TURN_TIME_MS;
   game.log.push(`Age ${game.age} begins: ${ERAS[game.age - 1].name}.`);
 }
 
@@ -510,22 +505,9 @@ function tick(game, now) {
   }
 
   if (game.phase === 'draft') {
+    // Human choices have no deadline; only NPCs may act from tick().
     const npc = aliveIds(game).map((id) => game.players[id]).find((player) => player.isNpc && !player.acted);
     if (npc) { playNpc(game, npc); if (aliveIds(game).every((id) => game.players[id].acted)) completeTurn(game); return true; }
-  }
-  if (game.phase === 'draft' && now >= game.turnDeadline) {
-    let changed = false;
-    aliveIds(game).forEach((id) => {
-      const p = game.players[id];
-      if (!p.acted) {
-        p.gold += discardGold(game.age);
-        p.acted = true;
-        changed = true;
-        game.log.push(`${p.name} was te laat en past automatisch.`);
-      }
-    });
-    if (aliveIds(game).every((id) => game.players[id].acted)) completeTurn(game);
-    return changed || true;
   }
 
   if (game.phase === 'wave' && game.waveShownUntil && now >= game.waveShownUntil) {
@@ -606,8 +588,7 @@ function serialize(game, requesterId, connected) {
     totalTurns: TOTAL_TURNS,
     eraName: ERAS[game.age - 1] ? ERAS[game.age - 1].name : '',
     phase: game.phase,
-    deadline: game.phase === 'draft' ? game.turnDeadline
-      : (game.phase === 'wave' ? game.waveShownUntil : null),
+    deadline: game.phase === 'wave' ? game.waveShownUntil : null,
     order: game.order,
     players,
     leaders: LEADERS.map((l) => ({ key: l.key, name: l.name, attribute: l.attribute, bonus: l.bonus, taken: takenKeys.has(l.key) })),

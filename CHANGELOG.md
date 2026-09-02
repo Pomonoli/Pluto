@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.13.2 — Age of Civilization zonder human-timeout
+
+- De verborgen deadline van 40 seconden voor draft/build-beurten is verwijderd. Menselijke spelers handelen uitsluitend zelf, ook na lang wachten.
+- NPC-keuzes blijven via `tick()` lopen; aanvalsgolven en het eindresultaat gaan automatisch verder wanneer geen spelerinput nodig is.
+- Gerichte regressietests bewaken wachtende humans, verouderde deadlines, expliciete acties na lang wachten, NPC-acties en fase-overgangen.
+
 ## v1.13.1 — Gericht testen
 
 - `npm test` en `npm run check` selecteren gewijzigde games plus algemene integratiechecks; gedeelde wijzigingen starten de volledige suite.
