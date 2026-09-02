@@ -281,6 +281,12 @@ const RELEASES = [
       'The Deep Bleu C: andere spelers zijn zichtbaar op de kaart als gekleurde vis met naamlabel, met een hengelicoontje boven wie aan het vissen is.',
       'The Deep Bleu C: de spelerslijst bovenaan toont voortaan iedereen in de wereld met hun geld en aantal ontdekte soorten.'
     ]
+  },
+  {
+    version:'1.15.1',
+    improvements:[
+      'CycClub: het gelijktijdige segment-systeem tijdens een rit is gerepareerd — de segmentvoortgang werd voorheen onterecht per speler bijgehouden in plaats van gedeeld voor de hele rit, waardoor de rit niet correct verder ging zodra iedereen bevestigd had.'
+    ]
   }
 ];
 

@@ -362,14 +362,15 @@ function resolveRiderSegment(rider,catalogRace,team,roll,multiplier){
 function startRacing(game){
   game.phase='racing';
   game.race.npcTimers={};
+  game.race.segmentIndex=0;
   game.race.progress={};
   for(const player of game.players){
     const riderIds=game.race.lineups[player.id]||[];
     const riders={};
     for(const riderId of riderIds) riders[riderId]={pr:0,segments:[],dnf:false};
     game.race.progress[player.id]={
-      segmentIndex:0, multiplier:baseMultiplierFor(player.team), bankStreak:0,
-      pendingRoll:null, riders, done:riderIds.length===0
+      multiplier:baseMultiplierFor(player.team), bankStreak:0,
+      pendingRoll:null, confirmed:false, riders
     };
   }
 }
@@ -383,10 +384,14 @@ function activeRiderIds(prog){
   return Object.keys(prog.riders).filter((riderId) => !prog.riders[riderId].dnf);
 }
 
+function playerAwaitsConfirmation(prog){
+  return activeRiderIds(prog).length>0&&!prog.confirmed;
+}
+
 function resolveSegmentFor(game,player,apply){
   const race=game.race;
   const prog=race.progress[player.id];
-  if(!prog||prog.done||!prog.pendingRoll)return;
+  if(!prog||prog.confirmed||!prog.pendingRoll)return;
   const catalogRace=RACE_BY_ID.get(race.raceId);
   const roll=prog.pendingRoll.roll;
   const multiplierUsed=apply?prog.multiplier:1;
@@ -395,29 +400,40 @@ function resolveSegmentFor(game,player,apply){
     const state=prog.riders[riderId];
     if(!rider||!state)continue;
     const segment=resolveRiderSegment(rider,catalogRace,player.team,roll,multiplierUsed);
-    state.segments.push({n:prog.segmentIndex+1, roll:segment.roll, total:segment.total, outcome:segment.outcome});
+    state.segments.push({n:race.segmentIndex+1, roll:segment.roll, total:segment.total, outcome:segment.outcome});
     if(segment.dnf)state.dnf=true;
     else state.pr+=segment.score;
   }
   prog.multiplier=apply?baseMultiplierFor(player.team):Math.round(prog.multiplier*1.125*1000)/1000;
   prog.bankStreak=apply?0:prog.bankStreak+1;
   prog.pendingRoll=null;
-  prog.segmentIndex+=1;
-  if(prog.segmentIndex>=SEGMENTS_PER_RACE||activeRiderIds(prog).length===0){
-    prog.done=true;
-    for(const riderId of Object.keys(prog.riders)){
-      if(prog.riders[riderId].dnf)continue;
-      const rider=player.team.riders.find((candidate) => candidate.id===riderId);
-      if(rider)rider.fatigue=clamp(rider.fatigue+Math.max(6,22-player.team.shop.nutrition*3),0,100);
-    }
-  }
+  prog.confirmed=true;
 }
 
-function maybeFinishRace(game){
+function maybeAdvanceSegment(game){
   if(game.phase!=='racing'||!game.race)return false;
-  const allDone=game.players.every((player) => game.race.progress[player.id]?.done);
-  if(!allDone)return false;
-  finalizeRace(game);
+  const race=game.race;
+  const stillWaiting=game.players.some((player) => playerAwaitsConfirmation(race.progress[player.id]||{riders:{},confirmed:true}));
+  if(stillWaiting)return false;
+  race.segmentIndex+=1;
+  const finished=race.segmentIndex>=SEGMENTS_PER_RACE||game.players.every((player) => activeRiderIds(race.progress[player.id]).length===0);
+  if(finished){
+    for(const player of game.players){
+      const prog=race.progress[player.id];
+      if(!prog)continue;
+      for(const riderId of Object.keys(prog.riders)){
+        if(prog.riders[riderId].dnf)continue;
+        const rider=player.team.riders.find((candidate) => candidate.id===riderId);
+        if(rider)rider.fatigue=clamp(rider.fatigue+Math.max(6,22-player.team.shop.nutrition*3),0,100);
+      }
+    }
+    finalizeRace(game);
+    return true;
+  }
+  for(const player of game.players){
+    const prog=race.progress[player.id];
+    if(prog)prog.confirmed=false;
+  }
   return true;
 }
 
@@ -621,7 +637,7 @@ function handleAction(game,playerId,action,payload={}){
   if(action==='rollSegment'){
     if(game.phase!=='racing'||!game.race)throw new Error('Er is geen actieve rit.');
     const prog=game.race.progress[playerId];
-    if(!prog||prog.done)throw new Error('Jouw rit is al afgerond.');
+    if(!prog||!playerAwaitsConfirmation(prog))throw new Error('Er valt voor jou niets te rollen in dit segment.');
     if(prog.pendingRoll)throw new Error('Verwerk eerst je vorige worp.');
     prog.pendingRoll={roll:randInt(1,20)};
     return;
@@ -630,10 +646,10 @@ function handleAction(game,playerId,action,payload={}){
   if(action==='resolveSegment'){
     if(game.phase!=='racing'||!game.race)throw new Error('Er is geen actieve rit.');
     const prog=game.race.progress[playerId];
-    if(!prog||prog.done)throw new Error('Jouw rit is al afgerond.');
+    if(!prog||!playerAwaitsConfirmation(prog))throw new Error('Er valt voor jou niets te bevestigen in dit segment.');
     if(!prog.pendingRoll)throw new Error('Rol eerst een dobbelsteen.');
     resolveSegmentFor(game,player,Boolean(payload.apply));
-    maybeFinishRace(game);
+    maybeAdvanceSegment(game);
     return;
   }
 
@@ -674,7 +690,7 @@ function tick(game,now=Date.now()){
     for(const player of game.players){
       if(!player.isNpc)continue;
       const prog=game.race.progress[player.id];
-      if(!prog||prog.done)continue;
+      if(!prog||!playerAwaitsConfirmation(prog))continue;
       if(!game.race.npcTimers[player.id])game.race.npcTimers[player.id]=now+NPC_DELAY;
       if(now<game.race.npcTimers[player.id])continue;
       if(!prog.pendingRoll)prog.pendingRoll={roll:randInt(1,20)};
@@ -682,7 +698,7 @@ function tick(game,now=Date.now()){
       game.race.npcTimers[player.id]=now+NPC_DELAY;
       changed=true;
     }
-    if(changed&&maybeFinishRace(game))changed=true;
+    if(maybeAdvanceSegment(game))changed=true;
     return changed;
   }
 
@@ -713,10 +729,12 @@ function serializeRace(game,requesterId,catalogRace){
     readyIds:Object.keys(game.race.lineups), myLineup:game.race.lineups[requesterId]??null
   };
   if(game.phase!=='racing'||!game.race.progress)return base;
+  base.segmentIndex=game.race.segmentIndex;
   const myProg=game.race.progress[requesterId];
   const requester=game.players.find((candidate) => candidate.id===requesterId);
   base.myProgress=myProg?{
-    segmentIndex:myProg.segmentIndex, multiplier:myProg.multiplier, bankStreak:myProg.bankStreak, done:myProg.done,
+    multiplier:myProg.multiplier, bankStreak:myProg.bankStreak,
+    awaitingConfirmation:playerAwaitsConfirmation(myProg),
     pendingRoll:myProg.pendingRoll?{roll:myProg.pendingRoll.roll}:null,
     riders:Object.fromEntries(Object.entries(myProg.riders).map(([riderId,state]) => {
       const rider=requester?.team.riders.find((candidate) => candidate.id===riderId);
@@ -727,7 +745,7 @@ function serializeRace(game,requesterId,catalogRace){
     const prog=game.race.progress[player.id];
     return {
       playerId:player.id, playerName:player.name, isNpc:player.isNpc,
-      segmentIndex:prog?prog.segmentIndex:0, done:prog?prog.done:true
+      awaitingConfirmation:prog?playerAwaitsConfirmation(prog):false
     };
   });
   return base;

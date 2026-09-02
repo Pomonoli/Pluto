@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.15.1 — CycClub: segment-synchronisatie hersteld
+
+- CycClub: het gelijktijdige segment-systeem (iedereen rijdt een segment en de rit gaat pas verder zodra alle spelers hun worp voor dat segment bevestigd hebben) werkte niet correct doordat de segmentvoortgang per speler bijgehouden werd in plaats van gedeeld voor de hele rit. Dit is nu gerepareerd.
+
 ## v1.15.0 — The Deep Bleu C: samen vissen en ruilen
 
 - The Deep Bleu C is nu speelbaar met 1 tot 4 spelers in dezelfde wereld — nodig vrienden uit via de gamecode om samen te verkennen en te vissen.

@@ -2,6 +2,10 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
+## Nieuw in versie 1.15.1
+
+CycClub: het gelijktijdige segment-systeem tijdens een rit (iedereen rijdt een segment, en de rit gaat pas verder zodra alle spelers hun worp voor dat segment bevestigd hebben) is gerepareerd — de segmentvoortgang werd voorheen onterecht per speler bijgehouden in plaats van gedeeld voor de hele rit.
+
 ## Nieuw in versie 1.15.0
 
 **The Deep Bleu C** is nu speelbaar met 1 tot 4 spelers in dezelfde wereld — nodig vrienden uit via de gamecode om samen te verkennen en te vissen. Andere spelers zijn zichtbaar op de kaart als gekleurde vis met naamlabel, en een nieuwe knop "Ruilen" laat je vis en geld ruilen met je medespelers: kies wat jij aanbiedt en wat je vraagt, en zij accepteren of weigeren het voorstel. De spelerslijst bovenaan toont voortaan iedereen in de wereld met hun geld en aantal ontdekte soorten.
