@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.16.0
+## Nieuw in versie 1.17.0
 
-CycClub: Tour de France, Giro d’Italia en Vuelta a España zijn nu volwaardige Grote Rondes van 21 ritten na elkaar, elk met de bestaande 8-segmenten dobbelstenenrit. Ze vervangen de losse Tour-, Giro- en Vuelta-ritten; de koerskalender toont voortaan eendagskoersen en de drie Grote Rondes apart. Elke rit levert een eigen ritzege en ritprijzengeld op, na elke rit zie je meteen de tussenstand van het eindklassement, een renner die valt of ziek wordt ligt voor de rest van de ronde eruit, en het eindklassement na de laatste rit bepaalt een groot bijkomend prijzengeld.
+Age of Civilization heeft meer variatie in gebouwen: Attack-, Defence- en Economy-kaarten hebben nu elk twee verschillende namen per tijdperk, en vanaf tijdperk 2 is er keuze uit twee Wonders — een gebalanceerd en een agressiever exemplaar. Eenmaal gebouwd blijft een tegel altijd zijn eigen variant volgen bij upgrades.
 
 ## Nieuw in versie 1.0.0
 

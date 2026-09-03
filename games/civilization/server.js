@@ -26,6 +26,14 @@
  *     instant you designate them — no multi-step upgrade path. Each civic
  *     building can be designated exactly once per game; once used, it is
  *     maxed and can never be designated again.
+ *
+ * Later addition: each flexible category (Attack/Defence/Economy) has TWO
+ * named variants per Age instead of one, doubling the draft pool for more
+ * variety. Wonders similarly come in two flavors from Age 2: the original
+ * balanced one, and an aggressive one (more Attack, less Defence and
+ * Income). A tile remembers which variant it was built from (`variantIndex`)
+ * so upgrading it always re-skins along that same track — its identity
+ * never changes once bought, only its level.
  */
 
 const TOTAL_AGES = 7;
@@ -54,14 +62,45 @@ const ERAS = [
   { name: 'Future to Futuristic', wonder: 'Dyson Sphere' }
 ];
 
-// One canonical name per category per Age. Building fresh and re-skinning on
-// upgrade both use this same track, so "Sharpened Spear" built in Age 1
-// becomes "Drone Swarm Offensive" by Age 7 purely through upgrades.
+// Two named variants per category per Age (more choice in the draft pool,
+// less predictable than a single option). Building fresh and re-skinning on
+// upgrade both use the SAME variant's track, so a tile keeps its identity
+// for life — "Sharpened Spear" built in Age 1 always becomes "Drone Swarm
+// Offensive" by Age 7, never drifts onto the other variant's name.
 const NAMES = {
-  attack: ['Sharpened Spear', 'Phalanx Legion', 'Musketeer Vanguard', 'Grand Army Corps', 'Armored Blitz Division', 'Stealth Strike Wing', 'Drone Swarm Offensive'],
-  defence: ['Stone Palisade', 'City Rampart', 'Castle Bastion', 'Great Wall Garrison', 'Trench Fortress', 'Cyber Defense Shield', 'Orbital Defense Platform'],
-  economy: ['Grain Store', 'Trade Galley', 'Banking House', 'Continental Bank', 'Factory Assembly Line', 'Stock Exchange Floor', 'Quantum Bank']
+  attack: [
+    ['Sharpened Spear', 'Bone-tipped Arrow'],
+    ['Phalanx Legion', 'Ballista Corps'],
+    ['Musketeer Vanguard', 'Cannon Battery'],
+    ['Grand Army Corps', 'Cavalry Brigade'],
+    ['Armored Blitz Division', 'Artillery Regiment'],
+    ['Stealth Strike Wing', 'Cruise Missile Battery'],
+    ['Drone Swarm Offensive', 'Railgun Platform']
+  ],
+  defence: [
+    ['Stone Palisade', 'Thorn Barricade'],
+    ['City Rampart', 'Hoplite Shield Wall'],
+    ['Castle Bastion', 'Moated Keep'],
+    ['Great Wall Garrison', 'Watchtower Network'],
+    ['Trench Fortress', 'Bunker Complex'],
+    ['Cyber Defense Shield', 'Anti-Air Battery'],
+    ['Orbital Defense Platform', 'Shield Generator Array']
+  ],
+  economy: [
+    ['Grain Store', 'Fishing Weir'],
+    ['Trade Galley', 'Silver Mine'],
+    ['Banking House', 'Silk Road Caravan'],
+    ['Continental Bank', 'Tea Trade Fleet'],
+    ['Factory Assembly Line', 'Oil Refinery'],
+    ['Stock Exchange Floor', 'Tech Startup Hub'],
+    ['Quantum Bank', 'Asteroid Mining Rig']
+  ]
 };
+
+// Second Wonder variant per Age, alongside ERAS[].wonder (variant 0, the
+// original balanced Wonder). Variant 1 is the aggressive option: more
+// Attack, less Defence and Income.
+const WONDER_NAMES_ALT = ['Colossus of War', 'Trojan Horse', "Excalibur's Forge", 'Forbidden Arsenal', 'Manhattan Project', 'Stealth Bomber Program', 'Death Star Array'];
 
 // Fixed civic buildings: one each, present from the start, never rebuilt.
 const CIVIC_NAMES = { science: 'Observatory', religion: 'Grand Temple', culture: 'Academy' };
@@ -89,14 +128,28 @@ const LEADERS = [
   { key: 'harald', name: 'King Harald Hardrada', attribute: 'Gehoornde helm', bonus: `Bij elke aanvalsgolf plunder je tot ${HARALD_RAID_GOLD} Goud van de speler die jij aanvalt.` }
 ];
 
-function makeCard(type, age, name) {
+// variantIndex distinguishes the two named options within a category/Age
+// (0 or 1) so a tile's re-skin-on-upgrade always pulls from the same track
+// it was originally built from. For Wonders, variantIndex also picks the
+// stat split: 0 = the original balanced Wonder, 1 = the aggressive one.
+function makeCard(type, age, name, variantIndex) {
+  variantIndex = variantIndex || 0;
   switch (type) {
-    case 'attack': return { type, name, cost: age + 1, attack: age + 3, defence: 0, income: 0 };
-    case 'defence': return { type, name, cost: age + 1, attack: 0, defence: age + 2, income: 0 };
-    case 'economy': return { type, name, cost: age, attack: 0, defence: 0, income: age + 1 };
-    case 'wonder': return { type, name, cost: age * 2, attack: age * 2, defence: age * 2 - 1, income: age };
+    case 'attack': return { type, name, variantIndex, cost: age + 1, attack: age + 3, defence: 0, income: 0 };
+    case 'defence': return { type, name, variantIndex, cost: age + 1, attack: 0, defence: age + 2, income: 0 };
+    case 'economy': return { type, name, variantIndex, cost: age, attack: 0, defence: 0, income: age + 1 };
+    case 'wonder': return variantIndex === 1
+      ? { type, name, variantIndex, cost: age * 2, attack: age * 2 + 3, defence: Math.max(1, age - 1), income: Math.max(1, age - 2) }
+      : { type, name, variantIndex, cost: age * 2, attack: age * 2, defence: age * 2 - 1, income: age };
     default: throw new Error('unknown card type: ' + type);
   }
+}
+
+// The re-skin name for a tile at its current level/Age, following whichever
+// variant track it was originally built from.
+function reskinName(type, age, variantIndex) {
+  if (type === 'wonder') return variantIndex === 1 ? WONDER_NAMES_ALT[age - 1] : ERAS[age - 1].wonder;
+  return NAMES[type][age - 1][variantIndex];
 }
 
 function cardDesc(c) {
@@ -149,13 +202,17 @@ function shuffle(arr) {
 function buildPool(age, player) {
   const pool = [];
   CATEGORIES.forEach((type) => {
-    const name = NAMES[type][age - 1];
-    if (player.built.has(name)) return;
-    const card = makeCard(type, age, name);
-    if (type === 'attack' && player.leaderKey === 'alexander') card.attack += 2;
-    pool.push(card);
+    NAMES[type][age - 1].forEach((name, variantIndex) => {
+      if (player.built.has(name)) return;
+      const card = makeCard(type, age, name, variantIndex);
+      if (type === 'attack' && player.leaderKey === 'alexander') card.attack += 2;
+      pool.push(card);
+    });
   });
-  if (age >= 2 && !player.wonderBuilt) pool.push(makeCard('wonder', age, ERAS[age - 1].wonder));
+  if (age >= 2 && !player.wonderBuilt) {
+    pool.push(makeCard('wonder', age, ERAS[age - 1].wonder, 0));
+    pool.push(makeCard('wonder', age, WONDER_NAMES_ALT[age - 1], 1));
+  }
   return pool;
 }
 
@@ -292,7 +349,7 @@ function handleAction(game, playerId, action, payload) {
     if (p.gold < card.cost) throw new Error('Je hebt niet genoeg goud.');
 
     p.gold -= card.cost;
-    p.grid[slot] = { type: card.type, name: card.name, level: 1, base: { attack: card.attack, defence: card.defence, income: card.income } };
+    p.grid[slot] = { type: card.type, name: card.name, level: 1, variantIndex: card.variantIndex, base: { attack: card.attack, defence: card.defence, income: card.income } };
     p.built.add(card.name);
     if (card.type === 'wonder') p.wonderBuilt = true;
     p.acted = true;
@@ -323,7 +380,7 @@ function handleAction(game, playerId, action, payload) {
 
       p.gold -= cost;
       tile.level += 1;
-      tile.name = tile.type === 'wonder' ? ERAS[game.age - 1].wonder : NAMES[tile.type][game.age - 1];
+      tile.name = reskinName(tile.type, game.age, tile.variantIndex);
       game.log.push(`${p.name} upgrade ${tile.name} (niveau ${tile.level}).`);
       p.acted = true;
     }
@@ -456,7 +513,7 @@ function playNpc(game, player) {
     const { card } = affordable[0];
     const slot = player.grid.findIndex((v) => v === null);
     player.gold -= card.cost;
-    player.grid[slot] = { type: card.type, name: card.name, level: 1, base: { attack: card.attack, defence: card.defence, income: card.income } };
+    player.grid[slot] = { type: card.type, name: card.name, level: 1, variantIndex: card.variantIndex, base: { attack: card.attack, defence: card.defence, income: card.income } };
     player.built.add(card.name);
     if (card.type === 'wonder') player.wonderBuilt = true;
     game.log.push(`${player.name} bouwt ${card.name}.`);
@@ -475,7 +532,7 @@ function playNpc(game, player) {
         const tile = choice.tile;
         player.gold -= flexibleUpgradeCost(game.age, tile.type, player);
         tile.level += 1;
-        tile.name = tile.type === 'wonder' ? ERAS[game.age - 1].wonder : NAMES[tile.type][game.age - 1];
+        tile.name = reskinName(tile.type, game.age, tile.variantIndex);
         game.log.push(`${player.name} upgrade ${tile.name}.`);
       } else {
         const civic = player.civic[choice.key];

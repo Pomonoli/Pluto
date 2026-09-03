@@ -109,9 +109,11 @@ test('vrije gebouwen kunnen pas het volgende tijdperk upgraden, en krijgen dan x
   const game=civilization.createGame(players());
   pickLeaders(game);
   const p=game.players.a;
-  const attackIdx=p.hand.findIndex((card)=>card.type==='attack');
-  const baseAttack=p.hand[attackIdx].attack;
-  civilization.handleAction(game,'a','build',{handIndex:attackIdx});
+  // Injected directly (rather than drawn) so the test doesn't depend on
+  // which of the two Attack variants a random hand happens to deal.
+  const baseAttack=4;
+  p.hand[0]={type:'attack',name:'Test Spear',variantIndex:0,cost:2,attack:baseAttack,defence:0,income:0};
+  civilization.handleAction(game,'a','build',{handIndex:0});
   const slot=p.grid.findIndex(Boolean);
 
   civilization.handleAction(game,'b','discard',{handIndex:0});
@@ -192,11 +194,39 @@ test('gebouwen zijn uniek: dezelfde kaart wordt niet opnieuw aangeboden in hetze
   const game=civilization.createGame(players());
   pickLeaders(game);
   const p=game.players.a;
-  p.hand[0]={type:'attack',name:'Sharpened Spear',cost:2,attack:4,defence:0,income:0};
+  p.hand[0]={type:'attack',name:'Sharpened Spear',variantIndex:0,cost:2,attack:4,defence:0,income:0};
   civilization.handleAction(game,'a','build',{handIndex:0});
   civilization.handleAction(game,'b','discard',{handIndex:0});
   assert.equal(game.turnInAge,2);
-  assert.equal(p.hand.some((card)=>card.type==='attack'),false);
+  // The sibling Attack variant ("Bone-tipped Arrow") can still legitimately
+  // appear — only this exact, already-built card is barred from the pool.
+  assert.equal(p.hand.some((card)=>card.name==='Sharpened Spear'),false);
+});
+
+test('elke categorie heeft twee varianten, en een gebouwde tegel blijft zijn eigen variant volgen bij upgraden',()=>{
+  const game=civilization.createGame(players());
+  pickLeaders(game);
+  const p=game.players.a;
+  p.hand[0]={type:'attack',name:'Bone-tipped Arrow',variantIndex:1,cost:2,attack:4,defence:0,income:0};
+  civilization.handleAction(game,'a','build',{handIndex:0});
+  const slot=p.grid.findIndex(Boolean);
+  assert.equal(p.grid[slot].variantIndex,1);
+  civilization.handleAction(game,'b','discard',{handIndex:0});
+
+  for(let round=0;round<2;round++){
+    civilization.handleAction(game,'a','discard',{handIndex:0});
+    civilization.handleAction(game,'b','discard',{handIndex:0});
+  }
+  assert.equal(game.phase,'wave');
+  civilization.tick(game,game.waveShownUntil+1);
+  assert.equal(game.age,2);
+
+  p.gold=999;
+  civilization.handleAction(game,'a','upgrade',{slot});
+  assert.equal(p.grid[slot].level,2);
+  // Age-2 name of variant 1 ("Ballista Corps"), never variant 0's
+  // ("Phalanx Legion") even though the tile is now built in a fresh Age.
+  assert.equal(p.grid[slot].name,'Ballista Corps');
 });
 
 test('Age of Civilization NPC kiest zelfstandig een actie',()=>{

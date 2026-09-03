@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.17.0 — Age of Civilization: meer gebouwvarianten en tweede Wonder
+
+- Attack-, Defence- en Economy-gebouwen hebben nu elk twee verschillende namen per tijdperk, voor meer variatie in de aangeboden kaarten. Welke variant je krijgt aangeboden is willekeurig, maar eenmaal gebouwd blijft een tegel altijd zijn eigen variant volgen bij elke latere upgrade — de identiteit van een gebouw verandert nooit.
+- Vanaf tijdperk 2 is er keuze uit twee Wonders: het originele gebalanceerde Wonder, en een nieuw agressief Wonder met meer Attack maar minder Defence en Inkomen. Ook een Wonder houdt zijn gekozen variant vast bij upgrades.
+- Nieuwe regressietest bewaakt dat een gebouwde tegel zijn eigen variant blijft volgen doorheen upgrades, ook als de andere variant van dezelfde categorie intussen wordt aangeboden.
+
 ## v1.16.0 — CycClub: volwaardige Grote Rondes van 21 ritten
 
 - Tour de France, Giro d’Italia en Vuelta a España zijn nu volwaardige Grote Rondes: je rijdt 21 ritten na elkaar, elk met de bestaande 8-segmenten dobbelstenenrit, tot de ronde is uitgereden.
