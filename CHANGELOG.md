@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.18.6 — Ragnarok
+
+- Nieuwe realtime game Ragnarok: verover een gedeelde hexkaart met je vikingclan, breid uit, upgrade pionnen, val rivalen aan en overleef het oordeel der goden.
+- Speel met 2 tot 6 spelers of NPC's; iedereen handelt gelijktijdig zonder beurten.
+
 ## v1.18.5 — Age of Civilization: totale Attack en Defence terug zichtbaar
 
 - Je totale Attack en Defence staan weer permanent bij je andere statistieken (Goud, Inkomen, Toren), in plaats van alleen zichtbaar tijdens de schadeberekening van een aanvalsgolf — belangrijk om te zien voor je een bouw- of upgradekeuze maakt.

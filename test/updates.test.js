@@ -22,7 +22,7 @@ test('current version has no unseen changes', () => {
 
 test('missed releases are grouped instead of shown as version history', () => {
   const changes=updates.changesSince('1.9.0');
-  assert.deepEqual(changes.games,['Kingdomino','Cascadia','Isle of Skye','The Deep Bleu C','CycClub']);
+  assert.deepEqual(changes.games,['Kingdomino','Cascadia','Isle of Skye','The Deep Bleu C','CycClub','Ragnarok']);
   assert.ok(changes.features.some((item) => item.includes('updatepopup')));
 });
 
@@ -34,9 +34,9 @@ test('first guest visit establishes a silent baseline', () => {
 
 test('guest with an older seen version gets only relevant grouped changes', () => {
   const payload=updates.payloadFor({since:'1.11.0'});
-  assert.deepEqual(payload.changes.games,['Isle of Skye','The Deep Bleu C','CycClub']);
-  assert.equal(payload.changes.features.length,29);
-  assert.equal(payload.changes.improvements.length,63);
+  assert.deepEqual(payload.changes.games,['Isle of Skye','The Deep Bleu C','CycClub','Ragnarok']);
+  assert.equal(payload.changes.features.length,30);
+  assert.equal(payload.changes.improvements.length,64);
   assert.ok(payload.changes.features.some((item)=>item.includes('Light theme')));
   assert.ok(payload.changes.features.some((item)=>item.includes('gameheader')));
   assert.ok(payload.changes.features.some((item)=>item.includes('72, 36 of 18 tegels')));
@@ -69,4 +69,6 @@ test('guest with an older seen version gets only relevant grouped changes', () =
   assert.ok(payload.changes.improvements.some((item)=>item.includes('echte voornaam')));
   assert.ok(payload.changes.improvements.some((item)=>item.includes('centraal symbool')));
   assert.ok(payload.changes.improvements.some((item)=>item.includes('vaste legenda')));
+  assert.ok(payload.changes.improvements.some((item)=>item.includes('totale Attack')));
+  assert.ok(payload.changes.features.some((item)=>item.includes('Ragnarok')));
 });

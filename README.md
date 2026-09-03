@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.18.5
+## Nieuw in versie 1.18.6
 
-Age of Civilization toont je totale Attack en Defence weer permanent bij je andere statistieken, in plaats van alleen tijdens de schadeberekening van een aanvalsgolf.
+**Ragnarok** is een nieuwe realtime game voor 2-6 spelers: verover een gedeelde hexkaart met je vikingclan, verzamel grondstoffen, breid uit, upgrade pionnen en overleef het oordeel der goden. Iedereen speelt gelijktijdig, zonder beurten.
 
 ## Nieuw in versie 1.18.0
 

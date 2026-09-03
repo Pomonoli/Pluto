@@ -340,6 +340,19 @@ const RELEASES = [
       'Isle of Skye-tegels zijn veel groter en tonen weide, berg en water als duidelijke gekleurde vakken met een centraal symbool voor wegen, whisky, schapen, vee en schepen.',
       'Isle of Skye toont een vaste legenda van alle terrein- en tegelsymbolen, en je kasteel is meteen herkenbaar op elk eiland.'
     ]
+  },
+  {
+    version:'1.18.5',
+    improvements:[
+      'Age of Civilization toont totale Attack en Defence weer permanent bij je andere statistieken.'
+    ]
+  },
+  {
+    version:'1.18.6',
+    games:['Ragnarok'],
+    features:[
+      'Ragnarok: verover in realtime een gedeelde hexkaart met je vikingclan, bouw je gebied uit en overleef het oordeel der goden.'
+    ]
   }
 ];
 
