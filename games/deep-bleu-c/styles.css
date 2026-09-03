@@ -32,6 +32,9 @@
 .dbc-boat-sail{fill:#f4ede0;stroke:#c9bfa8;stroke-width:.5}
 .dbc-fish-line{fill:none;stroke:#2b2320;stroke-width:1;stroke-linecap:round}
 .dbc-fish-hook{fill:none;stroke:#2b2320;stroke-width:1.2}
+.dbc-tool-handle{stroke:#7a5636;stroke-width:1.4;stroke-linecap:round}
+.dbc-tool-axe-head{fill:#aab2b8;stroke:#4d5459;stroke-width:.8;stroke-linejoin:round}
+.dbc-tool-pick-head{fill:none;stroke:#7d838a;stroke-width:2.6;stroke-linecap:round}
 .dbc-player-other{opacity:.95}
 .dbc-player-label{font-size:9px;font-weight:700;fill:#fff;paint-order:stroke;stroke:#0d1117;stroke-width:2.5px;pointer-events:none}
 .dbc-player-fishing{font-size:11px;pointer-events:none}
