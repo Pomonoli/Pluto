@@ -228,24 +228,51 @@ function facingLeftFor(id, entity) {
 
 const OTHER_PLAYER_COLORS = ['#ff9f43', '#4dd0e1', '#c77dff', '#ffe066'];
 
+// Werktuig in de voorste hand — enkel getekend zolang de bijhorende actie
+// bezig is: hengel bij vissen, bijl bij hakken, houweel bij delven. Anders
+// hangt die hand net als de andere gewoon leeg naast het lichaam.
+function appendTool(g, tool) {
+  if (tool === 'rod') {
+    g.append(svgEl('line', { x1: 12, y1: -3, x2: 22, y2: -13, class: 'dbc-tool-handle' }));
+    g.append(svgEl('path', { d: 'M 22 -13 Q 28 -5 26 6', class: 'dbc-fish-line' }));
+    g.append(svgEl('circle', { cx: 26, cy: 7, r: 1.6, class: 'dbc-fish-hook' }));
+  } else if (tool === 'axe') {
+    g.append(svgEl('line', { x1: 12, y1: -3, x2: 20, y2: -16, class: 'dbc-tool-handle' }));
+    g.append(svgEl('path', { d: 'M 20 -16 L 15 -21 Q 24 -23 27 -16 Q 24 -10 16 -12 Z', class: 'dbc-tool-axe-head' }));
+  } else if (tool === 'pickaxe') {
+    g.append(svgEl('line', { x1: 12, y1: -3, x2: 20, y2: -16, class: 'dbc-tool-handle' }));
+    g.append(svgEl('path', { d: 'M 10 -12 Q 20 -23 30 -12', class: 'dbc-tool-pick-head' }));
+  }
+}
+
 // Kleine 2D visser-avatar (chibi trainer met pet, geïnspireerd op klassieke
-// top-down RPG-personages) — hengel-arm en vislijn wijzen standaard naar
-// rechts/voren; facingLeftFor spiegelt de hele groep bij het naar links lopen.
-function appendAnglerFigure(g, { accent = 'var(--accent)', skin = '#f2c199', jeans = '#33456a', hair = '#3a2a1a' } = {}) {
+// top-down RPG-personages) — de voorste arm (en het werktuig erin) wijst
+// standaard naar rechts/voren; facingLeftFor spiegelt de hele groep bij het
+// naar links lopen.
+function appendAnglerFigure(g, { accent = 'var(--accent)', skin = '#f2c199', jeans = '#33456a', hair = '#3a2a1a', tool = null } = {}) {
   g.append(svgEl('ellipse', { cx: 0, cy: 10, rx: 9, ry: 3, class: 'dbc-angler-shadow' }));
   g.append(svgEl('rect', { x: -4.5, y: 1, width: 4, height: 9, rx: 2, fill: jeans }));
   g.append(svgEl('rect', { x: 0.5, y: 1, width: 4, height: 9, rx: 2, fill: jeans }));
   g.append(svgEl('path', { d: 'M -5 -6 Q -9 -3 -8 2', fill: 'none', stroke: skin, 'stroke-width': 3, 'stroke-linecap': 'round' }));
   g.append(svgEl('rect', { x: -6, y: -9, width: 12, height: 12, rx: 4, fill: accent, stroke: '#fff', 'stroke-width': 1.2 }));
-  g.append(svgEl('path', { d: 'M 5 -5 Q 10 -6 12 -3', fill: 'none', stroke: skin, 'stroke-width': 3, 'stroke-linecap': 'round' }));
-  g.append(svgEl('line', { x1: 12, y1: -3, x2: 22, y2: -13, stroke: '#7a5636', 'stroke-width': 1.4, 'stroke-linecap': 'round' }));
-  g.append(svgEl('path', { d: 'M 22 -13 Q 28 -5 26 6', class: 'dbc-fish-line' }));
-  g.append(svgEl('circle', { cx: 26, cy: 7, r: 1.6, class: 'dbc-fish-hook' }));
+  if (tool) {
+    g.append(svgEl('path', { d: 'M 5 -5 Q 10 -6 12 -3', fill: 'none', stroke: skin, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    appendTool(g, tool);
+  } else {
+    g.append(svgEl('path', { d: 'M 5 -6 Q 9 -3 8 2', fill: 'none', stroke: skin, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+  }
   g.append(svgEl('circle', { cx: 0, cy: -13, r: 5.5, fill: skin, stroke: '#0d1117', 'stroke-width': 0.6 }));
   g.append(svgEl('path', { d: 'M -5.5 -15 Q -6.5 -19 -2 -18', fill: hair }));
   g.append(svgEl('path', { d: 'M -6 -15 Q -6 -22 0 -22 Q 6 -22 6 -15 Z', fill: accent, stroke: '#fff', 'stroke-width': 0.8 }));
   g.append(svgEl('ellipse', { cx: 5, cy: -15, rx: 4, ry: 1.6, fill: accent, stroke: '#fff', 'stroke-width': 0.6 }));
   g.append(svgEl('circle', { cx: 0, cy: -18.5, r: 1.5, fill: '#fff' }));
+}
+
+function toolFor(fishingPhase, gatheringKind) {
+  if (fishingPhase) return 'rod';
+  if (gatheringKind === 'wood') return 'axe';
+  if (gatheringKind === 'rock') return 'pickaxe';
+  return null;
 }
 
 function renderOtherPlayerMarker(svg, p, camX, camY, colorIndex) {
@@ -257,7 +284,7 @@ function renderOtherPlayerMarker(svg, p, camX, camY, colorIndex) {
     class: 'dbc-player dbc-player-other',
     transform: `translate(${cx},${cy}) scale(${facingLeft ? -1 : 1},1)`
   });
-  appendAnglerFigure(g, { accent: color });
+  appendAnglerFigure(g, { accent: color, tool: toolFor(p.fishingPhase, p.gatheringKind) });
   svg.append(g);
   if (p.fishingPhase || p.gatheringKind) {
     const icon = svgEl('text', { x: cx, y: cy - 32, class: 'dbc-player-fishing', 'text-anchor': 'middle' });
@@ -433,7 +460,7 @@ function renderMapWrap(you, worldData, camX, camY, others = []) {
     class: 'dbc-player',
     transform: `translate(${px},${py}) scale(${facingLeft ? -1 : 1},1)`
   });
-  appendAnglerFigure(player);
+  appendAnglerFigure(player, { tool: toolFor(you.fishing, you.gathering?.kind) });
   svg.append(player);
 
   const wrapDiv = E('div', 'dbc-map-wrap');
