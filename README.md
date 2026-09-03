@@ -2,6 +2,10 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
+## Nieuw in versie 1.18.1
+
+**Isle of Skye** is veel speelbaarder gemaakt: tegels zijn een stuk groter en tonen weide, berg en water als duidelijke gekleurde vakken met een centraal medaillon-icoon voor wegen, whisky, schapen, vee en schepen. Je kasteel-starttegel valt meteen op met een gouden rand, en een vaste legenda boven het bord verklaart alle symbolen. De spelregels zijn ongewijzigd.
+
 ## Nieuw in versie 1.18.0
 
 **The Deep Bleu C** heeft er een hele laag bij: naast vissen kun je nu ook hout hakken en steen delven bij de nieuwe Haven, Houthakkerij en Steengroeve, met vijf sets van 10 soorten per grondstof. De hex-tegels zijn twee keer zo groot met kleur en reliëf, je speler is een 2D-chibi visser die z'n hengel/bijl/houweel alleen vasthoudt tijdens de actie, en een nieuwe vaardigheden-skilltree (Vissen, Houthakken, Delven, Verzamelen, Handelen) loopt van niveau 1 tot 99 op basis van je vangsten, ontdekkingen en ruilen.

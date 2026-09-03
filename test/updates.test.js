@@ -36,7 +36,7 @@ test('guest with an older seen version gets only relevant grouped changes', () =
   const payload=updates.payloadFor({since:'1.11.0'});
   assert.deepEqual(payload.changes.games,['Isle of Skye','The Deep Bleu C','CycClub']);
   assert.equal(payload.changes.features.length,29);
-  assert.equal(payload.changes.improvements.length,57);
+  assert.equal(payload.changes.improvements.length,59);
   assert.ok(payload.changes.features.some((item)=>item.includes('Light theme')));
   assert.ok(payload.changes.features.some((item)=>item.includes('gameheader')));
   assert.ok(payload.changes.features.some((item)=>item.includes('72, 36 of 18 tegels')));
@@ -66,4 +66,6 @@ test('guest with an older seen version gets only relevant grouped changes', () =
   assert.ok(payload.changes.improvements.some((item)=>item.includes('meteen zodra je ze aanduidt')));
   assert.ok(payload.changes.improvements.some((item)=>item.includes('Tijdperk × 10% van je huidige stat')));
   assert.ok(payload.changes.improvements.some((item)=>item.includes('gelijktijdige segment-systeem')));
+  assert.ok(payload.changes.improvements.some((item)=>item.includes('centraal symbool')));
+  assert.ok(payload.changes.improvements.some((item)=>item.includes('vaste legenda')));
 });

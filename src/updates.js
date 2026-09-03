@@ -314,6 +314,13 @@ const RELEASES = [
       'The Deep Bleu C: de hex-tegels zijn twee keer zo groot, met kleur en reliëf (bomen, rotsen, heuvels, water) in Pokémon-achtige stijl.',
       'The Deep Bleu C: je speler is nu een 2D-chibi visser die alleen een hengel, bijl of houweel in de hand heeft tijdens de bijhorende actie.'
     ]
+  },
+  {
+    version:'1.18.1',
+    improvements:[
+      'Isle of Skye-tegels zijn veel groter en tonen weide, berg en water als duidelijke gekleurde vakken met een centraal symbool voor wegen, whisky, schapen, vee en schepen.',
+      'Isle of Skye toont een vaste legenda van alle terrein- en tegelsymbolen, en je kasteel is meteen herkenbaar op elk eiland.'
+    ]
   }
 ];
 
