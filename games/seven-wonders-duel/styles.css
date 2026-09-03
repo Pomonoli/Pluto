@@ -47,3 +47,5 @@
   .duel-wonders,.duel-progress-row{grid-template-columns:1fr}
   .duel-tab{min-height:46px;flex-direction:column;gap:1px}
 }
+
+.duel-cost-details{margin-top:9px;padding:8px;border-radius:9px;background:rgba(0,0,0,.16);font-size:.74rem;line-height:1.45}.duel-cost-row{color:rgba(255,255,255,.9)}.duel-trade-row{color:#f0cf81}.duel-cost-total{margin-top:3px;font-weight:850}

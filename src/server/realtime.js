@@ -4,6 +4,7 @@ const crypto = require('node:crypto');
 const { getGame } = require('../games');
 const authDb = require('../db');
 const { resultsForGame } = require('../results');
+const { chooseNpcName } = require('../npc-names');
 
 const ROOM_TTL_MS = 2 * 60 * 60 * 1000;
 const HOST_GRACE_MS = 15 * 1000;
@@ -207,13 +208,6 @@ function createRealtime(io) {
     socket.data.token = null;
   }
 
-  function nextNpcName(room) {
-    const used = new Set(room.players.filter((p) => p.isNpc).map((p) => p.name));
-    let i = 1;
-    while (used.has(`NPC ${i}`)) i += 1;
-    return `NPC ${i}`;
-  }
-
   function ackError(ack, message) {
     if (typeof ack === 'function') ack({ ok: false, error: message });
   }
@@ -252,6 +246,7 @@ function createRealtime(io) {
         placement: result.placement,
         score: result.score,
         won: Boolean(result.won),
+        draw: Boolean(result.draw),
         outcome: result.outcome || null,
         durationMs: result.durationMs ?? null,
         moves: result.moves ?? null
@@ -432,6 +427,22 @@ function createRealtime(io) {
       if (typeof ack === 'function') ack({ ok: true });
     });
 
+    socket.on('room:leaveFinished', (_payload, ack) => {
+      const { room, player } = getPlayerForSocket(socket);
+      if (!room || !player) return ackError(ack, 'Je zit niet in een game.');
+      if (room.status !== 'finished') return ackError(ack, 'Het spel is nog niet afgelopen.');
+      if (player.token === room.hostToken) return ackError(ack, 'De host blijft in de game.');
+
+      socket.leave(room.id);
+      room.players = room.players.filter((participant) => participant.id !== player.id);
+      socket.data.roomId = null;
+      socket.data.token = null;
+
+      if (!room.players.some((participant) => !participant.isNpc)) rooms.delete(room.id);
+      else broadcastRoom(room);
+      if (typeof ack === 'function') ack({ ok: true });
+    });
+
     socket.on('room:close', (payload = {}, ack) => {
       const room=rooms.get(normalizeRoomCode(payload.roomId));
       if(!room)return ackError(ack,'Deze game bestaat niet meer.');
@@ -463,7 +474,7 @@ function createRealtime(io) {
       room.players.push({
         id: makeId(),
         token: null,
-        name: nextNpcName(room),
+        name: chooseNpcName(room.players),
         userId: null,
         isNpc: true,
         socketId: null,

@@ -1327,7 +1327,7 @@ body.game-active .game-panel{
   #leaderboardContent .stats-table th{font-size:0;letter-spacing:0}#leaderboardContent .stats-table th::after{content:attr(data-short);font-size:8px}
   #leaderboardContent .stats-table th:first-child,#leaderboardContent .stats-table td:first-child{width:25px}
   #leaderboardContent .stats-table th:nth-child(2),#leaderboardContent .stats-table td:nth-child(2){width:auto;text-align:left}
-  #leaderboardContent .stats-table th:nth-child(n+3),#leaderboardContent .stats-table td:nth-child(n+3){width:48px;text-align:right}
+  #leaderboardContent .stats-table th:nth-child(n+3),#leaderboardContent .stats-table td:nth-child(n+3){width:38px;text-align:right}
   #leaderboardContent .profile-link{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
 
   .account-modal{max-height:calc(100dvh - max(20px,env(safe-area-inset-top)) - max(20px,env(safe-area-inset-bottom)))}

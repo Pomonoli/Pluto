@@ -45,6 +45,7 @@ db.exec(`
     placement INTEGER,
     score REAL,
     won INTEGER NOT NULL DEFAULT 0,
+    drawn INTEGER NOT NULL DEFAULT 0,
     outcome TEXT,
     duration_ms INTEGER,
     moves INTEGER
@@ -89,6 +90,10 @@ if (!db.prepare("PRAGMA table_info(users)").all().some((column) => column.name =
 }
 if (!db.prepare("PRAGMA table_info(users)").all().some((column) => column.name === 'game_sort')) {
   db.exec("ALTER TABLE users ADD COLUMN game_sort TEXT NOT NULL DEFAULT 'alphabetical'");
+}
+if (!db.prepare("PRAGMA table_info(match_players)").all().some((column) => column.name === 'drawn')) {
+  // Existing match rows remain valid and start with zero draws.
+  db.exec('ALTER TABLE match_players ADD COLUMN drawn INTEGER NOT NULL DEFAULT 0');
 }
 
 function applyDataMigrations() {
@@ -288,8 +293,8 @@ function recordMatch({ gameKey, roomId, startedAt, endedAt = Date.now(), players
     const matchId = Number(matchResult.lastInsertRowid);
     const insertPlayer = db.prepare(`
       INSERT INTO match_players(
-        match_id,user_id,display_name,placement,score,won,outcome,duration_ms,moves
-      ) VALUES(?,?,?,?,?,?,?,?,?)
+        match_id,user_id,display_name,placement,score,won,drawn,outcome,duration_ms,moves
+      ) VALUES(?,?,?,?,?,?,?,?,?,?)
     `);
 
     for (const p of players) {
@@ -300,6 +305,7 @@ function recordMatch({ gameKey, roomId, startedAt, endedAt = Date.now(), players
         p.placement ?? null,
         p.score ?? null,
         p.won ? 1 : 0,
+        p.draw ? 1 : 0,
         p.outcome || null,
         p.durationMs ?? null,
         p.moves ?? null
@@ -318,7 +324,7 @@ function leaderboard(gameKey = null, limit = 100) {
   const safeLimit = Math.max(1, Math.min(100, Number(limit) || 100));
   if (gameKey === 'blackjack') {
     return db.prepare(`
-      SELECT username, blackjack_chips AS chips
+      SELECT username, blackjack_chips AS chips, 0 AS draws
       FROM users
       ORDER BY blackjack_chips DESC, username COLLATE NOCASE ASC
       LIMIT ${safeLimit}
@@ -336,12 +342,13 @@ function leaderboard(gameKey = null, limit = 100) {
         u.username,
         COALESCE(s.games,0) AS games,
         COALESCE(s.wins,0) AS wins,
+        COALESCE(s.draws,0) AS draws,
         CASE WHEN COALESCE(s.games,0) = 0 THEN 0 ELSE ROUND(100.0 * s.wins / s.games,1) END AS winRate,
         s.bestSolitaireMs,
         s.bestSolitaireMoves
       FROM users u
       LEFT JOIN (
-        SELECT mp.user_id,COUNT(*) AS games,COALESCE(SUM(mp.won),0) AS wins,
+        SELECT mp.user_id,COUNT(*) AS games,COALESCE(SUM(mp.won),0) AS wins,COALESCE(SUM(mp.drawn),0) AS draws,
           MIN(CASE WHEN mp.won = 1 THEN mp.duration_ms END) AS bestSolitaireMs,
           MIN(CASE WHEN mp.won = 1 THEN mp.moves END) AS bestSolitaireMoves
         FROM match_players mp
@@ -365,6 +372,7 @@ function leaderboard(gameKey = null, limit = 100) {
       u.username,
       COUNT(*) AS games,
       SUM(mp.won) AS wins,
+      COALESCE(SUM(mp.drawn),0) AS draws,
       ROUND(100.0 * SUM(mp.won) / COUNT(*), 1) AS winRate,
       MIN(CASE WHEN m.game_key = 'solitaire' AND mp.won = 1 THEN mp.duration_ms END) AS bestSolitaireMs,
       MIN(CASE WHEN m.game_key = 'solitaire' AND mp.won = 1 THEN mp.moves END) AS bestSolitaireMoves
@@ -431,7 +439,7 @@ function getProfile(usernameValue) {
   if (!user) return null;
 
   const totals = db.prepare(`
-    SELECT COUNT(*) AS games, COALESCE(SUM(won),0) AS wins
+    SELECT COUNT(*) AS games, COALESCE(SUM(won),0) AS wins, COALESCE(SUM(drawn),0) AS draws
     FROM match_players
     WHERE user_id = ?
   `).get(user.id);
@@ -441,6 +449,7 @@ function getProfile(usernameValue) {
       m.game_key AS gameKey,
       COUNT(*) AS games,
       COALESCE(SUM(mp.won),0) AS wins,
+      COALESCE(SUM(mp.drawn),0) AS draws,
       ROUND(100.0 * SUM(mp.won) / COUNT(*), 1) AS winRate,
       MIN(CASE WHEN m.game_key = 'solitaire' AND mp.won = 1 THEN mp.duration_ms END) AS bestTimeMs,
       MIN(CASE WHEN m.game_key = 'solitaire' AND mp.won = 1 THEN mp.moves END) AS bestMoves
@@ -477,6 +486,7 @@ function getProfile(usernameValue) {
     totals: {
       games,
       wins,
+      draws:Number(totals.draws || 0),
       winRate: games ? Math.round((wins / games) * 1000) / 10 : 0
     },
     perGame,
@@ -486,13 +496,13 @@ function getProfile(usernameValue) {
 
 function getOwnStats(userId) {
   const totals = db.prepare(`
-    SELECT COUNT(*) AS games, COALESCE(SUM(won),0) AS wins
+    SELECT COUNT(*) AS games, COALESCE(SUM(won),0) AS wins, COALESCE(SUM(drawn),0) AS draws
     FROM match_players
     WHERE user_id = ?
   `).get(userId);
   const games = Number(totals.games || 0);
   const wins = Number(totals.wins || 0);
-  return { games, wins, winRate: games ? Math.round((wins / games) * 1000) / 10 : 0 };
+  return { games, wins, draws:Number(totals.draws || 0), winRate: games ? Math.round((wins / games) * 1000) / 10 : 0 };
 }
 
 function getBlackjackChips(userId) {
@@ -565,6 +575,7 @@ function deepBleuCLeaderboard(limit = 100) {
     }
     return {
       username: row.username,
+      draws: 0,
       cash: Math.round(Number(state?.cash || 0)),
       discovered: Array.isArray(state?.discovered) ? state.discovered.length : 0,
       heaviestKg: Math.round(Number(state?.heaviestKg || 0) * 10) / 10
@@ -591,6 +602,7 @@ function cycclubLeaderboard(limit = 100) {
       const career = state?.career || {};
       return {
         username: row.username,
+        draws: 0,
         netWorth: Math.round(netWorth),
         victories: Number(career.victories || 0),
         podiums: Number(career.podiums || 0),

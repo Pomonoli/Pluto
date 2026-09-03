@@ -36,14 +36,14 @@
 /* ---- top player strip ---- */
 .civ-top-strip { display: flex; align-items: center; gap: 3px; overflow-x: auto; padding-bottom: 2px; }
 .civ-player-chip {
-  flex: none; min-width: 72px; background: var(--civ-bg-panel); border: 1px solid var(--civ-bg-panel-2);
+  flex: 0 0 92px; width:92px; box-sizing:border-box; background: var(--civ-bg-panel); border: 1px solid var(--civ-bg-panel-2);
   border-radius: 8px; padding: 4px 6px; display: flex; flex-direction: column; gap: 2px;
 }
 .civ-player-chip.you { border-color: var(--civ-accent); border-width: 2px; }
 .civ-player-chip.dead { opacity: 0.5; }
 .civ-player-chip.picking { border-color: var(--civ-good); box-shadow: 0 0 6px color-mix(in srgb, var(--civ-good) 50%, transparent); }
 .civ-chip-head { display: flex; flex-direction: column; line-height: 1.2; }
-.civ-chip-name { font-size: 0.68rem; font-weight: 700; white-space: nowrap; }
+.civ-chip-name { min-width:0;overflow:hidden;text-overflow:ellipsis;display:block;border:0;padding:0;background:transparent;color:inherit;font:inherit;font-size:0.68rem;font-weight:700;white-space:nowrap;text-align:left;cursor:pointer; }
 .civ-chip-leader { font-size: 0.58rem; color: var(--civ-text-dim); white-space: nowrap; }
 .civ-chip-hp-track { height: 5px; background: var(--civ-bg-panel-2); border-radius: 3px; overflow: hidden; }
 .civ-chip-hp-fill { height: 100%; background: var(--civ-good); }
@@ -114,6 +114,7 @@ button.civ-tile.filled:disabled .civ-tile-upgrade { color: var(--civ-text-dim); 
   background: color-mix(in srgb, var(--tile-accent, var(--civ-accent)) 18%, var(--civ-bg-panel));
 }
 .civ-card.wonder { border-color: #8B5CF6; }
+.civ-card.unaffordable,.civ-tile.unaffordable { opacity:.62; filter:saturate(.7); }
 .civ-card-icon { font-size: 1.3rem; }
 .civ-card-name { font-size: 0.6rem; line-height: 1.15; min-height: 2em; }
 .civ-card-perk { font-size: 0.52rem; color: var(--tile-accent, var(--civ-accent)); font-weight: 600; }
@@ -203,6 +204,9 @@ button.civ-tile.filled:disabled .civ-tile-upgrade { color: var(--civ-text-dim); 
 @media(min-height:720px){
   .civ-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
   .civ-grid .civ-tile{min-height:clamp(66px,9.5vh,86px)}
+}
+@media(max-width:760px){
+  .civ-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 .civ-leader-card {
   background: var(--civ-bg-panel); border: 1.5px solid var(--civ-bg-panel-2); border-radius: 12px;

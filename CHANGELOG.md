@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.18.2 — Multiplayer-resultaten en gelijke spelen
+
+- Niet-hosts krijgen na elk multiplayerresultaat de acties Rematch (in de game blijven) en Verlaten (de game direct verlaten). De bestaande hostacties blijven ongewijzigd, ook op resultaten met een eigen scoreweergave.
+- Leaderboards tonen nu gelijkspelen. Bestaande opgeslagen resultaten krijgen automatisch 0 gelijkspelen.
+
+## v1.18.1 — NPC-voornamen
+
+- NPC's krijgen bij het toevoegen aan een lobby een willekeurige echte voornaam uit een gedeelde Belgische, Nederlandse en internationale namenpool. Die naam blijft behouden gedurende de lobby en het spel.
+
 ## v1.18.0 — The Deep Bleu C: haven, hakken/delven en een vaardigheden-skilltree
 
 - De hex-tegels zijn twee keer zo groot, met kleur, reliëf en Pokémon-achtige natuurdecoraties (bomen, rotsen, heuvels, water).

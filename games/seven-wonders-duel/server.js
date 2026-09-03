@@ -479,7 +479,7 @@ function publicCard(game, requester, card, canAct) {
   const copy = {...clone(card)};
   delete copy.coveredBy;
   const info = canAct && base.available ? costInfo(game, requester, card) : null;
-  return {...base, ...copy, cost:copy.cost || {}, costCoins:info?.coins ?? null, affordable:info?.affordable ?? false};
+  return {...base, ...copy, cost:copy.cost || {}, costCoins:info?.coins ?? null, trade:info ? {baseCoins:info.baseCoins,tradeCoins:info.tradeCoins,purchases:info.purchases} : null, affordable:info?.affordable ?? false};
 }
 function serialize(game, requesterId, connected) {
   const requester = game.players.find((p) => p.id === requesterId);
@@ -493,7 +493,10 @@ function serialize(game, requesterId, connected) {
       id:player.id,name:player.name,isNpc:player.isNpc,seat:player.seat,coins:player.coins,score:game.gameOver?player.score:null,
       production:production(player), sciences:scienceCounts(player), distinctScience:distinctScience(player),
       built:player.built.map((card) => ({name:card.name,color:card.color,vp:card.vp||0,shields:card.shields||0,science:card.science||null,produces:card.produces||null})),
-      wonders:player.wonders.map((wonder,index) => ({...clone(wonder),index,costCoins:canAct&&player.id===requesterId&&!wonder.built?costInfo(game, player, wonder).coins:null,affordable:canAct&&player.id===requesterId&&!wonder.built?costInfo(game, player, wonder).affordable:false})),
+      wonders:player.wonders.map((wonder,index) => {
+        const info=canAct&&player.id===requesterId&&!wonder.built?costInfo(game, player, wonder):null;
+        return {...clone(wonder),index,costCoins:info?.coins??null,trade:info?{baseCoins:info.baseCoins,tradeCoins:info.tradeCoins,purchases:info.purchases}:null,affordable:info?.affordable??false};
+      }),
       progress:player.progress.map((token) => ({id:token.id,name:token.name,text:token.text})),
       connected:player.isNpc || Boolean(connected?.get?.(player.id))
     })),

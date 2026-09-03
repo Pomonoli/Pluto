@@ -51,7 +51,7 @@
 .dbc-action-btn{background:var(--panel2,rgba(255,255,255,.04));border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-weight:600;cursor:pointer;color:var(--text);text-align:left}
 .dbc-action-btn:hover{border-color:var(--accent)}
 
-.dbc-detail-screen{display:flex;flex-direction:column;gap:12px}
+.dbc-detail-screen{display:flex;flex:1;min-height:0;flex-direction:column;gap:12px;overflow-y:auto;overscroll-behavior:contain}
 .dbc-back-button{align-self:flex-start}
 
 @media(max-width:640px){

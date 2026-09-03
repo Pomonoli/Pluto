@@ -1,6 +1,22 @@
 export function createGameUi(ctx) {
-  const { state, els, E, action, profileButton, sound, socket, handleAck, cardNode, valueLabel, requestRematch, requestReturnToLobby } = ctx;
+  const { state, els, E, action, profileButton, sound, socket, handleAck, cardNode, valueLabel, requestRematch, requestReturnToLobby, requestLeaveFinishedRoom } = ctx;
   const pluginRenderers=new Map();
+
+function dismissResult(){els.gameResult.classList.add('hidden');els.gameResult.setAttribute('aria-hidden','true')}
+function resultActions(room){
+  const actions=E('div','result-modal-actions');
+  if(room.isHost){
+    const rematch=E('button','primary','Rematch');rematch.onclick=()=>requestRematch(rematch);
+    const lobby=E('button','secondary','Naar lobby');lobby.onclick=()=>requestReturnToLobby(lobby);
+    const close=E('button','secondary','Sluiten');close.onclick=dismissResult;
+    actions.append(rematch,lobby,close);
+  }else{
+    const rematch=E('button','primary','Rematch');rematch.onclick=dismissResult;
+    const leave=E('button','danger-button','Verlaten');leave.onclick=()=>requestLeaveFinishedRoom(leave);
+    actions.append(rematch,leave);
+  }
+  return actions;
+}
 
 function resultPresentation(room,game){
   const plugin=pluginRenderers.get(game.kind);if(plugin?.presentResult){const result=plugin.presentResult({room,game});if(result)return result}
@@ -24,15 +40,14 @@ function renderGame(room) {
     els.gameResult.classList.add('result-pop');const presentation=resultPresentation(room,game),resultCard=E('div','result-modal-card');
     resultCard.append(E('span','eyebrow','SPEL AFGELOPEN'),E('h2','result-modal-title',presentation.title),E('p','result-modal-copy',presentation.copy));
     const details=plugin?.renderResultDetails?.({room,game,E});if(details){resultCard.classList.add('has-details');resultCard.append(details)}
-    const actions=E('div','result-modal-actions');if(room.isHost){const rematch=E('button','primary','Rematch');rematch.onclick=()=>requestRematch(rematch);const lobby=E('button','secondary','Naar lobby');lobby.onclick=()=>requestReturnToLobby(lobby);actions.append(rematch,lobby)}
-    const close=E('button','secondary','Sluiten');close.onclick=()=>{els.gameResult.classList.add('hidden');els.gameResult.setAttribute('aria-hidden','true')};actions.append(close);resultCard.append(actions);els.gameResult.append(resultCard);els.gameResult.setAttribute('aria-hidden','false');
+    resultCard.append(resultActions(room));els.gameResult.append(resultCard);els.gameResult.setAttribute('aria-hidden','false');
   }
   if(!plugin?.render){els.gameStage.append(pluginError(game.kind,'Renderer wordt geladen…'));return}
   try{if(plugin.playerStrip)els.gameStage.append(renderGamePlayerStrip(room,game));plugin.render(pluginApi(room,game))}
   catch(error){console.error(`Renderer van ${game.kind} faalde:`,error);els.gameStage.replaceChildren(pluginError(game.kind,'Deze game kon niet worden weergegeven.'))}
 }
 
-function pluginApi(room,game){return {room,game,state,els,E,action,profileButton,sound,socket,handleAck,cardNode,valueLabel,titlebar,logBox,renderGame,renderCardOpponents,renderDiscardStack,scoreList}}
+function pluginApi(room,game){return {room,game,state,els,E,action,profileButton,sound,socket,handleAck,cardNode,valueLabel,titlebar,logBox,renderGame,renderCardOpponents,renderDiscardStack,scoreList,resultActions:()=>resultActions(room)}}
 function pluginError(key,message){const box=E('div','plugin-error');box.append(E('strong','',`Game “${key}” kon niet laden.`),E('p','',message));return box}
 
 function gameMetric(game,p) {

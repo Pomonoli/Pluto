@@ -34,7 +34,10 @@ function renderCivilization({game,state,els,E,action,titlebar,logBox,sound}) {
     if(!you.acted&&game.yourHand.length)root.append(renderDraft(E,action,sound,game,you,openModal));
     else if(!you.acted)root.append(E('div','civ-waiting','Geen kaarten of upgrades meer beschikbaar.'));
     else root.append(E('div','civ-waiting','Wachten op andere spelers…'));
-  } else if(game.phase==='wave') root.append(renderWave(E,game));
+  } else if(game.phase==='wave') {
+    root.append(renderWave(E,game));
+    if(!game.hasAcknowledgedWave)showCombatModal(E,root,game,you,action,sound);
+  }
   else root.append(renderGameOver(E,game,you));
 
   els.gameStage.append(titlebar('Age of Civilization',status),root,logBox(game.log||[]));
@@ -76,7 +79,11 @@ function renderTopStrip(E,game){
   game.players.forEach((player)=>{
     const chip=E('div',`civ-player-chip${player.isYou?' you':''}${player.alive===false?' dead':''}${player.id===game.pickerId?' picking':''}`);
     const head=E('div','civ-chip-head');
-    head.append(E('span','civ-chip-name',`${player.isYou?'Jij':player.name}`));
+    const name=E('button','civ-chip-name',`${player.isYou?'Jij':player.name}`);
+    name.type='button';
+    name.title=player.isYou?'Jouw spelerdetails':`${player.name} bekijken`;
+    name.onclick=()=>showCivModal(E,strip.parentElement||strip,{eyebrow:'Speler',title:player.isYou?'Jij':player.name,body:`Held: ${player.leaderName||'Nog niet gekozen'} · Heldenkracht: ${player.leaderKey?heroPower(player.leaderKey):'Nog niet gekozen'}`,health:player.hp,confirmLabel:'Sluiten'});
+    head.append(name);
     if(player.leaderName)head.append(E('span','civ-chip-leader',`${LEADER_ATTRIBUTES[player.leaderKey]||''} ${player.leaderName}`));
     chip.append(head);
     if(player.hp!==undefined){
@@ -101,7 +108,7 @@ function renderEraBanner(E,game){const wrap=E('div','civ-era-banner');wrap.appen
 function renderStats(E,player){
   const wrap=E('div','civ-stats-row civ-you');
   const boxes=E('div','civ-stat-boxes');
-  for(const [label,value] of [['Goud',player.gold],['Attack',player.attack],['Defence',player.defence],['Inkomen',`+${player.income}`]])boxes.append(statBox(E,label,value));
+  for(const [label,value] of [['Goud',player.gold],['Inkomen',`+${player.income}`]])boxes.append(statBox(E,label,value));
   const hp=statBox(E,'Toren',`${player.hp}/100`),track=E('div','civ-hp-track'),fill=E('div','civ-hp-fill');fill.style.width=`${Math.max(0,player.hp)}%`;track.append(fill);hp.append(track);boxes.append(hp);wrap.append(boxes);return wrap;
 }
 function statBox(E,label,value){const box=E('div','civ-stat-box');box.append(E('div','civ-stat-label',label),E('div','civ-stat-value',String(value)));return box;}
@@ -120,16 +127,15 @@ function renderCivicRow(E,action,sound,game,you,openModal){
     if(canAct&&!civic.used){
       const afford=you.gold>=civic.upgradeCost;
       node.append(E('div','civ-tile-upgrade event',`Ontketen (${civic.upgradeCost}g)`));
-      node.disabled=!afford;
+      if(!afford)node.classList.add('unaffordable');
       node.onclick=()=>{
-        const current=you[civic.statKey];
-        const delta=Math.round(current*civic.eventBonusPct/100);
         openModal({
           eyebrow:'Vast gebouw',
           title:`${bt.icon} ${civic.name}`,
-          body:`Aanduiden geeft meteen een eenmalige, permanente bonus: +${civic.eventBonusPct}% van je huidige ${civic.statLabel} (${current} → ${current+delta}). Dit kan maar 1x per spel.`,
+          body:'Aanduiden ontketent meteen een eenmalige, permanente gebeurtenis. Dit kan maar 1x per spel.',
           cost:civic.upgradeCost,
           confirmLabel:'Ontketen',
+          confirmDisabled:!afford,
           onConfirm:()=>{sound('score');action('upgrade',{civic:key})}
         });
       };
@@ -154,13 +160,14 @@ function renderYourGrid(E,action,sound,game,you,openModal){
     if(canAct&&!tile.maxed){
       const afford=you.gold>=tile.upgradeCost;
       node.append(E('div','civ-tile-upgrade',`Upgrade (${tile.upgradeCost}g)`));
-      node.disabled=!afford;
+      if(!afford)node.classList.add('unaffordable');
       node.onclick=()=>openModal({
         eyebrow:'Jouw stad',
         title:`${bt.icon} ${tile.name}`,
         body:upgradeDeltaText(tile),
         cost:tile.upgradeCost,
         confirmLabel:'Upgrade',
+        confirmDisabled:!afford,
         onConfirm:()=>{sound('score');action('upgrade',{slot})}
       });
     } else node.disabled=true;
@@ -171,31 +178,24 @@ function renderYourGrid(E,action,sound,game,you,openModal){
 }
 
 function tilePerkText(t){
-  const parts=[];
-  if(t.attack)parts.push(`+${t.attack} ATK`);
-  if(t.defence)parts.push(`+${t.defence} DEF`);
-  if(t.income)parts.push(`+${t.income}g`);
-  return parts.join(' · ');
+  return t.type==='wonder'?'Wonderbonus':'Bouwbonus';
 }
 
 function upgradeDeltaText(tile){
-  const parts=[];
-  if(tile.nextAttack!==tile.attack)parts.push(`ATK +${tile.nextAttack-tile.attack}`);
-  if(tile.nextDefence!==tile.defence)parts.push(`DEF +${tile.nextDefence-tile.defence}`);
-  if(tile.nextIncome!==tile.income)parts.push(`Inkomen +${tile.nextIncome-tile.income}`);
-  return parts.length?parts.join(' · '):'Geen zichtbare statverhoging door afronding.';
+  return `Verbetert dit gebouw naar niveau ${tile.level+1}.`;
 }
 
-function showCivModal(E,root,{eyebrow,title,body,cost=null,confirmLabel='',onConfirm=null,secondaryLabel='',onSecondary=null}){
+function showCivModal(E,root,{eyebrow,title,body,health=null,cost=null,confirmLabel='',confirmDisabled=false,onConfirm=null,secondaryLabel='',onSecondary=null,required=false}){
   root.querySelector('.civ-modal-backdrop')?.remove();
   const backdrop=E('div','civ-modal-backdrop'),modal=E('div','civ-modal'),actions=E('div','civ-detail-actions civ-modal-actions');
   const close=()=>backdrop.remove();
-  backdrop.onclick=(event)=>{if(event.target===backdrop)close()};
+  if(!required)backdrop.onclick=(event)=>{if(event.target===backdrop)close()};
   modal.append(E('div','civ-modal-eyebrow',eyebrow),E('div','civ-detail-name',title),E('div','civ-detail-desc',body));
+  if(health!==null){const tower=E('div','civ-modal-tower',`Toren ${health}/100`),track=E('div','civ-hp-track'),fill=E('div','civ-hp-fill');fill.style.width=`${Math.max(0,health)}%`;track.append(fill);tower.append(track);modal.append(tower)}
   if(cost!==null)modal.append(E('div','civ-modal-cost',`Kost ${cost} goud`));
   if(onSecondary){const secondary=E('button','civ-btn civ-btn-ghost civ-modal-secondary',secondaryLabel);secondary.onclick=()=>{close();onSecondary()};actions.append(secondary)}
-  if(onConfirm){const confirm=E('button','civ-btn civ-btn-primary civ-modal-confirm',confirmLabel);confirm.onclick=()=>{close();onConfirm()};actions.append(confirm)}
-  const back=E('button','civ-btn civ-btn-ghost civ-modal-back','Terug');back.onclick=close;actions.append(back);
+  if(onConfirm||confirmDisabled){const confirm=E('button','civ-btn civ-btn-primary civ-modal-confirm',confirmLabel);confirm.disabled=confirmDisabled;confirm.onclick=()=>{close();onConfirm()};actions.append(confirm)}
+  if(!required){const back=E('button','civ-btn civ-btn-ghost civ-modal-back','Terug');back.onclick=close;actions.append(back)}
   modal.append(actions);backdrop.append(modal);root.append(backdrop);
 }
 
@@ -214,6 +214,7 @@ function renderDraft(E,action,sound,game,you,openModal){
     const bt=buildingTheme(game.age,card.type);
     const node=E('button',`civ-card${card.type==='wonder'?' wonder':''}`);node.type='button';node.dataset.index=String(card.idx);
     node.style.setProperty('--tile-accent',bt.color);
+    if(card.cost>you.gold)node.classList.add('unaffordable');
     node.append(E('div','civ-card-icon',bt.icon),E('div','civ-card-name',card.name),E('div','civ-card-perk',tilePerkText(card)),E('div','civ-card-cost',`Kost ${card.cost}g`));
     node.onclick=()=>showDetail(card);hand.append(node)
   }
@@ -223,19 +224,7 @@ function renderDraft(E,action,sound,game,you,openModal){
 
 function renderWave(E,game){
   const wrap=E('div','civ-wave');
-  wrap.append(E('div','civ-wave-title',`Tijdperk ${game.waveResult.age} — Aanvalsgolf`));
-  const list=E('div','civ-wave-list');
-  game.players.forEach((player)=>{
-    const result=game.waveResult.results[player.id];
-    if(!result)return;
-    const attacker=game.players.find((p)=>p.id===result.attackerId);
-    const row=E('div',`civ-wave-row${player.isYou?' you':''}`);
-    row.append(E('div','civ-wave-name',`${player.isYou?'Jij':player.name}`));
-    row.append(E('div','civ-wave-numbers',`Attack ${result.attack} · Defence ${result.defence} ← ${attacker?attacker.name:'?'} (${result.incoming})`));
-    row.append(E('div',`civ-wave-result ${result.damage?'hit':'ok'}`,result.damage?`-${result.damage} HP`:'Afgeslagen'));
-    list.append(row);
-  });
-  wrap.append(list);
+  wrap.append(E('div','civ-wave-title',`Tijdperk ${game.waveResult.age} — Aanvalsgolf`),E('div','civ-waiting','Bekijk de schadeberekening en kies Doorgaan.'));
   return wrap;
 }
 
@@ -245,12 +234,37 @@ function renderGameOver(E,game,you){
   const ranked=[...game.players].sort((a,b)=>(b.hp-a.hp)||(b.gold-a.gold));
   for(const player of ranked){
     const row=E('div',`civ-final-row${game.winnerId===player.id?' winner':''}`),info=E('div');
-    info.append(E('div','civ-fname',`${player.isYou?'Jij · ':''}${player.name}${player.leaderName?` · ${player.leaderName}`:''}`),E('div','civ-breakdown',`Goud ${player.gold} · Attack ${player.attack} · Defence ${player.defence}`));
+    info.append(E('div','civ-fname',`${player.isYou?'Jij · ':''}${player.name}${player.leaderName?` · ${player.leaderName}`:''}`),E('div','civ-breakdown',`Goud ${player.gold}`));
     row.append(info,E('div','civ-fscore',`${player.hp}/100`));
     table.append(row);
   }
   wrap.append(table);
   return wrap;
+}
+
+function heroPower(key){
+  return {
+    cleopatra:'Gouden start en gratis aanduidingen.',
+    alexander:'Versterkt strijdgebouwen.',
+    einstein:'Versterkt het Observatorium.',
+    gandhi:'Beperkt inkomende schade.',
+    bismarck:'Maakt upgrades goedkoper.',
+    lincoln:'Herstelt een zwaar beschadigde toren.',
+    achilles:'Sterker offensief, maar kwetsbaarder.',
+    harald:'Plundert goud bij een aanval.'
+  }[key]||'';
+}
+
+function showCombatModal(E,root,game,you,action,sound){
+  const result=game.waveResult.results[you.id];
+  const attacker=game.players.find((player)=>player.id===result.attackerId);
+  showCivModal(E,root,{
+    eyebrow:'Schadeberekening',
+    title:`${attacker?.name||'Tegenstander'} valt jouw toren aan`,
+    body:`ATK ${result.incoming} − DEF ${result.defence} = ${result.damage} schade.`,
+    confirmLabel:'Doorgaan',required:true,
+    onConfirm:()=>{sound('score');action('continueWave',{})}
+  });
 }
 
 export function metric({game,player}){const score=Number(game.finalScores?.[player.id]??player.gold??0);return{text:`${score}g`,score};}

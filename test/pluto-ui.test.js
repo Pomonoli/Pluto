@@ -128,9 +128,9 @@ test('sound button is icon-only en app knop heet App',()=>{
   assert.match(app,/Geluid aanzetten/);
 });
 
-test('leaderboard toont wins voor games',()=>{
+test('leaderboard toont wins en draws voor games',()=>{
   const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
-  assert.match(app,/\['#','Speler','Wins','Games','Winrate'\]/);
+  assert.match(app,/\['#','Speler','Wins','Draw','Games','Winrate'\]/);
   assert.match(app,/String\(row\.wins\).*String\(row\.games\).*row\.winRate/s);
 });
 

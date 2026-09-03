@@ -27,6 +27,7 @@ test('a tied Hofslag result does not count as a win', () => {
   }, 1000);
   assert.equal(result[0].won, false);
   assert.equal(result[1].won, false);
+  assert.ok(result.every(x=>x.draw));
 });
 
 
@@ -60,6 +61,7 @@ test('Minigolf gelijk hoogste punten geeft geen leaderboard-win', () => {
   }, 1000);
   assert.equal(result[0].won, false);
   assert.equal(result[1].won, false);
+  assert.ok(result.every(x=>x.draw));
 });
 
 test('Carcassonne hoogste unieke score wint', () => {

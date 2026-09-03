@@ -1,5 +1,5 @@
-import { createGameUi } from './js/game-ui.js?v=1.18.0';
-import { createScreenWakeLock } from './js/screen-wake-lock.js?v=1.18.0';
+import { createGameUi } from './js/game-ui.js?v=1.18.2';
+import { createScreenWakeLock } from './js/screen-wake-lock.js?v=1.18.2';
 const socket = window.io();
 const screenWakeLock = createScreenWakeLock({ navigator, document, window });
   const $ = (id) => document.getElementById(id);
@@ -320,7 +320,7 @@ const screenWakeLock = createScreenWakeLock({ navigator, document, window });
     return b;
   }
   const gameUi = createGameUi({
-    state, els, E, action, profileButton, sound, socket, handleAck, cardNode, valueLabel, requestRematch, requestReturnToLobby
+    state, els, E, action, profileButton, sound, socket, handleAck, cardNode, valueLabel, requestRematch, requestReturnToLobby, requestLeaveFinishedRoom
   });
   function handlePluginRoute(){return Object.values(state.gamePlugins).some(plugin=>plugin.handleRoute?.({path:location.pathname,state,setRoute,toast})===true)}
   function createRoom(gameKey) {
@@ -379,15 +379,15 @@ const screenWakeLock = createScreenWakeLock({ navigator, document, window });
     els.leaderboardContent.replaceChildren();
     if (!rows.length) { els.leaderboardContent.append(E('p','muted','Nog geen resultaten.')); return; }
     const table=E('table','stats-table');
-    const plugin=state.gamePlugins[gameKey],columns=plugin?.leaderboardColumns||['#','Speler','Wins','Games','Winrate'];
-    const shortLabels={'Speler':'Speler','Wins':'W','Games':'G','Winrate':'%','Chips':'Chips','Beste':'Beste'};
+    const plugin=state.gamePlugins[gameKey],columns=plugin?.leaderboardColumns||['#','Speler','Wins','Draw','Games','Winrate'];
+    const shortLabels={'Speler':'Speler','Wins':'W','Draw':'½','Games':'G','Winrate':'%','Chips':'Chips','Beste':'Beste','Netto waarde':'NW','Zeges':'Z','Prijzengeld':'€'};
     const head=E('tr');columns.forEach(x=>{const th=E('th','',x);th.dataset.short=shortLabels[x]||x;head.append(th)});
     table.append(head);
     rows.forEach((row,index)=>{
       const tr=E('tr');
       tr.append(E('td','',String(index+1)));
       const td=E('td'); const link=E('button','profile-link',row.username); link.type='button'; link.onclick=()=>{setRoute(`/profile/${encodeURIComponent(row.username)}`);showProfile(row.username)};td.append(link);tr.append(td);
-      const cells=plugin?.renderLeaderboardCells?.({row,E})||[E('td','',String(row.wins)),E('td','',String(row.games)),E('td','',`${row.winRate||0}%`)];tr.append(...cells);
+      const cells=plugin?.renderLeaderboardCells?.({row,E})||[E('td','',String(row.wins)),E('td','',String(row.draws||0)),E('td','',String(row.games)),E('td','',`${row.winRate||0}%`)];tr.append(...cells);
       table.append(tr);
     });
     els.leaderboardContent.append(table);
@@ -545,6 +545,14 @@ const screenWakeLock = createScreenWakeLock({ navigator, document, window });
       if(!response?.ok){if(button)button.disabled=false;handleAck(response)}
     });
   }
+  function requestLeaveFinishedRoom(button){
+    if(!socket.connected)return;
+    if(button){button.disabled=true;button.textContent='Verlaten…'}
+    socket.emit('room:leaveFinished',{},(response)=>{
+      if(!response?.ok){if(button){button.disabled=false;button.textContent='Verlaten'}return handleAck(response)}
+      leaveRoom({confirmed:true,removed:true});
+    });
+  }
   socket.on('connect',()=>{
     const target=getRoomFromPath();
     if(target){state.expectedRoomId=target;state.roomStateBlocked=false;}
@@ -654,7 +662,7 @@ const screenWakeLock = createScreenWakeLock({ navigator, document, window });
   if('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.18.0', {
+        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.18.2', {
           updateViaCache:'none'
         });
         await registration.update();

@@ -314,6 +314,19 @@ const RELEASES = [
       'The Deep Bleu C: de hex-tegels zijn twee keer zo groot, met kleur en reliëf (bomen, rotsen, heuvels, water) in Pokémon-achtige stijl.',
       'The Deep Bleu C: je speler is nu een 2D-chibi visser die alleen een hengel, bijl of houweel in de hand heeft tijdens de bijhorende actie.'
     ]
+  },
+  {
+    version:'1.18.1',
+    improvements:[
+      'NPC\'s krijgen voortaan een willekeurige echte voornaam die gedurende de lobby en het spel behouden blijft.'
+    ]
+  },
+  {
+    version:'1.18.2',
+    improvements:[
+      'Niet-hosts kunnen na een multiplayerresultaat kiezen om in de game te blijven voor een rematch, of die meteen te verlaten.',
+      'Leaderboards tonen voortaan ook het aantal gelijkspelen, zonder extra breedte op mobiel.'
+    ]
   }
 ];
 

@@ -39,7 +39,6 @@
 const TOTAL_AGES = 7;
 const TURNS_PER_AGE = 3;
 const TOTAL_TURNS = TOTAL_AGES * TURNS_PER_AGE;
-const WAVE_DISPLAY_MS = 4000; // how long the wave-result screen stays up before auto-advancing
 const START_GOLD = 4;
 const START_HP = 100;
 const GRID_SIZE = 6;
@@ -153,11 +152,8 @@ function reskinName(type, age, variantIndex) {
 }
 
 function cardDesc(c) {
-  if (c.type === 'attack') return `+${c.attack} Attack.`;
-  if (c.type === 'defence') return `+${c.defence} Defence.`;
-  if (c.type === 'economy') return `+${c.income} Goud per beurt.`;
-  if (c.type === 'wonder') return `Wonder: +${c.attack} Attack, +${c.defence} Defence, +${c.income} Goud per beurt. Eenmalig.`;
-  return '';
+  if (c.type === 'wonder') return 'Eenmalige wonderbonus voor je stad.';
+  return 'Een bouwbonus voor je stad.';
 }
 
 // Effective stat for a flexible tile: each upgrade level multiplies the
@@ -293,7 +289,7 @@ function createGame(roomPlayers) {
     players,
     order: roomPlayers.map((rp) => rp.id),
     log: [],
-    waveShownUntil: null,
+    waveAcknowledged: new Set(),
     waveResult: null,
     winnerId: null,       // null = draw (only meaningful once phase === 'ended')
     endedSuddenDeath: false,
@@ -318,6 +314,14 @@ function beginAges(game) {
 /* ---------------- actions ---------------- */
 
 function handleAction(game, playerId, action, payload) {
+  if (game.phase === 'wave') {
+    const p = game.players[playerId];
+    if (action !== 'continueWave' || !p || p.isNpc) throw new Error('Wacht op de aanvalsgolf.');
+    game.waveAcknowledged.add(playerId);
+    if (humanWavePlayers(game).every((id) => game.waveAcknowledged.has(id))) advanceAfterWave(game);
+    return;
+  }
+
   if (game.phase === 'picking') {
     if (action !== 'pickLeader') throw new Error('Kies eerst een leider.');
     const expectedId = game.order[game.pickIndex];
@@ -451,7 +455,15 @@ function resolveWave(game) {
   game.phase = 'wave';
   game.log.push(`Age ${game.age} aanval verwerkt.`);
 
-  const stillAlive = ids.filter((id) => game.players[id].hp > 0);
+  game.waveAcknowledged = new Set();
+}
+
+function humanWavePlayers(game) {
+  return game.order.filter((id) => !game.players[id].isNpc);
+}
+
+function advanceAfterWave(game) {
+  const stillAlive = aliveIds(game);
   if (stillAlive.length <= 1) {
     game.phase = 'ended';
     game.gameOver = true;
@@ -459,12 +471,8 @@ function resolveWave(game) {
     game.winnerId = stillAlive.length === 1 ? stillAlive[0] : null;
     finalizeScores(game);
     setResultText(game);
-  } else {
-    game.waveShownUntil = Date.now() + WAVE_DISPLAY_MS;
+    return;
   }
-}
-
-function advanceAfterWave(game) {
   if (game.age >= TOTAL_AGES) {
     game.phase = 'ended';
     game.gameOver = true;
@@ -489,6 +497,7 @@ function advanceAfterWave(game) {
   dealHands(game);
   game.phase = 'draft';
   game.waveResult = null;
+  game.waveAcknowledged = new Set();
   game.log.push(`Age ${game.age} begins: ${ERAS[game.age - 1].name}.`);
 }
 
@@ -577,7 +586,9 @@ function tick(game, now) {
     if (npc) { playNpc(game, npc); if (aliveIds(game).every((id) => game.players[id].acted)) completeTurn(game); return true; }
   }
 
-  if (game.phase === 'wave' && game.waveShownUntil && now >= game.waveShownUntil) {
+  // A wave with only NPCs needs no human confirmation.  Never let tick()
+  // skip a combat result that a human still has to acknowledge.
+  if (game.phase === 'wave' && humanWavePlayers(game).length === 0) {
     advanceAfterWave(game);
     return true;
   }
@@ -658,7 +669,7 @@ function serialize(game, requesterId, connected) {
     totalTurns: TOTAL_TURNS,
     eraName: ERAS[game.age - 1] ? ERAS[game.age - 1].name : '',
     phase: game.phase,
-    deadline: game.phase === 'wave' ? game.waveShownUntil : null,
+    deadline: null,
     order: game.order,
     players,
     leaders: LEADERS.map((l) => ({ key: l.key, name: l.name, attribute: l.attribute, bonus: l.bonus, taken: takenKeys.has(l.key) })),
@@ -669,6 +680,7 @@ function serialize(game, requesterId, connected) {
       : [],
     waveResult: game.waveResult,
     phaseIsWave: game.phase === 'wave',
+    hasAcknowledgedWave: game.waveAcknowledged.has(requesterId),
     winnerId: game.winnerId,
     endedSuddenDeath: game.endedSuddenDeath,
     finalScores: game.finalScores,

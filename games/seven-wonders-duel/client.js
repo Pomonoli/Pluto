@@ -9,12 +9,27 @@ function sumResources(production){
 function scienceLine(sciences){
   return Object.entries(sciences||{}).filter(([,count])=>count>0).map(([key,count])=>`${SCIENCE_ICONS[key]||key}${count>1?`×${count}`:''}`).join(' ')||'geen';
 }
-function cardCostText(card){
-  if(card.costCoins!=null)return card.costCoins===0?'Gratis':`${card.costCoins} munt${card.costCoins===1?'':'en'}`;
+function constructionCostText(card){
   const parts=[];
   if(card.cost?.coins)parts.push(`${card.cost.coins} munt${card.cost.coins===1?'':'en'}`);
   Object.entries(card.cost?.resources||{}).forEach(([resource,count])=>parts.push(`${RESOURCE_ICONS[resource]||resource}${count}`));
   return parts.join(' ')||'Gratis';
+}
+function paymentText(card){
+  if(card.costCoins!=null)return card.costCoins===0?'Gratis':`${card.costCoins} munt${card.costCoins===1?'':'en'}`;
+  return constructionCostText(card);
+}
+function tradeText(trade){
+  const purchases=Object.entries(trade?.purchases||{});
+  if(!purchases.length)return 'Geen grondstoffen inkopen';
+  return purchases.map(([resource,purchase])=>`${RESOURCE_ICONS[resource]||resource}${purchase.count} × ${purchase.unitPrice}`).join(' · ');
+}
+function costDetails(E,item,coins){
+  const detail=E('div','duel-cost-details');
+  detail.append(E('div','duel-cost-row',`Bouwkosten: ${constructionCostText(item)}`));
+  if(item.trade)detail.append(E('div','duel-cost-row duel-trade-row',`Directe handel: ${tradeText(item.trade)}${item.trade.tradeCoins?` = ${item.trade.tradeCoins} munten`:''}`));
+  if(item.costCoins!=null)detail.append(E('div','duel-cost-total',`Te betalen: ${paymentText(item)} · jij hebt ${coins} munten`));
+  return detail;
 }
 function cardEffectText(card){
   const parts=[];
@@ -73,7 +88,7 @@ function renderDuel({room,game,state,els,E,action,titlebar}){
     node.style.gridColumn=`${card.col} / span 2`;
     node.disabled=!(game.canAct&&card.available&&!game.pendingProgressFor);
     if(card.revealed){
-      node.append(E('span','duel-card-type',COLOR_LABELS[card.color]||''),E('strong','duel-card-name',card.name),E('span','duel-card-cost',cardCostText(card)),E('small','duel-card-effect',cardEffectText(card)));
+      node.append(E('span','duel-card-type',COLOR_LABELS[card.color]||''),E('strong','duel-card-name',card.name),E('span','duel-card-cost',constructionCostText(card)),E('small','duel-card-effect',cardEffectText(card)));
       if(node.disabled&&card.available)node.title='Beschikbaar zodra jij aan de beurt bent.';
     }else{
       node.append(E('span','duel-card-back-mark','VII'),E('small','duel-card-back-age',`Leeftijd ${game.age}`));
@@ -144,11 +159,11 @@ function openCardChoice({E,boardWrap,game,card,me,action}){
   boardWrap.querySelector('.duel-choice')?.remove();
   const choice=E('div',`duel-choice color-${card.color}`);
   const head=E('div','duel-choice-head');
-  head.append(E('div','',`${card.name} · ${cardCostText(card)}`),E('small','',cardEffectText(card)));
+  head.append(E('div','',card.name),E('small','',`Effect na bouw: ${cardEffectText(card)}`));
   const close=E('button','duel-choice-close','×');close.type='button';close.onclick=()=>choice.remove();head.append(close);
-  choice.append(head);
+  choice.append(head,costDetails(E,card,me?.coins??0));
   const actions=E('div','duel-choice-actions');
-  const build=E('button','primary duel-action',card.affordable?`Bouw (${cardCostText(card)})`:`Niet betaalbaar (${cardCostText(card)})`);
+  const build=E('button','primary duel-action',card.affordable?`Bouw (${paymentText(card)})`:`Niet betaalbaar (${paymentText(card)})`);
   build.type='button';build.disabled=!card.affordable;build.onclick=()=>action('build',{cardId:card.id});
   const discard=E('button','secondary duel-action',`Afleggen (+${game.discardCoins} munten)`);
   discard.type='button';discard.onclick=()=>action('discard',{cardId:card.id});
@@ -162,7 +177,7 @@ function openCardChoice({E,boardWrap,game,card,me,action}){
     wonders.forEach(wonder=>{
       const button=E('button',`duel-wonder-choice ${wonder.affordable?'':'disabled'}`);
       button.type='button';button.disabled=!wonder.affordable;
-      button.append(E('strong','',wonder.name),E('span','',wonder.costCoins===0?'Gratis':`${wonder.costCoins} munten`),E('small','',wonderEffectText(wonder)));
+      button.append(E('strong','',wonder.name),E('span','',constructionCostText(wonder)),E('small','',`${wonderEffectText(wonder)} · ${paymentText(wonder)}`));
       button.onclick=()=>action('wonder',{cardId:card.id,wonderIndex:wonder.index});
       grid.append(button);
     });
@@ -178,7 +193,7 @@ function wondersPanel(E,me,game){
   const grid=E('div','duel-wonders');
   (me?.wonders||[]).forEach(wonder=>{
     const card=E('div',`duel-wonder ${wonder.built?'built':''}`);
-    card.append(E('strong','',wonder.name),E('span','',wonder.built?'Gebouwd':cardCostText(wonder)),E('small','',wonderEffectText(wonder)));
+    card.append(E('strong','',wonder.name),E('span','',wonder.built?'Gebouwd':constructionCostText(wonder)),E('small','',wonderEffectText(wonder)));
     grid.append(card);
   });
   panel.append(grid);

@@ -3,8 +3,8 @@ function bind(api){({state,els,E,action,profileButton,sound,socket,handleAck,car
 export function render(api){bind(api);renderSolitaire(api.room,api.game)}
 export const playerStrip=true;
 export const roomOptions={};
-export const leaderboardColumns=['#','Speler','Wins','Beste'];
-export function renderLeaderboardCells({row,E}){return [E('td','',String(row.wins)),E('td','',row.bestSolitaireMoves?`${row.bestSolitaireMoves} zetten`:'—')]}
+export const leaderboardColumns=['#','Speler','Wins','Draw','Beste'];
+export function renderLeaderboardCells({row,E}){return [E('td','',String(row.wins)),E('td','',String(row.draws||0)),E('td','',row.bestSolitaireMoves?`${row.bestSolitaireMoves} zetten`:'—')]}
 export function profileExtra({stat,formatDuration}){return stat.bestTimeMs?`Beste: ${formatDuration(stat.bestTimeMs)} · ${stat.bestMoves} zetten`:'—'}
 
 function renderSolitaire(room,game) {
