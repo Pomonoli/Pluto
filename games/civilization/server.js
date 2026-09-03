@@ -48,6 +48,12 @@ const EVENT_STEP_COST_MULTIPLIER = 2;
 const GANDHI_DAMAGE_CAP = 25;
 const HARALD_RAID_GOLD = 3;
 
+function normalizeRoomOptions(options = {}) {
+  return { mode: options.mode === 'deathmatch' ? 'deathmatch' : 'classic' };
+}
+
+function contentAge(age) { return Math.min(age, TOTAL_AGES); }
+
 const CATEGORIES = ['attack', 'defence', 'economy'];
 const CIVIC_CATEGORIES = ['science', 'religion', 'culture'];
 
@@ -147,8 +153,9 @@ function makeCard(type, age, name, variantIndex) {
 // The re-skin name for a tile at its current level/Age, following whichever
 // variant track it was originally built from.
 function reskinName(type, age, variantIndex) {
-  if (type === 'wonder') return variantIndex === 1 ? WONDER_NAMES_ALT[age - 1] : ERAS[age - 1].wonder;
-  return NAMES[type][age - 1][variantIndex];
+  const index = contentAge(age) - 1;
+  if (type === 'wonder') return variantIndex === 1 ? WONDER_NAMES_ALT[index] : ERAS[index].wonder;
+  return NAMES[type][index][variantIndex];
 }
 
 function cardDesc(c) {
@@ -197,8 +204,9 @@ function shuffle(arr) {
 
 function buildPool(age, player) {
   const pool = [];
+  const assetAge = contentAge(age);
   CATEGORIES.forEach((type) => {
-    NAMES[type][age - 1].forEach((name, variantIndex) => {
+    NAMES[type][assetAge - 1].forEach((name, variantIndex) => {
       if (player.built.has(name)) return;
       const card = makeCard(type, age, name, variantIndex);
       if (type === 'attack' && player.leaderKey === 'alexander') card.attack += 2;
@@ -206,8 +214,8 @@ function buildPool(age, player) {
     });
   });
   if (age >= 2 && !player.wonderBuilt) {
-    pool.push(makeCard('wonder', age, ERAS[age - 1].wonder, 0));
-    pool.push(makeCard('wonder', age, WONDER_NAMES_ALT[age - 1], 1));
+    pool.push(makeCard('wonder', age, ERAS[assetAge - 1].wonder, 0));
+    pool.push(makeCard('wonder', age, WONDER_NAMES_ALT[assetAge - 1], 1));
   }
   return pool;
 }
@@ -254,7 +262,8 @@ function aliveIds(game) { return game.order.filter((id) => game.players[id].hp >
 
 /* ---------------- lifecycle ---------------- */
 
-function createGame(roomPlayers) {
+function createGame(roomPlayers, options = {}) {
+  const { mode } = normalizeRoomOptions(options);
   const players = {};
   roomPlayers.forEach((rp) => {
     players[rp.id] = {
@@ -280,6 +289,7 @@ function createGame(roomPlayers) {
 
   const game = {
     gameKey: 'civilization',
+    mode,
     gameOver: false,
     resultText: '',
     age: 1,
@@ -473,7 +483,7 @@ function advanceAfterWave(game) {
     setResultText(game);
     return;
   }
-  if (game.age >= TOTAL_AGES) {
+  if (game.mode === 'classic' && game.age >= TOTAL_AGES) {
     game.phase = 'ended';
     game.gameOver = true;
     game.endedSuddenDeath = false;
@@ -498,7 +508,7 @@ function advanceAfterWave(game) {
   game.phase = 'draft';
   game.waveResult = null;
   game.waveAcknowledged = new Set();
-  game.log.push(`Age ${game.age} begins: ${ERAS[game.age - 1].name}.`);
+  game.log.push(`Age ${game.age} begins: ${ERAS[contentAge(game.age) - 1].name}.`);
 }
 
 function finalizeScores(game) {
@@ -662,12 +672,13 @@ function serialize(game, requesterId, connected) {
     gameOver: game.gameOver,
     resultText: game.resultText,
     age: game.age,
-    totalAges: TOTAL_AGES,
+    mode: game.mode,
+    totalAges: game.mode === 'deathmatch' ? null : TOTAL_AGES,
     turnInAge: game.turnInAge,
     turnsPerAge: TURNS_PER_AGE,
     turnNumber: (game.age - 1) * TURNS_PER_AGE + game.turnInAge,
     totalTurns: TOTAL_TURNS,
-    eraName: ERAS[game.age - 1] ? ERAS[game.age - 1].name : '',
+    eraName: ERAS[contentAge(game.age) - 1].name,
     phase: game.phase,
     deadline: null,
     order: game.order,
@@ -702,4 +713,4 @@ function results(game, durationMs) {
   }));
 }
 
-module.exports = { createGame, handleAction, serialize, tick, results };
+module.exports = { createGame, handleAction, serialize, tick, results, normalizeRoomOptions };

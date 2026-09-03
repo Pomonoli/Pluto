@@ -348,6 +348,13 @@ const RELEASES = [
     ]
   },
   {
+    version:'1.19.0',
+    features:[
+      'Age of Civilization heeft nu een Deathmatch-modus: speel na tijdperk 7 door met late-game content tot er maximaal één toren overblijft.',
+      'Age of Civilization toont een volledig aanvalsoverzicht en duidelijkere statinformatie in kaart-, upgrade- en spelerpopups.'
+    ]
+  },
+  {
     version:'1.18.6',
     games:['Ragnarok'],
     features:[

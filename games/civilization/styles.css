@@ -44,7 +44,7 @@
 .civ-player-chip.picking { border-color: var(--civ-good); box-shadow: 0 0 6px color-mix(in srgb, var(--civ-good) 50%, transparent); }
 .civ-chip-head { display: flex; flex-direction: column; line-height: 1.2; }
 .civ-chip-name { min-width:0;overflow:hidden;text-overflow:ellipsis;display:block;border:0;padding:0;background:transparent;color:inherit;font:inherit;font-size:0.68rem;font-weight:700;white-space:nowrap;text-align:left;cursor:pointer; }
-.civ-chip-leader { font-size: 0.58rem; color: var(--civ-text-dim); white-space: nowrap; }
+.civ-chip-leader { display:block;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:0.58rem;color:var(--civ-text-dim);white-space:nowrap; }
 .civ-chip-hp-track { height: 5px; background: var(--civ-bg-panel-2); border-radius: 3px; overflow: hidden; }
 .civ-chip-hp-fill { height: 100%; background: var(--civ-good); }
 .civ-chip-hp-fill.dead { background: var(--civ-danger); }
@@ -135,6 +135,7 @@ button.civ-tile.filled:disabled .civ-tile-upgrade { color: var(--civ-text-dim); 
 .civ-modal .civ-detail-name{font-size:1.05rem;line-height:1.25}
 .civ-modal .civ-detail-desc{font-size:.76rem;line-height:1.55}
 .civ-modal-cost{align-self:flex-start;padding:7px 10px;border:1px solid color-mix(in srgb,var(--civ-accent) 28%,transparent);border-radius:999px;background:color-mix(in srgb,var(--civ-accent) 10%,var(--civ-bg-panel));font-size:.68rem;font-weight:800}
+.civ-modal-badges{display:flex;flex-wrap:wrap;gap:6px}.civ-modal-badge,.civ-player-leader{padding:6px 9px;border:1px solid color-mix(in srgb,var(--civ-accent) 28%,transparent);border-radius:999px;background:color-mix(in srgb,var(--civ-accent) 10%,var(--civ-bg-panel));font-size:.67rem;font-weight:800}.civ-player-details{display:grid;gap:8px;padding:10px;border:1px solid var(--civ-bg-panel-2);border-radius:12px;background:rgba(255,255,255,.42)}.civ-player-leader{justify-self:start;color:var(--civ-accent)}.civ-player-power{font-size:.72rem;line-height:1.45;color:var(--civ-text-dim)}
 .civ-modal-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:3px}
 .civ-modal-actions .civ-btn{min-height:44px;padding:10px 12px;border:1px solid transparent;transition:transform .12s ease,filter .12s ease}
 .civ-modal-actions .civ-btn:not(:disabled):active{transform:scale(.98)}
@@ -168,6 +169,7 @@ button.civ-tile.filled:disabled .civ-tile-upgrade { color: var(--civ-text-dim); 
 .civ-wave-result { font-size: 0.76rem; font-weight: 600; flex: none; }
 .civ-wave-result.ok { color: var(--civ-good); }
 .civ-wave-result.hit { color: var(--civ-danger); }
+.civ-combat-table{overflow:hidden;border:1px solid var(--civ-bg-panel-2);border-radius:12px}.civ-combat-row{display:grid;grid-template-columns:minmax(58px,1.15fr) .45fr .45fr minmax(58px,1fr) .55fr;gap:5px;align-items:center;padding:8px 7px;border-top:1px solid var(--civ-bg-panel-2);font-size:.63rem;text-align:center}.civ-combat-row:first-child{border-top:0}.civ-combat-row.you{background:color-mix(in srgb,var(--civ-accent) 12%,transparent);font-weight:800}.civ-combat-head{background:var(--civ-bg-panel-2);color:var(--civ-text-dim);font-size:.53rem;font-weight:800;text-transform:uppercase;letter-spacing:.03em}.civ-combat-name,.civ-combat-target{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}.civ-combat-damage{color:var(--civ-danger);font-weight:800}
 
 /* ---- game over ---- */
 .civ-gameover { text-align: center; }
@@ -227,3 +229,8 @@ button.civ-tile.filled:disabled .civ-tile-upgrade { color: var(--civ-text-dim); 
 .civ-leader-attribute { font-size: 0.58rem; color: var(--civ-accent); }
 .civ-leader-bonus { font-size: 0.58rem; color: var(--civ-text-dim); line-height: 1.3; }
 .civ-leader-owner { font-size: 0.56rem; color: var(--civ-good); font-weight: 600; }
+/* Center combat player names under the Speler column label. */
+.civ-combat-name{text-align:center}
+.civ-combat-target{text-align:center;border-left:1px solid var(--civ-bg-panel-2);padding-left:5px}
+.civ-combat-row > :nth-child(4){border-left:1px solid var(--civ-bg-panel-2);padding-left:5px}
+.civ-lobby-options{display:grid;gap:9px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--panel)}.civ-lobby-options-head{display:flex;justify-content:space-between;gap:12px;align-items:baseline}.civ-lobby-options-head small{color:var(--muted);font-size:.75rem}.civ-mode-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.civ-mode-choice{min-width:0;padding:11px;border:1px solid var(--border);border-radius:10px;background:var(--panel);color:var(--text);text-align:left;cursor:pointer}.civ-mode-choice.active{border-color:var(--civ-accent);box-shadow:inset 0 0 0 1px var(--civ-accent);background:color-mix(in srgb,var(--civ-accent) 11%,var(--panel))}.civ-mode-choice:disabled{cursor:default}.civ-mode-choice strong,.civ-mode-choice small{display:block}.civ-mode-choice small{margin-top:3px;color:var(--muted);font-size:.68rem;line-height:1.35}

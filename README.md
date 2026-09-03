@@ -2,7 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.18.6
+## Nieuw in versie 1.19.0
+
+**Age of Civilization** krijgt de nieuwe Deathmatch-modus: speel na tijdperk 7 door tot er maximaal één toren overblijft, met doorlopende late-game content en een overzichtelijke aanvalstabel.
 
 **Ragnarok** is een nieuwe realtime game voor 2-6 spelers: verover een gedeelde hexkaart met je vikingclan, verzamel grondstoffen, breid uit, upgrade pionnen en overleef het oordeel der goden. Iedereen speelt gelijktijdig, zonder beurten.
 

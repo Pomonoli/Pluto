@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.19.0 — Age of Civilization: Deathmatch
+
+- Nieuwe Deathmatch-modus: na tijdperk 7 gaat het spel door met late-game content tot er maximaal één toren overblijft.
+- De lobby laat de host de spelmodus kiezen; de aanvalsgolf toont voortaan een overzicht van alle spelers, doelwitten en schade.
+- Gebouwkaarten, upgrades en spelerdetails tonen duidelijkere statbadges en informatie.
+
 ## v1.18.6 — Ragnarok
 
 - Nieuwe realtime game Ragnarok: verover een gedeelde hexkaart met je vikingclan, breid uit, upgrade pionnen, val rivalen aan en overleef het oordeel der goden.
