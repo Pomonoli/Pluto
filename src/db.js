@@ -121,6 +121,48 @@ function applyDataMigrations() {
 
 applyDataMigrations();
 
+function applyDrawMigration() {
+  const migrationKey = 'v1.18.2-backfill-draws';
+  if (db.prepare('SELECT migration_key FROM app_migrations WHERE migration_key = ?').get(migrationKey)) return;
+
+  db.exec('BEGIN IMMEDIATE');
+  try {
+    // Older match rows encoded draws in their outcome. Ticket to Ride's old
+    // result contract also marked every tied winner as won; that is a draw,
+    // except for Blackjack where multiple players can beat the dealer in one
+    // recorded round.
+    db.exec(`
+      UPDATE match_players
+      SET drawn = 1
+      WHERE drawn = 0
+        AND match_id IN (
+          SELECT match_id
+          FROM match_players
+          GROUP BY match_id
+          HAVING COUNT(*) > 1
+        )
+        AND (
+          outcome LIKE 'Gelijkspel%'
+          OR match_id IN (
+            SELECT mp.match_id
+            FROM match_players mp
+            JOIN matches m ON m.id = mp.match_id
+            WHERE m.game_key NOT IN ('blackjack','solitaire','cycclub','deep-bleu-c')
+            GROUP BY mp.match_id
+            HAVING COUNT(*) > 1 AND SUM(mp.won) > 1
+          )
+        )
+    `);
+    db.prepare('INSERT INTO app_migrations(migration_key,applied_at) VALUES(?,?)').run(migrationKey, Date.now());
+    db.exec('COMMIT');
+  } catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
+  }
+}
+
+applyDrawMigration();
+
 const SESSION_COOKIE = 'mg_session';
 const SESSION_MS = 30 * 24 * 60 * 60 * 1000;
 

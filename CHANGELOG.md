@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.18.3 — Drawhistorie migratie
+
+- Bestaande gelijkspelresultaten worden bij de database-upgrade teruggelezen in de nieuwe draw-statistieken.
+
 ## v1.18.2 — Multiplayer-resultaten en gelijke spelen
 
 - Niet-hosts krijgen na elk multiplayerresultaat de acties Rematch (in de game blijven) en Verlaten (de game direct verlaten). De bestaande hostacties blijven ongewijzigd, ook op resultaten met een eigen scoreweergave.

@@ -21,8 +21,13 @@ test('draw-migratie bewaart oude statistieken en telt nieuwe gelijke spelen',()=
       CREATE TABLE app_migrations(migration_key TEXT PRIMARY KEY,applied_at INTEGER NOT NULL);
       INSERT INTO app_migrations VALUES('v0.10.3-reset-leaderboards',1);
       INSERT INTO users(username,username_key,password_hash,created_at) VALUES('Oud','oud','x',1);
+      INSERT INTO users(username,username_key,password_hash,created_at) VALUES('OudeGelijkspel','oudegelijkspel','x',1);
+      INSERT INTO users(username,username_key,password_hash,created_at) VALUES('AndereOudeGelijkspel','andereoudegelijkspel','x',1);
       INSERT INTO matches(game_key,ended_at) VALUES('hofslag',1);
       INSERT INTO match_players(match_id,user_id,display_name,won) VALUES(1,1,'Oud',0);
+      INSERT INTO matches(game_key,ended_at) VALUES('hofslag',2);
+      INSERT INTO match_players(match_id,user_id,display_name,won,outcome) VALUES(2,2,'OudeGelijkspel',0,'Gelijkspel');
+      INSERT INTO match_players(match_id,user_id,display_name,won,outcome) VALUES(2,3,'AndereOudeGelijkspel',0,'Gelijkspel');
     \`);
   `;
   const seeded=spawnSync(process.execPath,['-e',seed],{encoding:'utf8'});
@@ -31,7 +36,8 @@ test('draw-migratie bewaart oude statistieken en telt nieuwe gelijke spelen',()=
   process.env.DATA_DIR=dir;
   const db=require('../src/db');
   assert.ok(db.db.prepare("PRAGMA table_info(match_players)").all().some(column=>column.name==='drawn'));
-  assert.equal(db.leaderboard('hofslag')[0].draws,0);
+  assert.equal(db.leaderboard('hofslag').find(row=>row.username==='Oud').draws,0);
+  assert.equal(db.leaderboard('hofslag').find(row=>row.username==='OudeGelijkspel').draws,1);
 
   const first=db.register('GelijkEen','password123').user;
   const second=db.register('GelijkTwee','password123').user;

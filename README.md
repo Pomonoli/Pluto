@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.18.2
+## Nieuw in versie 1.18.3
 
-Na een multiplayerresultaat kunnen niet-hosts voortaan kiezen: met **Rematch** blijven ze in de game, met **Verlaten** verlaten ze die direct. Leaderboards tonen nu ook het aantal gelijkspelen, compact leesbaar op elk schermformaat.
+De draw-statistieken nemen nu ook bestaande gelijkspelgeschiedenis mee; leaderboards tonen daardoor de volledige historie.
 
 ## Nieuw in versie 1.18.0
 

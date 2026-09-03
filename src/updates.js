@@ -327,6 +327,12 @@ const RELEASES = [
       'Niet-hosts kunnen na een multiplayerresultaat kiezen om in de game te blijven voor een rematch, of die meteen te verlaten.',
       'Leaderboards tonen voortaan ook het aantal gelijkspelen, zonder extra breedte op mobiel.'
     ]
+  },
+  {
+    version:'1.18.3',
+    improvements:[
+      'Bestaande gelijkspelgeschiedenis wordt automatisch meegenomen in de draw-statistieken.'
+    ]
   }
 ];
 
