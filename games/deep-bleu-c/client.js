@@ -30,9 +30,13 @@ function computeCoreBounds() {
 const VIEW_BOX = computeCoreBounds();
 const HOOK_WINDOW_MS = 900;
 const REEL_WINDOW_MS = 1300;
-const TILE_COLORS = {
-  L: '#8fc26c', B: '#e3cd93', f: '#3f7a3a', h: '#8a7f6b', p: '#5c5648',
-  r: '#5fb3da', k: '#3f8fc4', a: '#22557f', m: '#1f9a8f', z: '#dce8f0'
+// Twee tinten per tegeltype (licht boven, donker onder) i.p.v. een platte
+// kleur: geeft elke hex een subtiel "belicht van boven"-reliëf via een
+// gradient, zonder dat naburige tegels van hetzelfde type een zichtbare naad
+// krijgen (iedere hex herhaalt dezelfde gradient-oriëntatie).
+const TILE_SHADES = {
+  L: ['#a3db7b', '#74ae4f'], B: ['#f3e0ac', '#dcbd76'], f: ['#5b9c4e', '#2d5b2a'], h: ['#b39c70', '#816d49'], p: ['#9b9591', '#5c5754'],
+  r: ['#8ad2ec', '#4a9bc4'], k: ['#63b6e8', '#2f7fb3'], a: ['#3d7cb8', '#1c3f66'], m: ['#3fd0bb', '#1c8272'], z: ['#f5fbfe', '#c3dbe6']
 };
 const MINIMAP_RGB = {
   L: [143, 194, 108], B: [227, 205, 147], f: [63, 122, 58], h: [138, 127, 107], p: [92, 86, 72],
@@ -265,6 +269,95 @@ function renderOtherPlayerMarker(svg, p, camX, camY, colorIndex) {
   svg.append(label);
 }
 
+// Stabiele pseudo-random waarde per tegelcoördinaat (0..1) — bepaalt welke
+// tegels versiering krijgen en welke variant, zonder dat de kaart bij elke
+// render "flikkert" zoals bij een echte Math.random() zou gebeuren.
+function tileHash(wx, wy) {
+  let h = Math.imul(wx, 374761393) ^ Math.imul(wy, 668265263);
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+
+function buildTileDefs() {
+  const defs = svgEl('defs');
+  Object.entries(TILE_SHADES).forEach(([key, [light, dark]]) => {
+    const grad = svgEl('linearGradient', { id: `dbc-grad-${key}`, x1: '0.2', y1: '0', x2: '0.5', y2: '1' });
+    grad.append(svgEl('stop', { offset: '0%', 'stop-color': light }));
+    grad.append(svgEl('stop', { offset: '100%', 'stop-color': dark }));
+    defs.append(grad);
+  });
+  return defs;
+}
+
+// Kleine, chibi-achtige natuurdecors — geïnspireerd op de blokkige, ronde
+// bomen/rotsen/watertegels uit klassieke top-down Pokémon-kaarten.
+function appendTreeDecor(svg, cx, cy, seed) {
+  const g = svgEl('g', { transform: `translate(${cx},${cy})`, class: 'dbc-tile-decor' });
+  const cluster = (ox, oy, scale) => {
+    const tg = svgEl('g', { transform: `translate(${ox},${oy}) scale(${scale})` });
+    tg.append(svgEl('rect', { x: -1.4, y: 3, width: 2.8, height: 5, rx: 1, class: 'dbc-tile-tree-trunk' }));
+    tg.append(svgEl('ellipse', { cx: 0, cy: 4.5, rx: 6, ry: 1.6, class: 'dbc-tile-tree-shadow' }));
+    tg.append(svgEl('circle', { cx: -3, cy: -1, r: 5.4, class: 'dbc-tile-tree-leaf' }));
+    tg.append(svgEl('circle', { cx: 3, cy: 0, r: 5, class: 'dbc-tile-tree-leaf' }));
+    tg.append(svgEl('circle', { cx: 0, cy: -5, r: 5.6, class: 'dbc-tile-tree-leaf' }));
+    tg.append(svgEl('circle', { cx: -2, cy: -6, r: 2, class: 'dbc-tile-tree-highlight' }));
+    return tg;
+  };
+  if (seed < 0.5) g.append(cluster(0, -1, 1));
+  else { g.append(cluster(-4.5, 2, 0.66)); g.append(cluster(4, -1, 0.78)); }
+  svg.append(g);
+}
+
+function appendHillDecor(svg, cx, cy) {
+  const g = svgEl('g', { transform: `translate(${cx},${cy})`, class: 'dbc-tile-decor' });
+  g.append(svgEl('ellipse', { cx: 0, cy: 5, rx: 10, ry: 3, class: 'dbc-tile-hill-shadow' }));
+  g.append(svgEl('path', { d: 'M -9 4 Q -9 -5 0 -6 Q 9 -5 9 4 Z', class: 'dbc-tile-hill-face' }));
+  g.append(svgEl('path', { d: 'M -6 0 Q -3 -5 3 -5', class: 'dbc-tile-hill-highlight' }));
+  svg.append(g);
+}
+
+function appendPeakDecor(svg, cx, cy) {
+  const g = svgEl('g', { transform: `translate(${cx},${cy})`, class: 'dbc-tile-decor' });
+  g.append(svgEl('ellipse', { cx: 0, cy: 6, rx: 11, ry: 2.6, class: 'dbc-tile-hill-shadow' }));
+  g.append(svgEl('polygon', { points: '-10,6 -3,-9 3,-3 10,6', class: 'dbc-tile-peak-face' }));
+  g.append(svgEl('polygon', { points: '3,-3 10,6 5,6 1,-2', class: 'dbc-tile-peak-shadow' }));
+  g.append(svgEl('polygon', { points: '-3,-9 1,-4 -1,-2 -4,-3', class: 'dbc-tile-peak-snow' }));
+  svg.append(g);
+}
+
+function appendWaveDecor(svg, cx, cy, seed) {
+  const g = svgEl('g', { transform: `translate(${cx},${cy + (seed - 0.5) * 7})`, class: 'dbc-tile-decor' });
+  g.append(svgEl('path', { d: 'M -7 0 Q -3.5 -2.6 0 0 Q 3.5 2.6 7 0', class: 'dbc-tile-wave' }));
+  svg.append(g);
+}
+
+function appendGrassDecor(svg, cx, cy, seed) {
+  const g = svgEl('g', { transform: `translate(${cx + (seed - 0.5) * 8},${cy + 3})`, class: 'dbc-tile-decor' });
+  g.append(svgEl('path', { d: 'M -3 3 Q -3.4 -1 -4.4 -3 M 0 3 Q 0 -2 1 -4.4 M 3 3 Q 3.2 -0.4 4.2 -2.6', class: 'dbc-tile-grass' }));
+  svg.append(g);
+}
+
+function appendSandDecor(svg, cx, cy, seed) {
+  const g = svgEl('g', { transform: `translate(${cx},${cy})`, class: 'dbc-tile-decor' });
+  const spots = [[-4, 2], [3, -3], [1, 4], [-2, -4]];
+  const count = 2 + Math.floor(seed * 3);
+  for (let i = 0; i < count; i += 1) {
+    const [dx, dy] = spots[i];
+    g.append(svgEl('circle', { cx: dx, cy: dy, r: 0.9, class: 'dbc-tile-sand-dot' }));
+  }
+  svg.append(g);
+}
+
+function appendTileDecor(svg, tile, cx, cy, wx, wy) {
+  const seed = tileHash(wx, wy);
+  if (tile === 'f') appendTreeDecor(svg, cx, cy, seed);
+  else if (tile === 'h') appendHillDecor(svg, cx, cy);
+  else if (tile === 'p') appendPeakDecor(svg, cx, cy);
+  else if (WATER_CHARS.has(tile)) { if (seed < 0.4) appendWaveDecor(svg, cx, cy, seed); }
+  else if (tile === 'L') { if (seed < 0.3) appendGrassDecor(svg, cx, cy, seed); }
+  else if (tile === 'B') { if (seed < 0.4) appendSandDecor(svg, cx, cy, seed); }
+}
+
 function renderMapWrap(you, worldData, camX, camY, others = []) {
   const svg = svgEl('svg', {
     viewBox: `${VIEW_BOX.minX} ${VIEW_BOX.minY} ${VIEW_BOX.width} ${VIEW_BOX.height}`,
@@ -275,11 +368,16 @@ function renderMapWrap(you, worldData, camX, camY, others = []) {
     role: 'img',
     'aria-label': 'Kaart van The Deep Bleu C'
   });
+  svg.append(buildTileDefs());
 
   // Eén extra ring tegels buiten het zichtbare venster tekenen: de SVG clipt
   // alles buiten de viewBox vanzelf, maar zonder deze rand tonen de rechte
   // viewBox-hoeken een zaagtandpatroon met de achtergrondkleur erdoorheen
   // (het "blauwe randje"). De rand vult die hoeken op met echte tegels.
+  // Reliëfdecors (bomen, rotsen, golven, ...) tekenen we in een aparte, latere
+  // pas zodat ze nooit onder een lateref gebuurtegel wegvallen wanneer ze
+  // buiten hun eigen hex uitsteken.
+  const decorQueue = [];
   for (let row = -1; row <= ROWS; row += 1) {
     for (let col = -1; col <= COLS; col += 1) {
       const wx = camX + col, wy = camY + row;
@@ -287,11 +385,13 @@ function renderMapWrap(you, worldData, camX, camY, others = []) {
       const tile = worldData.tiles[wy * worldData.width + wx] || 'L';
       const { cx, cy } = hexPoints(col, row);
       const points = hexCorners(cx, cy, HEX_DRAW_SIZE).map(([px, py]) => `${px},${py}`).join(' ');
-      const hex = svgEl('polygon', { points, fill: TILE_COLORS[tile] || '#8fc26c', class: 'dbc-tile' });
+      const hex = svgEl('polygon', { points, fill: `url(#dbc-grad-${tile})`, class: 'dbc-tile' });
       if (row >= 0 && row < ROWS && col >= 0 && col < COLS) hex.onclick = () => handleTileClick(wx, wy, tile, you);
       svg.append(hex);
+      decorQueue.push({ tile, cx, cy, wx, wy });
     }
   }
+  decorQueue.forEach(({ tile, cx, cy, wx, wy }) => appendTileDecor(svg, tile, cx, cy, wx, wy));
 
   // Decoratieve bootjes in de Haven — puur sfeer, de bootupgrade zelf koop je
   // op de Handelsmarkt en werkt overal op de kaart.
