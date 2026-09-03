@@ -154,18 +154,71 @@ const RACE_CATALOG = [
   {id:'e3-saxo-classic', name:'E3 Saxo Classic', category:'classic', difficulty:5, terrain:{cobbles:0.5,flat:0.3,stamina:0.2}},
   {id:'gent-wevelgem', name:'Gent-Wevelgem', category:'classic', difficulty:5, terrain:{flat:0.4,cobbles:0.3,sprint:0.3}},
   {id:'dwars-door-vlaanderen', name:'Dwars door Vlaanderen', category:'classic', difficulty:5, terrain:{cobbles:0.4,flat:0.3,stamina:0.3}},
-  {id:'omloop-het-nieuwsblad', name:'Omloop Het Nieuwsblad', category:'classic', difficulty:5, terrain:{cobbles:0.45,flat:0.25,stamina:0.3}},
-  {id:'tour-vlakke-rit', name:'Tour de France — Vlakke Rit', category:'gt_stage', difficulty:7, terrain:{flat:0.5,sprint:0.4,stamina:0.1}},
-  {id:'tour-bergrit', name:'Tour de France — Bergrit', category:'gt_stage', difficulty:9, terrain:{mountain:0.7,stamina:0.3}},
-  {id:'tour-tijdrit', name:'Tour de France — Tijdrit', category:'gt_stage', difficulty:8, terrain:{timeTrial:0.8,stamina:0.2}},
-  {id:'giro-bergrit', name:'Giro d’Italia — Bergrit', category:'gt_stage', difficulty:8, terrain:{mountain:0.5,stamina:0.5}},
-  {id:'vuelta-rit', name:'Vuelta a España — Rit', category:'gt_stage', difficulty:8, terrain:{mountain:0.5,flat:0.3,stamina:0.2}},
-  {id:'tour-eindklassement', name:'Tour de France — Eindklassement', category:'grand_tour', difficulty:10, terrain:{mountain:0.35,timeTrial:0.25,stamina:0.3,flat:0.1}},
-  {id:'giro-eindklassement', name:'Giro d’Italia — Eindklassement', category:'grand_tour', difficulty:9, terrain:{mountain:0.4,timeTrial:0.2,stamina:0.4}},
-  {id:'vuelta-eindklassement', name:'Vuelta a España — Eindklassement', category:'grand_tour', difficulty:9, terrain:{mountain:0.45,stamina:0.35,flat:0.2}}
+  {id:'omloop-het-nieuwsblad', name:'Omloop Het Nieuwsblad', category:'classic', difficulty:5, terrain:{cobbles:0.45,flat:0.25,stamina:0.3}}
 ].map((race) => ({...race, basePrize:prizeForDifficulty(race.difficulty)}));
 const RACE_BY_ID = new Map(RACE_CATALOG.map((race) => [race.id, race]));
 const PAYOUT_TABLE = [0.40,0.22,0.14,0.09,0.06,0.04,0.025,0.015,0.01,0.005];
+
+const STAGES_PER_GRAND_TOUR = 21;
+const STAGE_ID_SEP = '::stage:';
+const STAGE_TERRAIN = {
+  flat:{flat:0.5,sprint:0.35,stamina:0.15},
+  hilly:{mountain:0.35,flat:0.35,stamina:0.3},
+  mountain:{mountain:0.65,stamina:0.35},
+  timeTrial:{timeTrial:0.8,stamina:0.2}
+};
+const STAGE_TYPE_LABELS = {flat:'Vlak',hilly:'Heuvelachtig',mountain:'Bergrit',timeTrial:'Tijdrit'};
+const STAGE_DIFFICULTY = {flat:6,hilly:7,mountain:9,timeTrial:8};
+
+function aggregateTerrain(route){
+  const totals={};
+  for(const stageType of route){
+    const terrain=STAGE_TERRAIN[stageType];
+    for(const key of Object.keys(terrain)) totals[key]=(totals[key]||0)+terrain[key];
+  }
+  const sum=Object.values(totals).reduce((a,b) => a+b,0);
+  const normalized={};
+  for(const key of Object.keys(totals)) normalized[key]=totals[key]/sum;
+  return normalized;
+}
+
+function grandTour(id,name,route,overallPrize){
+  return {id, name, category:'grand_tour', stages:STAGES_PER_GRAND_TOUR, route, overallPrize, terrain:aggregateTerrain(route)};
+}
+
+const GRAND_TOUR_CATALOG = [
+  grandTour('tour-de-france','Tour de France',
+    ['flat','hilly','flat','flat','mountain','flat','hilly','mountain','flat','flat','mountain','hilly','timeTrial','mountain','mountain','flat','hilly','mountain','flat','timeTrial','flat'],
+    180000),
+  grandTour('giro-ditalia','Giro d’Italia',
+    ['flat','flat','hilly','mountain','flat','mountain','hilly','mountain','flat','timeTrial','mountain','flat','hilly','mountain','mountain','flat','hilly','mountain','mountain','timeTrial','flat'],
+    140000),
+  grandTour('vuelta-a-espana','Vuelta a España',
+    ['flat','hilly','flat','mountain','flat','hilly','mountain','flat','mountain','hilly','timeTrial','mountain','flat','mountain','hilly','mountain','flat','mountain','hilly','timeTrial','flat'],
+    140000)
+];
+const GRAND_TOUR_BY_ID = new Map(GRAND_TOUR_CATALOG.map((tour) => [tour.id, tour]));
+
+function buildStageRaceId(tourId,stageNumber){return `${tourId}${STAGE_ID_SEP}${stageNumber}`}
+function parseStageRaceId(raceId){
+  const index=String(raceId||'').indexOf(STAGE_ID_SEP);
+  if(index<0)return null;
+  return {tourId:raceId.slice(0,index), stageNumber:Number(raceId.slice(index+STAGE_ID_SEP.length))};
+}
+
+function currentCatalogRace(raceId){
+  const parsed=parseStageRaceId(raceId);
+  if(!parsed)return RACE_BY_ID.get(raceId);
+  const tour=GRAND_TOUR_BY_ID.get(parsed.tourId);
+  if(!tour)return null;
+  const stageType=tour.route[parsed.stageNumber-1];
+  return {
+    id:raceId, name:`${tour.name} — Rit ${parsed.stageNumber}/${tour.stages} · ${STAGE_TYPE_LABELS[stageType]}`,
+    category:'grand_tour', terrain:STAGE_TERRAIN[stageType], stageType,
+    basePrize:prizeForDifficulty(STAGE_DIFFICULTY[stageType]),
+    tourId:tour.id, tourName:tour.name, stageNumber:parsed.stageNumber, totalStages:tour.stages
+  };
+}
 
 function rand(min,max){return min+Math.random()*(max-min)}
 function randInt(min,max){return Math.floor(rand(min,max+1))}
@@ -305,8 +358,14 @@ function availableRiders(team){
   return team.riders.filter((rider) => rider.status==='active');
 }
 
+function startStageLineup(game,raceId){
+  game.phase='lineup';
+  game.race={raceId, lineups:{}, npcTimers:{}, startedAt:Date.now()};
+  for(const candidate of game.players) if(candidate.isNpc) autoLineup(game,candidate);
+}
+
 function autoLineup(game,player){
-  const catalogRace=RACE_BY_ID.get(game.race.raceId);
+  const catalogRace=currentCatalogRace(game.race.raceId);
   const ranked=availableRiders(player.team).sort((a,b) => scoreRiderForRace(b,catalogRace,player.team)-scoreRiderForRace(a,catalogRace,player.team));
   game.race.lineups[player.id]=ranked.slice(0,SQUAD_SIZE).map((rider) => rider.id);
 }
@@ -392,7 +451,7 @@ function resolveSegmentFor(game,player,apply){
   const race=game.race;
   const prog=race.progress[player.id];
   if(!prog||prog.confirmed||!prog.pendingRoll)return;
-  const catalogRace=RACE_BY_ID.get(race.raceId);
+  const catalogRace=currentCatalogRace(race.raceId);
   const roll=prog.pendingRoll.roll;
   const multiplierUsed=apply?prog.multiplier:1;
   for(const riderId of activeRiderIds(prog)){
@@ -439,7 +498,7 @@ function maybeAdvanceSegment(game){
 
 function finalizeRace(game){
   const race=game.race;
-  const catalogRace=RACE_BY_ID.get(race.raceId);
+  const catalogRace=currentCatalogRace(race.raceId);
   for(const player of game.players) player.team.raceCount+=1;
 
   const entries=[];
@@ -466,6 +525,14 @@ function finalizeRace(game){
   finishers.forEach((entry,index) => {entry.place=index+1});
   const dnfs=entries.filter((entry) => entry.dnf);
 
+  if(game.grandTour&&catalogRace.category==='grand_tour'){
+    finalizeGrandTourStage(game,race,catalogRace,finishers,dnfs);
+  } else {
+    finalizeStandaloneRace(game,race,catalogRace,finishers,dnfs);
+  }
+}
+
+function finalizeStandaloneRace(game,race,catalogRace,finishers,dnfs){
   const payouts=[];
   for(const player of game.players){
     let prizeWon=0,best=null;
@@ -483,8 +550,6 @@ function finalizeRace(game){
     if(best&&best.place===1){
       player.team.career.victories+=1;
       if(catalogRace.category==='monument')player.team.career.monumentsWon+=1;
-      if(catalogRace.category==='grand_tour')player.team.career.grandToursWon+=1;
-      if(catalogRace.category==='gt_stage')player.team.career.gtStagesWon+=1;
     }
     if(best&&best.place<=3)player.team.career.podiums+=1;
     if((race.lineups[player.id]||[]).length)player.team.career.racesEntered+=1;
@@ -493,7 +558,7 @@ function finalizeRace(game){
   }
 
   game.lastResult={
-    raceId:race.raceId, raceName:catalogRace.name, category:catalogRace.category,
+    type:'one_day', raceId:race.raceId, raceName:catalogRace.name, category:catalogRace.category,
     classification:finishers.map((entry) => ({place:entry.place, playerId:entry.playerId, playerName:entry.playerName, riderName:entry.riderName, event:entry.event, segments:entry.segments, prize:entry.prize||0})),
     dnfs:dnfs.map((entry) => ({playerId:entry.playerId, playerName:entry.playerName, riderName:entry.riderName, event:entry.event, segments:entry.segments})),
     payouts
@@ -519,6 +584,112 @@ function finalizeRace(game){
   game.race=null;
 }
 
+function finalizeGrandTourStage(game,race,catalogRace,finishers,dnfs){
+  const tour=GRAND_TOUR_BY_ID.get(catalogRace.tourId);
+  const stageNumber=catalogRace.stageNumber;
+
+  const payouts=[];
+  for(const player of game.players){
+    let prizeWon=0,best=null;
+    for(const entry of finishers){
+      if(entry.playerId!==player.id)continue;
+      if(!best||entry.place<best.place)best=entry;
+      if(entry.place<=PAYOUT_TABLE.length){
+        entry.prize=Math.round(catalogRace.basePrize*PAYOUT_TABLE[entry.place-1]);
+        prizeWon+=entry.prize;
+      } else entry.prize=0;
+    }
+    if(best&&best.place===1)bumpMarketValue(best.rider,0.05);
+    player.team.wallet+=prizeWon;
+    player.team.career.prizeMoney+=prizeWon;
+    if(best&&best.place===1)player.team.career.gtStagesWon+=1;
+    payouts.push({playerId:player.id, prizeWon, bestPlace:best?best.place:null});
+  }
+
+  for(const entry of finishers){
+    const key=`${entry.playerId}:${entry.riderId}`;
+    if(!game.grandTour.gc[key]){
+      game.grandTour.gc[key]={playerId:entry.playerId, playerName:entry.playerName, riderId:entry.riderId, riderName:entry.riderName, rider:entry.rider, totalPr:0, stageWins:0};
+    }
+    game.grandTour.gc[key].totalPr+=entry.pr;
+    if(entry.place===1)game.grandTour.gc[key].stageWins+=1;
+  }
+
+  game.grandTour.stageLog.push({
+    stageNumber, type:catalogRace.stageType, typeLabel:STAGE_TYPE_LABELS[catalogRace.stageType],
+    winner:finishers[0]?{riderName:finishers[0].riderName,playerName:finishers[0].playerName}:null,
+    dnfCount:dnfs.length
+  });
+
+  game.log.unshift(`${tour.name} rit ${stageNumber}/${tour.stages}: ${finishers.length?`${finishers[0].riderName} (${finishers[0].playerName}) wint de rit.`:'geen enkele renner haalt de finish.'}`);
+
+  if(stageNumber>=tour.stages){
+    finalizeGrandTourOverall(game,tour);
+    return;
+  }
+
+  game.lastResult={
+    type:'grand_tour_stage', tourId:tour.id, raceName:catalogRace.name, stageNumber, totalStages:tour.stages,
+    classification:finishers.map((entry) => ({place:entry.place, playerId:entry.playerId, playerName:entry.playerName, riderName:entry.riderName, event:entry.event, segments:entry.segments, prize:entry.prize||0})),
+    dnfs:dnfs.map((entry) => ({playerId:entry.playerId, playerName:entry.playerName, riderName:entry.riderName, event:entry.event, segments:entry.segments}))
+  };
+  game.phase='stageResult';
+  game.race=null;
+}
+
+function finalizeGrandTourOverall(game,tour){
+  const gcEntries=Object.values(game.grandTour.gc).sort((a,b) => b.totalPr-a.totalPr);
+  gcEntries.forEach((entry,index) => {entry.gcPlace=index+1});
+
+  const payouts=[];
+  for(const player of game.players){
+    let gcPrize=0,best=null;
+    for(const entry of gcEntries){
+      if(entry.playerId!==player.id)continue;
+      if(!best||entry.gcPlace<best.gcPlace)best=entry;
+      if(entry.gcPlace<=PAYOUT_TABLE.length)gcPrize+=Math.round(tour.overallPrize*PAYOUT_TABLE[entry.gcPlace-1]);
+    }
+    if(best&&best.gcPlace===1)bumpMarketValue(best.rider,0.15);
+    else if(best&&best.gcPlace<=3)bumpMarketValue(best.rider,0.06);
+    player.team.wallet+=gcPrize;
+    player.team.career.prizeMoney+=gcPrize;
+    if(best&&best.gcPlace===1){
+      player.team.career.victories+=1;
+      player.team.career.grandToursWon+=1;
+    }
+    if(best&&best.gcPlace<=3)player.team.career.podiums+=1;
+    if(gcEntries.some((entry) => entry.playerId===player.id))player.team.career.racesEntered+=1;
+    payouts.push({playerId:player.id, gcPrize, gcPlace:best?best.gcPlace:null});
+  }
+
+  game.lastResult={
+    type:'grand_tour_final', tourId:tour.id, raceName:tour.name, totalStages:tour.stages,
+    stages:game.grandTour.stageLog,
+    gc:gcEntries.slice(0,10).map((entry) => ({place:entry.gcPlace, playerId:entry.playerId, playerName:entry.playerName, riderName:entry.riderName, stageWins:entry.stageWins})),
+    payouts
+  };
+
+  game.log.unshift(`${tour.name}: ${gcEntries.length?`${gcEntries[0].riderName} (${gcEntries[0].playerName}) wint het eindklassement.`:'niemand haalt de eindstreep.'}`);
+
+  game.pendingRoundRecord={
+    startedAt:game.grandTour.startedAt||Date.now(), endedAt:Date.now(),
+    players:game.players.map((player) => {
+      const summary=payouts.find((entry) => entry.playerId===player.id);
+      return {
+        playerId:player.id,
+        placement:summary?.gcPlace??null,
+        score:summary?.gcPrize??0,
+        won:summary?.gcPlace===1,
+        outcome:summary?.gcPlace?`GC #${summary.gcPlace}`:'Geen resultaat'
+      };
+    })
+  };
+
+  game.phase='result';
+  game.race=null;
+  game.grandTour=null;
+}
+
 function bumpMarketValue(rider,factor){
   rider.marketValue=Math.round(rider.marketValue*(1+factor)/50)*50;
 }
@@ -536,7 +707,7 @@ function createGame(roomPlayers){
       id:player.id, name:player.name, isNpc:player.isNpc,
       team:player.cycclubTeam?hydrateTeam(player.cycclubTeam):defaultTeam(player.isNpc)
     })),
-    race:null, lastResult:null, log:[], scoutMarkets:{}, pendingRoundRecord:null
+    race:null, grandTour:null, lastResult:null, log:[], scoutMarkets:{}, pendingRoundRecord:null
   };
   for(const player of game.players) if(!player.isNpc) game.scoutMarkets[player.id]=scoutCandidates(player.team.riders.map((rider) => rider.name));
   return game;
@@ -614,11 +785,25 @@ function handleAction(game,playerId,action,payload={}){
   if(action==='selectRace'){
     if(game.phase!=='club')throw new Error('Er loopt al een koers.');
     if(playerId!==game.hostId)throw new Error('Alleen de host kiest een koers.');
-    const catalogRace=RACE_BY_ID.get(payload.raceId);
-    if(!catalogRace)throw new Error('Onbekende koers.');
-    game.phase='lineup';
-    game.race={raceId:catalogRace.id, lineups:{}, npcTimers:{}, startedAt:Date.now()};
-    for(const candidate of game.players) if(candidate.isNpc) autoLineup(game,candidate);
+    const oneDayRace=RACE_BY_ID.get(payload.raceId);
+    const tour=GRAND_TOUR_BY_ID.get(payload.raceId);
+    if(!oneDayRace&&!tour)throw new Error('Onbekende koers.');
+    if(tour){
+      game.grandTour={tourId:tour.id, stageNumber:1, gc:{}, stageLog:[], startedAt:Date.now()};
+      startStageLineup(game,buildStageRaceId(tour.id,1));
+    } else {
+      game.grandTour=null;
+      startStageLineup(game,oneDayRace.id);
+    }
+    return;
+  }
+
+  if(action==='nextStage'){
+    if(game.phase!=='stageResult')throw new Error('Er is geen volgende rit klaar.');
+    if(playerId!==game.hostId)throw new Error('Alleen de host start de volgende rit.');
+    if(!game.grandTour)throw new Error('Er loopt geen Grote Ronde.');
+    game.grandTour.stageNumber+=1;
+    startStageLineup(game,buildStageRaceId(game.grandTour.tourId,game.grandTour.stageNumber));
     return;
   }
 
@@ -654,10 +839,11 @@ function handleAction(game,playerId,action,payload={}){
   }
 
   if(action==='cancelRace'){
-    if(game.phase!=='lineup'&&game.phase!=='racing')throw new Error('Er is geen koers om te annuleren.');
+    if(!['lineup','racing','stageResult'].includes(game.phase))throw new Error('Er is geen koers om te annuleren.');
     if(playerId!==game.hostId)throw new Error('Alleen de host kan annuleren.');
     game.phase='club';
     game.race=null;
+    game.grandTour=null;
     return;
   }
 
@@ -706,11 +892,15 @@ function tick(game,now=Date.now()){
 }
 
 function serialize(game,requesterId,connected){
-  const catalogRace=game.race?RACE_BY_ID.get(game.race.raceId):null;
+  const catalogRace=game.race?currentCatalogRace(game.race.raceId):null;
   return {
     kind:meta.key, gameOver:false, phase:game.phase, hostId:game.hostId, squadSize:SQUAD_SIZE, maxRiders:MAX_RIDERS,
-    raceCatalog:RACE_CATALOG.map((race) => ({id:race.id, name:race.name, category:race.category, difficulty:race.difficulty, basePrize:race.basePrize, terrain:race.terrain})),
+    raceCatalog:[
+      ...RACE_CATALOG.map((race) => ({id:race.id, name:race.name, category:race.category, difficulty:race.difficulty, basePrize:race.basePrize, terrain:race.terrain})),
+      ...GRAND_TOUR_CATALOG.map((tour) => ({id:tour.id, name:tour.name, category:tour.category, stages:tour.stages, overallPrize:tour.overallPrize, terrain:tour.terrain}))
+    ],
     race:game.race?serializeRace(game,requesterId,catalogRace):null,
+    grandTour:game.grandTour?serializeGrandTour(game):null,
     lastResult:game.lastResult,
     log:game.log.slice(0,20),
     myScoutMarket:(game.scoutMarkets[requesterId]||[]).map(serializeRider),
@@ -719,6 +909,16 @@ function serialize(game,requesterId,connected){
       wallet:player.team.wallet, shop:player.team.shop, shopEffects:describeShopEffects(player.team.shop), career:player.team.career,
       riders:player.team.riders.map(serializeRider)
     }))
+  };
+}
+
+function serializeGrandTour(game){
+  const tour=GRAND_TOUR_BY_ID.get(game.grandTour.tourId);
+  const standings=Object.values(game.grandTour.gc).sort((a,b) => b.totalPr-a.totalPr).slice(0,5)
+    .map((entry,index) => ({place:index+1, playerName:entry.playerName, riderName:entry.riderName, totalPr:Math.round(entry.totalPr*10)/10, stageWins:entry.stageWins}));
+  return {
+    tourId:tour?.id, tourName:tour?.name||'', stageNumber:game.grandTour.stageNumber,
+    totalStages:tour?.stages||STAGES_PER_GRAND_TOUR, standings
   };
 }
 
@@ -792,5 +992,6 @@ function afterStateChange(room,{db}){
 
 module.exports={
   meta, createGame, handleAction, serialize, tick, preparePlayers, afterStateChange,
-  RACE_CATALOG, SHOP_COSTS, STAT_KEYS, SQUAD_SIZE, MAX_RIDERS, TEAMS, REAL_RIDERS
+  RACE_CATALOG, GRAND_TOUR_CATALOG, SHOP_COSTS, STAT_KEYS, SQUAD_SIZE, MAX_RIDERS, TEAMS, REAL_RIDERS,
+  STAGES_PER_GRAND_TOUR, SEGMENTS_PER_RACE
 };

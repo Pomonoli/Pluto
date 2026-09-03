@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.16.0 — CycClub: volwaardige Grote Rondes van 21 ritten
+
+- Tour de France, Giro d’Italia en Vuelta a España zijn nu volwaardige Grote Rondes: je rijdt 21 ritten na elkaar, elk met de bestaande 8-segmenten dobbelstenenrit, tot de ronde is uitgereden.
+- Deze Grote Rondes vervangen de losse Tour-, Giro- en Vuelta-ritten en het losse eindklassement-abstractierace die eerder los op de koerskalender stonden.
+- De koerskalender toont voortaan twee groepen: eendagskoersen (Monumenten, Vlaamse Klassiekers) en de drie Grote Rondes.
+- Elke rit levert een eigen ritzege en ritprijzengeld op; na elke rit toont het ritresultaatscherm de tussenstand van het eindklassement en een knop om meteen de volgende rit te starten.
+- Een renner die tijdens een rit valt of ziek wordt ligt voor de rest van de ronde eruit (net als bij een eendagskoers) en is nadien enkele koersen onbeschikbaar.
+- Na de 21ste rit bepaalt de opgetelde vorm het eindklassement en een groot bijkomend prijzengeld; de erelijst houdt Grote Ronde-eindzeges (`grandToursWon`) nu apart bij van ritzeges.
+
 ## v1.15.2 — The Deep Bleu C: grotere kaart en wereldkaart
 
 - The Deep Bleu C toont een groter zichtbaar speelveld zonder de hexagonen uit te rekken.

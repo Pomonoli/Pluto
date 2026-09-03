@@ -1,5 +1,5 @@
-import { createGameUi } from './js/game-ui.js?v=1.15.2';
-import { createScreenWakeLock } from './js/screen-wake-lock.js?v=1.15.2';
+import { createGameUi } from './js/game-ui.js?v=1.16.0';
+import { createScreenWakeLock } from './js/screen-wake-lock.js?v=1.16.0';
 const socket = window.io();
 const screenWakeLock = createScreenWakeLock({ navigator, document, window });
   const $ = (id) => document.getElementById(id);
@@ -654,7 +654,7 @@ const screenWakeLock = createScreenWakeLock({ navigator, document, window });
   if('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.15.2', {
+        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.16.0', {
           updateViaCache:'none'
         });
         await registration.update();

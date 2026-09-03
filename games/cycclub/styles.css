@@ -97,6 +97,10 @@ body.cycclub-active input,body.cycclub-active select{background:var(--bg);color:
 .cc-ready-chip{border:1px solid var(--border);border-radius:999px;padding:5px 10px;font-size:12px;color:var(--muted)}
 .cc-ready-chip.ready{color:#4fa96b;border-color:#4fa96b}
 
+.cc-stage-list{display:grid;gap:4px;max-height:420px;overflow-y:auto}
+.cc-stage-row{border:1px solid var(--border);border-radius:9px;background:var(--panel2);padding:6px 10px;display:flex;align-items:center;gap:10px;font-size:12px;flex-wrap:wrap}
+.cc-stage-number{font-weight:800;min-width:52px}
+
 .cc-profile-chart{border:1px solid var(--border);border-radius:12px;background:var(--panel2);padding:10px;margin-top:12px}
 .cc-profile-svg{width:100%;height:140px;display:block;overflow:visible}
 .cc-profile-area{fill:rgba(36,138,73,.14);stroke:none}

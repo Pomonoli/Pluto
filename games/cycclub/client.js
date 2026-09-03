@@ -16,8 +16,8 @@ const STAT_LABELS={flat:'Vlak',mountain:'Berg',cobbles:'Kasseien',timeTrial:'Tij
 const STAT_SHORT={flat:'VLK',mountain:'BRG',cobbles:'KSW',timeTrial:'TT',sprint:'SPR',stamina:'UIT'};
 const SHOP_LABELS={bikes:'Fietsen & Materiaal',nutrition:'Voeding & Supplementen',trainers:'Trainers & Analyse',medical:'Medische Staf'};
 const SHOP_ICONS={bikes:'🚲',nutrition:'🍎',trainers:'📈',medical:'⚕️'};
-const CATEGORY_ORDER=['monument','classic','gt_stage','grand_tour'];
-const CATEGORY_LABELS={monument:'Monumenten',classic:'Vlaamse Klassiekers',gt_stage:'Grote Ritten',grand_tour:'Grote Rondes'};
+const CATEGORY_ORDER=['monument','classic','grand_tour'];
+const CATEGORY_LABELS={monument:'Monumenten',classic:'Vlaamse Klassiekers',grand_tour:'Grote Rondes'};
 const STATUS_LABELS={active:'Fit',injured:'Geblesseerd',sick:'Ziek'};
 const SPECIALISM_LABELS={sprinter:'Sprinter',climber:'Klimmer',classics:'Klassieker',allrounder:'Allrounder',puncheur:'Puncheur'};
 const EVENT_LABELS={topdag:'Topdag',opportuniteit:'Voorsprong genomen',normaal:'Normale rit',pech:'Pech',valt:'Val'};
@@ -55,6 +55,7 @@ function labelValue(label,value){
 }
 
 function sellPrice(rider){return rider.sellValue??Math.round(rider.marketValue*0.55/50)*50}
+function cancelButtonLabel(game){return game.grandTour?'✕ Stop de ronde':'✕ Annuleer koers'}
 
 let selectedLineup=new Set();
 let lastRaceKey=null;
@@ -68,6 +69,7 @@ function renderCycClub(room,game){
   const status=game.phase==='club'?'In de ploegleiding.'
     :game.phase==='lineup'?`Opstelling voor ${game.race?.raceName||'koers'}.`
     :game.phase==='racing'?`Onderweg in ${game.race?.raceName||'de koers'}.`
+    :game.phase==='stageResult'?`Ritresultaat — ${game.grandTour?.tourName||''}.`
     :'Koersresultaat.';
   els.gameStage.append(titlebar('CycClub',status));
 
@@ -76,6 +78,7 @@ function renderCycClub(room,game){
   if(game.phase==='club')renderClub(room,game,me);
   else if(game.phase==='lineup')renderLineup(room,game,me);
   else if(game.phase==='racing')renderRacing(room,game,me);
+  else if(game.phase==='stageResult')renderStageResult(room,game,me);
   else if(game.phase==='result')renderResult(room,game,me);
 
   els.gameStage.append(logBox(game.log));
@@ -293,8 +296,12 @@ function renderRaceCatalogPanel(room,game,me){
     const grid=E('div','cc-race-grid');
     races.forEach((race) => {
       const card=E('div','cc-race-card');
-      card.append(E('strong','',race.name),E('span','muted',euro(race.basePrize)));
-      if(race.difficulty)card.append(E('small','muted',`Moeilijkheidsgraad ${race.difficulty}/10`));
+      if(race.category==='grand_tour'){
+        card.append(E('strong','',race.name),E('span','muted',`${race.stages} ritten · ${euro(race.overallPrize)} eindklassement`));
+      } else {
+        card.append(E('strong','',race.name),E('span','muted',euro(race.basePrize)));
+        if(race.difficulty)card.append(E('small','muted',`Moeilijkheidsgraad ${race.difficulty}/10`));
+      }
       const terrain=Object.entries(race.terrain).sort((a,b) => b[1]-a[1]).map(([key]) => STAT_LABELS[key]).slice(0,2).join(' · ');
       card.append(E('small','',terrain));
       if(room.isHost){
@@ -442,7 +449,7 @@ function renderLineup(room,game,me){
     actionsRow.append(submit);
   } else actionsRow.append(E('span','muted','Wachten op de rest van het peloton…'));
   if(room.isHost){
-    const cancel=E('button','secondary','✕ Annuleer koers');
+    const cancel=E('button','secondary',cancelButtonLabel(game));
     cancel.onclick=() => action('cancelRace');
     actionsRow.append(cancel);
   }
@@ -603,7 +610,7 @@ function renderRacing(room,game,me){
 
   if(room.isHost){
     const actionsRow2=E('div','cc-rider-actions');
-    const cancel=E('button','secondary','✕ Annuleer koers');
+    const cancel=E('button','secondary',cancelButtonLabel(game));
     cancel.onclick=() => action('cancelRace');
     actionsRow2.append(cancel);
     panel.append(actionsRow2);
@@ -622,12 +629,7 @@ function segmentDots(segments){
   return row;
 }
 
-function renderResult(room,game,me){
-  const result=game.lastResult;
-  if(!result){els.gameStage.append(E('p','muted','Geen resultaat beschikbaar.'));return}
-  const panel=E('div','panel cc-panel');
-  panel.append(panelHeading(result.raceName));
-
+function renderClassificationPanel(panel,result){
   const table=E('table','stats-table');
   const head=E('tr');
   ['#','Renner','Speler','Segmenten','Gebeurtenis','Prijs'].forEach((label) => head.append(E('th','',label)));
@@ -656,12 +658,108 @@ function renderResult(room,game,me){
     });
     panel.append(dnfList);
   }
+}
 
+function backToClubButton(){
   const actionsRow=E('div','cc-rider-actions');
   const back=E('button','primary','← Terug naar club');
   back.onclick=() => action('backToClub');
   actionsRow.append(back);
+  return actionsRow;
+}
+
+function renderResult(room,game,me){
+  const result=game.lastResult;
+  if(!result){els.gameStage.append(E('p','muted','Geen resultaat beschikbaar.'));return}
+  if(result.type==='grand_tour_final')renderGrandTourFinalResult(room,game,result);
+  else renderOneDayResult(result);
+}
+
+function renderOneDayResult(result){
+  const panel=E('div','panel cc-panel');
+  panel.append(panelHeading(result.raceName));
+  renderClassificationPanel(panel,result);
+  panel.append(backToClubButton());
+  els.gameStage.append(panel);
+}
+
+function renderStageResult(room,game,me){
+  const result=game.lastResult;
+  if(!result){els.gameStage.append(E('p','muted','Geen ritresultaat beschikbaar.'));return}
+  const panel=E('div','panel cc-panel');
+  panel.append(panelHeading(`${result.raceName} · Rit ${result.stageNumber}/${result.totalStages}`));
+  renderClassificationPanel(panel,result);
+
+  const standings=game.grandTour?.standings||[];
+  if(standings.length){
+    panel.append(E('h4','cc-category-title','Tussenstand eindklassement'));
+    const gcTable=E('table','stats-table');
+    const gcHead=E('tr');
+    ['#','Renner','Speler','Ritzeges'].forEach((label) => gcHead.append(E('th','',label)));
+    gcTable.append(gcHead);
+    standings.forEach((entry) => {
+      const tr=E('tr');
+      tr.append(E('td','',String(entry.place)),E('td','',entry.riderName),E('td','',entry.playerName),E('td','',String(entry.stageWins)));
+      gcTable.append(tr);
+    });
+    const gcWrap=E('div','stats-table-wrap');
+    gcWrap.append(gcTable);
+    panel.append(gcWrap);
+  }
+
+  const actionsRow=E('div','cc-rider-actions');
+  if(room.isHost){
+    const next=E('button','primary',`➡️ Volgende rit (${result.stageNumber+1}/${result.totalStages})`);
+    next.onclick=() => action('nextStage');
+    actionsRow.append(next);
+    const cancel=E('button','secondary',cancelButtonLabel(game));
+    cancel.onclick=() => action('cancelRace');
+    actionsRow.append(cancel);
+  } else actionsRow.append(E('span','muted','Wachten tot de host de volgende rit start…'));
   panel.append(actionsRow);
 
+  els.gameStage.append(panel);
+}
+
+function renderGrandTourFinalResult(room,game,result){
+  const panel=E('div','panel cc-panel');
+  panel.append(panelHeading(`${result.raceName} · Eindklassement`));
+
+  const gcTable=E('table','stats-table');
+  const gcHead=E('tr');
+  ['#','Renner','Speler','Ritzeges'].forEach((label) => gcHead.append(E('th','',label)));
+  gcTable.append(gcHead);
+  result.gc.forEach((entry) => {
+    const tr=E('tr');
+    tr.append(E('td','',String(entry.place)),E('td','',entry.riderName),E('td','',entry.playerName),E('td','',String(entry.stageWins)));
+    gcTable.append(tr);
+  });
+  const gcWrap=E('div','stats-table-wrap');
+  gcWrap.append(gcTable);
+  panel.append(gcWrap);
+
+  if(result.payouts?.some((entry) => entry.gcPrize>0)){
+    panel.append(E('h4','cc-category-title','Eindklassementsprijzengeld'));
+    const list=E('div','cc-ready-list');
+    const nameById=new Map(game.players.map((player) => [player.id,player.name]));
+    result.payouts.filter((entry) => entry.gcPrize>0).forEach((entry) => {
+      list.append(E('span','cc-ready-chip',`${nameById.get(entry.playerId)||'Onbekend'} · ${euro(entry.gcPrize)}`));
+    });
+    panel.append(list);
+  }
+
+  panel.append(E('h4','cc-category-title','Ritverloop'));
+  const stageList=E('div','cc-stage-list');
+  result.stages.forEach((stage) => {
+    const row=E('div','cc-stage-row');
+    row.append(E('span','cc-stage-number',`Rit ${stage.stageNumber}`));
+    row.append(E('span','muted',stage.typeLabel));
+    row.append(E('span','',stage.winner?`${stage.winner.riderName} (${stage.winner.playerName})`:'Geen winnaar'));
+    if(stage.dnfCount)row.append(E('small','',`${stage.dnfCount} opgave(n)`));
+    stageList.append(row);
+  });
+  panel.append(stageList);
+
+  panel.append(backToClubButton());
   els.gameStage.append(panel);
 }

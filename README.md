@@ -2,17 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.15.2
+## Nieuw in versie 1.16.0
 
-The Deep Bleu C toont nu een grotere kaart met een aparte knop voor de volledige wereldkaart; de bediening is overzichtelijker naast de kaart geplaatst.
-
-## Nieuw in versie 1.15.1
-
-CycClub: het gelijktijdige segment-systeem tijdens een rit (iedereen rijdt een segment, en de rit gaat pas verder zodra alle spelers hun worp voor dat segment bevestigd hebben) is gerepareerd — de segmentvoortgang werd voorheen onterecht per speler bijgehouden in plaats van gedeeld voor de hele rit.
-
-## Nieuw in versie 1.15.0
-
-**The Deep Bleu C** is nu speelbaar met 1 tot 4 spelers in dezelfde wereld — nodig vrienden uit via de gamecode om samen te verkennen en te vissen. Andere spelers zijn zichtbaar op de kaart als gekleurde vis met naamlabel, en een nieuwe knop "Ruilen" laat je vis en geld ruilen met je medespelers: kies wat jij aanbiedt en wat je vraagt, en zij accepteren of weigeren het voorstel. De spelerslijst bovenaan toont voortaan iedereen in de wereld met hun geld en aantal ontdekte soorten.
+CycClub: Tour de France, Giro d’Italia en Vuelta a España zijn nu volwaardige Grote Rondes van 21 ritten na elkaar, elk met de bestaande 8-segmenten dobbelstenenrit. Ze vervangen de losse Tour-, Giro- en Vuelta-ritten; de koerskalender toont voortaan eendagskoersen en de drie Grote Rondes apart. Elke rit levert een eigen ritzege en ritprijzengeld op, na elke rit zie je meteen de tussenstand van het eindklassement, een renner die valt of ziek wordt ligt voor de rest van de ronde eruit, en het eindklassement na de laatste rit bepaalt een groot bijkomend prijzengeld.
 
 ## Nieuw in versie 1.0.0
 

@@ -293,6 +293,16 @@ const RELEASES = [
     improvements:[
       'CycClub: het gelijktijdige segment-systeem tijdens een rit is gerepareerd — de segmentvoortgang werd voorheen onterecht per speler bijgehouden in plaats van gedeeld voor de hele rit, waardoor de rit niet correct verder ging zodra iedereen bevestigd had.'
     ]
+  },
+  {
+    version:'1.16.0',
+    features:[
+      'CycClub: Tour de France, Giro d’Italia en Vuelta a España zijn nu volwaardige Grote Rondes van 21 ritten na elkaar, elk met de bestaande 8-segmenten dobbelstenenrit — ze vervangen de losse Tour-, Giro- en Vuelta-ritten op de koerskalender.'
+    ],
+    improvements:[
+      'CycClub: na elke rit van een Grote Ronde toont het ritresultaat meteen de tussenstand van het eindklassement, met een knop om direct de volgende rit te starten.',
+      'CycClub: de erelijst houdt Grote Ronde-eindzeges nu apart bij van individuele ritzeges.'
+    ]
   }
 ];
 
