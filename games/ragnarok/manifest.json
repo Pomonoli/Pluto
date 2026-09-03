@@ -1,0 +1,14 @@
+{
+  "key": "ragnarok",
+  "name": "Ragnarok",
+  "description": "Veroverg een gedeelde hexkaart met je vikingclan. Grondstoffen groeien vanzelf aan, jij claimt land, bouwt een leger op en overleeft het oordeel der goden — geen beurten, gewoon spelen zodra je kunt.",
+  "version": "1",
+  "icon": "🪓",
+  "badge": "2-6",
+  "actionLabel": "Nieuwe expeditie",
+  "minPlayers": 2,
+  "maxPlayers": 6,
+  "supportsNpc": true,
+  "realtime": true,
+  "solo": false
+}

@@ -4,10 +4,18 @@ Een vereenvoudigde, realtime mobile versie van het originele Ragnarok bordspel.
 
 **Doel:** een volledige match tussen vrienden speel je uit in 10-15 minuten.
 
-> Status: ontwerp. Deze map bevat nog geen `manifest.json` of `server.js`, dus
-> Ragnarok wordt (nog) niet als speelbare game geladen — zie
-> [`games/README.md`](../README.md) voor het pluginformaat zodra de
-> implementatie start.
+> Status: geïmplementeerd (`manifest.json`, `server.js`, `client.js`) — Ragnarok
+> is speelbaar in Pluto. De implementatie wijkt op één belangrijk punt af van
+> het oorspronkelijke ontwerp hieronder: in plaats van 8 discrete rondes met
+> een geheime-gelijktijdige-actie-timer (§4) is het een continu, tickless
+> spel geworden, geïnspireerd door Age of Civilization/Age of Civilizations —
+> Erts en IJzer groeien voortdurend aan, en iedere clan (mens of NPC) handelt
+> zodra die het kan betalen, zichtbaar en direct voor iedereen. Het "8 rondes →
+> eindsprint"-ritme uit §8 is vertaald naar verstreken speeltijd: na verloop
+> van tijd breekt de eindstrijd aan en wordt het oordeel der goden frequenter
+> en heftiger. Er is dus geen zichtbare, opjagende per-actie-timer — enkel een
+> stille server-side veiligheidsklep tegen een oneindig durende expeditie.
+> Zie `games/ragnarok/server.js` voor de exacte tijdsconstantes.
 
 ---
 

@@ -1,0 +1,85 @@
+/* Ragnarok — scoped entirely under .rgnk-root so it can't leak into the
+   rest of the Pluto shell or other game plugins. */
+
+.rgnk-root {
+  --rgnk-accent: #d1602f;
+  --rgnk-bg-panel: #141b16;
+  --rgnk-bg-panel-2: #1c2620;
+  --rgnk-text: #e7e9df;
+  --rgnk-text-dim: #93a08f;
+  --rgnk-good: #6fae7a;
+  --rgnk-favor: #b596d9;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0 12px;
+  color: var(--rgnk-text);
+}
+
+.rgnk-board-wrap {
+  background: radial-gradient(130% 110% at 50% 8%, #1c2c1a 0%, #101c11 60%, #0a120c 100%);
+  border: 1px solid var(--rgnk-bg-panel-2);
+  border-radius: 10px;
+  padding: 8px;
+}
+.rgnk-svg { display: block; width: 100%; height: auto; max-height: 46vh; }
+.rgnk-glyph { pointer-events: none; }
+
+.rgnk-hud { display: flex; flex-direction: column; gap: 10px; }
+
+.rgnk-resources { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.rgnk-res-box {
+  flex: 1; min-width: 74px; background: var(--rgnk-bg-panel); border: 1px solid var(--rgnk-bg-panel-2);
+  border-radius: 8px; padding: 6px 4px; text-align: center;
+}
+.rgnk-res-icon { font-size: 1rem; }
+.rgnk-res-val { font-weight: 700; font-size: 0.95rem; }
+.rgnk-res-label { font-size: 0.55rem; color: var(--rgnk-text-dim); text-transform: uppercase; letter-spacing: .04em; }
+.rgnk-protected {
+  flex-basis: 100%; font-size: 0.68rem; color: var(--rgnk-favor);
+  background: rgba(181,150,217,.12); border: 1px solid rgba(181,150,217,.3);
+  border-radius: 8px; padding: 5px 8px;
+}
+
+.rgnk-standings { display: flex; flex-direction: column; gap: 4px; }
+.rgnk-standing-row {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--rgnk-bg-panel); border: 1px solid var(--rgnk-bg-panel-2);
+  border-radius: 7px; padding: 5px 8px; font-size: 0.72rem;
+}
+.rgnk-standing-row.me { border-color: var(--rgnk-accent); }
+.rgnk-standing-row.out { opacity: .5; text-decoration: line-through; }
+.rgnk-dot { width: 8px; height: 8px; border-radius: 2px; transform: rotate(45deg); flex: 0 0 auto; }
+.rgnk-standing-name { flex: 1; font-weight: 600; }
+.rgnk-standing-meta { color: var(--rgnk-text-dim); }
+.rgnk-standing-score { font-weight: 700; color: var(--rgnk-accent); }
+
+.rgnk-actions-wrap { display: flex; flex-direction: column; gap: 8px; }
+.rgnk-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.rgnk-actbtn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: var(--rgnk-bg-panel); border: 1px solid var(--rgnk-bg-panel-2);
+  border-radius: 8px; padding: 9px 6px; font-size: 0.75rem; font-weight: 600;
+  color: var(--rgnk-text); cursor: pointer;
+}
+.rgnk-actbtn:hover { background: var(--rgnk-bg-panel-2); }
+.rgnk-actbtn.selected { border-color: var(--rgnk-accent); background: rgba(209,96,47,.14); color: var(--rgnk-accent); }
+.rgnk-actbtn-icon { font-size: 0.95rem; }
+
+.rgnk-subchoice:empty, .rgnk-hint:empty { display: none; }
+.rgnk-subchoice-label { font-size: 0.68rem; color: var(--rgnk-text-dim); margin-bottom: 6px; }
+.rgnk-subchoice-row { display: flex; gap: 6px; }
+.rgnk-subbtn {
+  flex: 1; background: var(--rgnk-bg-panel-2); border: 1px solid var(--rgnk-bg-panel-2);
+  border-radius: 8px; padding: 8px; font-size: 0.72rem; font-weight: 600; color: var(--rgnk-text); cursor: pointer;
+}
+.rgnk-subbtn:hover { border-color: var(--rgnk-accent); }
+.rgnk-hint { font-size: 0.68rem; color: var(--rgnk-text-dim); text-align: center; padding: 2px 4px; }
+.rgnk-waiting { text-align: center; color: var(--rgnk-text-dim); font-size: 0.8rem; padding: 10px; }
+
+.rgnk-log { border-top: 1px solid var(--rgnk-bg-panel-2); padding-top: 8px; }
+.rgnk-log-title { font-size: 0.62rem; color: var(--rgnk-text-dim); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
+.rgnk-log-list { max-height: 140px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+.rgnk-log-line { font-size: 0.68rem; color: var(--rgnk-text-dim); padding: 3px 0; border-top: 1px dashed rgba(147,160,143,.18); }
+.rgnk-log-line:first-child { border-top: none; }
