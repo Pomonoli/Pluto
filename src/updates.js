@@ -333,6 +333,13 @@ const RELEASES = [
     improvements:[
       'Bestaande gelijkspelgeschiedenis wordt automatisch meegenomen in de draw-statistieken.'
     ]
+  },
+  {
+    version:'1.18.4',
+    improvements:[
+      'Isle of Skye-tegels zijn veel groter en tonen weide, berg en water als duidelijke gekleurde vakken met een centraal symbool voor wegen, whisky, schapen, vee en schepen.',
+      'Isle of Skye toont een vaste legenda van alle terrein- en tegelsymbolen, en je kasteel is meteen herkenbaar op elk eiland.'
+    ]
   }
 ];
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.18.4 — Isle of Skye leesbaarder en speelbaarder
+
+- Tegels zijn veel groter en tonen weide, berg en water als vier duidelijke gekleurde vakken rond een centraal symbool.
+- Wegen, whisky, schapen, vee en schepen krijgen een eigen medaillon-icoon (met aantal-badge bij meerdere) in plaats van kleine tekst.
+- Je kasteel-starttegel is nu overal meteen herkenbaar met een gouden rand en kasteelicoon.
+- Een vaste legenda boven het bord verklaart alle terrein- en tegelsymbolen.
+- Het eigen eiland en de eilanden van medespelers scrollen binnen hun eigen kader zodra ze groter worden dan het scherm.
+- Spelregels en scoring zijn ongewijzigd.
+
 ## v1.18.3 — Drawhistorie migratie
 
 - Bestaande gelijkspelresultaten worden bij de database-upgrade teruggelezen in de nieuwe draw-statistieken.
