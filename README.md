@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.18.4
+## Nieuw in versie 1.18.5
 
-**Isle of Skye** is veel speelbaarder gemaakt: tegels zijn een stuk groter en tonen weide, berg en water als duidelijke gekleurde vakken met een centraal medaillon-icoon voor wegen, whisky, schapen, vee en schepen. Je kasteel-starttegel valt meteen op met een gouden rand, en een vaste legenda boven het bord verklaart alle symbolen. De spelregels zijn ongewijzigd.
+Age of Civilization toont je totale Attack en Defence weer permanent bij je andere statistieken, in plaats van alleen tijdens de schadeberekening van een aanvalsgolf.
 
 ## Nieuw in versie 1.18.0
 

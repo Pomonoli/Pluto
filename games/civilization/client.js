@@ -108,7 +108,7 @@ function renderEraBanner(E,game){const wrap=E('div','civ-era-banner');wrap.appen
 function renderStats(E,player){
   const wrap=E('div','civ-stats-row civ-you');
   const boxes=E('div','civ-stat-boxes');
-  for(const [label,value] of [['Goud',player.gold],['Inkomen',`+${player.income}`]])boxes.append(statBox(E,label,value));
+  for(const [label,value] of [['Goud',player.gold],['Attack',player.attack],['Defence',player.defence],['Inkomen',`+${player.income}`]])boxes.append(statBox(E,label,value));
   const hp=statBox(E,'Toren',`${player.hp}/100`),track=E('div','civ-hp-track'),fill=E('div','civ-hp-fill');fill.style.width=`${Math.max(0,player.hp)}%`;track.append(fill);hp.append(track);boxes.append(hp);wrap.append(boxes);return wrap;
 }
 function statBox(E,label,value){const box=E('div','civ-stat-box');box.append(E('div','civ-stat-label',label),E('div','civ-stat-value',String(value)));return box;}

@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.18.5 — Age of Civilization: totale Attack en Defence terug zichtbaar
+
+- Je totale Attack en Defence staan weer permanent bij je andere statistieken (Goud, Inkomen, Toren), in plaats van alleen zichtbaar tijdens de schadeberekening van een aanvalsgolf — belangrijk om te zien voor je een bouw- of upgradekeuze maakt.
+
 ## v1.18.4 — Isle of Skye leesbaarder en speelbaarder
 
 - Tegels zijn veel groter en tonen weide, berg en water als vier duidelijke gekleurde vakken rond een centraal symbool.
