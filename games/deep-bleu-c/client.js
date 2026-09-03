@@ -54,6 +54,13 @@ const GATHER_UI = {
   wood: { verb: 'Hakken', icon: '🪓', bg: 'Je bijl staat klaar bij de stam...' },
   rock: { verb: 'Houwen', icon: '⛏️', bg: 'Je houweel staat klaar bij de rots...' }
 };
+const SKILL_LABELS = {
+  fishing: { icon: '🎣', label: 'Vissen', help: 'Xp per gevangen vis — hoe zeldzamer, hoe meer.' },
+  woodcutting: { icon: '🪓', label: 'Houthakken', help: 'Xp per gehakte stam — hoe zeldzamer, hoe meer.' },
+  mining: { icon: '⛏️', label: 'Delven', help: 'Xp per gedolven steen — hoe zeldzamer, hoe meer.' },
+  collecting: { icon: '📖', label: 'Verzamelen', help: 'Bonus-xp telkens je een vis-, hout- of steensoort voor het eerst ontdekt.' },
+  trading: { icon: '🤝', label: 'Handelen', help: 'Xp voor beide spelers bij elke voltooide ruil.' }
+};
 
 let state, els, E, action, titlebar, logBox, renderGame;
 function bind(api) { ({ state, els, E, action, titlebar, logBox, renderGame } = api); }
@@ -191,6 +198,7 @@ function renderHud(you) {
   const hud = E('div', 'dbc-hud');
   hud.append(E('div', 'dbc-cash', `\u{1F4B0} €${you.cash}`));
   hud.append(E('div', 'dbc-discovered', `\u{1F4D6} ${you.discovered.length} soorten`));
+  hud.append(E('div', 'dbc-total-level', `⭐ Level ${you.totalLevel}`));
   return hud;
 }
 
@@ -580,6 +588,7 @@ function renderActionBar() {
     { id: 'markt', icon: '⚖️', label: 'Markt' },
     { id: 'haven', icon: '⚓', label: 'Haven' },
     { id: 'ruilen', icon: '🤝', label: 'Ruilen' },
+    { id: 'vaardigheden', icon: '⭐', label: 'Vaardigheden' },
     { id: 'monument', icon: '🏆', label: 'Hall of Fame' },
     { id: 'world-map', label: 'Map' }
   ];
@@ -604,6 +613,7 @@ function renderActivePanel(you, others) {
   if (activePanel === 'markt') return renderMarktPanel(you);
   if (activePanel === 'haven') return renderHavenPanel(you);
   if (activePanel === 'ruilen') return renderRuilenPanel(you, others);
+  if (activePanel === 'vaardigheden') return renderVaardighedenPanel(you);
   if (activePanel === 'monument') return renderMonumentPanel(you);
   if (activePanel === 'world-map') return renderMapPanel(you);
   return E('div', 'dbc-hint', 'Tik op de kaart om te wandelen, op water vlak naast je om te vissen, of op een boom/rots vlak naast je om te hakken/houwen.');
@@ -697,6 +707,31 @@ function renderMarktPanel(you) {
     button.disabled = maxed || you.cash < you.gearCosts[level];
     button.onclick = () => action('buyUpgrade', { category: key });
     card.append(button);
+    grid.append(card);
+  });
+  wrap.append(grid);
+  return wrap;
+}
+
+function renderVaardighedenPanel(you) {
+  const wrap = E('div', 'dbc-panel');
+  wrap.append(E('h4', '', `⭐ Vaardigheden · totaalniveau ${you.totalLevel}`));
+  wrap.append(E('p', 'dbc-panel-copy', 'Elke vangst, kap, delving, nieuwe ontdekking en ruil levert xp op. Niveau 1 tot en met 99 per vaardigheid.'));
+  const grid = E('div', 'dbc-gear-grid');
+  Object.keys(SKILL_LABELS).forEach((key) => {
+    const info = SKILL_LABELS[key];
+    const skill = you.skills[key];
+    const card = E('div', 'dbc-gear-card');
+    card.append(E('div', 'dbc-gear-title', `${info.icon} ${info.label} · niveau ${skill.level}/99`));
+    card.append(E('p', 'dbc-gear-help', info.help));
+    const track = E('div', 'dbc-timer-track');
+    const fill = E('div', 'dbc-timer-fill');
+    fill.style.width = `${skill.maxed ? 100 : Math.round((skill.xpIntoLevel / skill.xpForNextLevel) * 100)}%`;
+    track.append(fill);
+    card.append(track);
+    card.append(E('p', 'dbc-gear-help', skill.maxed
+      ? `${skill.xp} xp · maximumniveau bereikt`
+      : `${skill.xpIntoLevel}/${skill.xpForNextLevel} xp naar niveau ${skill.level + 1}`));
     grid.append(card);
   });
   wrap.append(grid);
