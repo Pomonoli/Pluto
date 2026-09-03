@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.18.0 — The Deep Bleu C: haven, hakken/delven en een vaardigheden-skilltree
+
+- De hex-tegels zijn twee keer zo groot, met kleur, reliëf en Pokémon-achtige natuurdecoraties (bomen, rotsen, heuvels, water).
+- De speler is nu een 2D-chibi visser in plaats van een abstracte vismarker, met horizontale spiegeling bij het lopen.
+- Nieuwe Haven aan de Middellandse Zee met decoratieve bootjes — een bootupgrade laat je verder het water op varen.
+- Naast vissen kun je nu ook hout hakken (bijl) en steen delven (houweel), met exact hetzelfde werp/aanslaan/binnenhalen-ritme als vissen.
+- Nieuwe Houthakkerij en Steengroeve naast het Aquarium-Museum, elk met vijf sets van 10 hout- en steensoorten om te verzamelen en te verkopen.
+- Het werktuig (hengel/bijl/houweel) verschijnt voortaan alleen in de hand van de speler tijdens de bijhorende actie; in rust zijn beide handen leeg.
+- Nieuwe vaardigheden-skilltree: Vissen, Houthakken, Delven, Verzamelen en Handelen gaan van niveau 1 tot 99. Je verdient xp bij elke vangst, kap, delving, nieuwe ontdekking en voltooide ruil (voor beide spelers).
+
 ## v1.17.0 — Age of Civilization: meer gebouwvarianten en tweede Wonder
 
 - Attack-, Defence- en Economy-gebouwen hebben nu elk twee verschillende namen per tijdperk, voor meer variatie in de aangeboden kaarten. Welke variant je krijgt aangeboden is willekeurig, maar eenmaal gebouwd blijft een tegel altijd zijn eigen variant volgen bij elke latere upgrade — de identiteit van een gebouw verandert nooit.

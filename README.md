@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.17.0
+## Nieuw in versie 1.18.0
 
-Age of Civilization heeft meer variatie in gebouwen: Attack-, Defence- en Economy-kaarten hebben nu elk twee verschillende namen per tijdperk, en vanaf tijdperk 2 is er keuze uit twee Wonders — een gebalanceerd en een agressiever exemplaar. Eenmaal gebouwd blijft een tegel altijd zijn eigen variant volgen bij upgrades.
+**The Deep Bleu C** heeft er een hele laag bij: naast vissen kun je nu ook hout hakken en steen delven bij de nieuwe Haven, Houthakkerij en Steengroeve, met vijf sets van 10 soorten per grondstof. De hex-tegels zijn twee keer zo groot met kleur en reliëf, je speler is een 2D-chibi visser die z'n hengel/bijl/houweel alleen vasthoudt tijdens de actie, en een nieuwe vaardigheden-skilltree (Vissen, Houthakken, Delven, Verzamelen, Handelen) loopt van niveau 1 tot 99 op basis van je vangsten, ontdekkingen en ruilen.
 
 ## Nieuw in versie 1.0.0
 

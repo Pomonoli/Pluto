@@ -303,6 +303,17 @@ const RELEASES = [
       'CycClub: na elke rit van een Grote Ronde toont het ritresultaat meteen de tussenstand van het eindklassement, met een knop om direct de volgende rit te starten.',
       'CycClub: de erelijst houdt Grote Ronde-eindzeges nu apart bij van individuele ritzeges.'
     ]
+  },
+  {
+    version:'1.18.0',
+    features:[
+      'The Deep Bleu C: nieuwe Haven met bootjes in de Middellandse Zee — koop een boot om het water op te varen, en hak hout of delf steen naast bomen en bergpieken met bijl en houweel, net als vissen. Nieuwe Houthakkerij en Steengroeve naast het Aquarium-Museum, elk met vijf sets van 10 soorten.',
+      'The Deep Bleu C: nieuwe vaardigheden-skilltree — Vissen, Houthakken, Delven, Verzamelen en Handelen gaan van niveau 1 tot 99. Je verdient xp bij elke vangst, kap, delving, nieuwe ontdekking en voltooide ruil.'
+    ],
+    improvements:[
+      'The Deep Bleu C: de hex-tegels zijn twee keer zo groot, met kleur en reliëf (bomen, rotsen, heuvels, water) in Pokémon-achtige stijl.',
+      'The Deep Bleu C: je speler is nu een 2D-chibi visser die alleen een hengel, bijl of houweel in de hand heeft tijdens de bijhorende actie.'
+    ]
   }
 ];
 
