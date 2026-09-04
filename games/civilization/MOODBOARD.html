@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pluto: Age of Civilization — Moodboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@500;600;700;800&display=swap');
+:root{
+  --wood:#2B1B13;--wood2:#3C2618;--wood3:#583621;--parch:#F3DFB3;--parch2:#E9D09A;
+  --ink:#2B2018;--soft:#69513C;--gold:#D9A541;--amber:#CB7C24;--hp:#6D8F58;
+  --attack:#C16F3E;--def:#72C6CF;--income:#CDA249;--off:#FFF6E4;
+}
+*{box-sizing:border-box}html,body{margin:0}body{font-family:Inter,sans-serif;color:var(--ink);background:linear-gradient(#F1E2C3,#DFC69A)}
+.wrap{max-width:1120px;margin:auto;padding:48px 28px 90px}.eyebrow{font-size:12px;font-weight:800;letter-spacing:.16em;color:#B9641E;text-transform:uppercase}.title{font:800 clamp(48px,7vw,78px)/.95 Cinzel,serif;color:var(--wood);margin:8px 0}.sub{font-size:18px;font-weight:700;color:#7A4A28}.lead{max-width:760px;line-height:1.65;color:var(--soft);margin-top:18px}
+section{margin-top:62px}.sh{font-size:12px;font-weight:800;letter-spacing:.14em;color:#B9641E;text-transform:uppercase}.st{font:800 29px Cinzel,serif;color:var(--wood);margin:7px 0 14px}.note{max-width:760px;line-height:1.65;color:var(--soft);font-size:15px}
+.palette{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:20px}.sw{border-radius:14px;overflow:hidden;box-shadow:0 4px 0 rgba(70,42,23,.15)}.fill{height:78px}.lab{background:var(--wood);color:#F3DBAA;padding:8px 9px;font-size:10px;font-weight:800}.lab b{display:block;font-family:monospace;color:#FFF3D6;margin-top:2px}@media(max-width:800px){.palette{grid-template-columns:repeat(3,1fr)}}
+.rules{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px}.rule{background:rgba(255,248,230,.78);border-radius:18px;padding:18px;border:1px solid rgba(70,42,23,.15)}.rule.good{border-top:5px solid var(--hp)}.rule.bad{border-top:5px solid #B85F49}.rule h3{margin:0 0 10px;font-size:13px}.rule ul{margin:0;padding-left:18px;font-size:13px;line-height:1.7;color:var(--soft)}@media(max-width:700px){.rules{grid-template-columns:1fr}}
+.surfaces{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:20px}.surf{border-radius:16px;overflow:hidden;background:white;border:1px solid rgba(70,42,23,.15)}.tile{height:95px}.wood{background:repeating-linear-gradient(6deg,#351F14 0 8px,#4A2D1D 8px 17px,#301C12 17px 24px)}.paper{background:linear-gradient(135deg,#FAEECB,#F3DFB3)}.brass{background:linear-gradient(120deg,#754A18,#E4B95C,#8E5D1D,#C58D31)}.light{background:linear-gradient(#F6E9C9,#E5C98E)}.surf b{display:block;padding:10px 12px 2px}.surf span{display:block;padding:0 12px 12px;color:var(--soft);font-size:11px;line-height:1.4}@media(max-width:780px){.surfaces{grid-template-columns:repeat(2,1fr)}}
+.full{display:grid;grid-template-columns:420px 1fr;gap:42px;align-items:start;margin-top:24px}@media(max-width:900px){.full{grid-template-columns:1fr}}
+.phone{width:390px;max-width:100%;height:844px;margin:auto;border:10px solid #2D1B12;border-radius:44px;overflow:hidden;background:#24160F;box-shadow:0 28px 58px rgba(30,18,11,.32)}
+.screen{height:100%;padding:11px 10px;background:repeating-linear-gradient(6deg,#392216 0 10px,#4A2C1C 10px 20px,#331E14 20px 29px);display:grid;grid-template-rows:auto auto auto auto auto auto auto auto 1fr;row-gap:6px;overflow:hidden}
+.top{display:grid;grid-template-columns:35px 1fr 35px;gap:10px;align-items:center}.ib{width:35px;height:35px;border-radius:11px;border:1.5px solid #B37E35;background:linear-gradient(#5A3422,#402517);display:grid;place-items:center;color:#F3D59A;font-weight:800}.gt{text-align:center;font:800 16px Cinzel,serif;color:#F6DEAC}
+.info{display:grid;grid-template-columns:116px 1fr;gap:9px}.logo{font:800 12px/1.02 Cinzel,serif;letter-spacing:.08em;color:#CB7C24}.turn{font-size:10px;line-height:1.28;color:#F4E9D6}
+.players{display:flex;gap:7px;overflow:hidden}.pc{flex:0 0 83px;min-height:91px;border:2px solid #B88B52;border-radius:13px;background:linear-gradient(#F8E9C8,#EEE1C7);padding:7px}.pc.dim{opacity:.5}.pn{font-size:9px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:10px}.hero{font-size:6.5px;color:#7B5A3E}.bar{height:6px;background:#E8DCCD;border-radius:5px;overflow:hidden;margin-top:7px}.bar span{display:block;height:100%;background:var(--hp)}.hpt{font-size:6.5px;margin-top:3px;color:#5C4A35}
+.period{text-align:center;color:#E6D7BC;font-size:7px;letter-spacing:.14em}.era{text-align:center;font:700 14px Cinzel,serif;color:#E6BD72}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;border:2px solid #B98A54;border-radius:14px;padding:7px 5px;background:linear-gradient(#F8ECCE,#F2E4C4)}.sb{text-align:center}.k{font-size:6px;text-transform:uppercase;color:#786049}.v{font-size:11px;font-weight:800;margin-top:2px}.mini{height:5px;border-radius:4px;background:#E8DCCD;margin-top:4px;overflow:hidden}.mini span{display:block;height:100%;width:37%;background:var(--hp)}
+.label{font-size:7px;font-weight:800;letter-spacing:.08em;color:#E6D7BC;text-transform:uppercase;margin-left:2px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.card{min-height:92px;border-radius:13px;border:2px solid #DDCDB2;background:linear-gradient(#F6E8C6,#E9D8B4);padding:7px 6px;overflow:hidden}.card.teal{border-color:#57D6D4;background:linear-gradient(#E0F5F3,#D4EFEA)}.card.gold{border-color:#C8A14B}.card.cyan{border-color:#53DDD6;border-style:dashed;background:linear-gradient(#D7F0EE,#CCE8E3)}.card.purple{border-color:#A07BFF;border-style:dashed;background:linear-gradient(#E8E0F3,#DDD0EC)}.card.empty{background:rgba(255,248,232,.3)}.card.choice{min-height:101px}
+.icon{width:32px;height:32px;border-radius:10px;border:1.5px solid #9C6C39;background:linear-gradient(#F3E1B8,#D9B77A);display:grid;place-items:center;margin-bottom:5px;position:relative}.ct{font-size:6.4px;font-weight:800;line-height:1.15}.cs{font-size:5.6px;line-height:1.18;color:#7C5F43;margin-top:3px}.bonus{font-size:5.6px;font-weight:800;margin-top:4px;line-height:1.15}.bonus.a{color:#9E5C33}.bonus.d{color:#43AEB5}.bonus.i{color:#A9882E}.act{font-size:5.5px;color:#A67C3C;margin-top:4px}
+.glyph{display:block;position:relative}.shield{width:16px;height:18px;background:#A8CFD7;clip-path:polygon(50% 0,94% 18%,85% 65%,50% 100%,15% 65%,6% 18%);box-shadow:inset 0 0 0 2px #5A9EAE}.gem{width:18px;height:16px;background:#8EC8FF;clip-path:polygon(50% 0,100% 35%,78% 100%,22% 100%,0 35%)}.sun{width:16px;height:16px;background:#F0BB37;border-radius:50%;box-shadow:0 -8px 0 -6px #E6A82E,0 8px 0 -6px #E6A82E,8px 0 0 -6px #E6A82E,-8px 0 0 -6px #E6A82E}.cannon{width:19px;height:8px;background:#A44B3B;border-radius:5px}.cannon:after{content:"";position:absolute;width:11px;height:4px;right:-5px;top:-4px;background:#7A8A94;border-radius:3px;transform:rotate(-12deg)}.brain{width:18px;height:14px;border:2px solid #B86C50;border-radius:8px;background:#F1C7B8}.brain:after{content:"";position:absolute;left:7px;top:-2px;height:14px;border-left:2px solid #B86C50}.temple{width:20px;height:16px;border-bottom:3px solid #635AA7;background:repeating-linear-gradient(90deg,transparent 0 3px,#7F78C8 3px 6px)}.temple:before{content:"";position:absolute;left:1px;right:1px;top:-4px;height:6px;background:#635AA7;clip-path:polygon(50% 0,100% 100%,0 100%)}.spark{width:17px;height:17px;background:#E0B13F;clip-path:polygon(50% 0,62% 37%,100% 50%,62% 63%,50% 100%,38% 63%,0 50%,38% 37%)}.radar{width:18px;height:18px;border:2px solid #66C1C8;border-radius:50%}.radar:after{content:"";position:absolute;inset:4px;border:2px solid #66C1C8;border-radius:50%}
+.legend{font-size:13px;line-height:1.7;color:var(--soft)}.legend p{margin:0 0 12px}.legend b{color:var(--wood)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Pluto game moodboard</div>
+  <h1 class="title">Age of Civ</h1>
+  <div class="sub">Alchemist workshop × modern strategy UI</div>
+  <p class="lead"><b>Dit is een reskin, geen redesign van de gamelogica.</b> Behoud de bestaande Age of Civilization-indeling en informatie-architectuur. Verander alleen de visuele taal naar donker hout, warm perkament, messing en amber. De primaire mobiele gamescreen moet fixed full screen zijn: alle hoofdsecties blijven tegelijk zichtbaar zonder verticale paginascroll.</p>
+
+  <section>
+    <div class="sh">01 — Palette</div><h2 class="st">Warm, tactiel, leesbaar</h2>
+    <div class="palette">
+      <div class="sw"><div class="fill" style="background:#2B1B13"></div><div class="lab">Walnut Dark<b>#2B1B13</b></div></div>
+      <div class="sw"><div class="fill" style="background:#3C2618"></div><div class="lab">Walnut Mid<b>#3C2618</b></div></div>
+      <div class="sw"><div class="fill" style="background:#F3DFB3"></div><div class="lab">Parchment<b>#F3DFB3</b></div></div>
+      <div class="sw"><div class="fill" style="background:#E9D09A"></div><div class="lab">Parchment Mid<b>#E9D09A</b></div></div>
+      <div class="sw"><div class="fill" style="background:#D9A541"></div><div class="lab">Gold Accent<b>#D9A541</b></div></div>
+      <div class="sw"><div class="fill" style="background:#CB7C24"></div><div class="lab">Amber CTA<b>#CB7C24</b></div></div>
+      <div class="sw"><div class="fill" style="background:#6D8F58"></div><div class="lab">Health<b>#6D8F58</b></div></div>
+      <div class="sw"><div class="fill" style="background:#C16F3E"></div><div class="lab">Attack<b>#C16F3E</b></div></div>
+      <div class="sw"><div class="fill" style="background:#72C6CF"></div><div class="lab">Defence<b>#72C6CF</b></div></div>
+      <div class="sw"><div class="fill" style="background:#CDA249"></div><div class="lab">Income<b>#CDA249</b></div></div>
+      <div class="sw"><div class="fill" style="background:#2B2018"></div><div class="lab">Ink<b>#2B2018</b></div></div>
+      <div class="sw"><div class="fill" style="background:#FFF6E4"></div><div class="lab">Off White<b>#FFF6E4</b></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh">02 — Surface system</div><h2 class="st">Hout als shell, perkament als content</h2>
+    <div class="surfaces">
+      <div class="surf"><div class="tile wood"></div><b>Donker hout</b><span>Globale framing en donkere randzones.</span></div>
+      <div class="surf"><div class="tile paper"></div><b>Perkament</b><span>Hoofdvlak voor kaarten, stats en light-theme content.</span></div>
+      <div class="surf"><div class="tile brass"></div><b>Messing</b><span>Focus, randen, actieve states en CTA-accent.</span></div>
+      <div class="surf"><div class="tile light"></div><b>Lichte kaarten</b><span>Warm en luchtig, niet overal donkere containers.</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh">03 — Fixed full-screen mockup</div><h2 class="st">Zelfde layout, nieuwe skin</h2>
+    <p class="note">De volgorde blijft: header → logo/status → spelers → tijdperk → stats → vaste gebouwen → jouw stad → kies één kaart. Geen nieuwe arena, geen apart torenveld en geen gameplay-elementen toevoegen.</p>
+    <div class="full">
+      <div class="phone"><div class="screen">
+        <div class="top"><div class="ib">←</div><div class="gt">Age of Civilization</div><div class="ib">•••</div></div>
+        <div class="info"><div class="logo">AGE OF<br>CIVILIZATION</div><div class="turn">Tijdperk 22 · Deathmatch · beurt 2/3 · kies een actie</div></div>
+        <div class="players">
+          <div class="pc"><div class="pn">Jij</div><div class="hero">Bismarck</div><div class="bar"><span style="width:37%"></span></div><div class="hpt">37/100</div></div>
+          <div class="pc"><div class="pn">Lotte</div><div class="hero">Cleopatra</div><div class="bar"><span style="width:100%"></span></div><div class="hpt">100/100</div></div>
+          <div class="pc dim"><div class="pn">Isabella</div><div class="hero">Einstein</div><div class="bar"><span style="width:0"></span></div><div class="hpt">Verslagen</div></div>
+          <div class="pc dim"><div class="pn">Cl...</div><div class="hero">...</div><div class="bar"><span style="width:0"></span></div><div class="hpt">Verslagen</div></div>
+        </div>
+        <div class="period">TIJDPERK 22 / ∞ · BEURT 2/3</div><div class="era">Future to Futuristic</div>
+        <div class="stats">
+          <div class="sb"><div class="k">Goud</div><div class="v">2363</div></div><div class="sb"><div class="k">Attack</div><div class="v">0</div></div><div class="sb"><div class="k">Defence</div><div class="v">5315</div></div><div class="sb"><div class="k">Inkomen</div><div class="v">+502</div></div><div class="sb"><div class="k">Toren</div><div class="v">37/100</div><div class="mini"><span></span></div></div>
+        </div>
+        <div><div class="label">Vaste gebouwen</div><div class="grid">
+          <div class="card cyan"><div class="icon"><span class="glyph brain"></span></div><div class="ct">Observatory</div><div class="bonus a">+220% Attack bij aanduiden</div><div class="act">Ontketen (87g)</div></div>
+          <div class="card purple"><div class="icon"><span class="glyph temple"></span></div><div class="ct">Grand Temple</div><div class="cs">Gebeurtenis actief</div></div>
+          <div class="card"><div class="icon"><span class="glyph spark"></span></div><div class="ct">Academy</div><div class="cs">Gebeurtenis actief</div></div>
+        </div></div>
+        <div><div class="label">Jouw stad</div><div class="grid">
+          <div class="card gold"><div class="icon"><span class="glyph gem"></span></div><div class="ct">Asteroid Mining Rig<br>Niv. 11</div><div class="bonus i">+162 Inkomen</div><div class="act">Upgrade (29g)</div></div>
+          <div class="card teal"><div class="icon"><span class="glyph shield"></span></div><div class="ct">Shield Generator Array<br>Niv. 15</div><div class="bonus d">+1065 Defence</div><div class="act">Upgrade (30g)</div></div>
+          <div class="card teal"><div class="icon"><span class="glyph shield"></span></div><div class="ct">Shield Generator Array<br>Niv. 15</div><div class="bonus d">+1598 Defence</div><div class="act">Upgrade (30g)</div></div>
+          <div class="card teal"><div class="icon"><span class="glyph radar"></span></div><div class="ct">Orbital Defense Platform<br>Niv. 15</div><div class="bonus d">+2397 Defence</div><div class="act">Upgrade (30g)</div></div>
+          <div class="card empty"></div><div class="card empty"></div>
+        </div></div>
+        <div><div class="label">Kies één kaart</div><div class="grid">
+          <div class="card choice"><div class="icon"><span class="glyph cannon"></span></div><div class="ct">Railgun Platform</div><div class="bonus a">+25 Attack</div><div class="act">Kost 23g</div></div>
+          <div class="card choice" style="border-color:#8D67F7"><div class="icon"><span class="glyph sun"></span></div><div class="ct">Death Star Array</div><div class="bonus a">+47 Attack · +21 Defence · +20 Inkomen</div><div class="act">Kost 44g</div></div>
+          <div class="card choice"><div class="icon"><span class="glyph shield"></span></div><div class="ct">Shield Generator Array</div><div class="bonus d">+24 Defence</div><div class="act">Kost 23g</div></div>
+        </div></div>
+      </div></div>
+      <div class="legend">
+        <p><b>Fixed full screen:</b> de mockup is geproportioneerd zodat alle hoofdsecties tegelijk zichtbaar blijven op mobiel.</p>
+        <p><b>Geen logica wijzigen:</b> layout en informatievolgorde volgen het bestaande Age of Civilization-scherm.</p>
+        <p><b>Iconen:</b> kaartemoji's worden vervangen door één coherent systeem van eenvoudige etched glyphs in perkament/messing badges.</p>
+        <p><b>Light theme:</b> echte informatievlakken blijven licht; hout wordt vooral framing.</p>
+        <p><b>Responsive:</b> tablet/desktop mogen meer ademruimte krijgen, maar knoppen en kaarten worden niet buitensporig groot.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh">04 — Implementation rules</div><h2 class="st">Wat Codex moet bewaken</h2>
+    <div class="rules">
+      <div class="rule good"><h3>DO</h3><ul><li>Behoud de huidige schermstructuur en sectievolgorde.</li><li>Hou de primaire mobiele screen binnen één schermhoogte.</li><li>Gebruik hout als shell en perkament als contentvlak.</li><li>Gebruik coherente gegraveerde icoontjes in plaats van emoji's.</li><li>Behoud semantische kleuren voor attack, defence, income en health.</li><li>Hou CTA's compact en amber/goud.</li></ul></div>
+      <div class="rule bad"><h3>DON'T</h3><ul><li>Voeg geen battlefield, torenveld of andere nieuwe gameplayzone toe.</li><li>Maak de hoofdgame niet afhankelijk van verticale paginascroll.</li><li>Gebruik geen emoji-stickers als kaarticonen.</li><li>Maak light-theme content niet onnodig donker.</li><li>Verberg geen bestaande stats die nodig zijn om keuzes te maken.</li><li>Vervang geen echte gamecontent door generieke fantasy-content.</li></ul></div>
+    </div>
+  </section>
+</div>
+</body>
+</html>
