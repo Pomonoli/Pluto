@@ -111,12 +111,12 @@ function renderKoelingAlert({ game, E, action }) {
 }
 
 function renderPhaseBody({ game, E, action, sound }) {
-  if (game.phase === 'prep') return renderPrepScreen({ game, E, action });
   if (game.phase === 'shopPrompt') return renderShopPromptPopup({ game, E, action });
   if (game.phase === 'shop') return renderShopScreen({ game, E, action, sound });
   if (game.phase === 'closePrompt') return renderClosePromptPopup({ game, E, action });
   if (game.phase === 'supermarket') return renderSupermarketScreen({ game, E, action });
-  return renderDayEndPopup({ game, E, action });
+  if (game.phase === 'dayEnd') return renderDayEndPopup({ game, E, action });
+  return renderPrepScreen({ game, E, action });
 }
 
 /* ---------------- prep ---------------- */
