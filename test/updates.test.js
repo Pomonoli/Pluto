@@ -36,13 +36,15 @@ test('guest with an older seen version gets only relevant grouped changes', () =
   const payload=updates.payloadFor({since:'1.11.0'});
   assert.deepEqual(payload.changes.games,['Isle of Skye','The Deep Bleu C','CycClub','Ragnarok','Bakkermans Jones']);
   assert.equal(payload.changes.features.length,38);
-  assert.equal(payload.changes.improvements.length,71);
+  assert.equal(payload.changes.improvements.length,73);
   assert.ok(payload.changes.features.some((item)=>item.includes('Light theme')));
   assert.ok(payload.changes.features.some((item)=>item.includes('gameheader')));
   assert.ok(payload.changes.features.some((item)=>item.includes('72, 36 of 18 tegels')));
   assert.ok(payload.changes.features.some((item)=>item.includes('burgers per speler')));
   assert.ok(payload.changes.improvements.some((item)=>item.includes('planeet-')));
   assert.ok(payload.changes.improvements.some((item)=>item.includes('ruimtebanner')));
+  assert.ok(payload.changes.improvements.some((item)=>item.includes('schermvullende, randloze ondergrond')));
+  assert.ok(payload.changes.improvements.some((item)=>item.includes('geen dubbele titel meer')));
   assert.ok(payload.changes.improvements.some((item)=>item.includes('in plaats van room')));
   assert.ok(payload.changes.improvements.some((item)=>item.includes('passende, gecentreerde breedte')));
   assert.ok(payload.changes.features.some((item)=>item.includes('2 tot 7 spelers')));
