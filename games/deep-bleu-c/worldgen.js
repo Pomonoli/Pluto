@@ -1,9 +1,11 @@
 'use strict';
 
-// Procedureel gegenereerde, gestileerde Europakaart van hex-tegels. De kaart
-// wordt één keer per serverproces opgebouwd (deterministisch seed) en
-// gedeeld door alle games, net zoals de Minigolf-mappool los van de engine
-// staat. Tegels blijven opgeslagen in een plat row-major array
+// Procedureel gegenereerde eilandkaart van hex-tegels: één centraal eiland vol
+// meren, volledig omringd door zee en oceaan, met een "wereldrand" (platte-
+// aarde-thema — een waterval die in het niets stort) op de buitenste ring van
+// de kaart. De kaart wordt één keer per serverproces opgebouwd (deterministisch
+// seed) en gedeeld door alle games, net zoals de Minigolf-mappool los van de
+// engine staat. Tegels blijven opgeslagen in een plat row-major array
 // (tiles[y*WIDTH+x]); alleen buur-/afstandslogica is hexagonaal (pointy-top,
 // "odd-r" offset) via hexmath.js.
 //
@@ -20,9 +22,12 @@ const SEED = 424242;
 const REF_SIZE = 200;
 const SCALE = HEIGHT / REF_SIZE;
 
+// 'w' = wereldrand: de waterval aan de rand van de platte wereld. Puur een
+// grens — niet beloopbaar, niet bevaarbaar, niet bevisbaar (geen biome).
+const EDGE_MARGIN = 2;
 const WALKABLE = new Set(['L', 'B', 'f', 'h']);
-const WATER = new Set(['r', 'k', 'a', 'm', 'z']);
-const BIOME_BY_TILE = { r: 'rivier', k: 'kust', a: 'atlantisch', m: 'middellandse-zee', z: 'atlantisch' };
+const WATER = new Set(['r', 'k', 'a', 'm']);
+const BIOME_BY_TILE = { r: 'rivier', k: 'kust', a: 'atlantisch', m: 'middellandse-zee' };
 
 function mulberry32(seed) {
   let t = seed >>> 0;
@@ -39,118 +44,50 @@ function clamp(value, min, max) { return value < min ? min : value > max ? max :
 
 function buildRaw(seed) {
   const rng = mulberry32(seed);
-  const tiles = new Array(WIDTH * HEIGHT).fill('L');
+  const tiles = new Array(WIDTH * HEIGHT).fill('a');
   const at = (x, y) => tiles[y * WIDTH + x];
   const set = (x, y, value) => { if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) tiles[y * WIDTH + x] = value; };
   // Frequenties (die tegen absolute x/y draaien) schalen omgekeerd mee zodat
   // hetzelfde aantal golven/eilanden/rivieren ontstaat, ongeacht kaartgrootte.
   const freq = (value) => value / SCALE;
 
-  // --- Silhouet op basis van de standaardkaart van Europa ----------------
-  // Werkwijze: eerst de grote zeeën (Arctisch, Atlantisch, Middellandse Zee,
-  // Oostzee, Zwarte Zee, Noordzee) over het hele vasteland "snijden", en
-  // daarna de karakteristieke schiereilanden/eilanden (Scandinavië, de
-  // Britse eilanden, het Iberisch Schiereiland, Italië + Sicilië, de Balkan)
-  // als land terugzetten — dezelfde volgorde als een echte atlaskaart.
-  const rowJitter = Array.from({ length: HEIGHT }, () => (rng() - 0.5) * 2);
-  const colJitter = Array.from({ length: WIDTH }, () => (rng() - 0.5) * 2);
-
-  // Eén punt is binnen een "keten" van cirkels (basis → punt) als het dicht
-  // genoeg bij het geïnterpoleerde middelpunt/straal van een van de
-  // segmenten ligt — een simpele, natuurlijk taps toelopende schiereiland-vorm.
-  function inChain(fx, fy, stops) {
-    for (let i = 0; i < stops.length - 1; i += 1) {
-      const [, x0, y0, r0] = stops[i];
-      const [, x1, y1, r1] = stops[i + 1];
-      const segX = x1 - x0, segY = y1 - y0;
-      const len2 = segX * segX + segY * segY || 1;
-      let t = ((fx - x0) * segX + (fy - y0) * segY) / len2;
-      t = clamp(t, 0, 1);
-      const px = x0 + segX * t, py = y0 + segY * t;
-      const r = r0 + (r1 - r0) * t;
-      const dx = fx - px, dy = fy - py;
-      if (dx * dx + dy * dy <= r * r) return true;
-    }
-    return false;
-  }
-
-  // Ellips met een golvende, onregelmatige rand (voor zeeën/gebergtes).
+  // --- Eén centraal eiland, volledig omringd door zee -------------------
+  // Werkwijze: een enkele, grillig-golvende ellips als eilandsilhouet
+  // (i.p.v. een vaste atlaskaart), met daarbuiten drie concentrische
+  // zeeringen (kust → atlantisch → diepzee) die overal — ook in de hoeken —
+  // ruim binnen de kaartranden blijven. De buitenste rand van de kaart wordt
+  // achteraf altijd hard overschreven met de wereldrand-waterval, ongeacht
+  // waar de golvende kustlijn toevallig uitkomt.
   function inWobblyEllipse(fx, fy, cx, cy, rx, ry, phase, freqMul = 1) {
     const dx = (fx - cx) / rx, dy = (fy - cy) / ry;
     const dist = Math.sqrt(dx * dx + dy * dy);
     const angle = Math.atan2(dy, dx);
     const wobble = 1 + 0.24 * Math.sin(angle * 3 * freqMul + phase) + 0.12 * Math.sin(angle * 5 * freqMul + phase * 1.7);
-    return dist < wobble;
+    return dist / wobble;
   }
 
-  // Ellips (voor bredere, ronde schiereilanden/eilanden).
-  function inEllipse(fx, fy, cx, cy, rx, ry) {
-    const dx = (fx - cx) / rx, dy = (fy - cy) / ry;
-    return dx * dx + dy * dy <= 1;
-  }
-
-  const seaPhase = rng() * Math.PI * 2;
-
-  // Vloeiende "bult" (smoothstep), voor een landtong die een rechte zeegrens
-  // lokaal laat uitstulpen — betrouwbaarder zichtbaar dan een los vormpje
-  // dat over een rechte grenslijn heen moet concurreren.
-  function bump(t, center, halfWidth, height) {
-    const d = Math.abs(t - center);
-    if (d >= halfWidth) return 0;
-    const s = 1 - d / halfWidth;
-    return height * s * s * (3 - 2 * s);
-  }
-
-  // Het Iberisch Schiereiland duwt de Atlantische grens plaatselijk naar het
-  // westen; Italië en de Balkan duwen de Middellandse Zee-grens naar het
-  // zuiden. Dit zijn de twee meest herkenbare "inkepingen" van Europa.
-  const atlanticEdge = (fy) => 0.095 - bump(fy, 0.85, 0.16, 0.075);
-  const medEdge = (fx) => 0.80 + bump(fx, 0.495, 0.07, 0.20) + bump(fx, 0.635, 0.075, 0.16);
-
-  // Herbruikbaar silhouet van de kleinere eilanden/schiereilanden (ook nodig
-  // na de rivieren/meren hieronder, zodat die de kustlijn niet "opeten").
-  function isLandmark(fx, fy) {
-    const scandinavia = inChain(fx, fy, [
-      [0, 0.36, 0.34, 0.09], [0.4, 0.375, 0.19, 0.075], [1, 0.40, 0.02, 0.045]
-    ]);
-    const jutland = inChain(fx, fy, [[0, 0.345, 0.315, 0.035], [1, 0.365, 0.22, 0.024]]);
-    const greatBritain = inEllipse(fx, fy, 0.06, 0.22, 0.045, 0.075);
-    const ireland = inEllipse(fx, fy, 0.012, 0.30, 0.028, 0.05);
-    const sicily = inEllipse(fx, fy, 0.505, 0.975, 0.03, 0.022);
-    const crete = inEllipse(fx, fy, 0.66, 0.95, 0.03, 0.018);
-    return scandinavia || jutland || greatBritain || ireland || sicily || crete;
-  }
+  const islandPhase = rng() * Math.PI * 2;
+  const ISLAND_CX = 0.5, ISLAND_CY = 0.5, ISLAND_RX = 0.30, ISLAND_RY = 0.28;
+  const islandRatio = (fx, fy) => inWobblyEllipse(fx, fy, ISLAND_CX, ISLAND_CY, ISLAND_RX, ISLAND_RY, islandPhase);
 
   for (let y = 0; y < HEIGHT; y += 1) {
     for (let x = 0; x < WIDTH; x += 1) {
       const fx = x / WIDTH, fy = y / HEIGHT;
-      const jx = colJitter[x] * 0.012, jy = rowJitter[y] * 0.012;
-
-      // Schiereilanden en eilanden winnen altijd van de zeeën hieronder.
-      if (isLandmark(fx, fy)) { set(x, y, 'L'); continue; }
-
-      // Zeeën: Arctisch (noord), Atlantisch (west, met Iberië-inkeping),
-      // Middellandse Zee (zuid, met Italië/Balkan-inkeping), en twee
-      // ingesloten zeeën (Oostzee, Zwarte Zee).
-      let sea = null;
-      if (fy + jy < 0.10) sea = 'z';
-      else if (fx + jx < atlanticEdge(fy)) sea = 'a';
-      else if (fy + jy > medEdge(fx)) sea = 'm';
-      else if (inWobblyEllipse(fx, fy, 0.44, 0.235, 0.105, 0.095, seaPhase)) sea = 'k';
-      else if (inWobblyEllipse(fx, fy, 0.735, 0.735, 0.085, 0.075, seaPhase * 1.4)) sea = 'k';
-
-      if (sea) set(x, y, sea);
-      // anders: blijft 'L' (Europees vasteland).
+      const ratio = islandRatio(fx, fy);
+      if (ratio < 1) set(x, y, 'L');
+      else if (ratio < 1.22) set(x, y, 'k');
+      else if (ratio < 1.55) set(x, y, 'a');
+      else set(x, y, 'm');
     }
   }
 
-  // Meren verspreid over het vasteland.
-  const lakeCount = Math.max(8, Math.round(22 * Math.sqrt(SCALE)));
+  // Meren: heel wat meer dan vroeger, verspreid over het hele eiland.
+  const lakeCount = Math.max(24, Math.round(46 * Math.sqrt(SCALE)));
   for (let i = 0; i < lakeCount; i += 1) {
-    const lx = Math.round(30 * SCALE) + Math.floor(rng() * 150 * SCALE);
-    const ly = Math.round(30 * SCALE) + Math.floor(rng() * 130 * SCALE);
+    const lx = Math.floor(rng() * WIDTH);
+    const ly = Math.floor(rng() * HEIGHT);
     if (at(lx, ly) !== 'L') continue;
-    const r = Math.max(1, (2.5 + rng() * 4.5) * SCALE);
+    const r = Math.max(1, (1.6 + rng() * 3.2) * SCALE);
     for (let y = Math.floor(ly - r - 1); y <= ly + r + 1; y += 1) {
       for (let x = Math.floor(lx - r - 1); x <= lx + r + 1; x += 1) {
         if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT || at(x, y) !== 'L') continue;
@@ -159,7 +96,9 @@ function buildRaw(seed) {
     }
   }
 
-  // Rivieren die van het binnenland naar zee of binnenmeer stromen.
+  // Rivieren die van het binnenland naar de kust of naar een binnenmeer
+  // stromen — nu vertrekkend vanuit het eilandcentrum in willekeurige
+  // richtingen, i.p.v. vaste Europa-coördinaten.
   function carveRiver(startX, startY, dirX, dirY, steps) {
     let x = startX, y = startY;
     for (let i = 0; i < steps; i += 1) {
@@ -175,27 +114,14 @@ function buildRaw(seed) {
       y += dirY + (rng() - 0.5) * 1.4;
     }
   }
-  const riverStart = (x, y) => [Math.round(x * SCALE), Math.round(y * SCALE)];
-  const riverSteps = (steps) => Math.max(10, Math.round(steps * SCALE));
-  for (const [sx, sy, dx, dy, steps] of [
-    [140, 40, 0.9, 1.6, 90],
-    [90, 60, -0.4, 1.7, 80],
-    [70, 150, 1.3, 0.3, 60],
-    [150, 130, -1.1, 0.8, 70],
-    [45, 90, 1.2, -0.3, 65],
-    [120, 170, -0.6, -1.4, 55]
-  ]) {
-    const [startX, startY] = riverStart(sx, sy);
-    carveRiver(startX, startY, dx, dy, riverSteps(steps));
-  }
-
-  // De schiereilanden/eilanden opnieuw als land bevestigen: een rivier of
-  // meer dat toevallig over Italië of Iberië liep, mag die kustlijn niet
-  // "doorprikken" — hun silhouet moet herkenbaar blijven.
-  for (let y = 0; y < HEIGHT; y += 1) {
-    for (let x = 0; x < WIDTH; x += 1) {
-      if (isLandmark(x / WIDTH, y / HEIGHT)) set(x, y, 'L');
-    }
+  const riverCount = 7;
+  for (let i = 0; i < riverCount; i += 1) {
+    const angle = (i / riverCount) * Math.PI * 2 + rng() * 0.6;
+    const startDist = (0.05 + rng() * 0.08) * WIDTH;
+    const startX = Math.round(WIDTH * ISLAND_CX + Math.cos(angle) * startDist);
+    const startY = Math.round(HEIGHT * ISLAND_CY + Math.sin(angle) * startDist);
+    const steps = Math.max(10, Math.round(60 * SCALE));
+    carveRiver(startX, startY, Math.cos(angle) * 1.3, Math.sin(angle) * 1.3, steps);
   }
 
   // Strand/dokrand: land naast water wordt beloopbaar en aanlegbaar.
@@ -219,14 +145,19 @@ function buildRaw(seed) {
   const forestPhase = rng() * Math.PI * 2;
   const forestPhase2 = rng() * Math.PI * 2;
 
-  // Ruwe locaties van de bekendste Europese gebergtes, als golvende ellipsen.
-  const mountainRanges = [
-    { cx: 0.445, cy: 0.635, rx: 0.115, ry: 0.05, freqMul: 1.0 }, // Alpen
-    { cx: 0.235, cy: 0.635, rx: 0.05, ry: 0.026, freqMul: 1.4 }, // Pyreneeën
-    { cx: 0.63, cy: 0.575, rx: 0.11, ry: 0.042, freqMul: 0.8 }, // Karpaten
-    { cx: 0.80, cy: 0.705, rx: 0.055, ry: 0.03, freqMul: 1.6 }, // Kaukasus
-    { cx: 0.365, cy: 0.16, rx: 0.045, ry: 0.11, freqMul: 1.1 } // Scandinavisch gebergte
-  ];
+  // Een handvol bergketens verspreid over het eiland, in plaats van vaste
+  // Europese gebergtes.
+  const mountainRanges = Array.from({ length: 4 }, () => {
+    const angle = rng() * Math.PI * 2;
+    const dist = 0.05 + rng() * 0.13;
+    return {
+      cx: ISLAND_CX + Math.cos(angle) * dist,
+      cy: ISLAND_CY + Math.sin(angle) * dist,
+      rx: 0.045 + rng() * 0.05,
+      ry: 0.03 + rng() * 0.035,
+      freqMul: 0.8 + rng() * 0.8
+    };
+  });
 
   for (let y = 0; y < HEIGHT; y += 1) {
     for (let x = 0; x < WIDTH; x += 1) {
@@ -234,7 +165,7 @@ function buildRaw(seed) {
       const fx = x / WIDTH, fy = y / HEIGHT;
 
       const inMountains = mountainRanges.some((range) => (
-        inWobblyEllipse(fx, fy, range.cx, range.cy, range.rx, range.ry, mountainPhase, range.freqMul)
+        inWobblyEllipse(fx, fy, range.cx, range.cy, range.rx, range.ry, mountainPhase, range.freqMul) < 1
       ));
       if (inMountains) {
         // Grillig, kleinschalig ruispatroon bepaalt piek (onbegaanbaar) vs.
@@ -246,13 +177,19 @@ function buildRaw(seed) {
         continue;
       }
 
-      // Bebossing: vlekkerige ruis (som van gefaseerde sinussen), dichter in
-      // het noorden (naaldwoud), matig gemiddeld, nog aanwezig richting het zuiden.
+      // Bebossing: vlekkerige ruis (som van gefaseerde sinussen).
       const noise = Math.sin(x * freq(0.13) + forestPhase) * Math.cos(y * freq(0.11) + forestPhase)
         + Math.sin((x + y) * freq(0.08) + forestPhase2) * 0.6;
-      const latitude = y / HEIGHT;
-      const forestThreshold = 0.32 - latitude * 0.55;
-      if (noise > forestThreshold) set(x, y, 'f');
+      if (noise > 0.05) set(x, y, 'f');
+    }
+  }
+
+  // Wereldrand: de buitenste ring van de kaart is altijd de waterval die in
+  // het niets stort — een platte-aarde-grens die nooit door land of een
+  // golvende kustlijn doorbroken kan worden.
+  for (let y = 0; y < HEIGHT; y += 1) {
+    for (let x = 0; x < WIDTH; x += 1) {
+      if (x < EDGE_MARGIN || x >= WIDTH - EDGE_MARGIN || y < EDGE_MARGIN || y >= HEIGHT - EDGE_MARGIN) set(x, y, 'w');
     }
   }
 
@@ -345,17 +282,15 @@ function buildWorld() {
   const lumberyard = placeNear(tiles, used, aquarium.x, aquarium.y, 2, 5, rng);
   const quarry = placeNear(tiles, used, aquarium.x, aquarium.y, 2, 5, rng);
 
-  // De haven hoort specifiek aan de Middellandse Zee (zuiden) te liggen, niet
-  // toevallig ergens aan een willekeurige kust bij het dorp.
-  const harborSpot = findCoastalSpot(tiles, 'm', WIDTH * 0.55, HEIGHT * 0.86)
-    || findCoastalSpot(tiles, 'm', WIDTH * 0.5, HEIGHT - 1)
+  // De haven zoekt de dichtstbijzijnde dokrand aan de kustring rond het eiland.
+  const harborSpot = findCoastalSpot(tiles, 'k', spawn.x, spawn.y)
     || placeNear(tiles, used, spawn.x, spawn.y, 10, 18, rng);
   used.add(harborSpot.y * WIDTH + harborSpot.x);
 
   // Een handvol bootjes die letterlijk in het water bij de haven liggen —
   // puur decoratief, de bootupgrade zelf koop je op de Handelsmarkt.
   const boats = hexNeighbors(harborSpot.x, harborSpot.y)
-    .filter(([x, y]) => x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT && tiles[y * WIDTH + x] === 'm')
+    .filter(([x, y]) => x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT && tiles[y * WIDTH + x] === 'k')
     .slice(0, 3)
     .map(([x, y]) => ({ x, y }));
 
@@ -369,7 +304,19 @@ function buildWorld() {
     { id: 'haven', type: 'haven', name: 'De Haven', icon: '⚓', x: harborSpot.x, y: harborSpot.y, active: true }
   ];
 
-  return { width: WIDTH, height: HEIGHT, tiles, buildings, boats, spawn, tileString: tiles.join('') };
+  // Wilde dieren: verspreid over gewone graslandtegels ('L', niet bos/rots —
+  // die zijn al voor hout/steen), deterministisch per tegel zodat de kaart
+  // niet "flikkert" en de server dezelfde plekken kent als de client.
+  const wildlife = [];
+  for (let y = 0; y < HEIGHT; y += 1) {
+    for (let x = 0; x < WIDTH; x += 1) {
+      if (tiles[y * WIDTH + x] !== 'L') continue;
+      if (used.has(y * WIDTH + x)) continue;
+      if (rng() < 0.11) wildlife.push({ x, y });
+    }
+  }
+
+  return { width: WIDTH, height: HEIGHT, tiles, buildings, boats, wildlife, spawn, tileString: tiles.join('') };
 }
 
 let cached = null;
@@ -388,11 +335,17 @@ function biomeAt(world, x, y) { const tile = tileAt(world, x, y); return tile ? 
 
 // Hout groeit op bostegels ('f' — ook gewoon beloopbaar). Steen zit in de
 // onbeloopbare bergpieken ('p'): je verzamelt 'm vanaf een aangrenzende
-// heuvel of stuk land, net zoals vissen vanaf de kant.
+// heuvel of stuk land, net zoals vissen vanaf de kant. Wilde dieren staan op
+// vaste, vooraf bepaalde graslandplekken (world.wildlife).
+function wildlifeSetFor(world) {
+  if (!world.wildlifeSet) world.wildlifeSet = new Set(world.wildlife.map((spot) => spot.y * world.width + spot.x));
+  return world.wildlifeSet;
+}
 function resourceAt(world, x, y) {
   const tile = tileAt(world, x, y);
   if (tile === 'f') return 'wood';
   if (tile === 'p') return 'rock';
+  if (tile === 'L' && wildlifeSetFor(world).has(y * world.width + x)) return 'animal';
   return null;
 }
 

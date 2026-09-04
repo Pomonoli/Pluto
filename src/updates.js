@@ -395,6 +395,16 @@ const RELEASES = [
     improvements:[
       'Age of Civilization heeft een nieuwe alchemistenatelier-interface met walnoothout, perkament, messing accenten en consistente gegraveerde iconen, compact en schermvullend op ieder formaat.'
     ]
+  },
+  {
+    version:'1.22.0',
+    features:[
+      'The Deep Bleu C: gezondheid, energie en pantser — jaag op wilde dieren en eet de buit op voor energie; een mislukte jacht kost gezondheid (verminderd door pantser).',
+      'The Deep Bleu C: de Inventaris heeft een gear-screen en de Marktplaats verkoopt nu ook kleding, wapens en schilden.'
+    ],
+    improvements:[
+      'The Deep Bleu C: de kaart is nu één eiland vol meren, volledig omringd door zee en oceaan, met een wereldrand-waterval die in het niets stort.'
+    ]
   }
 ];
 

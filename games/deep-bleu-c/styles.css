@@ -49,9 +49,13 @@
 .dbc-tool-handle{stroke:#7a5636;stroke-width:1.4;stroke-linecap:round}
 .dbc-tool-axe-head{fill:#aab2b8;stroke:#4d5459;stroke-width:.8;stroke-linejoin:round}
 .dbc-tool-pick-head{fill:none;stroke:#7d838a;stroke-width:2.6;stroke-linecap:round}
+.dbc-tool-bow{fill:none;stroke:#7a5636;stroke-width:1.4;stroke-linecap:round}
+.dbc-tool-bowstring{stroke:var(--dbc-foam);stroke-width:.6}
 .dbc-player-other{opacity:.96}
 .dbc-player-label{font-size:9px;font-weight:700;fill:#fff;paint-order:stroke;stroke:var(--dbc-ink);stroke-width:2.5px;pointer-events:none}
 .dbc-player-fishing{font-size:12px;pointer-events:none}
+.dbc-wildlife-icon{font-size:14px;pointer-events:none}
+.dbc-tile-void-stream{fill:none;stroke:rgba(228,247,241,.35);stroke-width:1.1;stroke-linecap:round}
 
 /* ============ ZWEVENDE HUD ============ */
 .dbc-stat-pills{position:absolute;top:14px;left:14px;z-index:4;display:flex;gap:8px;flex-wrap:wrap;max-width:calc(100% - 90px)}
@@ -59,6 +63,24 @@
   display:flex;align-items:center;gap:5px;white-space:nowrap;
   background:rgba(10,48,73,.78);border:2px solid var(--dbc-foam);border-radius:999px;
   padding:5px 12px;color:var(--dbc-foam);font-weight:700;font-size:13px;backdrop-filter:blur(2px);
+}
+
+/* Gezondheid/energie als vullende balken, pantser als vaste badge — direct
+   onder de geld/soorten/level-pillen, ook zwevend boven de kaart. */
+.dbc-stat-bars{position:absolute;top:48px;left:14px;z-index:4;display:flex;gap:8px;flex-wrap:wrap;max-width:calc(100% - 90px)}
+.dbc-stat-bar{
+  display:flex;align-items:center;gap:5px;white-space:nowrap;
+  background:rgba(10,48,73,.78);border:1px solid rgba(228,247,241,.4);border-radius:999px;
+  padding:3px 10px;color:var(--dbc-foam);font-weight:700;font-size:11px;backdrop-filter:blur(2px);
+}
+.dbc-stat-bar-track{width:56px;height:7px;border-radius:5px;background:rgba(228,247,241,.2);overflow:hidden}
+.dbc-stat-bar-fill{height:100%;transition:width .3s ease}
+.dbc-stat-bar-health .dbc-stat-bar-fill{background:#ff5c5c}
+.dbc-stat-bar-energy .dbc-stat-bar-fill{background:var(--dbc-sunset)}
+.dbc-stat-armor{
+  display:flex;align-items:center;white-space:nowrap;
+  background:rgba(10,48,73,.78);border:1px solid rgba(228,247,241,.4);border-radius:999px;
+  padding:3px 10px;color:var(--dbc-foam);font-weight:700;font-size:11px;backdrop-filter:blur(2px);
 }
 
 /* Elke knoppengroep krijgt een eigen ondoorzichtig "eilandje": zonder een
@@ -73,12 +95,6 @@
   position:absolute;top:50%;right:14px;transform:translateY(-50%);z-index:4;display:flex;flex-direction:column;gap:12px;
   padding:10px 10px 16px;background:rgba(10,48,73,.94);border:1px solid rgba(228,247,241,.25);border-radius:14px;
 }
-.dbc-dock-bottom{
-  position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:4;
-  display:flex;justify-content:center;align-items:flex-end;gap:12px;
-  padding:10px 18px 8px;background:rgba(10,48,73,.82);border:1px solid rgba(228,247,241,.25);border-radius:999px;
-}
-
 .dbc-icon-col{display:flex;flex-direction:column;align-items:center;gap:4px}
 .dbc-icon-btn{
   width:50px;height:50px;border-radius:50%;border:3px solid var(--dbc-foam);
@@ -89,15 +105,12 @@
 .dbc-icon-btn:hover{filter:brightness(1.08)}
 .dbc-icon-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--dbc-deep),0 2px 5px rgba(0,0,0,.2)}
 .dbc-icon-btn.square{border-radius:15px;width:44px;height:44px;font-size:19px}
-.dbc-icon-btn.primary{
-  width:68px;height:68px;font-size:29px;margin-bottom:4px;
-  background:radial-gradient(circle at 32% 28%, var(--dbc-sunset), var(--dbc-coral) 65%, var(--dbc-coral-2) 100%);
-  box-shadow:0 5px 0 var(--dbc-coral-2), 0 8px 14px rgba(0,0,0,.3);
-}
 .dbc-icon-label{font-size:10px;font-weight:700;color:var(--dbc-foam);text-shadow:0 1px 3px rgba(0,0,0,.7);white-space:nowrap}
 
-.dbc-fishing-overlay{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(10,48,73,.55)}
-.dbc-fishing-overlay .dbc-fishing{width:100%;max-width:340px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+/* Onderaan i.p.v. schermvullend: de speler zelf (altijd centraal in beeld)
+   blijft zo zichtbaar terwijl je vist, hakt, houwt of jaagt. */
+.dbc-fishing-overlay{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:5}
+.dbc-fishing-overlay .dbc-fishing{width:min(340px,calc(100vw - 28px));box-shadow:0 8px 24px rgba(0,0,0,.35)}
 
 .dbc-loading,.dbc-hint{padding:14px;text-align:center;color:var(--muted);background:var(--panel);border:1px solid var(--border);border-radius:12px}
 
@@ -128,6 +141,19 @@
 .dbc-gear-card{display:flex;flex-direction:column;gap:6px;background:rgba(228,247,241,.06);border:1px solid rgba(228,247,241,.18);border-radius:10px;padding:10px}
 .dbc-gear-title{font-weight:700;color:var(--dbc-foam)}
 .dbc-gear-help{margin:0;color:rgba(228,247,241,.65);font-size:13px}
+
+/* Interne sub-tabs binnen Inventaris/Marktplaats — zelfde pil-stijl als de
+   spelerknoppen bij Ruilen, zodat het paneel visueel als één familie oogt. */
+.dbc-subtab-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px}
+.dbc-subtab-btn{background:rgba(228,247,241,.08);border:1px solid rgba(228,247,241,.25);border-radius:999px;padding:6px 12px;cursor:pointer;color:var(--dbc-foam);font-weight:600;font-size:13px}
+.dbc-subtab-btn.active{border-color:var(--dbc-sunset);color:var(--dbc-sunset)}
+
+.dbc-build-stub{background:rgba(228,247,241,.04);border:2px dashed rgba(228,247,241,.3);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:6px}
+
+.dbc-equip-section{display:flex;flex-direction:column;gap:8px}
+.dbc-equip-row{display:flex;flex-wrap:wrap;gap:8px}
+.dbc-shop-section{display:flex;flex-direction:column;gap:10px}
+.dbc-shop-section h5{margin:4px 0 0;color:var(--dbc-foam)}
 
 .dbc-leaderboard{width:100%;border-collapse:collapse}
 .dbc-leaderboard th,.dbc-leaderboard td{padding:6px 8px;text-align:left;border-bottom:1px solid rgba(228,247,241,.2);color:var(--dbc-foam)}
@@ -191,12 +217,12 @@
   .dbc-trade-columns{grid-template-columns:1fr}
   .dbc-icon-btn{width:44px;height:44px;font-size:18px}
   .dbc-icon-btn.square{width:38px;height:38px;font-size:16px;border-radius:12px}
-  .dbc-icon-btn.primary{width:58px;height:58px;font-size:24px}
   .dbc-rail-topleft{top:54px;left:10px;gap:8px}
   .dbc-rail-right{right:10px;gap:9px}
-  .dbc-dock-bottom{gap:8px;bottom:10px}
   .dbc-icon-label{font-size:9px}
   .dbc-stat-pill{font-size:11px;padding:4px 9px}
+  .dbc-stat-bars{top:44px}
+  .dbc-stat-bar-track{width:44px}
 }
 
 @media(min-width:761px){#gameStage:has(.dbc-wrap){width:100%;max-width:1180px}}

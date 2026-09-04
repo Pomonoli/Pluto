@@ -2,13 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.21.2
+## Nieuw in versie 1.22.0
 
-Age of Civilization heeft een volledig vernieuwde alchemistenatelier-interface met donker walnoothout, warm perkament, messing accenten en consistente gegraveerde iconen. Het hoofdscherm blijft compact en schermvullend op mobiel, tablet en desktop, zonder wijzigingen aan de spelregels of bediening.
-
-## Nieuw in versie 1.21.0
-
-**Bakkermans Jones** is een nieuwe solo game: draai een vroege bakkersdienst, bak van 03:00 tot 07:00, bedien klanten en lever bestellingen tot de winkel om 12:00 sluit, en overleef willekeurige tegenslagen zoals een kapotte koeling of stroomstoring.
+**The Deep Bleu C** is nu een overlevingseiland: de kaart is één landmassa vol meren, volledig omringd door zee tot aan de rand van de platte wereld (een waterval die in het niets stort). Nieuwe gezondheid-, energie- en pantserbalken — jaag op wilde dieren en eet de buit op voor energie. De Inventaris heeft een gear-screen voor uitrusting, en de Marktplaats verkoopt nu ook kleding, wapens en schilden naast vis, hout, steen en vlees.
 
 ## Nieuw in versie 1.0.0
 

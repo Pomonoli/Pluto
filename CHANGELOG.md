@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.22.0 — The Deep Bleu C: overleven op een eiland
+
+- De kaart is nu één eiland vol meren, volledig omringd door zee en oceaan; aan de rand van de wereld stort een waterval in het niets (klassiek platte-aarde-thema).
+- Nieuwe gezondheid-, energie- en pantserbalken. Energie is nodig om te vissen, hakken, houwen of jagen en herstelt door vlees te eten; gezondheid daalt alleen bij een mislukte jachtpoging (verminderd door pantser) en een speler die flauwvalt, wordt teruggebracht naar het dorp.
+- Wilde dieren verschijnen verspreid over het eiland — jaag erop met hetzelfde tijdig-toeslaan-ritme als hakken/delven, en eet de buit op voor energie of verkoop het.
+- De Inventaris krijgt een gear-screen: uitrusting (kleding, wapens, schilden) kopen op de Marktplaats en aan-/uitdoen vanuit je Inventaris.
+- De Marktplaats verkoopt nu ook basiskleding, wapens en schilden naast vis, hout, steen en vlees.
+
 ## v1.21.2 — Age of Civilization: alchemistenatelier
 
 - Age of Civilization gebruikt een volledig vernieuwde visuele stijl met donker walnoothout, warm perkament, messing en amber.

@@ -213,6 +213,44 @@ const ROCK_SETS = [
   }
 ];
 
+// Wilde dieren, gejaagd op graslandtegels — zelfde patroon als hout/steen,
+// maar met een extra `energy`-veld: elk stuk vlees herstelt energie wanneer
+// je het opeet (zie doEat in server.js), naast de gewone verkoopprijs.
+const ANIMAL_SETS = [
+  {
+    id: 'kleinwild',
+    biome: 'wildernis',
+    name: 'Kleinwild',
+    icon: '🐇',
+    description: 'Snel, schuw en overal op het eiland te vinden.',
+    rewardGear: null,
+    items: [
+      { id: 'konijn', name: 'Konijn', icon: '🐇', rarity: 'common', minKg: 0.5, maxKg: 2, basePrice: 5, energy: 8 },
+      { id: 'fazant', name: 'Fazant', icon: '🐦', rarity: 'common', minKg: 0.5, maxKg: 1.5, basePrice: 6, energy: 9 },
+      { id: 'eekhoorn', name: 'Eekhoorn', icon: '🐿️', rarity: 'common', minKg: 0.1, maxKg: 0.5, basePrice: 3, energy: 4 },
+      { id: 'egel', name: 'Egel', icon: '🦔', rarity: 'uncommon', minKg: 0.3, maxKg: 1, basePrice: 8, energy: 6 },
+      { id: 'vos', name: 'Vos', icon: '🦊', rarity: 'uncommon', minKg: 3, maxKg: 8, basePrice: 14, energy: 12 },
+      { id: 'das', name: 'Das', icon: '🦡', rarity: 'rare', minKg: 6, maxKg: 14, basePrice: 22, energy: 16 },
+      { id: 'havik', name: 'Havik', icon: '🦅', rarity: 'epic', minKg: 0.5, maxKg: 1.5, basePrice: 48, energy: 14 }
+    ]
+  },
+  {
+    id: 'grofwild',
+    biome: 'wildernis',
+    name: 'Grofwild',
+    icon: '🦌',
+    description: 'Groot, gevaarlijk en zeldzamer — maar de moeite waard.',
+    rewardGear: null,
+    items: [
+      { id: 'ree', name: 'Ree', icon: '🦌', rarity: 'common', minKg: 15, maxKg: 30, basePrice: 20, energy: 24 },
+      { id: 'wild-zwijn', name: 'Wild Zwijn', icon: '🐗', rarity: 'uncommon', minKg: 40, maxKg: 90, basePrice: 34, energy: 32 },
+      { id: 'steenbok', name: 'Steenbok', icon: '🐐', rarity: 'uncommon', minKg: 20, maxKg: 45, basePrice: 30, energy: 28 },
+      { id: 'wolf', name: 'Wolf', icon: '🐺', rarity: 'rare', minKg: 25, maxKg: 45, basePrice: 55, energy: 30 },
+      { id: 'hert', name: 'Edelhert', icon: '🦌', rarity: 'epic', minKg: 60, maxKg: 140, basePrice: 95, energy: 45 }
+    ]
+  }
+];
+
 const RARITY_LABEL = { common: 'Gewoon', uncommon: 'Ongewoon', rare: 'Zeldzaam', epic: 'Episch' };
 
 function buildIndex(sets) {
@@ -228,8 +266,8 @@ function buildIndex(sets) {
   return { byId, flat };
 }
 
-const INDEX = { wood: buildIndex(WOOD_SETS), rock: buildIndex(ROCK_SETS) };
-const SETS_BY_KIND = { wood: WOOD_SETS, rock: ROCK_SETS };
+const INDEX = { wood: buildIndex(WOOD_SETS), rock: buildIndex(ROCK_SETS), meat: buildIndex(ANIMAL_SETS) };
+const SETS_BY_KIND = { wood: WOOD_SETS, rock: ROCK_SETS, meat: ANIMAL_SETS };
 
 function setsFor(kind) { return SETS_BY_KIND[kind] || []; }
 function poolFor(kind) { return INDEX[kind] ? INDEX[kind].flat : []; }
@@ -243,4 +281,4 @@ function priceFor(kind, id, weightKg, bonusMultiplier = 1) {
   return Math.max(1, Math.round(item.basePrice * factor * bonusMultiplier));
 }
 
-module.exports = { WOOD_SETS, ROCK_SETS, RARITY_LABEL, setsFor, poolFor, getItem, priceFor };
+module.exports = { WOOD_SETS, ROCK_SETS, ANIMAL_SETS, RARITY_LABEL, setsFor, poolFor, getItem, priceFor };

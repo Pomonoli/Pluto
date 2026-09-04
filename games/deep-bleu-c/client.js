@@ -35,53 +35,53 @@ const REEL_WINDOW_MS = 1300;
 // gradient, zonder dat naburige tegels van hetzelfde type een zichtbare naad
 // krijgen (iedere hex herhaalt dezelfde gradient-oriëntatie). Kleuren volgen
 // het "deep water, warm land"-palet uit de art-styleguide: lagoon/ocean/deep
-// voor water, grass/kelp/rock voor land, in aflopende diepte.
+// voor water, grass/kelp/rock voor land, in aflopende diepte. 'w' is de
+// wereldrand: een platte-aarde-waterval die in het niets stort.
 const TILE_SHADES = {
   L: ['#7FC168', '#5FA24C'], B: ['#F0D9A8', '#D9BD82'], f: ['#5FA282', '#396B52'], h: ['#B49B76', '#8A7358'], p: ['#9C8567', '#7A6650'],
-  r: ['#5FC2CE', '#2E8CA8'], k: ['#3FB6C4', '#1C6E8C'], a: ['#1C6E8C', '#0A3049'], m: ['#3FC4A8', '#1C8272'], z: ['#F2FAF7', '#CFE9E1']
+  r: ['#5FC2CE', '#2E8CA8'], k: ['#3FB6C4', '#1C6E8C'], a: ['#1C6E8C', '#0A3049'], m: ['#123048', '#050F18'], w: ['#1A2E38', '#020608']
 };
 const MINIMAP_RGB = {
   L: [127, 193, 104], B: [240, 217, 168], f: [95, 162, 130], h: [180, 155, 118], p: [156, 133, 103],
-  r: [95, 194, 206], k: [63, 182, 196], a: [28, 110, 140], m: [63, 196, 168], z: [242, 250, 247]
+  r: [95, 194, 206], k: [63, 182, 196], a: [28, 110, 140], m: [18, 48, 72], w: [4, 8, 10]
 };
-const WATER_CHARS = new Set(['r', 'k', 'a', 'm', 'z']);
+const WATER_CHARS = new Set(['r', 'k', 'a', 'm']);
 const WOOD_TILE = 'f';
 const ROCK_TILE = 'p';
 const GEAR_LABELS = { rod: { icon: '🎣', label: 'Hengel', help: 'Ruimer tijdvenster om aan te slaan bij een beet.' },
   bait: { icon: '🪱', label: 'Aas', help: 'Grotere kans op zeldzame en epische vis.' },
-  boat: { icon: '🚤', label: 'Boot', help: 'Vaar verder over rivieren, kust en open zee — koop deze upgrade bij de Haven of de Handelsmarkt.' },
+  boat: { icon: '🚤', label: 'Boot', help: 'Vaar verder over rivieren, kust en open zee — koop deze upgrade in je Inventaris.' },
   axe: { icon: '🪓', label: 'Bijl', help: 'Ruimer tijdvenster om raak te hakken bij een boom.' },
   pickaxe: { icon: '⛏️', label: 'Houweel', help: 'Ruimer tijdvenster om raak te houwen bij een rots.' } };
+const GEAR_CATEGORY_META = {
+  clothes: { icon: '🧥', label: 'Kleding' },
+  weapons: { icon: '⚔️', label: 'Wapens' },
+  shields: { icon: '🛡️', label: 'Schilden' }
+};
 
-// De 10 actieknoppen, ingedeeld in drie vaste zones rond de rand van de
-// volledig zichtbare kaart (i.p.v. een lijst in een zijbalk) — linksboven
-// systeem/voortgang, rechts contextuele acties, onderaan de productieknoppen
-// met de Haven als goud uitgelichte ankerknop in het midden.
+// De actieknoppen staan rechts, verticaal gecentreerd, in dezelfde blauwe
+// stijl als elkaar (geen apart uitgelichte "primary"-knop meer) — zo blijft
+// de speler zelf altijd centraal op de kaart in beeld.
 const TOPLEFT_BUTTONS = [
   { id: 'monument', icon: '🏆', label: 'Hall of Fame', square: true },
   { id: 'vaardigheden', icon: '⭐', label: 'Vaardigheden', square: true },
   { id: 'world-map', icon: '🗺️', label: 'Map', square: true }
 ];
 const RIGHT_BUTTONS = [
-  { id: 'aquarium', icon: '🐠', label: 'Aquarium' },
-  { id: 'ruilen', icon: '🤝', label: 'Ruilen' }
-];
-const DOCK_BUTTONS = [
-  { id: 'vishandel', icon: '🐟', label: 'Vishandel' },
-  { id: 'lumberyard', icon: '🪓', label: 'Hout' },
-  { id: 'haven', icon: '⚓', label: 'Haven', primary: true },
-  { id: 'quarry', icon: '⛏️', label: 'Steen' },
-  { id: 'markt', icon: '🏪', label: 'Markt' }
+  { id: 'inventaris', icon: '🎒', label: 'Inventaris' },
+  { id: 'markt', icon: '🏪', label: 'Marktplaats' }
 ];
 const GATHER_UI = {
   wood: { verb: 'Hakken', icon: '🪓', bg: 'Je bijl staat klaar bij de stam...' },
-  rock: { verb: 'Houwen', icon: '⛏️', bg: 'Je houweel staat klaar bij de rots...' }
+  rock: { verb: 'Houwen', icon: '⛏️', bg: 'Je houweel staat klaar bij de rots...' },
+  animal: { verb: 'Aanvallen', icon: '🏹', bg: 'Je sluipt op het dier af...' }
 };
 const SKILL_LABELS = {
   fishing: { icon: '🎣', label: 'Vissen', help: 'Xp per gevangen vis — hoe zeldzamer, hoe meer.' },
   woodcutting: { icon: '🪓', label: 'Houthakken', help: 'Xp per gehakte stam — hoe zeldzamer, hoe meer.' },
   mining: { icon: '⛏️', label: 'Delven', help: 'Xp per gedolven steen — hoe zeldzamer, hoe meer.' },
-  collecting: { icon: '📖', label: 'Verzamelen', help: 'Bonus-xp telkens je een vis-, hout- of steensoort voor het eerst ontdekt.' },
+  hunting: { icon: '🏹', label: 'Jagen', help: 'Xp per gevelde prooi — hoe zeldzamer, hoe meer.' },
+  collecting: { icon: '📖', label: 'Verzamelen', help: 'Bonus-xp telkens je een vis-, hout-, steen- of diersoort voor het eerst ontdekt.' },
   trading: { icon: '🤝', label: 'Handelen', help: 'Xp voor beide spelers bij elke voltooide ruil.' }
 };
 
@@ -92,7 +92,7 @@ function bind(api) { ({ state, els, E, action, titlebar, logBox, renderGame } = 
 // with a long-lived immutable cache header, so without a version query a
 // browser that already loaded an older map would keep serving it from cache
 // for up to a day even after the server restarts with new world-gen code.
-const WORLD_VERSION = 6;
+const WORLD_VERSION = 7;
 
 let world = null;
 let worldPromise = null;
@@ -186,7 +186,7 @@ function renderDeepBleuC(room, game) {
 }
 
 // De kaart blijft altijd zichtbaar op de achtergrond, schermvullend; een open
-// paneel (Vishandel, Aquarium, ...) schuift eroverheen als een los "sheet"
+// paneel (Inventaris, Marktplaats, ...) schuift eroverheen als een los "sheet"
 // in plaats van de kaart te vervangen — zo blijft de wereld altijd in beeld.
 function renderStage(you, worldData, others) {
   const camX = clampInt(you.x - Math.floor(COLS / 2), 0, worldData.width - COLS);
@@ -205,9 +205,32 @@ function renderStatPills(you) {
   return wrap;
 }
 
+function renderStatBar(icon, value, max, kind) {
+  const bar = E('div', `dbc-stat-bar dbc-stat-bar-${kind}`);
+  bar.append(E('span', 'dbc-stat-bar-icon', icon));
+  const track = E('div', 'dbc-stat-bar-track');
+  const fill = E('div', 'dbc-stat-bar-fill');
+  fill.style.width = `${Math.max(0, Math.min(100, (value / max) * 100))}%`;
+  track.append(fill);
+  bar.append(track);
+  bar.append(E('span', 'dbc-stat-bar-value', `${value}/${max}`));
+  return bar;
+}
+
+// Gezondheid en energie als vullende balken (ze putten uit/herstellen);
+// pantser is een afgeleide, niet-vullende waarde uit je uitrusting, dus die
+// krijgt een badge in plaats van een balk.
+function renderStatBars(you) {
+  const wrap = E('div', 'dbc-stat-bars');
+  wrap.append(renderStatBar('❤️', you.stats.health, you.stats.maxHealth, 'health'));
+  wrap.append(renderStatBar('⚡', you.stats.energy, you.stats.maxEnergy, 'energy'));
+  wrap.append(E('div', 'dbc-stat-armor', `🛡️ ${you.stats.armor}`));
+  return wrap;
+}
+
 function renderIconButton(b) {
   const col = E('div', 'dbc-icon-col');
-  const btn = E('button', `dbc-icon-btn${b.primary ? ' primary' : ''}${b.square ? ' square' : ''}`, b.icon);
+  const btn = E('button', `dbc-icon-btn${b.square ? ' square' : ''}`, b.icon);
   btn.type = 'button';
   btn.title = b.label;
   btn.onclick = () => {
@@ -243,6 +266,10 @@ function renderPanelSheet(you, others) {
   return overlay;
 }
 
+function isWildlifeTile(wx, wy) {
+  return Boolean(world && (world.wildlife || []).some((spot) => spot.x === wx && spot.y === wy));
+}
+
 function handleTileClick(wx, wy, tile, you) {
   if (you.fishing && you.fishing.phase !== 'result' && you.fishing.phase !== 'cast') return;
   if (you.gathering && you.gathering.phase !== 'result' && you.gathering.phase !== 'cast') return;
@@ -250,6 +277,7 @@ function handleTileClick(wx, wy, tile, you) {
   if (adjacent && WATER_CHARS.has(tile)) { action('cast', { x: wx, y: wy }); return; }
   if (adjacent && tile === WOOD_TILE) { action('gatherStart', { kind: 'wood', x: wx, y: wy }); return; }
   if (adjacent && tile === ROCK_TILE) { action('gatherStart', { kind: 'rock', x: wx, y: wy }); return; }
+  if (adjacent && isWildlifeTile(wx, wy)) { action('gatherStart', { kind: 'animal', x: wx, y: wy }); return; }
   action('move', { x: wx, y: wy });
 }
 
@@ -278,8 +306,8 @@ function facingLeftFor(id, entity) {
 const OTHER_PLAYER_COLORS = ['#ff9f43', '#4dd0e1', '#c77dff', '#ffe066'];
 
 // Werktuig in de voorste hand — enkel getekend zolang de bijhorende actie
-// bezig is: hengel bij vissen, bijl bij hakken, houweel bij delven. Anders
-// hangt die hand net als de andere gewoon leeg naast het lichaam.
+// bezig is: hengel bij vissen, bijl bij hakken, houweel bij delven, boog bij
+// jagen. Anders hangt die hand net als de andere gewoon leeg naast het lichaam.
 function appendTool(g, tool) {
   if (tool === 'rod') {
     g.append(svgEl('line', { x1: 12, y1: -3, x2: 22, y2: -13, class: 'dbc-tool-handle' }));
@@ -291,6 +319,10 @@ function appendTool(g, tool) {
   } else if (tool === 'pickaxe') {
     g.append(svgEl('line', { x1: 12, y1: -3, x2: 20, y2: -16, class: 'dbc-tool-handle' }));
     g.append(svgEl('path', { d: 'M 10 -12 Q 20 -23 30 -12', class: 'dbc-tool-pick-head' }));
+  } else if (tool === 'weapon') {
+    g.append(svgEl('line', { x1: 12, y1: -3, x2: 22, y2: -18, class: 'dbc-tool-handle' }));
+    g.append(svgEl('path', { d: 'M 14 -8 Q 22 -22 30 -10', class: 'dbc-tool-bow' }));
+    g.append(svgEl('line', { x1: 14, y1: -8, x2: 30, y2: -10, class: 'dbc-tool-bowstring' }));
   }
 }
 
@@ -332,6 +364,7 @@ function toolFor(fishingPhase, gatheringKind) {
   if (fishingPhase) return 'rod';
   if (gatheringKind === 'wood') return 'axe';
   if (gatheringKind === 'rock') return 'pickaxe';
+  if (gatheringKind === 'animal') return 'weapon';
   return null;
 }
 
@@ -435,11 +468,22 @@ function appendSandDecor(svg, cx, cy, seed) {
   svg.append(g);
 }
 
+// Wereldrand: een waterval die letterlijk in het niets stort — twee vage,
+// verticale stromen die naar onderen toe oplossen in de duisternis.
+function appendVoidDecor(svg, cx, cy, seed) {
+  const g = svgEl('g', { transform: `translate(${cx},${cy})`, class: 'dbc-tile-decor' });
+  const offset = (seed - 0.5) * 8;
+  g.append(svgEl('path', { d: `M ${-6 + offset} -9 Q ${-4 + offset} 0 ${-7 + offset} 9`, class: 'dbc-tile-void-stream' }));
+  g.append(svgEl('path', { d: `M ${3 + offset} -9 Q ${5 + offset} 0 ${2 + offset} 9`, class: 'dbc-tile-void-stream' }));
+  svg.append(g);
+}
+
 function appendTileDecor(svg, tile, cx, cy, wx, wy) {
   const seed = tileHash(wx, wy);
   if (tile === 'f') appendTreeDecor(svg, cx, cy, seed);
   else if (tile === 'h') appendHillDecor(svg, cx, cy);
   else if (tile === 'p') appendPeakDecor(svg, cx, cy);
+  else if (tile === 'w') appendVoidDecor(svg, cx, cy, seed);
   else if (WATER_CHARS.has(tile)) { if (seed < 0.4) appendWaveDecor(svg, cx, cy, seed); }
   else if (tile === 'L') { if (seed < 0.3) appendGrassDecor(svg, cx, cy, seed); }
   else if (tile === 'B') { if (seed < 0.4) appendSandDecor(svg, cx, cy, seed); }
@@ -512,6 +556,18 @@ function renderMapWrap(you, worldData, camX, camY, others = []) {
     svg.append(g);
   });
 
+  // Wilde dieren: klein icoontje op hun vaste graslandplek, aanklikbaar zoals
+  // een boom (hout) of rots (steen) — start een jacht i.p.v. een gewone stap.
+  (worldData.wildlife || []).forEach((spot) => {
+    if (spot.x < camX || spot.x >= camX + COLS || spot.y < camY || spot.y >= camY + ROWS) return;
+    const occupied = (you.x === spot.x && you.y === spot.y) || others.some((other) => other.x === spot.x && other.y === spot.y);
+    if (occupied) return;
+    const { cx, cy } = hexPoints(spot.x - camX, spot.y - camY);
+    const icon = svgEl('text', { x: cx, y: cy + 4, class: 'dbc-wildlife-icon', 'text-anchor': 'middle' });
+    icon.textContent = '🐇';
+    svg.append(icon);
+  });
+
   others.forEach((other, index) => renderOtherPlayerMarker(svg, other, camX, camY, index));
 
   const { cx: px, cy: py } = hexPoints(you.x - camX, you.y - camY);
@@ -527,10 +583,10 @@ function renderMapWrap(you, worldData, camX, camY, others = []) {
   wrapDiv.append(svg);
 
   wrapDiv.append(renderStatPills(you));
+  wrapDiv.append(renderStatBars(you));
   if (activePanel === 'map') {
     wrapDiv.append(renderButtonRail('dbc-rail-topleft', TOPLEFT_BUTTONS));
     wrapDiv.append(renderButtonRail('dbc-rail-right', RIGHT_BUTTONS));
-    wrapDiv.append(renderButtonRail('dbc-dock-bottom', DOCK_BUTTONS));
   }
 
   const activityPanel = renderFishingPanel(you.fishing) || renderGatheringPanel(you.gathering);
@@ -638,17 +694,12 @@ function renderGatheringPanel(gathering) {
 }
 
 function renderActivePanel(you, others) {
-  if (activePanel === 'vishandel') return renderVishandelPanel(you);
-  if (activePanel === 'aquarium') return renderAquariumPanel(you);
-  if (activePanel === 'lumberyard') return renderLumberyardPanel(you);
-  if (activePanel === 'quarry') return renderQuarryPanel(you);
-  if (activePanel === 'markt') return renderMarktPanel(you);
-  if (activePanel === 'haven') return renderHavenPanel(you);
-  if (activePanel === 'ruilen') return renderRuilenPanel(you, others);
+  if (activePanel === 'inventaris') return renderInventarisPanel(you);
+  if (activePanel === 'markt') return renderMarktplaatsPanel(you, others);
   if (activePanel === 'vaardigheden') return renderVaardighedenPanel(you);
   if (activePanel === 'monument') return renderMonumentPanel(you);
   if (activePanel === 'world-map') return renderMapPanel(you);
-  return E('div', 'dbc-hint', 'Tik op de kaart om te wandelen, op water vlak naast je om te vissen, of op een boom/rots vlak naast je om te hakken/houwen.');
+  return E('div', 'dbc-hint', 'Tik op de kaart om te wandelen, op water vlak naast je om te vissen, op een boom/rots vlak naast je om te hakken/houwen, of op een dier om te jagen.');
 }
 
 function renderMapPanel(you) {
@@ -676,79 +727,157 @@ function renderMapPanel(you) {
   return wrap;
 }
 
-function renderVishandelPanel(you) {
-  const wrap = E('div', 'dbc-panel');
-  wrap.append(E('h4', '', '🐟 Vishandel'));
-  wrap.append(E('p', 'dbc-panel-copy', 'Verkoop je vangst — vanaf overal, geen reis nodig.'));
-  wrap.append(renderInventory(you));
-  return wrap;
-}
+// Boot-tiertekst — de index is het bootniveau (0..3).
+const BOAT_TIER_TEXT = ['Je kunt nog niet het water op.', 'Je vaart over rivieren.', 'Je vaart over rivieren en de kust.', 'Je vaart overal, tot op open zee.'];
 
-function renderAquariumPanel(you) {
-  const wrap = E('div', 'dbc-panel');
-  wrap.append(E('h4', '', '🐠 Aquarium-Museum'));
-  wrap.append(E('p', 'dbc-panel-copy', 'Volledige sets geven een eenmalige bonus en een blijvend hogere verkoopprijs.'));
-  wrap.append(renderSets(you));
-  return wrap;
-}
-
-function renderLumberyardPanel(you) {
-  const wrap = E('div', 'dbc-panel');
-  wrap.append(E('h4', '', '🪵 Houthakkerij'));
-  wrap.append(E('p', 'dbc-panel-copy', 'Hak bomen om vlak bij je met een bijl. Volledige sets geven een blijvende bonus.'));
-  wrap.append(renderSets(you, 'wood'));
-  wrap.append(renderInventory(you, 'wood'));
-  return wrap;
-}
-
-function renderQuarryPanel(you) {
-  const wrap = E('div', 'dbc-panel');
-  wrap.append(E('h4', '', '⛏️ Steengroeve'));
-  wrap.append(E('p', 'dbc-panel-copy', 'Houw rotsen los met een houweel. Volledige sets geven een blijvende bonus.'));
-  wrap.append(renderSets(you, 'rock'));
-  wrap.append(renderInventory(you, 'rock'));
-  return wrap;
-}
-
-function renderHavenPanel(you) {
-  const wrap = E('div', 'dbc-panel');
-  wrap.append(E('h4', '', '⚓ De Haven'));
-  wrap.append(E('p', 'dbc-panel-copy', 'De bootjes liggen hier klaar. Upgrade je boot op de Handelsmarkt om verder de rivieren, kust en open zee op te varen.'));
-  const level = you.gear.boat;
-  const card = E('div', 'dbc-gear-card');
-  card.append(E('div', 'dbc-gear-title', `🚤 Boot · niveau ${level}/${you.gearMaxLevel}`));
-  const tierText = ['Je kunt nog niet het water op.', 'Je vaart over rivieren.', 'Je vaart over rivieren en de kust.', 'Je vaart overal, tot op open zee.'][Math.min(level, 3)];
-  card.append(E('p', 'dbc-gear-help', tierText));
-  wrap.append(card);
-  return wrap;
-}
-
-function renderMarktPanel(you) {
-  const wrap = E('div', 'dbc-panel');
-  wrap.append(E('h4', '', '🏪 Handelsmarkt'));
-  wrap.append(E('p', 'dbc-panel-copy', 'Investeer in betere uitrusting.'));
-  const grid = E('div', 'dbc-gear-grid');
-  Object.keys(GEAR_LABELS).forEach((key) => {
-    const info = GEAR_LABELS[key];
-    const level = you.gear[key];
-    const maxed = level >= you.gearMaxLevel;
-    const card = E('div', 'dbc-gear-card');
-    card.append(E('div', 'dbc-gear-title', `${info.icon} ${info.label} · niveau ${level}/${you.gearMaxLevel}`));
-    card.append(E('p', 'dbc-gear-help', info.help));
-    const button = E('button', 'secondary', maxed ? 'Maximum bereikt' : `Upgraden (€${you.gearCosts[level]})`);
-    button.disabled = maxed || you.cash < you.gearCosts[level];
-    button.onclick = () => action('buyUpgrade', { category: key });
-    card.append(button);
-    grid.append(card);
+function renderSubtabs(tabs, activeId, onSelect) {
+  const row = E('div', 'dbc-subtab-row');
+  tabs.forEach((tab) => {
+    const btn = E('button', `dbc-subtab-btn${tab.id === activeId ? ' active' : ''}`, `${tab.icon} ${tab.label}`);
+    btn.type = 'button';
+    btn.onclick = () => onSelect(tab.id);
+    row.append(btn);
   });
-  wrap.append(grid);
+  return row;
+}
+
+// Uitrusting: per categorie de eigen items als aan/uit-knoppen (actief item
+// gemarkeerd). Kopen gebeurt op de Marktplaats; hier enkel bekijken/wisselen.
+function renderEquipSection(you) {
+  const wrap = E('div', 'dbc-equip-section');
+  wrap.append(E('h5', '', 'Uitrusting'));
+  Object.keys(GEAR_CATEGORY_META).forEach((category) => {
+    const meta = GEAR_CATEGORY_META[category];
+    const slot = you.gearShop[category];
+    const card = E('div', 'dbc-gear-card');
+    card.append(E('div', 'dbc-gear-title', `${meta.icon} ${meta.label}`));
+    if (!slot.owned.length) {
+      card.append(E('p', 'dbc-gear-help', 'Nog niets gekocht — bezoek de Marktplaats.'));
+    } else {
+      const row = E('div', 'dbc-equip-row');
+      slot.owned.forEach((id) => {
+        const item = slot.catalog.find((entry) => entry.id === id);
+        if (!item) return;
+        const isEquipped = slot.equipped === id;
+        const btn = E('button', `dbc-subtab-btn${isEquipped ? ' active' : ''}`, `${item.icon} ${item.name}`);
+        btn.type = 'button';
+        btn.onclick = () => action('equipGear', { category, id: isEquipped ? null : id });
+        row.append(btn);
+      });
+      card.append(row);
+    }
+    wrap.append(card);
+  });
+  return wrap;
+}
+
+let inventarisTab = 'bezit';
+const INVENTARIS_TABS = [
+  { id: 'bezit', icon: '🎒', label: 'Bezittingen' },
+  { id: 'sets', icon: '📖', label: 'Sets' },
+  { id: 'uitrusting', icon: '⭐', label: 'Uitrusting' },
+  { id: 'bouwen', icon: '🔨', label: 'Bouwen' }
+];
+
+function renderInventarisPanel(you) {
+  const wrap = E('div', 'dbc-panel');
+  wrap.append(E('h4', '', '🎒 Inventaris'));
+  wrap.append(E('p', 'dbc-panel-copy', 'Al je bezittingen, je setvoortgang en je uitrusting op één plek.'));
+  wrap.append(renderSubtabs(INVENTARIS_TABS, inventarisTab, (id) => { inventarisTab = id; renderGame(state.room); }));
+
+  if (inventarisTab === 'bezit') {
+    wrap.append(renderInventory(you, 'fish', { mode: 'readOnly' }));
+    wrap.append(renderInventory(you, 'wood', { mode: 'readOnly' }));
+    wrap.append(renderInventory(you, 'rock', { mode: 'readOnly' }));
+    wrap.append(renderInventory(you, 'meat', { mode: 'eat' }));
+  } else if (inventarisTab === 'sets') {
+    wrap.append(renderSets(you, 'fish'));
+    wrap.append(renderSets(you, 'wood'));
+    wrap.append(renderSets(you, 'rock'));
+    wrap.append(renderSets(you, 'meat'));
+  } else if (inventarisTab === 'uitrusting') {
+    const grid = E('div', 'dbc-gear-grid');
+    Object.keys(GEAR_LABELS).forEach((key) => {
+      const info = GEAR_LABELS[key];
+      const level = you.gear[key];
+      const maxed = level >= you.gearMaxLevel;
+      const card = E('div', 'dbc-gear-card');
+      card.append(E('div', 'dbc-gear-title', `${info.icon} ${info.label} · niveau ${level}/${you.gearMaxLevel}`));
+      card.append(E('p', 'dbc-gear-help', info.help));
+      if (key === 'boat') card.append(E('p', 'dbc-gear-help', BOAT_TIER_TEXT[Math.min(level, 3)]));
+      const button = E('button', 'secondary', maxed ? 'Maximum bereikt' : `Upgraden (€${you.gearCosts[level]})`);
+      button.disabled = maxed || you.cash < you.gearCosts[level];
+      button.onclick = () => action('buyUpgrade', { category: key });
+      card.append(button);
+      grid.append(card);
+    });
+    wrap.append(grid);
+    wrap.append(renderEquipSection(you));
+  } else if (inventarisTab === 'bouwen') {
+    const stub = E('div', 'dbc-build-stub');
+    stub.append(E('div', 'dbc-gear-title', '🔨 Bouwen'));
+    stub.append(E('p', 'dbc-gear-help', 'Binnenkort beschikbaar: bouw eigen constructies met je verzamelde hout en steen.'));
+    wrap.append(stub);
+  }
+  return wrap;
+}
+
+// Winkel: per categorie de volledige catalogus, met "In bezit" i.p.v. een
+// koopknop zodra je het al hebt.
+function renderShopSection(you) {
+  const wrap = E('div', 'dbc-shop-section');
+  Object.keys(GEAR_CATEGORY_META).forEach((category) => {
+    const meta = GEAR_CATEGORY_META[category];
+    const slot = you.gearShop[category];
+    wrap.append(E('h5', '', `${meta.icon} ${meta.label}`));
+    const grid = E('div', 'dbc-gear-grid');
+    slot.catalog.forEach((item) => {
+      const owned = slot.owned.includes(item.id);
+      const card = E('div', 'dbc-gear-card');
+      const statLine = item.armor ? `Pantser +${item.armor}` : `Aanval +${item.attack}`;
+      card.append(E('div', 'dbc-gear-title', `${item.icon} ${item.name}`));
+      card.append(E('p', 'dbc-gear-help', statLine));
+      const button = E('button', 'secondary', owned ? 'In bezit' : `Kopen (€${item.price})`);
+      button.disabled = owned || you.cash < item.price;
+      button.onclick = () => action('buyGear', { category, id: item.id });
+      card.append(button);
+      grid.append(card);
+    });
+    wrap.append(grid);
+  });
+  return wrap;
+}
+
+let marktTab = 'verkopen';
+const MARKT_TABS = [
+  { id: 'verkopen', icon: '🐟', label: 'Verkopen' },
+  { id: 'winkel', icon: '🧥', label: 'Winkel' },
+  { id: 'ruilen', icon: '🤝', label: 'Ruilen' }
+];
+
+function renderMarktplaatsPanel(you, others) {
+  const wrap = E('div', 'dbc-panel');
+  wrap.append(E('h4', '', '🏪 Marktplaats'));
+  wrap.append(E('p', 'dbc-panel-copy', 'Verkoop je vangst, koop uitrusting of ruil met andere spelers in deze wereld.'));
+  wrap.append(renderSubtabs(MARKT_TABS, marktTab, (id) => { marktTab = id; renderGame(state.room); }));
+
+  if (marktTab === 'verkopen') {
+    wrap.append(renderInventory(you, 'fish'));
+    wrap.append(renderInventory(you, 'wood'));
+    wrap.append(renderInventory(you, 'rock'));
+    wrap.append(renderInventory(you, 'meat'));
+  } else if (marktTab === 'winkel') {
+    wrap.append(renderShopSection(you));
+  } else if (marktTab === 'ruilen') {
+    wrap.append(renderRuilenBody(you, others));
+  }
   return wrap;
 }
 
 function renderVaardighedenPanel(you) {
   const wrap = E('div', 'dbc-panel');
   wrap.append(E('h4', '', `⭐ Vaardigheden · totaalniveau ${you.totalLevel}`));
-  wrap.append(E('p', 'dbc-panel-copy', 'Elke vangst, kap, delving, nieuwe ontdekking en ruil levert xp op. Niveau 1 tot en met 99 per vaardigheid.'));
+  wrap.append(E('p', 'dbc-panel-copy', 'Elke vangst, kap, delving, jacht, nieuwe ontdekking en ruil levert xp op. Niveau 1 tot en met 99 per vaardigheid.'));
   const grid = E('div', 'dbc-gear-grid');
   Object.keys(SKILL_LABELS).forEach((key) => {
     const info = SKILL_LABELS[key];
@@ -774,10 +903,20 @@ let tradeTargetId = null;
 let tradeOfferUids = new Set();
 let tradeRequestUids = new Set();
 
-function renderRuilenPanel(you, others) {
-  const wrap = E('div', 'dbc-panel dbc-trade-panel');
-  wrap.append(E('h4', '', '🤝 Ruilen'));
-  wrap.append(E('p', 'dbc-panel-copy', 'Ruil vis en geld met andere spelers in deze wereld.'));
+// Genormaliseerde ruilpool over de vier voorraadtypes — elke uid is al uniek
+// per speler (server deelt één teller over vis/hout/steen/vlees), dus deze
+// lijst kan gerust items van alle vier types samen bevatten.
+function combinedInventory(player) {
+  return [
+    ...player.inventory.map((item) => ({ uid: item.uid, weightKg: item.weightKg, icon: item.fish.icon, name: item.fish.name })),
+    ...player.woodInventory.map((item) => ({ uid: item.uid, weightKg: item.weightKg, icon: item.item.icon, name: item.item.name })),
+    ...player.rockInventory.map((item) => ({ uid: item.uid, weightKg: item.weightKg, icon: item.item.icon, name: item.item.name })),
+    ...player.meatInventory.map((item) => ({ uid: item.uid, weightKg: item.weightKg, icon: item.item.icon, name: item.item.name }))
+  ];
+}
+
+function renderRuilenBody(you, others) {
+  const wrap = E('div', 'dbc-trade-panel');
 
   if (!others.length) {
     wrap.append(E('p', 'dbc-empty', 'Je bent alleen in deze wereld. Nodig vrienden uit via de gamecode om samen te vissen en te ruilen.'));
@@ -789,7 +928,7 @@ function renderRuilenPanel(you, others) {
   const playerList = E('div', 'dbc-trade-players');
   others.forEach((p) => {
     const btn = E('button', `dbc-trade-player-btn ${p.id === tradeTargetId ? 'active' : ''}`,
-      `${p.name} · €${p.cash} · ${p.inventory.length} vis`);
+      `${p.name} · €${p.cash} · ${combinedInventory(p).length} items`);
     btn.type = 'button';
     btn.onclick = () => {
       tradeTargetId = p.id;
@@ -812,7 +951,7 @@ function renderTradeItemPicker(title, items, selectedUids) {
   const box = E('div', 'dbc-trade-column');
   box.append(E('h5', '', title));
   if (!items.length) {
-    box.append(E('p', 'dbc-empty', 'Geen vis beschikbaar.'));
+    box.append(E('p', 'dbc-empty', 'Niets beschikbaar.'));
     return box;
   }
   items.forEach((item) => {
@@ -824,7 +963,7 @@ function renderTradeItemPicker(title, items, selectedUids) {
       if (checkbox.checked) selectedUids.add(item.uid); else selectedUids.delete(item.uid);
       renderGame(state.room);
     };
-    row.append(checkbox, E('span', '', ` ${item.fish.icon} ${item.fish.name} · ${item.weightKg.toFixed(1)} kg`));
+    row.append(checkbox, E('span', '', ` ${item.icon} ${item.name} · ${item.weightKg.toFixed(1)} kg`));
     box.append(row);
   });
   return box;
@@ -832,14 +971,16 @@ function renderTradeItemPicker(title, items, selectedUids) {
 
 function renderTradeBuilder(you, target) {
   const wrap = E('div', 'dbc-trade-builder');
-  const validOfferUids = new Set(you.inventory.map((item) => item.uid));
+  const yourItems = combinedInventory(you);
+  const targetItems = combinedInventory(target);
+  const validOfferUids = new Set(yourItems.map((item) => item.uid));
   for (const uid of tradeOfferUids) if (!validOfferUids.has(uid)) tradeOfferUids.delete(uid);
-  const validRequestUids = new Set(target.inventory.map((item) => item.uid));
+  const validRequestUids = new Set(targetItems.map((item) => item.uid));
   for (const uid of tradeRequestUids) if (!validRequestUids.has(uid)) tradeRequestUids.delete(uid);
 
   const columns = E('div', 'dbc-trade-columns');
-  columns.append(renderTradeItemPicker('Jij biedt', you.inventory, tradeOfferUids));
-  columns.append(renderTradeItemPicker(`${target.name} heeft`, target.inventory, tradeRequestUids));
+  columns.append(renderTradeItemPicker('Jij biedt', yourItems, tradeOfferUids));
+  columns.append(renderTradeItemPicker(`${target.name} heeft`, targetItems, tradeRequestUids));
   wrap.append(columns);
 
   const cashRow = E('div', 'dbc-trade-cash-row');
@@ -885,7 +1026,7 @@ function renderTradeList(you) {
     const who = trade.incoming ? trade.fromName : trade.toName;
     card.append(E('div', 'dbc-trade-card-title', trade.incoming ? `Voorstel van ${who}` : `Voorstel aan ${who}`));
     const summarize = (side) => {
-      const parts = side.items.map((item) => `${item.fish.icon} ${item.fish.name}`);
+      const parts = side.items.map((item) => `${item.display.icon} ${item.display.name}`);
       if (side.cash) parts.push(`€${side.cash}`);
       return parts.length ? parts.join(', ') : 'niets';
     };
@@ -938,7 +1079,7 @@ function renderMonumentPanel() {
 }
 
 function renderSets(you, kind = 'fish') {
-  const sets = kind === 'fish' ? you.sets : kind === 'wood' ? you.woodSets : you.rockSets;
+  const sets = kind === 'fish' ? you.sets : kind === 'wood' ? you.woodSets : kind === 'rock' ? you.rockSets : you.meatSets;
   const entriesKey = kind === 'fish' ? 'fish' : 'items';
   const wrap = E('div', 'dbc-sets');
   const grid = E('div', 'dbc-set-grid');
@@ -962,15 +1103,19 @@ function renderSets(you, kind = 'fish') {
   return wrap;
 }
 
-const selectedUidsByKind = { fish: new Set(), wood: new Set(), rock: new Set() };
+const selectedUidsByKind = { fish: new Set(), wood: new Set(), rock: new Set(), meat: new Set() };
 const INVENTORY_LABELS = {
   fish: { title: 'Vangst', empty: 'Nog niets gevangen.', itemKey: 'fish' },
   wood: { title: 'Hout', empty: 'Nog niets gehakt.', itemKey: 'item' },
-  rock: { title: 'Steen', empty: 'Nog niets gedolven.', itemKey: 'item' }
+  rock: { title: 'Steen', empty: 'Nog niets gedolven.', itemKey: 'item' },
+  meat: { title: 'Vlees', empty: 'Nog niets buitgemaakt.', itemKey: 'item' }
 };
 
-function renderInventory(you, kind = 'fish') {
-  const list = kind === 'fish' ? you.inventory : kind === 'wood' ? you.woodInventory : you.rockInventory;
+// `mode` bepaalt de actie per rij: 'sell' (Marktplaats, standaard) toont
+// selectie + verkoopknoppen, 'readOnly' (Inventaris: vis/hout/steen) toont
+// enkel de lijst, 'eat' (Inventaris: vlees) toont een Eet-knop i.p.v. Verkoop.
+function renderInventory(you, kind = 'fish', { mode = 'sell' } = {}) {
+  const list = kind === 'fish' ? you.inventory : kind === 'wood' ? you.woodInventory : kind === 'rock' ? you.rockInventory : you.meatInventory;
   const labels = INVENTORY_LABELS[kind];
   const selectedUids = selectedUidsByKind[kind];
   const wrap = E('div', 'dbc-inventory');
@@ -983,32 +1128,49 @@ function renderInventory(you, kind = 'fish') {
   const validUids = new Set(list.map((item) => item.uid));
   for (const uid of selectedUids) if (!validUids.has(uid)) selectedUids.delete(uid);
 
-  const actionsRow = E('div', 'dbc-inventory-actions');
-  const sellSelected = E('button', 'primary', `Verkoop geselecteerde (${selectedUids.size})`);
-  sellSelected.disabled = !selectedUids.size;
-  sellSelected.onclick = () => { action('sell', { kind, uids: [...selectedUids] }); selectedUids.clear(); };
-  const sellAll = E('button', 'secondary', 'Verkoop alles');
-  sellAll.onclick = () => { action('sell', { kind, uid: 'all' }); selectedUids.clear(); };
-  actionsRow.append(sellSelected, sellAll);
-  wrap.append(actionsRow);
+  if (mode === 'sell') {
+    const actionsRow = E('div', 'dbc-inventory-actions');
+    const sellSelected = E('button', 'primary', `Verkoop geselecteerde (${selectedUids.size})`);
+    sellSelected.disabled = !selectedUids.size;
+    sellSelected.onclick = () => { action('sell', { kind, uids: [...selectedUids] }); selectedUids.clear(); };
+    const sellAll = E('button', 'secondary', 'Verkoop alles');
+    sellAll.onclick = () => { action('sell', { kind, uid: 'all' }); selectedUids.clear(); };
+    actionsRow.append(sellSelected, sellAll);
+    wrap.append(actionsRow);
+  } else if (mode === 'eat') {
+    const eatAll = E('button', 'primary', 'Eet alles op');
+    eatAll.onclick = () => action('eat', { uid: 'all' });
+    wrap.append(eatAll);
+  }
 
   const listWrap = E('div', 'dbc-inventory-list');
   list.forEach((item) => {
     const entry = item[labels.itemKey];
     const row = E('div', 'dbc-inventory-row');
-    const checkbox = E('input', 'dbc-inventory-check');
-    checkbox.type = 'checkbox';
-    checkbox.checked = selectedUids.has(item.uid);
-    checkbox.onchange = () => {
-      if (checkbox.checked) selectedUids.add(item.uid); else selectedUids.delete(item.uid);
-      renderGame(state.room);
-    };
-    row.append(checkbox);
+    if (mode === 'sell') {
+      const checkbox = E('input', 'dbc-inventory-check');
+      checkbox.type = 'checkbox';
+      checkbox.checked = selectedUids.has(item.uid);
+      checkbox.onchange = () => {
+        if (checkbox.checked) selectedUids.add(item.uid); else selectedUids.delete(item.uid);
+        renderGame(state.room);
+      };
+      row.append(checkbox);
+    }
     row.append(E('span', 'dbc-inventory-label', `${entry.icon} ${entry.name} · ${item.weightKg.toFixed(1)} kg`));
-    row.append(E('span', 'dbc-inventory-price', `€${item.price}`));
-    const sellButton = E('button', 'secondary', 'Verkoop');
-    sellButton.onclick = () => { action('sell', { kind, uid: item.uid }); selectedUids.delete(item.uid); };
-    row.append(sellButton);
+    if (mode === 'eat') {
+      row.append(E('span', 'dbc-inventory-price', `⚡${entry.energy}`));
+      const eatButton = E('button', 'secondary', 'Eet');
+      eatButton.onclick = () => action('eat', { uid: item.uid });
+      row.append(eatButton);
+    } else {
+      row.append(E('span', 'dbc-inventory-price', `€${item.price}`));
+      if (mode === 'sell') {
+        const sellButton = E('button', 'secondary', 'Verkoop');
+        sellButton.onclick = () => { action('sell', { kind, uid: item.uid }); selectedUids.delete(item.uid); };
+        row.append(sellButton);
+      }
+    }
     listWrap.append(row);
   });
   wrap.append(listWrap);

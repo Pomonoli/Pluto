@@ -3,6 +3,7 @@
 const { getWorld, isWalkable, isWater, resourceAt, nearestWalkable, findPath, hexDistance, biomeAt } = require('./worldgen');
 const { SETS, fishForBiome, getFish, priceFor: fishPriceFor } = require('./fish');
 const resources = require('./resources');
+const gear = require('./gear');
 
 const STEP_MS = 170;
 const HOOK_WINDOW_MS = 900;
@@ -25,12 +26,23 @@ const SET_COMPLETE_BONUS = 600;
 const SET_BONUS_MULTIPLIER = 1.15;
 const GEAR_LABEL = { rod: 'hengel', bait: 'aas', boat: 'boot', axe: 'bijl', pickaxe: 'houweel' };
 
-// Vaardigheden-skilltree: elke vangst/kap/delving/nieuwe-soort-ontdekking/ruil
-// levert xp op voor de bijhorende vaardigheid, van niveau 1 tot 99 — net als
-// het gereedschap is dit puur progressie/statistiek, geen extra bonussen.
-const SKILL_KEYS = ['fishing', 'woodcutting', 'mining', 'collecting', 'trading'];
+// Gezondheid, energie en pantser: pantser komt uitsluitend van uitgeruste
+// kleding/schild (geen losse "stat", puur afgeleid), gezondheid daalt alleen
+// bij een mislukte jachtpoging, energie daalt bij elke voltooide vangst/kap/
+// delving/jacht en herstelt door vlees te eten.
+const MAX_HEALTH = 100;
+const MAX_ENERGY = 100;
+const ENERGY_COST_PER_ACTION = 3;
+const HUNT_DAMAGE_MIN = 6;
+const HUNT_DAMAGE_MAX = 16;
+const FAINT_HEALTH_RESTORE = 0.5;
+
+// Vaardigheden-skilltree: elke vangst/kap/delving/jacht/nieuwe-soort-ontdekking/
+// ruil levert xp op voor de bijhorende vaardigheid, van niveau 1 tot 99 — net
+// als het gereedschap is dit puur progressie/statistiek, geen extra bonussen.
+const SKILL_KEYS = ['fishing', 'woodcutting', 'mining', 'hunting', 'collecting', 'trading'];
 const MAX_SKILL_LEVEL = 99;
-const SKILL_LABEL = { fishing: 'Vissen', woodcutting: 'Houthakken', mining: 'Delven', collecting: 'Verzamelen', trading: 'Handelen' };
+const SKILL_LABEL = { fishing: 'Vissen', woodcutting: 'Houthakken', mining: 'Delven', hunting: 'Jagen', collecting: 'Verzamelen', trading: 'Handelen' };
 const RARITY_XP = { common: 8, uncommon: 15, rare: 30, epic: 60 };
 const COLLECT_XP = 40;
 const TRADE_XP = 25;
@@ -91,17 +103,36 @@ const GATHER_CONFIG = {
     lateMiss: 'Mis geslagen! Het houweel ketst af.',
     haulMiss: 'Het brok viel terug, je moet opnieuw beginnen.',
     resultVerb: 'Gedolven'
+  },
+  // Jagen heeft geen `toolKey` (levelbonus): die komt in plaats daarvan van je
+  // uitgeruste wapen (zie weaponTierBonus). Een mislukte jacht kost bovendien
+  // gezondheid — het dier verweert zich — verminderd door je uitgeruste pantser.
+  animal: {
+    toolKey: null,
+    label: 'wild dier',
+    startLog: 'Je sluipt op het dier af...',
+    strikeText: 'Nu! Val aan!',
+    strikeVerb: 'Aanvallen',
+    haulText: 'Maak de vangst af!',
+    haulVerb: 'Buit binnenhalen',
+    earlyMiss: 'Het dier merkt je nog niet, wacht op je kans.',
+    lateMiss: 'Mis! Het dier bijt van zich af.',
+    haulMiss: 'Het dier rukt los en verwondt je in de worsteling.',
+    resultVerb: 'Buit',
+    dealsDamage: true
   }
 };
 
 function inventoryFieldFor(kind) {
   if (kind === 'wood') return 'woodInventory';
   if (kind === 'rock') return 'rockInventory';
+  if (kind === 'meat') return 'meatInventory';
   return 'inventory';
 }
 function discoveredFieldFor(kind) {
   if (kind === 'wood') return 'woodDiscovered';
   if (kind === 'rock') return 'rockDiscovered';
+  if (kind === 'meat') return 'meatDiscovered';
   return 'discovered';
 }
 function itemLookup(kind, id) { return kind === 'fish' ? getFish(id) : resources.getItem(kind, id); }
@@ -110,14 +141,47 @@ function priceForKind(kind, id, weightKg, bonus) {
 }
 function setsForKind(kind) { return kind === 'fish' ? SETS : resources.setsFor(kind); }
 
+// Pantser komt uitsluitend van uitgeruste kleding + schild; aanval van het
+// uitgeruste wapen. Beide zijn afgeleid van de winkelcatalogus (gear.js), niet
+// van een los opgeslagen getal — zo hoeft een prijs-/statwijziging in de
+// catalogus nergens anders bijgewerkt te worden.
+function equippedItem(player, category) {
+  const id = player.equipped[category];
+  return id ? gear.getGear(category, id) : null;
+}
+function armorValue(player) {
+  return (equippedItem(player, 'clothes')?.armor || 0) + (equippedItem(player, 'shields')?.armor || 0);
+}
+function weaponTierBonus(player) {
+  const weapon = equippedItem(player, 'weapons');
+  if (!weapon) return 0;
+  const tier = gear.WEAPONS.findIndex((entry) => entry.id === weapon.id) + 1;
+  return tier * TOOL_STRIKE_BONUS_MS;
+}
+
+// Ruilen werkt over alle vier voorraadtypes heen. `nextUid` is één gedeelde
+// teller per speler (`doReel`, `doGatherHaul` gebruiken 'm allemaal), dus een
+// uid is al uniek over vis/hout/steen/vlees — hier hoeven we enkel de velden
+// na elkaar te doorzoeken tot het item gevonden is.
+function findOwnedItem(player, uid) {
+  for (const kind of ['fish', 'wood', 'rock', 'meat']) {
+    const item = player[inventoryFieldFor(kind)].find((candidate) => candidate.uid === uid);
+    if (item) return { kind, item };
+  }
+  return null;
+}
+
 function boatWaterSet(player) {
   const tier = Math.min(player.gear.boat, WATER_TIERS.length - 1);
   return new Set(WATER_TIERS[tier] || []);
 }
 
 function defaultGear() { return { rod: 0, bait: 0, boat: 0, axe: 0, pickaxe: 0 }; }
-function allSets() { return [...SETS, ...resources.WOOD_SETS, ...resources.ROCK_SETS]; }
+function allSets() { return [...SETS, ...resources.WOOD_SETS, ...resources.ROCK_SETS, ...resources.ANIMAL_SETS]; }
 function defaultSetBonuses() { return Object.fromEntries(allSets().map((set) => [set.id, false])); }
+function defaultStats() { return { health: MAX_HEALTH, energy: MAX_ENERGY }; }
+function defaultGearOwned() { return Object.fromEntries(gear.CATEGORIES.map((category) => [category, []])); }
+function defaultEquipped() { return Object.fromEntries(gear.CATEGORIES.map((category) => [category, null])); }
 
 function sanitizeItems(kind, discoveredRaw, inventoryRaw) {
   const known = new Set(resources.poolFor(kind).map((item) => item.id));
@@ -136,10 +200,11 @@ function sanitizeSaved(saved) {
     : [];
   const wood = sanitizeItems('wood', saved?.woodDiscovered, saved?.woodInventory);
   const rock = sanitizeItems('rock', saved?.rockDiscovered, saved?.rockInventory);
-  const gear = { ...defaultGear() };
+  const meat = sanitizeItems('meat', saved?.meatDiscovered, saved?.meatInventory);
+  const toolLevels = { ...defaultGear() };
   for (const key of GEAR_KEYS) {
     const level = Number(saved?.gear?.[key]);
-    if (Number.isFinite(level)) gear[key] = Math.max(0, Math.min(GEAR_MAX_LEVEL, Math.round(level)));
+    if (Number.isFinite(level)) toolLevels[key] = Math.max(0, Math.min(GEAR_MAX_LEVEL, Math.round(level)));
   }
   const setBonuses = { ...defaultSetBonuses() };
   for (const set of allSets()) setBonuses[set.id] = Boolean(saved?.setBonuses?.[set.id]);
@@ -148,6 +213,21 @@ function sanitizeSaved(saved) {
     const xp = Number(saved?.skills?.[key]);
     if (Number.isFinite(xp)) skills[key] = Math.max(0, Math.min(MAX_SKILL_XP, Math.round(xp)));
   }
+  const gearOwned = defaultGearOwned();
+  for (const category of gear.CATEGORIES) {
+    const ownedIds = Array.isArray(saved?.gearOwned?.[category]) ? saved.gearOwned[category] : [];
+    gearOwned[category] = [...new Set(ownedIds.filter((id) => gear.getGear(category, id)))];
+  }
+  const equipped = defaultEquipped();
+  for (const category of gear.CATEGORIES) {
+    const id = saved?.equipped?.[category];
+    if (id && gearOwned[category].includes(id)) equipped[category] = id;
+  }
+  const stats = defaultStats();
+  const health = Number(saved?.stats?.health);
+  if (Number.isFinite(health)) stats.health = Math.max(0, Math.min(MAX_HEALTH, Math.round(health)));
+  const energy = Number(saved?.stats?.energy);
+  if (Number.isFinite(energy)) stats.energy = Math.max(0, Math.min(MAX_ENERGY, Math.round(energy)));
   return {
     cash: Math.max(0, Number(saved?.cash) || 0),
     discovered,
@@ -156,7 +236,12 @@ function sanitizeSaved(saved) {
     woodInventory: wood.inventory,
     rockDiscovered: rock.discovered,
     rockInventory: rock.inventory,
-    gear,
+    meatDiscovered: meat.discovered,
+    meatInventory: meat.inventory,
+    gear: toolLevels,
+    gearOwned,
+    equipped,
+    stats,
     setBonuses,
     skills,
     heaviestKg: Math.max(0, Number(saved?.heaviestKg) || 0)
@@ -216,7 +301,12 @@ function createGame(roomPlayers) {
       woodDiscovered: saved ? saved.woodDiscovered : [],
       rockInventory: saved ? saved.rockInventory : [],
       rockDiscovered: saved ? saved.rockDiscovered : [],
+      meatInventory: saved ? saved.meatInventory : [],
+      meatDiscovered: saved ? saved.meatDiscovered : [],
       gear: saved ? saved.gear : defaultGear(),
+      gearOwned: saved ? saved.gearOwned : defaultGearOwned(),
+      equipped: saved ? saved.equipped : defaultEquipped(),
+      stats: saved ? saved.stats : defaultStats(),
       setBonuses: saved ? saved.setBonuses : defaultSetBonuses(),
       skills: saved ? saved.skills : defaultSkills(),
       heaviestKg: saved ? saved.heaviestKg : 0,
@@ -228,7 +318,7 @@ function createGame(roomPlayers) {
   return {
     gameOver: false,
     resultText: '',
-    log: ['Je staat bij De Vishandel, klaar om uit te varen.'],
+    log: ['Je staat klaar om uit te varen.'],
     players,
     trades: []
   };
@@ -248,7 +338,12 @@ function afterStateChange(room, { db }) {
       woodDiscovered: player.woodDiscovered,
       rockInventory: player.rockInventory,
       rockDiscovered: player.rockDiscovered,
+      meatInventory: player.meatInventory,
+      meatDiscovered: player.meatDiscovered,
       gear: player.gear,
+      gearOwned: player.gearOwned,
+      equipped: player.equipped,
+      stats: player.stats,
       setBonuses: player.setBonuses,
       skills: player.skills,
       heaviestKg: player.heaviestKg
@@ -279,6 +374,7 @@ function doCast(game, player, payload) {
   const world = getWorld();
   if (player.path.length) throw new Error('Blijf even stilstaan om te vissen.');
   if (player.fishing && player.fishing.phase !== 'result') throw new Error('Je hengel ligt al uit.');
+  if (player.stats.energy <= 0) throw new Error('Je bent te uitgeput. Eet iets om energie te herstellen.');
   const tx = Math.round(Number(payload.x));
   const ty = Math.round(Number(payload.y));
   if (hexDistance(player.x, player.y, tx, ty) > 1) throw new Error('Dat water is te ver weg.');
@@ -325,6 +421,7 @@ function doReel(game, player) {
     weightKg: fishing.weightKg,
     caughtAt: now
   });
+  player.stats.energy = Math.max(0, player.stats.energy - ENERGY_COST_PER_ACTION);
   player.fishing = {
     phase: 'result',
     speciesId: fishing.speciesId,
@@ -338,7 +435,7 @@ function doReel(game, player) {
   if (isNew) { addXp(game, player, 'collecting', COLLECT_XP); applySetCompletionBonus(game, player, 'fish'); }
 }
 
-// Generieke setbonus-check: gebruikt na elke nieuwe vis/hout/steen-ontdekking.
+// Generieke setbonus-check: gebruikt na elke nieuwe vis/hout/steen/vlees-ontdekking.
 function applySetCompletionBonus(game, player, kind) {
   const discoveredField = discoveredFieldFor(kind);
   for (const set of setsForKind(kind)) {
@@ -357,17 +454,39 @@ function applySetCompletionBonus(game, player, kind) {
   }
 }
 
+// Een mislukte jachtpoging (te laat toegeslagen, of de buit ontglipt bij het
+// afmaken) laat het dier zich verweren — schade verminderd door pantser, kan
+// de speler laten flauwvallen (teruggebracht naar het dorp, halve gezondheid).
+function applyHuntDamage(game, player) {
+  const raw = HUNT_DAMAGE_MIN + Math.random() * (HUNT_DAMAGE_MAX - HUNT_DAMAGE_MIN);
+  const damage = Math.max(1, Math.round(raw - armorValue(player)));
+  player.stats.health = Math.max(0, player.stats.health - damage);
+  game.log.unshift(`Het dier verwondt je: -${damage} gezondheid.`);
+  if (player.stats.health <= 0) {
+    const world = getWorld();
+    player.x = world.spawn.x;
+    player.y = world.spawn.y;
+    player.path = [];
+    player.stats.health = Math.round(MAX_HEALTH * FAINT_HEALTH_RESTORE);
+    game.log.unshift(`${player.name} valt flauw en wordt teruggebracht naar het dorp.`);
+  }
+}
+
 function doGatherStart(game, player, payload) {
   const kind = String(payload.kind || '');
   const config = GATHER_CONFIG[kind];
   if (!config) throw new Error('Onbekende verzamelactie.');
   const world = getWorld();
   if (player.path.length) throw new Error('Blijf even stilstaan.');
-  if (player.gathering && player.gathering.phase !== 'result') throw new Error(`Je ${GEAR_LABEL[config.toolKey]} is al bezig.`);
+  const busyLabel = config.toolKey ? GEAR_LABEL[config.toolKey] : 'jacht';
+  if (player.gathering && player.gathering.phase !== 'result') throw new Error(`Je ${busyLabel} is al bezig.`);
+  if (player.stats.energy <= 0) throw new Error('Je bent te uitgeput. Eet iets om energie te herstellen.');
   const tx = Math.round(Number(payload.x));
   const ty = Math.round(Number(payload.y));
   if (hexDistance(player.x, player.y, tx, ty) > 1) throw new Error('Dat is te ver weg.');
-  if (resourceAt(world, tx, ty) !== kind) throw new Error(kind === 'wood' ? 'Daar staat geen boom.' : 'Daar zit geen delfbare rots.');
+  if (resourceAt(world, tx, ty) !== kind) {
+    throw new Error(kind === 'wood' ? 'Daar staat geen boom.' : kind === 'rock' ? 'Daar zit geen delfbare rots.' : 'Daar zit geen wild dier.');
+  }
   const now = Date.now();
   player.gathering = { kind, phase: 'cast', bitesAt: now + BITE_MIN_MS + Math.random() * (BITE_MAX_MS - BITE_MIN_MS) };
   game.log.unshift(config.startLog);
@@ -379,7 +498,9 @@ function doGatherStrike(game, player) {
   const now = Date.now();
   if (!gathering || gathering.phase !== 'bite' || now > gathering.hookDeadline) {
     player.gathering = null;
-    throw new Error(gathering?.phase === 'cast' ? (config?.earlyMiss || 'Nog niet klaar.') : (config?.lateMiss || 'Te laat.'));
+    const early = gathering?.phase === 'cast';
+    if (!early && config?.dealsDamage) applyHuntDamage(game, player);
+    throw new Error(early ? (config?.earlyMiss || 'Nog niet klaar.') : (config?.lateMiss || 'Te laat.'));
   }
   const item = weightedItem(resources.poolFor(gathering.kind));
   const weightKg = rollWeight(item);
@@ -398,6 +519,7 @@ function doGatherHaul(game, player) {
   const now = Date.now();
   if (!gathering || gathering.phase !== 'reel' || now > gathering.reelDeadline) {
     player.gathering = null;
+    if (config?.dealsDamage) applyHuntDamage(game, player);
     throw new Error(config?.haulMiss || 'Het glipte weg.');
   }
   const kind = gathering.kind;
@@ -412,6 +534,7 @@ function doGatherHaul(game, player) {
     weightKg: gathering.weightKg,
     caughtAt: now
   });
+  player.stats.energy = Math.max(0, player.stats.energy - ENERGY_COST_PER_ACTION);
   player.gathering = {
     ...gathering,
     phase: 'result',
@@ -419,7 +542,8 @@ function doGatherHaul(game, player) {
     resultUntil: now + RESULT_DISPLAY_MS
   };
   game.log.unshift(`${config.resultVerb}: ${item.name} (${gathering.weightKg.toFixed(1)} kg)${isNew ? ' — nieuw!' : ''}`);
-  addXp(game, player, kind === 'wood' ? 'woodcutting' : 'mining', RARITY_XP[item.rarity] || 0);
+  const skillKey = kind === 'wood' ? 'woodcutting' : kind === 'rock' ? 'mining' : 'hunting';
+  addXp(game, player, skillKey, RARITY_XP[item.rarity] || 0);
   if (isNew) { addXp(game, player, 'collecting', COLLECT_XP); applySetCompletionBonus(game, player, kind); }
 }
 
@@ -428,10 +552,12 @@ function bonusFor(player, kind, item) {
   return lookup && player.setBonuses[lookup.setId] ? SET_BONUS_MULTIPLIER : 1;
 }
 
+const SELL_NOUN = { fish: 'vis', wood: 'stuk hout', rock: 'steen', meat: 'stuk vlees' };
+
 function doSell(game, player, payload) {
-  const kind = ['fish', 'wood', 'rock'].includes(payload.kind) ? payload.kind : 'fish';
+  const kind = ['fish', 'wood', 'rock', 'meat'].includes(payload.kind) ? payload.kind : 'fish';
   const field = inventoryFieldFor(kind);
-  const noun = kind === 'fish' ? 'vis' : kind === 'wood' ? 'stuk hout' : 'steen';
+  const noun = SELL_NOUN[kind];
   if (!player[field].length) throw new Error('Je hebt niets om te verkopen.');
   const uid = String(payload.uid || '');
   const uids = Array.isArray(payload.uids) ? payload.uids.map(String) : null;
@@ -476,6 +602,48 @@ function doBuyUpgrade(game, player, payload) {
   game.log.unshift(`Upgrade gekocht: ${category} niveau ${player.gear[category]}.`);
 }
 
+function doEat(game, player, payload) {
+  if (!player.meatInventory.length) throw new Error('Je hebt niets om te eten.');
+  const uid = String(payload.uid || '');
+
+  if (uid === 'all') {
+    const gained = player.meatInventory.reduce((sum, item) => sum + (resources.getItem('meat', item.speciesId)?.energy || 0), 0);
+    player.stats.energy = Math.min(MAX_ENERGY, player.stats.energy + gained);
+    player.meatInventory = [];
+    game.log.unshift(`Je eet alles op en herstelt ${gained} energie.`);
+    return;
+  }
+
+  const index = player.meatInventory.findIndex((item) => item.uid === uid);
+  if (index === -1) throw new Error('Dat heb je niet.');
+  const [item] = player.meatInventory.splice(index, 1);
+  const entry = resources.getItem('meat', item.speciesId);
+  const gained = entry?.energy || 0;
+  player.stats.energy = Math.min(MAX_ENERGY, player.stats.energy + gained);
+  game.log.unshift(`Je eet ${entry?.name || 'iets'} op en herstelt ${gained} energie.`);
+}
+
+function doBuyGear(game, player, payload) {
+  const category = String(payload.category || '');
+  if (!gear.CATEGORIES.includes(category)) throw new Error('Onbekende categorie.');
+  const item = gear.getGear(category, String(payload.id || ''));
+  if (!item) throw new Error('Onbekend item.');
+  if (player.gearOwned[category].includes(item.id)) throw new Error('Je hebt dit al.');
+  if (player.cash < item.price) throw new Error('Onvoldoende geld.');
+  player.cash -= item.price;
+  player.gearOwned[category].push(item.id);
+  game.log.unshift(`Gekocht: ${item.name} voor €${item.price}.`);
+}
+
+function doEquipGear(game, player, payload) {
+  const category = String(payload.category || '');
+  if (!gear.CATEGORIES.includes(category)) throw new Error('Onbekende categorie.');
+  const id = payload.id ? String(payload.id) : null;
+  if (id && !player.gearOwned[category].includes(id)) throw new Error('Dat bezit je niet.');
+  player.equipped[category] = id;
+  game.log.unshift(id ? `Uitgerust: ${gear.getGear(category, id).name}.` : 'Uitrusting verwijderd.');
+}
+
 function doProposeTrade(game, player, payload) {
   const target = game.players.find((candidate) => candidate.id === String(payload.toId || ''));
   if (!target || target.id === player.id) throw new Error('Kies een andere speler om mee te ruilen.');
@@ -489,10 +657,10 @@ function doProposeTrade(game, player, payload) {
   }
   if (offerCash > player.cash) throw new Error('Je hebt niet genoeg geld om dat te bieden.');
 
-  const offerItems = offerUids.map((uid) => player.inventory.find((item) => item.uid === uid));
-  if (offerItems.some((item) => !item)) throw new Error('Je hebt niet (meer) al deze vissen.');
-  const requestItems = requestUids.map((uid) => target.inventory.find((item) => item.uid === uid));
-  if (requestItems.some((item) => !item)) throw new Error(`${target.name} heeft niet (meer) al deze vissen.`);
+  const offerFound = offerUids.map((uid) => findOwnedItem(player, uid));
+  if (offerFound.some((found) => !found)) throw new Error('Je hebt niet (meer) al deze items.');
+  const requestFound = requestUids.map((uid) => findOwnedItem(target, uid));
+  if (requestFound.some((found) => !found)) throw new Error(`${target.name} heeft niet (meer) al deze items.`);
 
   game.trades = game.trades.filter((t) => !(t.fromId === player.id && t.toId === target.id));
   game.trades.push({
@@ -503,10 +671,10 @@ function doProposeTrade(game, player, payload) {
     toName: target.name,
     offerUids,
     offerCash,
-    offerSnapshot: offerItems.map((item) => ({ uid: item.uid, speciesId: item.speciesId, weightKg: item.weightKg })),
+    offerSnapshot: offerFound.map(({ kind, item }) => ({ uid: item.uid, kind, speciesId: item.speciesId, weightKg: item.weightKg })),
     requestUids,
     requestCash,
-    requestSnapshot: requestItems.map((item) => ({ uid: item.uid, speciesId: item.speciesId, weightKg: item.weightKg })),
+    requestSnapshot: requestFound.map(({ kind, item }) => ({ uid: item.uid, kind, speciesId: item.speciesId, weightKg: item.weightKg })),
     createdAt: Date.now()
   });
   game.log.unshift(`${player.name} stelt een ruil voor aan ${target.name}.`);
@@ -532,21 +700,27 @@ function doRespondTrade(game, player, payload) {
   const to = game.players.find((candidate) => candidate.id === trade.toId);
   if (!from || !to) { game.trades.splice(index, 1); throw new Error('De andere speler is niet meer beschikbaar.'); }
 
-  const offerItems = trade.offerUids.map((uid) => from.inventory.find((item) => item.uid === uid));
-  const requestItems = trade.requestUids.map((uid) => to.inventory.find((item) => item.uid === uid));
+  const offerFound = trade.offerUids.map((uid) => findOwnedItem(from, uid));
+  const requestFound = trade.requestUids.map((uid) => findOwnedItem(to, uid));
   const valid = from.cash >= trade.offerCash && to.cash >= trade.requestCash &&
-    offerItems.every((item) => item) && requestItems.every((item) => item);
+    offerFound.every((found) => found) && requestFound.every((found) => found);
   if (!valid) {
     game.trades.splice(index, 1);
-    throw new Error('Dit voorstel is niet meer geldig — geld of vis is intussen niet meer beschikbaar.');
+    throw new Error('Dit voorstel is niet meer geldig — geld of een item is intussen niet meer beschikbaar.');
   }
 
   from.cash += trade.requestCash - trade.offerCash;
   to.cash += trade.offerCash - trade.requestCash;
-  from.inventory = from.inventory.filter((item) => !trade.offerUids.includes(item.uid));
-  to.inventory = to.inventory.filter((item) => !trade.requestUids.includes(item.uid));
-  to.inventory.push(...offerItems);
-  from.inventory.push(...requestItems);
+  for (const { kind, item } of offerFound) {
+    const field = inventoryFieldFor(kind);
+    from[field] = from[field].filter((candidate) => candidate.uid !== item.uid);
+    to[field].push(item);
+  }
+  for (const { kind, item } of requestFound) {
+    const field = inventoryFieldFor(kind);
+    to[field] = to[field].filter((candidate) => candidate.uid !== item.uid);
+    from[field].push(item);
+  }
 
   game.trades.splice(index, 1);
   game.log.unshift(`${from.name} en ${to.name} hebben geruild.`);
@@ -566,6 +740,9 @@ function handleAction(game, playerId, action, payload = {}) {
   if (action === 'gatherStrike') return doGatherStrike(game, player);
   if (action === 'gatherHaul') return doGatherHaul(game, player);
   if (action === 'buyUpgrade') return doBuyUpgrade(game, player, payload);
+  if (action === 'eat') return doEat(game, player, payload);
+  if (action === 'buyGear') return doBuyGear(game, player, payload);
+  if (action === 'equipGear') return doEquipGear(game, player, payload);
   if (action === 'proposeTrade') return doProposeTrade(game, player, payload);
   if (action === 'respondTrade') return doRespondTrade(game, player, payload);
   throw new Error('Onbekende actie.');
@@ -606,17 +783,20 @@ function tick(game, now = Date.now()) {
     if (!gathering) continue;
     const config = GATHER_CONFIG[gathering.kind];
     if (gathering.phase === 'cast' && now >= gathering.bitesAt) {
-      const strikeWindow = HOOK_WINDOW_MS + (player.gear[config.toolKey] || 0) * TOOL_STRIKE_BONUS_MS;
+      const toolBonus = config.toolKey ? (player.gear[config.toolKey] || 0) * TOOL_STRIKE_BONUS_MS : weaponTierBonus(player);
+      const strikeWindow = HOOK_WINDOW_MS + toolBonus;
       player.gathering = { ...gathering, phase: 'bite', hookDeadline: now + strikeWindow };
       game.log.unshift(config.strikeText);
       changed = true;
     } else if (gathering.phase === 'bite' && now > gathering.hookDeadline) {
       player.gathering = null;
       game.log.unshift(config.lateMiss);
+      if (config.dealsDamage) applyHuntDamage(game, player);
       changed = true;
     } else if (gathering.phase === 'reel' && now > gathering.reelDeadline) {
       player.gathering = null;
       game.log.unshift(config.haulMiss);
+      if (config.dealsDamage) applyHuntDamage(game, player);
       changed = true;
     } else if (gathering.phase === 'result' && now >= gathering.resultUntil) {
       player.gathering = null;
@@ -682,6 +862,14 @@ function serializeItemSets(kind, discoveredList) {
   }));
 }
 
+function serializeGearSlot(player, category) {
+  return {
+    catalog: gear.catalogFor(category),
+    owned: player.gearOwned[category],
+    equipped: player.equipped[category]
+  };
+}
+
 function serialize(game, requesterId) {
   const world = getWorld();
   const player = game.players.find((candidate) => candidate.id === requesterId) || game.players[0];
@@ -690,7 +878,7 @@ function serialize(game, requesterId) {
   return {
     kind: game.gameKey,
     gameOver: false,
-    world: { width: world.width, height: world.height, buildings: world.buildings, boats: world.boats },
+    world: { width: world.width, height: world.height, buildings: world.buildings, boats: world.boats, wildlife: world.wildlife },
     players: game.players.map((p) => ({
       id: p.id,
       name: p.name,
@@ -709,9 +897,17 @@ function serialize(game, requesterId) {
       y: player.y,
       path: player.path,
       cash: player.cash,
+      stats: {
+        health: player.stats.health,
+        maxHealth: MAX_HEALTH,
+        energy: player.stats.energy,
+        maxEnergy: MAX_ENERGY,
+        armor: armorValue(player)
+      },
       gear: player.gear,
       gearCosts: GEAR_COSTS,
       gearMaxLevel: GEAR_MAX_LEVEL,
+      gearShop: Object.fromEntries(gear.CATEGORIES.map((category) => [category, serializeGearSlot(player, category)])),
       inventory: player.inventory.map((item) => ({
         ...item,
         fish: getFish(item.speciesId),
@@ -726,6 +922,11 @@ function serialize(game, requesterId) {
         ...item,
         item: resources.getItem('rock', item.speciesId),
         price: priceForKind('rock', item.speciesId, item.weightKg, bonusFor(player, 'rock', item))
+      })),
+      meatInventory: player.meatInventory.map((item) => ({
+        ...item,
+        item: resources.getItem('meat', item.speciesId),
+        price: priceForKind('meat', item.speciesId, item.weightKg, bonusFor(player, 'meat', item))
       })),
       discovered: player.discovered,
       sets: SETS.map((set) => ({
@@ -742,6 +943,7 @@ function serialize(game, requesterId) {
       })),
       woodSets: serializeItemSets('wood', player.woodDiscovered).map((set) => ({ ...set, bonusActive: Boolean(player.setBonuses[set.id]) })),
       rockSets: serializeItemSets('rock', player.rockDiscovered).map((set) => ({ ...set, bonusActive: Boolean(player.setBonuses[set.id]) })),
+      meatSets: serializeItemSets('meat', player.meatDiscovered).map((set) => ({ ...set, bonusActive: Boolean(player.setBonuses[set.id]) })),
       skills: Object.fromEntries(SKILL_KEYS.map((key) => {
         const xp = player.skills[key];
         const level = levelForXp(xp);
@@ -769,11 +971,11 @@ function serialize(game, requesterId) {
           toName: t.toName,
           offer: {
             cash: t.offerCash,
-            items: t.offerSnapshot.map((item) => ({ ...item, fish: getFish(item.speciesId) }))
+            items: t.offerSnapshot.map((item) => ({ ...item, display: itemLookup(item.kind, item.speciesId) }))
           },
           request: {
             cash: t.requestCash,
-            items: t.requestSnapshot.map((item) => ({ ...item, fish: getFish(item.speciesId) }))
+            items: t.requestSnapshot.map((item) => ({ ...item, display: itemLookup(item.kind, item.speciesId) }))
           }
         }))
     },
@@ -792,7 +994,8 @@ function configureHttp({ app }) {
       tiles: world.tileString,
       spawn: world.spawn,
       buildings: world.buildings,
-      boats: world.boats
+      boats: world.boats,
+      wildlife: world.wildlife
     });
   });
 }
