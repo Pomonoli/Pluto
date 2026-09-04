@@ -2,6 +2,13 @@
 
 Dit bestand bevat de canonieke repositorybrede instructies voor Codex en Claude Code.
 
+## Scope
+
+- Voor game-specifieke wijzigingen: begin in `games/<game>/` en wijzig gedeelde platformcode alleen als dat noodzakelijk is.
+- Vermijd unrelated refactors en wijzigingen buiten de gevraagde scope.
+- Lees `ARCHITECTURE.md` alleen wanneer de wijziging gedeelde infrastructuur raakt of de juiste locatie onduidelijk is.
+- Als een GitHub issue de taak beschrijft, geldt die issue als functionele requirements; leid dezelfde requirements niet opnieuw af tenzij de code of issue tegenstrijdig is.
+
 ## Release- en versioneringsregels
 
 Bij **elke wijziging aan Pluto die naar GitHub gaat**, gelden onderstaande
