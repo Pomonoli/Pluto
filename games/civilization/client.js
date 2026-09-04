@@ -1,8 +1,8 @@
 import { ERA_THEMES } from './themes.js';
 
 const LEADER_ATTRIBUTES = {
-  cleopatra: '👑', alexander: '🪖', einstein: '🌀', gandhi: '👓',
-  bismarck: '⛑️', lincoln: '🎩', achilles: '⚔️', harald: '🛡️'
+  cleopatra: 'crown', alexander: 'spear', einstein: 'atom', gandhi: 'peace',
+  bismarck: 'helm', lincoln: 'liberty', achilles: 'blade', harald: 'shield'
 };
 
 // Hint shown on the tile before it's designated: the exact bonus for the
@@ -20,6 +20,12 @@ export function renderLobbyOptions({room,container,E,socket,handleAck}){
   wrap.append(head,choices);container.append(wrap);
 }
 function buildingTheme(age, type) { return theme(age).buildings[type] || { color: '#B8895A', icon: '' }; }
+function iconNode(E,type,className='civ-tile-icon'){
+  const badge=E('span',`${className} civ-icon-badge`);
+  badge.setAttribute('aria-hidden','true');
+  badge.append(E('span',`civ-glyph civ-glyph-${type}`));
+  return badge;
+}
 
 export function render(api){renderCivilization(api)}
 function renderCivilization({game,state,els,E,action,titlebar,logBox,sound}) {
@@ -38,7 +44,7 @@ function renderCivilization({game,state,els,E,action,titlebar,logBox,sound}) {
   const root=E('div','civ-root');
   root.style.setProperty('--civ-accent',theme(game.age).palette.gold||'#B8895A');
   const openModal=(options)=>showCivModal(E,root,options);
-  root.append(renderTopStrip(E,game),renderEraBanner(E,game),renderStats(E,you),renderCivicRow(E,action,sound,game,you,openModal),renderYourGrid(E,action,sound,game,you,openModal));
+  root.append(renderBrandBar(E,status),renderTopStrip(E,game),renderEraBanner(E,game),renderStats(E,you),renderCivicRow(E,action,sound,game,you,openModal),renderYourGrid(E,action,sound,game,you,openModal));
 
   if(game.phase==='draft'){
     if(!you.acted&&game.yourHand.length)root.append(renderDraft(E,action,sound,game,you,openModal));
@@ -50,7 +56,14 @@ function renderCivilization({game,state,els,E,action,titlebar,logBox,sound}) {
   }
   else root.append(renderGameOver(E,game,you));
 
-  els.gameStage.append(titlebar('Age of Civilization',status),root,logBox(game.log||[]));
+  els.gameStage.append(titlebar('Age of Civilization',''),root,logBox(game.log||[]));
+}
+
+function renderBrandBar(E,status){
+  const bar=E('div','civ-brand-bar');
+  const logo=E('div','civ-logo');logo.append(E('span','','AGE OF'),E('strong','','CIVILIZATION'));
+  bar.append(logo,E('div','civ-turn-status',status));
+  return bar;
 }
 
 function renderPicking(E, action, sound, game, els, titlebar, logBox) {
@@ -65,7 +78,7 @@ function renderPicking(E, action, sound, game, els, titlebar, logBox) {
     const card=E('button',`civ-leader-card${leader.taken?' taken':''}`);
     card.type='button';
     const medallion=E('div','civ-medallion');
-    medallion.append(E('div','civ-medallion-base','👤'),E('div','civ-medallion-attr',LEADER_ATTRIBUTES[leader.key]||''));
+    medallion.append(iconNode(E,'leader','civ-medallion-base'),iconNode(E,LEADER_ATTRIBUTES[leader.key]||'crown','civ-medallion-attr'));
     card.append(medallion,E('div','civ-leader-name',leader.name),E('div','civ-leader-attribute',leader.attribute),E('div','civ-leader-bonus',leader.bonus));
     if(leader.taken){
       const owner=game.players.find((p)=>p.leaderKey===leader.key);
@@ -94,7 +107,7 @@ function renderTopStrip(E,game){
     name.title=player.isYou?'Jouw spelerdetails':`${player.name} bekijken`;
     name.onclick=()=>showCivModal(E,strip.parentElement||strip,{eyebrow:'Speler',title:player.isYou?'Jij':player.name,content:playerDetails(E,player),health:player.hp,confirmLabel:'Sluiten'});
     head.append(name);
-    if(player.leaderName)head.append(E('span','civ-chip-leader',`${LEADER_ATTRIBUTES[player.leaderKey]||''} ${player.leaderName}`));
+    if(player.leaderName)head.append(E('span','civ-chip-leader',player.leaderName));
     chip.append(head);
     if(player.hp!==undefined){
       const track=E('div','civ-chip-hp-track'),fill=E('div','civ-chip-hp-fill');
@@ -132,7 +145,7 @@ function renderCivicRow(E,action,sound,game,you,openModal){
     const bt=buildingTheme(game.age,key);
     const node=E('button','civ-tile civ-civic filled');node.type='button';
     node.style.setProperty('--tile-accent',bt.color);
-    node.append(E('div','civ-tile-icon',bt.icon),E('div','civ-tile-name',civic.name));
+    node.append(iconNode(E,key),E('div','civ-tile-name',civic.name));
     node.append(E('div','civ-tile-perk',civic.used?'Gebeurtenis actief':civicPreviewText(civic)));
     if(canAct&&!civic.used){
       const afford=you.gold>=civic.upgradeCost;
@@ -141,7 +154,7 @@ function renderCivicRow(E,action,sound,game,you,openModal){
       node.onclick=()=>{
         openModal({
           eyebrow:'Vast gebouw',
-          title:`${bt.icon} ${civic.name}`,
+          title:civic.name,
           body:'Aanduiden ontketent meteen een eenmalige, permanente gebeurtenis. Dit kan maar 1x per spel.',
           badges:[`+${civic.eventBonusPct}% ${civic.statLabel}`,'Eenmalig permanent'],
           cost:civic.upgradeCost,
@@ -166,7 +179,7 @@ function renderYourGrid(E,action,sound,game,you,openModal){
     const bt=buildingTheme(game.age,tile.type);
     const node=E('button','civ-tile filled');node.type='button';
     node.style.setProperty('--tile-accent',bt.color);
-    node.append(E('div','civ-tile-icon',bt.icon),E('div','civ-tile-name',tile.name),E('div','civ-tile-level',`Niv. ${tile.level}`));
+    node.append(iconNode(E,tile.type),E('div','civ-tile-name',tile.name),E('div','civ-tile-level',`Niv. ${tile.level}`));
     node.append(E('div','civ-tile-perk',statGainText(tile)));
     if(!tile.maxed){
       const afford=you.gold>=tile.upgradeCost;
@@ -174,7 +187,7 @@ function renderYourGrid(E,action,sound,game,you,openModal){
       if(!afford)node.classList.add('unaffordable');
       node.onclick=()=>openModal({
         eyebrow:'Jouw stad',
-        title:`${bt.icon} ${tile.name}`,
+        title:tile.name,
         body:`Niveau ${tile.level} → ${tile.level+1}`,
         badges:statBadges(tile,{next:true}),
         cost:tile.upgradeCost,
@@ -203,7 +216,9 @@ function statBadges({attack=0,defence=0,income=0,nextAttack,nextDefence,nextInco
 }
 function playerDetails(E,player){
   const details=E('div','civ-player-details');
-  details.append(E('div','civ-player-leader',`${LEADER_ATTRIBUTES[player.leaderKey]||'👤'} ${player.leaderName||'Nog niet gekozen'}`),E('div','civ-player-power',player.leaderKey?heroPower(player.leaderKey):'Deze speler kiest nog een held.'));
+  const leader=E('div','civ-player-leader');
+  leader.append(iconNode(E,LEADER_ATTRIBUTES[player.leaderKey]||'leader','civ-player-icon'),E('span','',player.leaderName||'Nog niet gekozen'));
+  details.append(leader,E('div','civ-player-power',player.leaderKey?heroPower(player.leaderKey):'Deze speler kiest nog een held.'));
   return details;
 }
 
@@ -231,7 +246,7 @@ function renderDraft(E,action,sound,game,you,openModal){
     const bt=buildingTheme(game.age,card.type);
     const canBuild=you.gold>=card.cost&&you.grid.some((slot)=>slot===null);
     openModal({
-      eyebrow:'Kaart',title:`${bt.icon} ${card.name}`,body:card.desc,cost:card.cost,
+      eyebrow:'Kaart',title:card.name,body:card.desc,cost:card.cost,
       badges:statBadges(card),confirmLabel:'Bouw',confirmDisabled:!canBuild,onConfirm:()=>{sound('score');action('build',{handIndex:card.idx})},
       secondaryLabel:'Gooi weg voor goud',onSecondary:()=>{sound('card');action('discard',{handIndex:card.idx})}
     });
@@ -241,7 +256,7 @@ function renderDraft(E,action,sound,game,you,openModal){
     const node=E('button',`civ-card${card.type==='wonder'?' wonder':''}`);node.type='button';node.dataset.index=String(card.idx);
     node.style.setProperty('--tile-accent',bt.color);
     if(card.cost>you.gold)node.classList.add('unaffordable');
-    node.append(E('div','civ-card-icon',bt.icon),E('div','civ-card-name',card.name),E('div','civ-card-perk',statGainText(card)),E('div','civ-card-cost',`Kost ${card.cost}g`));
+    node.append(iconNode(E,card.type,'civ-card-icon'),E('div','civ-card-name',card.name),E('div','civ-card-perk',statGainText(card)),E('div','civ-card-cost',`Kost ${card.cost}g`));
     node.onclick=()=>showDetail(card);hand.append(node)
   }
   wrap.append(hand);

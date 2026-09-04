@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.21.2 — Age of Civilization: alchemistenatelier
+
+- Age of Civilization gebruikt een volledig vernieuwde visuele stijl met donker walnoothout, warm perkament, messing en amber.
+- Kaart- en leideremoji's zijn vervangen door één coherent systeem van gegraveerde iconen met herkenbare categorieën.
+- Het hoofdscherm blijft compact en schermvullend op mobiel, tablet en desktop, met behoud van alle bestaande informatie, acties en spelregels.
+
 ## v1.21.1 — UI- en spelverbeteringen
 
 - Hartenjagen spreidt een kleiner wordende hand over de beschikbare breedte en houdt alle vier spelers compact zichtbaar.

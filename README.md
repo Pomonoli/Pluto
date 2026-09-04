@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.21.1
+## Nieuw in versie 1.21.2
 
-De game-interface is op meerdere plekken verfijnd: Hartenjagen spreidt resterende kaarten beter, Solitaire kan direct herstarten en toont een verbeterd leaderboard, Age of Civilization heeft een bereikbaar eindoverzicht, en Ragnarok, CycClub en 7 Wonders Duel zijn leesbaarder en mobielvriendelijker.
+Age of Civilization heeft een volledig vernieuwde alchemistenatelier-interface met donker walnoothout, warm perkament, messing accenten en consistente gegraveerde iconen. Het hoofdscherm blijft compact en schermvullend op mobiel, tablet en desktop, zonder wijzigingen aan de spelregels of bediening.
 
 ## Nieuw in versie 1.21.0
 

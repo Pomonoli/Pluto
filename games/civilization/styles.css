@@ -1,238 +1,62 @@
-/* Age of Civilization — scoped entirely under .civ-root so it can't leak
-   into the rest of the Pluto shell or other game plugins.
-   Light, warm "parchment" palette; layout stays dense enough for one
-   mobile screen without the page itself scrolling, but leaves a bit more
-   breathing room than a pure information-density layout would. */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800&family=Inter:wght@600;700;800&display=swap');
 
-@media(min-width:761px){#gameStage:has(.civ-root){max-width:640px}}
-
-#gameStage:has(.civ-root){display:flex;flex-direction:column;overflow:hidden!important}
+/* Age of Civilization — walnut workshop shell, parchment game pieces. */
+@media(min-width:761px){#gameStage:has(.civ-root){max-width:920px}}
+#gameStage:has(.civ-root){display:flex;flex-direction:column;overflow:hidden!important;background:repeating-linear-gradient(7deg,#2b1b13 0 11px,#3c2618 11px 23px,#321f15 23px 34px);border:1px solid #6d4828;border-radius:18px;padding:10px;box-shadow:inset 0 0 0 1px rgba(255,222,158,.08),0 18px 44px rgba(18,10,5,.28)}
+#gameStage:has(.civ-root)>.game-titlebar{flex:none;align-items:center;margin:0 0 6px;padding:0 2px;min-height:34px}
+#gameStage:has(.civ-root)>.game-titlebar .eyebrow{font:800 clamp(.7rem,2.8vw,.95rem)/1 Cinzel,Georgia,serif;color:#fff0ce;letter-spacing:.045em}
+#gameStage:has(.civ-root)>.game-titlebar .game-status:empty{display:none}
 #gameStage:has(.civ-root)>.civ-root{flex:1;min-height:0}
 #gameStage:has(.civ-root)>.log-box{display:none!important}
 #gameStage:has(.civ-root .civ-gameover){overflow-y:auto!important}
 #gameStage:has(.civ-root .civ-gameover)>.civ-root{flex:none;min-height:auto;overflow:visible}
 
-.civ-root {
-  --civ-accent: #B8895A;
-  --civ-bg-panel: #fbf4e6;
-  --civ-bg-panel-2: #f1e2c4;
-  --civ-text: #40311f;
-  --civ-text-dim: #8c7a5e;
-  --civ-danger: #c0392b;
-  --civ-good: #3f9142;
+.civ-root{--civ-accent:#d9a541;--civ-wood:#2b1b13;--civ-wood-mid:#3c2618;--civ-parch:#f3dfb3;--civ-parch-mid:#e9d09a;--civ-off:#fff6e4;--civ-text:#2b2018;--civ-text-dim:#69513c;--civ-danger:#a84936;--civ-good:#6d8f58;--civ-attack:#c16f3e;--civ-defence:#54aeb8;--civ-income:#a67e21;position:relative;display:flex;flex-direction:column;min-height:0;overflow:hidden;gap:clamp(3px,.65vh,7px);padding:0 1px 2px;color:var(--civ-text);font-family:Inter,ui-sans-serif,system-ui,sans-serif;font-size:1rem}
+.civ-root h2{margin:0;font-family:Cinzel,Georgia,serif}
+.civ-brand-bar{display:grid;grid-template-columns:minmax(92px,auto) 1fr;align-items:center;gap:10px;min-height:31px;padding:4px 7px;border-block:1px solid rgba(217,165,65,.28)}
+.civ-logo{display:flex;flex-direction:column;font:700 .51rem/1 Cinzel,Georgia,serif;letter-spacing:.15em;color:#cb7c24;text-shadow:0 1px #120a06}.civ-logo strong{font-size:.66rem;color:#f0cb7d;letter-spacing:.06em}
+.civ-turn-status{min-width:0;text-align:right;color:#ead8b7;font-size:clamp(.48rem,1.7vw,.63rem);line-height:1.25;font-weight:700}
 
-  font-family: 'IBM Plex Mono', monospace;
-  color: var(--civ-text);
-  display: flex;
-  flex-direction: column;
-  gap: clamp(3px, 0.75vh, 8px);
-  padding: 2px 0 8px;
-  font-size: 1rem;
-  min-height: 0;
-  overflow: hidden;
-  position: relative;
-}
+.civ-top-strip{display:flex;align-items:stretch;gap:4px;overflow:hidden;padding:1px}
+.civ-player-chip {flex: 1 1 0; min-width:0;width:auto;box-sizing:border-box;position:relative;display:flex;flex-direction:column;gap:2px;padding:5px 6px;background:linear-gradient(145deg,var(--civ-off),var(--civ-parch));border:1px solid #b88b52;border-radius:10px;box-shadow:0 2px 0 rgba(31,18,10,.22)}
+.civ-player-chip.you{border-width:2px;border-color:var(--civ-accent);padding:4px 5px}.civ-player-chip.dead{opacity:.48;filter:saturate(.35)}.civ-player-chip.picking{border-color:var(--civ-good);box-shadow:0 0 0 1px rgba(109,143,88,.35),0 2px 0 rgba(31,18,10,.22)}
+.civ-chip-head{display:flex;flex-direction:column;min-width:0;line-height:1.15}
+.civ-chip-name {min-width:0;overflow:hidden;text-overflow:ellipsis;display:block;border:0;padding:0;background:transparent;color:inherit;font:800 .64rem Inter,sans-serif;white-space:nowrap;text-align:left;cursor:pointer}
+.civ-chip-leader {display:block;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:.5rem;color:var(--civ-text-dim);white-space:nowrap}
+.civ-chip-hp-track,.civ-hp-track{height:5px;overflow:hidden;border-radius:4px;background:#d6c6aa;box-shadow:inset 0 1px 1px rgba(43,27,19,.2)}.civ-chip-hp-fill,.civ-hp-fill{height:100%;background:var(--civ-good);transition:width .7s ease}.civ-chip-hp-fill.dead{background:var(--civ-danger)}.civ-chip-hp-label{font-size:.49rem;color:var(--civ-text-dim)}
+.civ-chip-status{position:absolute;right:4px;bottom:3px;font-size:.54rem}.civ-chip-status.ready{color:var(--civ-good)}.civ-chip-status.waiting{color:var(--civ-text-dim)}.civ-chip-arrow{display:none}
 
-.civ-root h2 { font-family: inherit; margin: 0; }
+.civ-era-banner{display:flex;align-items:baseline;justify-content:center;gap:7px;min-height:21px;flex-wrap:wrap;color:#ead8b7}.civ-era-num{font-size:.51rem;letter-spacing:.13em;text-transform:uppercase}.civ-era-name{font:700 clamp(.72rem,2.5vw,.9rem)/1.1 Cinzel,Georgia,serif;color:#e6bd72}
+.civ-stats-row{padding:5px 6px;background:linear-gradient(#fff3d2,var(--civ-parch));border:2px solid #b98a54;border-radius:11px;box-shadow:0 3px 0 rgba(35,20,10,.22)}.civ-stat-boxes{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px}.civ-stat-box{text-align:center;border-left:1px solid rgba(105,81,60,.16)}.civ-stat-box:first-child{border-left:0}.civ-stat-label{font-size:.48rem;font-weight:800;color:var(--civ-text-dim);text-transform:uppercase;letter-spacing:.035em}.civ-stat-value{font-size:clamp(.72rem,2.7vw,.93rem);font-weight:800;line-height:1.2}.civ-stat-box:nth-child(2) .civ-stat-value{color:var(--civ-attack)}.civ-stat-box:nth-child(3) .civ-stat-value{color:var(--civ-defence)}.civ-stat-box:nth-child(4) .civ-stat-value{color:var(--civ-income)}.civ-stat-box .civ-hp-track{margin-top:2px}
 
-/* ---- top player strip ---- */
-.civ-top-strip { display: flex; align-items: center; gap: 3px; overflow: hidden; padding-bottom: 2px; }
-.civ-player-chip {
-  flex: 1 1 0; min-width:0; width:auto; box-sizing:border-box; background: var(--civ-bg-panel); border: 1px solid var(--civ-bg-panel-2);
-  border-radius: 8px; padding: 4px 6px; display: flex; flex-direction: column; gap: 2px;
-}
-.civ-player-chip.you { border-color: var(--civ-accent); border-width: 2px; }
-.civ-player-chip.dead { opacity: 0.5; }
-.civ-player-chip.picking { border-color: var(--civ-good); box-shadow: 0 0 6px color-mix(in srgb, var(--civ-good) 50%, transparent); }
-.civ-chip-head { display: flex; flex-direction: column; line-height: 1.2; }
-.civ-chip-name { min-width:0;overflow:hidden;text-overflow:ellipsis;display:block;border:0;padding:0;background:transparent;color:inherit;font:inherit;font-size:0.68rem;font-weight:700;white-space:nowrap;text-align:left;cursor:pointer; }
-.civ-chip-leader { display:block;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:0.58rem;color:var(--civ-text-dim);white-space:nowrap; }
-.civ-chip-hp-track { height: 5px; background: var(--civ-bg-panel-2); border-radius: 3px; overflow: hidden; }
-.civ-chip-hp-fill { height: 100%; background: var(--civ-good); }
-.civ-chip-hp-fill.dead { background: var(--civ-danger); }
-.civ-chip-hp-label { font-size: 0.56rem; color: var(--civ-text-dim); }
-.civ-chip-status { font-size: 0.62rem; text-align: center; }
-.civ-chip-status.ready { color: var(--civ-good); }
-.civ-chip-status.waiting { color: var(--civ-text-dim); }
-.civ-chip-arrow { flex: none; color: var(--civ-text-dim); font-size: 0.8rem; }
+.civ-grid-block,.civ-draft{min-height:0}.civ-grid-label,.civ-draft-label{margin:0 0 3px 2px;color:#ead8b7;font-size:.51rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}.civ-grid {display: grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap: 4px}.civ-civic-row,.civ-hand{display:flex;gap:5px}
+.civ-tile,.civ-card{min-width:0;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:inherit;font-family:inherit;background:rgba(255,246,228,.24);border:1px solid rgba(233,208,154,.48);border-radius:10px}.civ-tile{min-height:clamp(48px,8vh,70px);gap:1px;padding:3px}
+.civ-tile.filled,.civ-card{background:linear-gradient(155deg,var(--civ-off),var(--civ-parch));border-color:color-mix(in srgb,var(--tile-accent,var(--civ-accent)) 74%,#8c653a);box-shadow:0 2px 0 rgba(30,17,8,.22),inset 0 0 0 1px rgba(255,255,255,.34)}.civ-tile.filled::after,.civ-card::after{content:"";position:absolute;inset:auto 12% 0;height:2px;background:var(--tile-accent,var(--civ-accent));opacity:.75}button.civ-tile.filled:not(:disabled),.civ-card{cursor:pointer}button.civ-tile.filled:not(:disabled):hover,.civ-card:hover{filter:brightness(1.035);transform:translateY(-1px)}.civ-tile:disabled{opacity:1}.civ-card.unaffordable,.civ-tile.unaffordable{opacity:.58;filter:saturate(.5)}
+.civ-tile-name,.civ-card-name{font-size:.49rem;font-weight:800;line-height:1.1;max-width:100%}.civ-tile-level{font-size:.42rem;color:var(--civ-text-dim)}.civ-tile-perk,.civ-card-perk{font-size:.43rem;line-height:1.12;color:var(--tile-accent,var(--civ-accent));font-weight:800}.civ-tile-upgrade,.civ-card-cost{margin-top:1px;font-size:.43rem;color:#8a6228;font-weight:700}.civ-tile-upgrade.event{color:#a05e1c}.civ-civic{flex:1;min-height:clamp(51px,8.3vh,70px);border-style:dashed;border-width:2px}.civ-civic .civ-tile-name{font-size:.51rem}.civ-card{flex:1;min-height:clamp(62px,9.5vh,84px);gap:2px;padding:4px}.civ-card.wonder{border-color:#8d67b8}.civ-card-name{min-height:0;font-size:.54rem}.civ-card-perk{font-size:.47rem}.civ-card-cost{font-size:.49rem}
 
-/* ---- era banner ---- */
-.civ-era-banner { display: flex; align-items: baseline; justify-content: center; gap: 7px; flex-wrap: wrap; }
-.civ-era-num { font-size: 0.62rem; color: var(--civ-text-dim); letter-spacing: 1px; }
-.civ-era-name { color: var(--civ-accent); font-size: 0.94rem; font-weight: 600; }
+/* One coherent etched icon set. Shapes are CSS-drawn, never emoji. */
+.civ-icon-badge{flex:none;width:25px;height:25px;display:grid;place-items:center;margin-bottom:1px;border:1px solid #9c6c39;border-radius:7px;background:linear-gradient(145deg,#f9e9c5,#d9b77a);box-shadow:inset 0 1px rgba(255,255,255,.55),0 1px 0 rgba(61,35,17,.18);color:var(--tile-accent,var(--civ-text-dim))}.civ-glyph{position:relative;display:block;width:14px;height:14px;color:inherit}.civ-glyph::before,.civ-glyph::after{content:"";position:absolute;box-sizing:border-box}
+.civ-glyph-attack::before,.civ-glyph-blade::before,.civ-glyph-spear::before{left:6px;top:0;width:3px;height:14px;border-radius:2px;background:currentColor;transform:rotate(42deg)}.civ-glyph-attack::after,.civ-glyph-blade::after,.civ-glyph-spear::after{left:6px;top:0;width:3px;height:14px;border-radius:2px;background:currentColor;transform:rotate(-42deg)}
+.civ-glyph-defence::before,.civ-glyph-shield::before{inset:0 1px;background:currentColor;clip-path:polygon(50% 0,95% 18%,84% 68%,50% 100%,16% 68%,5% 18%)}.civ-glyph-defence::after,.civ-glyph-shield::after{inset:3px 4px 5px;background:#ead09a;clip-path:polygon(50% 0,100% 20%,82% 66%,50% 100%,18% 66%,0 20%)}
+.civ-glyph-science::before,.civ-glyph-atom::before{inset:2px;border:1.5px solid currentColor;border-radius:50%;transform:rotate(55deg)}.civ-glyph-science::after,.civ-glyph-atom::after{left:6px;top:0;width:2px;height:14px;border-radius:50%;background:currentColor;transform:rotate(-55deg)}
+.civ-glyph-economy::before{inset:1px;background:currentColor;clip-path:polygon(50% 0,100% 38%,76% 100%,24% 100%,0 38%)}.civ-glyph-economy::after{left:3px;right:3px;top:5px;border-top:1px solid #f3dfb3}
+.civ-glyph-religion::before,.civ-glyph-liberty::before{left:1px;right:1px;bottom:1px;height:9px;border-bottom:2px solid currentColor;background:repeating-linear-gradient(90deg,transparent 0 2px,currentColor 2px 4px)}.civ-glyph-religion::after,.civ-glyph-liberty::after{left:0;top:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:5px solid currentColor}
+.civ-glyph-culture::before,.civ-glyph-crown::before{inset:1px;background:currentColor;clip-path:polygon(0 25%,28% 55%,50% 5%,72% 55%,100% 25%,88% 100%,12% 100%)}
+.civ-glyph-wonder::before,.civ-glyph-peace::before{inset:1px;border:2px solid currentColor;border-radius:50%}.civ-glyph-wonder::after,.civ-glyph-peace::after{left:6px;top:3px;width:2px;height:10px;background:currentColor;box-shadow:-3px 4px 0 -0.5px currentColor,3px 4px 0 -0.5px currentColor}
+.civ-glyph-leader::before,.civ-glyph-helm::before{left:3px;top:0;width:8px;height:8px;border:2px solid currentColor;border-radius:50%}.civ-glyph-leader::after,.civ-glyph-helm::after{left:1px;bottom:0;width:12px;height:6px;border:2px solid currentColor;border-radius:8px 8px 2px 2px}
+.civ-medallion-base.civ-icon-badge{width:43px;height:43px;margin:0;border-radius:50%}.civ-medallion-base .civ-glyph{width:20px;height:20px;transform:scale(1.25)}.civ-medallion-attr.civ-icon-badge{position:absolute;right:-3px;bottom:-3px;width:20px;height:20px;margin:0;border-radius:6px}.civ-medallion-attr .civ-glyph{transform:scale(.72)}.civ-player-icon.civ-icon-badge{width:22px;height:22px;margin:0}.civ-player-icon .civ-glyph{transform:scale(.7)}
 
-/* ---- stats (you) ---- */
-.civ-stats-row {
-  background: var(--civ-bg-panel); border: 1px solid var(--civ-bg-panel-2);
-  border-radius: 10px; padding: 6px 9px;
-}
-.civ-you { border-color: var(--civ-accent); }
-.civ-stat-boxes { display: flex; gap: 6px; }
-.civ-stat-box { flex: 1; text-align: center; }
-.civ-stat-label { font-size: 0.58rem; color: var(--civ-text-dim); text-transform: uppercase; }
-.civ-stat-value { font-size: 0.95rem; font-weight: 600; }
-.civ-hp-track { height: 5px; background: var(--civ-bg-panel-2); border-radius: 4px; margin-top: 3px; overflow: hidden; }
-.civ-hp-fill { height: 100%; background: var(--civ-good); transition: width 0.7s ease; }
+.civ-detail{display:flex;flex-direction:column;gap:6px;padding:10px;background:var(--civ-parch);border:1px solid var(--civ-accent);border-radius:10px}.civ-detail-name{font:800 1rem/1.2 Cinzel,Georgia,serif;color:#664018}.civ-detail-desc{font-size:.74rem;line-height:1.5;color:var(--civ-text-dim)}.civ-detail-actions{display:flex;gap:7px}
+.civ-modal-backdrop{position:absolute;z-index:30;inset:0;display:grid;place-items:center;padding:14px;background:rgba(30,17,9,.66);backdrop-filter:blur(4px)}.civ-modal{position:relative;width:min(400px,100%);max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:19px;background:linear-gradient(155deg,var(--civ-off),var(--civ-parch));border:2px solid #b1813e;border-radius:16px;box-shadow:0 18px 50px rgba(22,12,5,.48),inset 0 0 0 2px rgba(255,255,255,.35)}.civ-modal::before{content:"";position:absolute;inset:0 18% auto;height:3px;background:var(--civ-accent)}.civ-modal-eyebrow{color:#9b641d;font-size:.55rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.civ-modal-cost,.civ-modal-badge,.civ-player-leader{padding:6px 9px;border:1px solid rgba(126,84,34,.25);border-radius:999px;background:rgba(217,165,65,.13);font-size:.66rem;font-weight:800}.civ-modal-badges{display:flex;flex-wrap:wrap;gap:6px}.civ-modal-cost{align-self:flex-start}.civ-player-details{display:grid;gap:8px;padding:10px;border:1px solid #d4bd91;border-radius:12px;background:rgba(255,255,255,.3)}.civ-player-leader{justify-self:start;display:flex;align-items:center;gap:6px;color:#6d481f}.civ-player-power{font-size:.71rem;line-height:1.45;color:var(--civ-text-dim)}
+.civ-modal-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:3px}.civ-modal-actions .civ-btn{min-height:42px;padding:9px 11px}.civ-modal-actions:has(.civ-modal-secondary) .civ-modal-confirm{grid-column:1/-1;grid-row:1}.civ-modal-actions:has(.civ-modal-secondary) .civ-modal-secondary{grid-column:1;grid-row:2}.civ-modal-actions:has(.civ-modal-secondary) .civ-modal-back{grid-column:2;grid-row:2}.civ-btn{flex:1;padding:9px;border:1px solid #a66a24;border-radius:8px;font:800 .79rem Inter,sans-serif;cursor:pointer;box-shadow:0 3px 0 rgba(67,37,13,.22)}.civ-btn-primary{background:linear-gradient(#dc9b42,#cb7c24);color:#2b1b13}.civ-btn-ghost{background:var(--civ-off);color:var(--civ-text);border-color:#b89a6d}.civ-btn:disabled{opacity:.42;cursor:not-allowed}
+.civ-waiting{text-align:center;color:#ead8b7;font-size:.76rem;padding:7px}.civ-wave-title{text-align:center;color:#e6bd72;font:700 .88rem Cinzel,serif}.civ-combat-table{overflow:hidden;border:1px solid #d0b98b;border-radius:10px}.civ-combat-row{display:grid;grid-template-columns:minmax(58px,1.15fr) .45fr .45fr minmax(58px,1fr) .55fr;gap:5px;align-items:center;padding:8px 7px;border-top:1px solid #d0b98b;font-size:.62rem;text-align:center}.civ-combat-row:first-child{border-top:0}.civ-combat-row.you{background:rgba(217,165,65,.14);font-weight:800}.civ-combat-head{background:var(--civ-parch-mid);color:var(--civ-text-dim);font-size:.51rem;font-weight:800;text-transform:uppercase}.civ-combat-name,.civ-combat-target{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}.civ-combat-target,.civ-combat-row>:nth-child(4){border-left:1px solid #d0b98b;padding-left:5px}.civ-combat-damage{color:var(--civ-danger);font-weight:800}
+.civ-gameover{text-align:center}.civ-go-headline{margin-bottom:9px;color:#e6bd72;font:800 1.15rem Cinzel,serif}.civ-final-table{display:flex;flex-direction:column;gap:5px}.civ-final-row{display:flex;justify-content:space-between;align-items:center;padding:8px 11px;text-align:left;background:var(--civ-parch);border:1px solid #b88b52;border-radius:9px}.civ-final-row.winner{border-color:var(--civ-accent);background:var(--civ-off)}.civ-fname{font-weight:800;font-size:.82rem}.civ-breakdown{font-size:.62rem;color:var(--civ-text-dim)}.civ-fscore{color:#9a651b;font-weight:800;font-size:1.05rem}
+.civ-picking{gap:8px}.civ-pick-title{text-align:center;color:#e6bd72;font:800 1.08rem Cinzel,serif}.civ-pick-sub{text-align:center;color:#ead8b7;font-size:.73rem;margin-top:-4px}.civ-leader-list{min-height:0;flex:1;display:grid;grid-template-columns:repeat(2,1fr);gap:7px;overflow-y:auto}.civ-leader-card{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 7px;text-align:center;color:inherit;font-family:inherit;cursor:pointer;background:linear-gradient(var(--civ-off),var(--civ-parch));border:1px solid #b88b52;border-radius:11px}.civ-leader-card:not(:disabled):hover{border-color:var(--civ-accent)}.civ-leader-card:disabled{opacity:.48;cursor:not-allowed}.civ-medallion{position:relative;width:45px;height:45px}.civ-leader-name{font:800 .72rem Cinzel,serif}.civ-leader-attribute{font-size:.55rem;color:#9b641d}.civ-leader-bonus{font-size:.55rem;color:var(--civ-text-dim);line-height:1.25}.civ-leader-owner{font-size:.53rem;color:var(--civ-good);font-weight:800}
+.civ-lobby-options{display:grid;gap:9px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--panel)}.civ-lobby-options-head{display:flex;justify-content:space-between;gap:12px;align-items:baseline}.civ-lobby-options-head small{color:var(--muted);font-size:.75rem}.civ-mode-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.civ-mode-choice{min-width:0;padding:11px;border:1px solid var(--border);border-radius:10px;background:var(--panel);color:var(--text);text-align:left;cursor:pointer}.civ-mode-choice.active{border-color:#d9a541;box-shadow:inset 0 0 0 1px #d9a541;background:color-mix(in srgb,#d9a541 11%,var(--panel))}.civ-mode-choice:disabled{cursor:default}.civ-mode-choice strong,.civ-mode-choice small{display:block}.civ-mode-choice small{margin-top:3px;color:var(--muted);font-size:.68rem;line-height:1.35}
 
-/* ---- grid (shared: civic row + flexible grid) ---- */
-.civ-grid-label { font-size: 0.6rem; color: var(--civ-text-dim); text-transform: uppercase; margin-bottom: 4px; }
-.civ-grid { display: grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap: 4px; }
-.civ-tile {
-  min-width:0;min-height:clamp(52px,8.5vh,72px);background: var(--civ-bg-panel); border: 1px solid var(--civ-bg-panel-2);
-  border-radius: 9px; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 1px; font-size: 0.5rem; text-align: center; padding: 3px;
-  font-family: inherit; color: inherit;
-}
-.civ-tile.filled {
-  border-color: var(--tile-accent, var(--civ-accent));
-  background: color-mix(in srgb, var(--tile-accent, var(--civ-accent)) 15%, var(--civ-bg-panel));
-}
-button.civ-tile.filled:not(:disabled) { cursor: pointer; }
-button.civ-tile.filled:not(:disabled):hover { background: color-mix(in srgb, var(--tile-accent, var(--civ-accent)) 26%, var(--civ-bg-panel)); }
-.civ-tile:disabled { opacity: 1; }
-.civ-tile-icon { font-size: 1.15rem; }
-.civ-tile-name { font-size: 0.48rem; line-height: 1.1; }
-.civ-tile-level { font-size: 0.44rem; color: var(--civ-text-dim); }
-.civ-tile-perk { font-size: 0.44rem; color: var(--tile-accent, var(--civ-accent)); line-height: 1.1; font-weight: 600; }
-.civ-tile-upgrade { font-size: 0.44rem; color: var(--civ-accent); margin-top: 1px; }
-.civ-tile-upgrade.event { color: #a5750f; font-weight: 700; }
-button.civ-tile.filled:disabled .civ-tile-upgrade { color: var(--civ-text-dim); }
-
-/* ---- civic row (fixed, permanent buildings) ---- */
-.civ-civic-row { display: flex; gap: 6px; }
-.civ-civic { flex: 1; aspect-ratio: auto; min-height:clamp(55px,9vh,70px); border-style: dashed; border-width: 2px; border-color: var(--tile-accent, var(--civ-accent)); }
-.civ-civic .civ-tile-name { font-size: 0.52rem; font-weight: 600; }
-
-/* ---- draft ---- */
-.civ-draft-label { font-size: 0.6rem; color: var(--civ-text-dim); text-transform: uppercase; text-align: center; margin-bottom: 4px; }
-.civ-hand { display: flex; gap: 6px; }
-.civ-card {
-  flex: 1; background: var(--civ-bg-panel); border: 1.5px solid var(--civ-bg-panel-2);
-  border-radius: 10px; padding: 7px 4px; display: flex; flex-direction: column; align-items: center;
-  gap: 3px; text-align: center; cursor: pointer; font-family: inherit; color: inherit;
-}
-.civ-card.selected {
-  border-color: var(--tile-accent, var(--civ-accent));
-  background: color-mix(in srgb, var(--tile-accent, var(--civ-accent)) 18%, var(--civ-bg-panel));
-}
-.civ-card.wonder { border-color: #8B5CF6; }
-.civ-card.unaffordable,.civ-tile.unaffordable { opacity:.62; filter:saturate(.7); }
-.civ-card-icon { font-size: 1.3rem; }
-.civ-card-name { font-size: 0.6rem; line-height: 1.15; min-height: 2em; }
-.civ-card-perk { font-size: 0.52rem; color: var(--tile-accent, var(--civ-accent)); font-weight: 600; }
-.civ-card-cost { font-size: 0.6rem; color: var(--civ-text-dim); }
-
-.civ-detail {
-  background: var(--civ-bg-panel); border: 1px solid var(--civ-accent);
-  border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 6px;
-}
-.civ-detail-name { color: var(--civ-accent); font-weight: 700; font-size: 0.98rem; }
-.civ-detail-desc { font-size: 0.8rem; color: var(--civ-text-dim); }
-.civ-detail-actions { display: flex; gap: 7px; }
-
-.civ-modal-backdrop{position:absolute;z-index:30;inset:0;display:grid;place-items:center;padding:14px;background:rgba(49,35,20,.5);backdrop-filter:blur(5px)}
-.civ-modal{position:relative;width:min(400px,100%);max-height:100%;overflow:auto;background:linear-gradient(155deg,#fffaf0 0%,var(--civ-bg-panel) 100%);border:1px solid color-mix(in srgb,var(--civ-accent) 72%,#fff);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:11px;box-shadow:0 22px 60px rgba(48,31,15,.34)}
-.civ-modal::before{content:"";position:absolute;inset:0 18% auto;height:3px;border-radius:0 0 4px 4px;background:var(--civ-accent)}
-.civ-modal-eyebrow{margin-top:2px;color:var(--civ-text-dim);font-size:.56rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
-.civ-modal .civ-detail-name{font-size:1.05rem;line-height:1.25}
-.civ-modal .civ-detail-desc{font-size:.76rem;line-height:1.55}
-.civ-modal-cost{align-self:flex-start;padding:7px 10px;border:1px solid color-mix(in srgb,var(--civ-accent) 28%,transparent);border-radius:999px;background:color-mix(in srgb,var(--civ-accent) 10%,var(--civ-bg-panel));font-size:.68rem;font-weight:800}
-.civ-modal-badges{display:flex;flex-wrap:wrap;gap:6px}.civ-modal-badge,.civ-player-leader{padding:6px 9px;border:1px solid color-mix(in srgb,var(--civ-accent) 28%,transparent);border-radius:999px;background:color-mix(in srgb,var(--civ-accent) 10%,var(--civ-bg-panel));font-size:.67rem;font-weight:800}.civ-player-details{display:grid;gap:8px;padding:10px;border:1px solid var(--civ-bg-panel-2);border-radius:12px;background:rgba(255,255,255,.42)}.civ-player-leader{justify-self:start;color:var(--civ-accent)}.civ-player-power{font-size:.72rem;line-height:1.45;color:var(--civ-text-dim)}
-.civ-modal-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:3px}
-.civ-modal-actions .civ-btn{min-height:44px;padding:10px 12px;border:1px solid transparent;transition:transform .12s ease,filter .12s ease}
-.civ-modal-actions .civ-btn:not(:disabled):active{transform:scale(.98)}
-.civ-modal-actions .civ-btn-primary{box-shadow:0 7px 18px color-mix(in srgb,var(--civ-accent) 25%,transparent)}
-.civ-modal-actions .civ-btn-ghost{border-color:color-mix(in srgb,var(--civ-text-dim) 20%,transparent);background:rgba(255,255,255,.54)}
-.civ-modal-actions:has(.civ-modal-secondary) .civ-modal-confirm{grid-column:1/-1;grid-row:1}
-.civ-modal-actions:has(.civ-modal-secondary) .civ-modal-secondary{grid-column:1;grid-row:2}
-.civ-modal-actions:has(.civ-modal-secondary) .civ-modal-back{grid-column:2;grid-row:2}
-
-.civ-btn {
-  flex: 1; font-family: inherit; border: none; border-radius: 9px;
-  padding: 10px; font-size: 0.86rem; font-weight: 600; cursor: pointer;
-}
-.civ-btn-primary { background: var(--civ-accent); color: #2c1c0a; }
-.civ-btn-ghost { background: var(--civ-bg-panel-2); color: var(--civ-text); }
-.civ-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.civ-waiting { text-align: center; color: var(--civ-text-dim); font-size: 0.85rem; padding: 9px; }
-
-/* ---- wave ---- */
-.civ-wave-title { text-align: center; color: var(--civ-accent); font-size: 0.92rem; font-weight: 600; }
-.civ-wave-list { display: flex; flex-direction: column; gap: 5px; margin-top: 7px; }
-.civ-wave-row {
-  display: flex; align-items: center; gap: 9px;
-  background: var(--civ-bg-panel); border: 1px solid var(--civ-bg-panel-2);
-  border-radius: 9px; padding: 6px 9px;
-}
-.civ-wave-row.you { border-color: var(--civ-accent); }
-.civ-wave-name { font-size: 0.78rem; font-weight: 600; flex: none; min-width: 62px; }
-.civ-wave-numbers { font-size: 0.66rem; color: var(--civ-text-dim); flex: 1; }
-.civ-wave-result { font-size: 0.76rem; font-weight: 600; flex: none; }
-.civ-wave-result.ok { color: var(--civ-good); }
-.civ-wave-result.hit { color: var(--civ-danger); }
-.civ-combat-table{overflow:hidden;border:1px solid var(--civ-bg-panel-2);border-radius:12px}.civ-combat-row{display:grid;grid-template-columns:minmax(58px,1.15fr) .45fr .45fr minmax(58px,1fr) .55fr;gap:5px;align-items:center;padding:8px 7px;border-top:1px solid var(--civ-bg-panel-2);font-size:.63rem;text-align:center}.civ-combat-row:first-child{border-top:0}.civ-combat-row.you{background:color-mix(in srgb,var(--civ-accent) 12%,transparent);font-weight:800}.civ-combat-head{background:var(--civ-bg-panel-2);color:var(--civ-text-dim);font-size:.53rem;font-weight:800;text-transform:uppercase;letter-spacing:.03em}.civ-combat-name,.civ-combat-target{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}.civ-combat-damage{color:var(--civ-danger);font-weight:800}
-
-/* ---- game over ---- */
-.civ-gameover { text-align: center; }
-.civ-go-headline { color: var(--civ-accent); font-size: 1.2rem; margin-bottom: 9px; font-family: 'Spectral', serif; }
-.civ-final-table { display: flex; flex-direction: column; gap: 5px; }
-.civ-final-row {
-  display: flex; justify-content: space-between; align-items: center;
-  background: var(--civ-bg-panel); border: 1px solid var(--civ-bg-panel-2);
-  border-radius: 9px; padding: 7px 11px; text-align: left;
-}
-.civ-final-row.winner { border-color: var(--civ-accent); background: color-mix(in srgb, var(--civ-accent) 12%, var(--civ-bg-panel)); }
-.civ-fname { font-weight: 600; font-size: 0.86rem; }
-.civ-breakdown { font-size: 0.64rem; color: var(--civ-text-dim); }
-.civ-fscore { color: var(--civ-accent); font-weight: 700; font-size: 1.1rem; }
-
-/* ---- leader picking ---- */
-.civ-picking { gap: 9px; }
-.civ-pick-title { text-align: center; font-size: 1.15rem; font-weight: 700; color: var(--civ-accent); }
-.civ-pick-sub { text-align: center; font-size: 0.78rem; color: var(--civ-text-dim); margin-top: -4px; }
-.civ-leader-list { min-height:0;flex:1;display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; overflow-y: auto; }
-
-@media(max-height:700px){
-  .civ-root{font-size:.9rem}
-  .civ-top-strip{max-height:54px}
-  .civ-player-chip{padding:2px 5px}
-  .civ-stats-row{padding:3px 7px}
-  .civ-tile{min-height:48px}
-  .civ-civic{min-height:50px}
-  .civ-card{padding:4px 3px;gap:1px}
-  .civ-card-icon{font-size:1rem}
-  .civ-card-name{min-height:0}
-}
-
-@media(min-height:720px){
-  .civ-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
-  .civ-grid .civ-tile{min-height:clamp(66px,9.5vh,86px)}
-}
-@media(max-width:760px){
-  .civ-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
-}
-.civ-leader-card {
-  background: var(--civ-bg-panel); border: 1.5px solid var(--civ-bg-panel-2); border-radius: 12px;
-  padding: 9px 7px; display: flex; flex-direction: column; align-items: center; gap: 4px;
-  font-family: inherit; color: inherit; cursor: pointer; text-align: center;
-}
-.civ-leader-card:not(:disabled):hover { border-color: var(--civ-accent); }
-.civ-leader-card:disabled { opacity: 0.45; cursor: not-allowed; }
-.civ-leader-card.taken { opacity: 0.6; }
-.civ-medallion {
-  position: relative; width: 48px; height: 48px; border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #ecd48a, #b8823a 75%);
-  display: flex; align-items: center; justify-content: center; border: 1px solid #d9a83f;
-}
-.civ-medallion-base { font-size: 1.5rem; filter: grayscale(1) brightness(0.35); }
-.civ-medallion-attr { position: absolute; bottom: -4px; right: -4px; font-size: 1rem; }
-.civ-leader-name { font-size: 0.76rem; font-weight: 700; }
-.civ-leader-attribute { font-size: 0.58rem; color: var(--civ-accent); }
-.civ-leader-bonus { font-size: 0.58rem; color: var(--civ-text-dim); line-height: 1.3; }
-.civ-leader-owner { font-size: 0.56rem; color: var(--civ-good); font-weight: 600; }
-/* Center combat player names under the Speler column label. */
-.civ-combat-name{text-align:center}
-.civ-combat-target{text-align:center;border-left:1px solid var(--civ-bg-panel-2);padding-left:5px}
-.civ-combat-row > :nth-child(4){border-left:1px solid var(--civ-bg-panel-2);padding-left:5px}
-.civ-lobby-options{display:grid;gap:9px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--panel)}.civ-lobby-options-head{display:flex;justify-content:space-between;gap:12px;align-items:baseline}.civ-lobby-options-head small{color:var(--muted);font-size:.75rem}.civ-mode-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.civ-mode-choice{min-width:0;padding:11px;border:1px solid var(--border);border-radius:10px;background:var(--panel);color:var(--text);text-align:left;cursor:pointer}.civ-mode-choice.active{border-color:var(--civ-accent);box-shadow:inset 0 0 0 1px var(--civ-accent);background:color-mix(in srgb,var(--civ-accent) 11%,var(--panel))}.civ-mode-choice:disabled{cursor:default}.civ-mode-choice strong,.civ-mode-choice small{display:block}.civ-mode-choice small{margin-top:3px;color:var(--muted);font-size:.68rem;line-height:1.35}
+@media(max-height:700px){.civ-root{gap:2px}.civ-brand-bar{min-height:25px;padding-block:2px}.civ-top-strip{max-height:50px}.civ-player-chip{padding:3px 5px}.civ-player-chip.you{padding:2px 4px}.civ-stats-row{padding:3px 5px}.civ-tile{min-height:44px}.civ-civic{min-height:47px}.civ-card{min-height:52px;padding:3px;gap:1px}.civ-icon-badge{width:21px;height:21px}.civ-glyph{transform:scale(.78)}.civ-card-name{min-height:0}}
+@media(min-height:720px){.civ-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.civ-grid .civ-tile{min-height:clamp(61px,8.5vh,80px)}}
+@media(max-width:760px){.civ-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:761px){.civ-root{gap:clamp(5px,.8vh,9px)}.civ-player-chip{padding:6px 8px}.civ-chip-name{font-size:.7rem}.civ-chip-leader{font-size:.56rem}.civ-tile-name,.civ-card-name{font-size:.58rem}.civ-tile-perk,.civ-card-perk,.civ-tile-upgrade{font-size:.49rem}}
+@media(prefers-reduced-motion:reduce){.civ-root *{transition:none!important}}

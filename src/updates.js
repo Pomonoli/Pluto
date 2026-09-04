@@ -389,6 +389,12 @@ const RELEASES = [
       'Ragnarok-rivieren worden correct als gelaagde lijnen getekend en de lichte UI is rustiger en consistenter.',
       'CycClub is leesbaar in het lichte thema; 7 Wonders Duel toont kaarteffecten mobiel en noemt ieder tijdperk consequent Tijdperk.'
     ]
+  },
+  {
+    version:'1.21.2',
+    improvements:[
+      'Age of Civilization heeft een nieuwe alchemistenatelier-interface met walnoothout, perkament, messing accenten en consistente gegraveerde iconen, compact en schermvullend op ieder formaat.'
+    ]
   }
 ];
 
