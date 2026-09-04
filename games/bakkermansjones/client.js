@@ -9,6 +9,36 @@ const ICONS = {
 };
 const WARN_SVG = `<svg viewBox="0 0 100 100"><path d="M50 8 92 84H8Z" fill="#3A2417"/><path d="M50 18 84 78H16Z" fill="#fff"/><rect x="45" y="38" width="10" height="24" rx="4" fill="#3A2417"/><circle cx="50" cy="70" r="5.5" fill="#3A2417"/></svg>`;
 
+// Bakker: rond, warm figuurtje met schort — dezelfde dikke-contourenstijl als de producticonen.
+const BAKER_SVG = `<svg viewBox="0 0 100 150">
+  <rect x="36" y="104" width="11" height="30" rx="5" fill="#2B1C12" stroke="#3A2417" stroke-width="4"/>
+  <rect x="53" y="104" width="11" height="30" rx="5" fill="#2B1C12" stroke="#3A2417" stroke-width="4"/>
+  <rect x="22" y="58" width="56" height="52" rx="16" fill="#F5B942" stroke="#3A2417" stroke-width="6"/>
+  <path d="M30 64c-2 20-2 34 4 46h32c6-12 6-26 4-46" fill="#FBF0DC" stroke="#3A2417" stroke-width="6"/>
+  <rect x="42" y="72" width="16" height="12" rx="3" fill="none" stroke="#3A2417" stroke-width="3"/>
+  <circle cx="18" cy="72" r="11" fill="#F5B942" stroke="#3A2417" stroke-width="5"/>
+  <circle cx="82" cy="72" r="11" fill="#F5B942" stroke="#3A2417" stroke-width="5"/>
+  <circle cx="15" cy="93" r="8" fill="#F2C29B" stroke="#3A2417" stroke-width="4"/>
+  <circle cx="85" cy="93" r="8" fill="#F2C29B" stroke="#3A2417" stroke-width="4"/>
+  <circle cx="50" cy="32" r="23" fill="#F2C29B" stroke="#3A2417" stroke-width="6"/>
+  <path d="M27 26a23 23 0 0 1 46 0c0-9-9-19-23-19s-23 10-23 19z" fill="#8B5A34" stroke="#3A2417" stroke-width="5"/>
+  <circle cx="42" cy="34" r="2.6" fill="#3A2417"/>
+  <circle cx="58" cy="34" r="2.6" fill="#3A2417"/>
+  <path d="M41 41q9 7 18 0" fill="none" stroke="#3A2417" stroke-width="3" stroke-linecap="round"/>
+</svg>`;
+
+const CUSTOMER_COLORS = ['#2E9E8C', '#E14B3C', '#8B5A34', '#C98A2E'];
+function customerSvg(color) {
+  return `<svg viewBox="0 0 50 80">
+    <rect x="17" y="50" width="6" height="22" rx="3" fill="#2B1C12"/>
+    <rect x="27" y="50" width="6" height="22" rx="3" fill="#2B1C12"/>
+    <rect x="9" y="22" width="32" height="32" rx="13" fill="${color}" stroke="#3A2417" stroke-width="5"/>
+    <circle cx="25" cy="13" r="13" fill="#F2C29B" stroke="#3A2417" stroke-width="5"/>
+    <circle cx="21" cy="13" r="1.6" fill="#3A2417"/>
+    <circle cx="29" cy="13" r="1.6" fill="#3A2417"/>
+  </svg>`;
+}
+
 const PHASE_LABEL = {
   prep: 'Voorbereiding',
   shopPrompt: 'Klaar om te openen',
@@ -119,45 +149,98 @@ function renderPhaseBody({ game, E, action, sound }) {
   return renderPrepScreen({ game, E, action });
 }
 
+/* ---------------- ruimtes (illustraties) ---------------- */
+
+function scene(E, kind) { return E('div', `bj-scene bj-scene-${kind}`); }
+
+function renderBakeryScene({ game, E }) {
+  const room = scene(E, 'bakery');
+
+  const shelf = E('div', 'bj-scene-back-shelf');
+  ['bloem', 'boter', 'suiker'].forEach(() => {
+    const sack = E('span', 'bj-scene-sack');
+    sack.innerHTML = `<svg viewBox="0 0 40 40"><rect x="6" y="10" width="28" height="26" rx="8" fill="#E8D2A6" stroke="#3A2417" stroke-width="4"/><path d="M12 10c0-6 16-6 16 0" fill="none" stroke="#3A2417" stroke-width="3"/></svg>`;
+    shelf.append(sack);
+  });
+  room.append(shelf);
+
+  const ovenRow = E('div', 'bj-scene-ovens');
+  game.ovens.forEach((o, idx) => {
+    const box = E('div', `bj-scene-oven${o ? ' active' : ''}`);
+    const win = E('div', 'bj-oven-window');
+    if (o) {
+      const total = o.endMin - o.startMin;
+      const pct = total > 0 ? clampNum((game.clockMin - o.startMin) / total, 0, 1) : 1;
+      win.style.background = `radial-gradient(circle, #FFD27A ${Math.round(15 + pct * 45)}%, #E14B3C 100%)`;
+      win.style.boxShadow = `0 0 ${6 + pct * 12}px ${2 + pct * 5}px rgba(225,75,60,${(0.35 + pct * 0.4).toFixed(2)})`;
+      box.append(win, E('div', 'bj-scene-oven-label tabular', `${Math.max(0, o.endMin - game.clockMin)}′`));
+    } else {
+      box.append(win, E('div', 'bj-scene-oven-label', String(idx + 1)));
+    }
+    ovenRow.append(box);
+  });
+  room.append(ovenRow);
+
+  room.append(svgSpan(E, 'bj-scene-baker', BAKER_SVG));
+  room.append(E('div', 'bj-scene-table'));
+  return room;
+}
+
+function renderShopScene({ game, E }) {
+  const room = scene(E, 'shop');
+
+  const shelf = E('div', 'bj-scene-back-shelf');
+  RECIPE_ORDER.forEach((key) => shelf.append(svgSpan(E, 'bj-scene-shelf-item', ICONS[key] || '')));
+  room.append(shelf);
+
+  room.append(E('div', 'bj-scene-door'));
+  room.append(svgSpan(E, 'bj-scene-baker bj-scene-baker-behind', BAKER_SVG));
+  room.append(E('div', 'bj-scene-counter'));
+
+  const queue = E('div', 'bj-scene-queue');
+  game.customerQueue.slice(0, 4).forEach((c, i) => {
+    queue.append(svgSpan(E, 'bj-scene-customer', customerSvg(CUSTOMER_COLORS[i % CUSTOMER_COLORS.length])));
+  });
+  room.append(queue);
+  return room;
+}
+
+function renderStorageScene({ game, E }) {
+  const room = scene(E, 'storage');
+  const shelves = E('div', 'bj-scene-shelves');
+  Object.keys(game.ingredientMeta).forEach(() => {
+    const sack = E('span', 'bj-scene-sack');
+    sack.innerHTML = `<svg viewBox="0 0 40 40"><rect x="6" y="10" width="28" height="26" rx="8" fill="#E8D2A6" stroke="#3A2417" stroke-width="4"/><path d="M12 10c0-6 16-6 16 0" fill="none" stroke="#3A2417" stroke-width="3"/></svg>`;
+    shelves.append(sack);
+  });
+  room.append(shelves);
+  room.append(svgSpan(E, 'bj-scene-baker', BAKER_SVG));
+  room.append(E('div', 'bj-scene-crate'));
+  return room;
+}
+
+function renderHomeScene(E) {
+  const room = scene(E, 'home');
+  room.append(E('div', 'bj-scene-window'));
+  room.append(E('div', 'bj-scene-bed'));
+  room.append(svgSpan(E, 'bj-scene-baker', BAKER_SVG));
+  return room;
+}
+
 /* ---------------- prep ---------------- */
 
 function renderPrepScreen({ game, E, action }) {
+  const wrap = E('div', 'bj-phase-wrap');
+  wrap.append(renderBakeryScene({ game, E }));
   const grid = E('div', 'bj-grid-2');
-  grid.append(renderOvenPanel({ game, E }));
+  grid.append(renderStockPanel({ game, E }));
   grid.append(renderRecipePanel({ game, E, action }));
-  return grid;
+  wrap.append(grid);
+  return wrap;
 }
 
-function renderOvenPanel({ game, E }) {
+function renderStockPanel({ game, E }) {
   const panel = E('div', 'bj-panel');
-  panel.append(E('h2', '', 'De oven'));
-  const list = E('div', 'bj-oven-list');
-  game.ovens.forEach((o, idx) => {
-    if (o) {
-      const r = game.recipes[o.recipeKey];
-      const total = o.endMin - o.startMin;
-      const done = clampNum(game.clockMin - o.startMin, 0, total || 1);
-      const pct = total > 0 ? Math.round((done / total) * 100) : 100;
-      const card = E('div', 'bj-oven-card active');
-      const top = E('div', 'bj-oven-top');
-      top.append(svgSpan(E, 'bj-icon', ICONS[o.recipeKey] || ''));
-      const info = E('div', '');
-      info.append(E('div', 'bj-oven-name', r.naam), E('div', 'bj-oven-meta tabular', `nog ${Math.max(0, o.endMin - game.clockMin)} min`));
-      top.append(info);
-      const progress = E('div', 'bj-progress');
-      const span = E('span', '');
-      span.style.width = `${pct}%`;
-      progress.append(span);
-      card.append(top, progress);
-      list.append(card);
-    } else {
-      const card = E('div', 'bj-oven-card');
-      card.append(E('div', 'bj-oven-empty', `Oven ${idx + 1} · vrij`));
-      list.append(card);
-    }
-  });
-  panel.append(list);
-
   panel.append(E('h2', '', 'Voorraad'));
   const strip = E('div', 'bj-ing-strip');
   Object.entries(game.ingredients).forEach(([key, value]) => {
@@ -198,13 +281,16 @@ function renderRecipePanel({ game, E, action }) {
   return panel;
 }
 
-/* ---------------- shop ---------------- */
+/* ---------------- winkel ---------------- */
 
 function renderShopScreen({ game, E, action, sound }) {
+  const wrap = E('div', 'bj-phase-wrap');
+  wrap.append(renderShopScene({ game, E }));
   const grid = E('div', 'bj-grid-2');
   grid.append(renderCustomerPanel({ game, E, action, sound }));
   grid.append(renderOrdersPanel({ game, E, action, sound }));
-  return grid;
+  wrap.append(grid);
+  return wrap;
 }
 
 function renderCustomerPanel({ game, E, action, sound }) {
@@ -305,6 +391,8 @@ function renderOrdersPanel({ game, E, action, sound }) {
 /* ---------------- supermarkt ---------------- */
 
 function renderSupermarketScreen({ game, E, action }) {
+  const wrap = E('div', 'bj-phase-wrap');
+  wrap.append(renderStorageScene({ game, E }));
   const panel = E('div', 'bj-panel bj-market-panel');
   panel.append(E('h2', '', 'Supermarkt'));
   panel.append(E('p', 'bj-muted', `Koop ingrediënten voor morgen — sluit om ${fmtClock(game.supermarketEnd)}.`));
@@ -329,7 +417,8 @@ function renderSupermarketScreen({ game, E, action }) {
     grid.append(card);
   });
   panel.append(grid);
-  return panel;
+  wrap.append(panel);
+  return wrap;
 }
 
 /* ---------------- pop-ups ---------------- */
@@ -365,6 +454,7 @@ function renderClosePromptPopup({ game, E, action }) {
 
 function renderDayEndPopup({ game, E, action }) {
   const { overlay, card } = popupCard(E, 'bj-dayend');
+  card.append(renderHomeScene(E));
   if (game.gameOver) {
     card.append(
       E('h3', '', 'Failliet…'),

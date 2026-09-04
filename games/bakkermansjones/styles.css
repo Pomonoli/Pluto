@@ -111,6 +111,77 @@
 .bj-icon svg { width: 26px; height: 26px; }
 .bj-icon-small svg { width: 16px; height: 16px; }
 
+/* ---------------- ruimtes (illustraties) ---------------- */
+.bj-phase-wrap { display: flex; flex-direction: column; gap: 10px; }
+
+.bj-scene {
+  position: relative; overflow: hidden;
+  height: 150px;
+  border: 3px solid var(--bj-crust); border-radius: 14px;
+  box-shadow: 0 4px 0 var(--bj-crust);
+}
+
+.bj-scene-bakery { background: linear-gradient(180deg, #F3D9A6 0%, #F3D9A6 64%, #C9915B 64%, #C9915B 100%); }
+.bj-scene-shop { background: linear-gradient(180deg, #FDEBD3 0%, #FDEBD3 60%, #C9915B 60%, #C9915B 100%); }
+.bj-scene-storage { background: linear-gradient(180deg, #D9CBB0 0%, #D9CBB0 64%, #A9835A 64%, #A9835A 100%); }
+.bj-scene-home { background: linear-gradient(180deg, #2E3352 0%, #2E3352 66%, #47311F 66%, #47311F 100%); }
+
+.bj-scene-baker { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 62px; z-index: 1; }
+.bj-scene-baker svg { width: 100%; display: block; }
+.bj-scene-baker-behind { bottom: 30px; z-index: 0; }
+
+.bj-scene-ovens { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; gap: 8px; justify-content: center; }
+.bj-scene-oven {
+  width: 62px; height: 58px; flex: none;
+  background: #8B5A34; border: 4px solid var(--bj-crust); border-radius: 10px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+}
+.bj-oven-window { width: 30px; height: 30px; border-radius: 50%; background: #2B1A10; border: 3px solid var(--bj-crust); }
+.bj-scene-oven-label { font: 800 10px 'Baloo 2', sans-serif; color: #FBF0DC; }
+.bj-scene-table {
+  position: absolute; bottom: 0; left: 8px; right: 8px; height: 14px;
+  background: #8B5A34; border-top: 4px solid var(--bj-crust); border-radius: 6px 6px 0 0;
+}
+.bj-scene-back-shelf { position: absolute; top: 10px; left: 10px; display: flex; gap: 5px; z-index: 0; }
+.bj-scene-sack svg { width: 26px; height: 26px; }
+.bj-scene-shelf-item svg { width: 22px; height: 22px; }
+
+.bj-scene-counter {
+  position: absolute; left: 8px; right: 8px; bottom: 6px; height: 44px; z-index: 2;
+  background: #A9713F; border: 4px solid var(--bj-crust); border-radius: 8px 8px 3px 3px;
+}
+.bj-scene-door {
+  position: absolute; top: 10px; right: 12px; width: 24px; height: 46px; z-index: 0;
+  background: #8B5A34; border: 3px solid var(--bj-crust); border-radius: 4px;
+}
+.bj-scene-door::after {
+  content: ''; position: absolute; top: 8px; left: 5px; width: 12px; height: 12px;
+  border-radius: 50%; background: #FDEBD3; border: 2px solid var(--bj-crust);
+}
+.bj-scene-queue { position: absolute; bottom: 52px; right: 14px; display: flex; gap: 4px; align-items: flex-end; z-index: 1; }
+.bj-scene-customer svg { width: 24px; height: 38px; }
+
+.bj-scene-shelves { position: absolute; top: 10px; left: 8px; right: 8px; display: flex; justify-content: space-around; }
+.bj-scene-crate {
+  position: absolute; bottom: 0; left: 8px; right: 8px; height: 12px;
+  background: #6E4726; border-top: 4px solid var(--bj-crust); border-radius: 6px 6px 0 0;
+}
+
+.bj-scene-window {
+  position: absolute; top: 12px; right: 16px; width: 36px; height: 36px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #E8D9F0, #2E3352 70%);
+  border: 3px solid var(--bj-crust);
+}
+.bj-scene-bed {
+  position: absolute; bottom: 0; left: 10px; width: 92px; height: 34px;
+  background: #FBF0DC; border: 4px solid var(--bj-crust); border-radius: 12px 12px 0 0;
+}
+.bj-scene-bed::before {
+  content: ''; position: absolute; top: -8px; left: 6px; width: 22px; height: 16px;
+  background: #fff; border: 3px solid var(--bj-crust); border-radius: 8px;
+}
+.bj-scene-home .bj-scene-baker { left: auto; right: 14px; transform: none; }
+
 /* ---------------- layout ---------------- */
 .bj-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
 .bj-panel {
@@ -221,6 +292,7 @@
 .bj-popup-card .bj-btn { width: 100%; }
 .bj-popup-card.bj-dayend { text-align: left; max-width: 400px; }
 .bj-popup-card.bj-dayend h3 { text-align: center; }
+.bj-popup-card .bj-scene { margin: -16px -18px 12px; border-radius: 12px 12px 0 0; border-width: 0 0 3px; height: 110px; }
 .bj-modal-row { display: flex; justify-content: space-between; font-weight: 700; font-size: 12.5px; padding: 4px 0; border-bottom: 1px dashed var(--bj-line); }
 
 /* ---------------- responsive ---------------- */
