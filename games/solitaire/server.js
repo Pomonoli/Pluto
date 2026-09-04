@@ -60,6 +60,10 @@ function checkWin(game) {
 
 function handleAction(game, playerId, action, payload = {}) {
   if (playerId !== game.playerId) throw new Error('Niet jouw spel.');
+  if (action === 'restart') {
+    Object.assign(game, createGame([{ id: game.playerId }]));
+    return;
+  }
   if (game.gameOver) throw new Error('Het spel is afgelopen.');
 
   if (action === 'draw') {

@@ -16,6 +16,7 @@
 .sol-column{min-width:0;min-height:var(--sol-column-height);border-radius:8px;position:relative}
 .sol-column .playing-card{position:absolute;left:0;width:100%;max-width:64px;height:auto;aspect-ratio:64/90}
 .sol-info{margin-bottom:12px}
+.sol-restart{margin-left:auto;min-height:36px;padding:7px 11px;font-size:.78rem;white-space:nowrap}
 @media(max-height:760px){.solitaire-board{--sol-card-step:clamp(14px,2.8vh,21px);--sol-column-height:342px}}
 @media(max-height:600px){.solitaire-board{--sol-card-step:clamp(11px,2.4vh,16px);--sol-column-height:282px}}
 @media(max-width:760px){

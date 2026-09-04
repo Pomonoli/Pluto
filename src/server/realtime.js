@@ -564,6 +564,7 @@ function createRealtime(io) {
           String(payload.action || ''),
           payload.data || {}
         );
+        if (module.meta.key === 'solitaire' && payload.action === 'restart') room.startedAt = Date.now();
         runGameHook(room);
         room.gameRevision = (room.gameRevision || 0) + 1;
 

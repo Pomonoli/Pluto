@@ -246,9 +246,9 @@ function buildBoardSvg({ game, tileByKey, you, tileEls, onTileClick }) {
     const endP = hexPixel(path[path.length - 1].q, path[path.length - 1].r);
     pts.push(`${endP.x},${endP.y}`);
     const pointStr = pts.join(' ');
-    riverLayer.append(svgEl('polyline', { points: pointStr, class: 'rgnk-river-under' }));
-    riverLayer.append(svgEl('polyline', { points: pointStr, class: 'rgnk-river-body' }));
-    riverLayer.append(svgEl('polyline', { points: pointStr, class: 'rgnk-river-hi' }));
+    riverLayer.append(svgEl('polyline', { points: pointStr, class: 'rgnk-river-under', fill: 'none' }));
+    riverLayer.append(svgEl('polyline', { points: pointStr, class: 'rgnk-river-body', fill: 'none' }));
+    riverLayer.append(svgEl('polyline', { points: pointStr, class: 'rgnk-river-hi', fill: 'none' }));
   });
 
   return svg;

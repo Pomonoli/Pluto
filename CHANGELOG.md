@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.21.1 — UI- en spelverbeteringen
+
+- Hartenjagen spreidt een kleiner wordende hand over de beschikbare breedte en houdt alle vier spelers compact zichtbaar.
+- Solitaire heeft een directe herstartknop; het leaderboard toont geen gelijkspelkolom meer, gebruikt een compact beste-zettengetal en toont de snelste voltooiing.
+- Age of Civilization houdt het actieve spel vast op één scherm, maakt alleen het eindscherm scrollbaar en toont alle kernstatistieken in de eindrangschikking.
+- Ragnarok-rivieren zijn expliciet ongevuld en gelaagd gestileerd; de lichte interface gebruikt lichtere, consistentere panelen en acties.
+- CycClub heeft leesbare lichte racepanelen en 7 Wonders Duel toont kaarteffecten ook mobiel en gebruikt overal “Tijdperk”.
+
 ## v1.21.0 — Bakkermans Jones
 
 - Nieuwe solo game Bakkermans Jones: draai een vroege bakkersdienst — bak van 03:00 tot 07:00, bedien klanten en lever bestellingen tot de winkel om 12:00 sluit.

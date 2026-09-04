@@ -304,7 +304,7 @@ function advanceAge(game) {
   if (game.age >= 3) { finishCivilian(game); return; }
   game.age += 1;
   game.ageCards = buildLayout(game.age);
-  game.log.unshift(`Leeftijd ${game.age} begint.`);
+  game.log.unshift(`Tijdperk ${game.age} begint.`);
 }
 
 function buildCardAction(game, player, card) {

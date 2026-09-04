@@ -20,7 +20,9 @@ test('Age of Civilization houdt spelerkaarten vast, toont details en laat onbeta
   assert.match(client,/eyebrow:'Jouw stad'/);
   assert.match(client,/eyebrow:'Vast gebouw'/);
   assert.match(client,/function statBadges/);
-  assert.match(css,/\.civ-player-chip \{[\s\S]*?flex: 0 0 92px; width:92px/);
+  assert.match(css,/\.civ-player-chip \{[\s\S]*?flex: 1 1 0; min-width:0/);
+  assert.match(css,/#gameStage:has\(\.civ-root \.civ-gameover\)\{overflow-y:auto!important\}/);
+  assert.match(client,/Goud \$\{player\.gold\} · ATK \$\{player\.attack\} · DEF \$\{player\.defence\} · Inkomen \+\$\{player\.income\}/);
   assert.match(css,/\.civ-chip-name \{[^}]*text-overflow:ellipsis/);
   assert.match(client,/eyebrow:'Speler'/);
   assert.match(client,/function playerDetails/);

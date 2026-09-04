@@ -376,6 +376,19 @@ const RELEASES = [
     features:[
       'Bakkermans Jones: draai een vroege bakkersdienst — bak van 03:00 tot 07:00, bedien klanten en lever bestellingen en een dagelijks evenement tot de winkel om 12:00 sluit, en overleef willekeurige tegenslagen zoals een kapotte koeling of stroomstoring.'
     ]
+  },
+  {
+    version:'1.21.1',
+    features:[
+      'Solitaire heeft nu een zichtbare knop om meteen met een vers spel opnieuw te beginnen.',
+      'Het Solitaire-leaderboard toont voortaan de beste zetten en snelste voltooiing zonder overbodige gelijkspelkolom.'
+    ],
+    improvements:[
+      'Hartenjagen spreidt resterende handkaarten steeds ruimer en houdt alle vier spelers zichtbaar.',
+      'Age of Civilization houdt het actieve spel vast, maakt het eindscherm bereikbaar en toont daar goud, aanval, verdediging en inkomen.',
+      'Ragnarok-rivieren worden correct als gelaagde lijnen getekend en de lichte UI is rustiger en consistenter.',
+      'CycClub is leesbaar in het lichte thema; 7 Wonders Duel toont kaarteffecten mobiel en noemt ieder tijdperk consequent Tijdperk.'
+    ]
   }
 ];
 

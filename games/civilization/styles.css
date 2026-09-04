@@ -9,6 +9,8 @@
 #gameStage:has(.civ-root){display:flex;flex-direction:column;overflow:hidden!important}
 #gameStage:has(.civ-root)>.civ-root{flex:1;min-height:0}
 #gameStage:has(.civ-root)>.log-box{display:none!important}
+#gameStage:has(.civ-root .civ-gameover){overflow-y:auto!important}
+#gameStage:has(.civ-root .civ-gameover)>.civ-root{flex:none;min-height:auto;overflow:visible}
 
 .civ-root {
   --civ-accent: #B8895A;
@@ -34,9 +36,9 @@
 .civ-root h2 { font-family: inherit; margin: 0; }
 
 /* ---- top player strip ---- */
-.civ-top-strip { display: flex; align-items: center; gap: 3px; overflow-x: auto; padding-bottom: 2px; }
+.civ-top-strip { display: flex; align-items: center; gap: 3px; overflow: hidden; padding-bottom: 2px; }
 .civ-player-chip {
-  flex: 0 0 92px; width:92px; box-sizing:border-box; background: var(--civ-bg-panel); border: 1px solid var(--civ-bg-panel-2);
+  flex: 1 1 0; min-width:0; width:auto; box-sizing:border-box; background: var(--civ-bg-panel); border: 1px solid var(--civ-bg-panel-2);
   border-radius: 8px; padding: 4px 6px; display: flex; flex-direction: column; gap: 2px;
 }
 .civ-player-chip.you { border-color: var(--civ-accent); border-width: 2px; }

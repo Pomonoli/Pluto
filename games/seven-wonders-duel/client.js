@@ -77,7 +77,7 @@ function renderDuel({room,game,state,els,E,action,titlebar}){
 
   const boardWrap=E('div','duel-board-wrap');
   const boardHead=E('div','duel-board-head');
-  boardHead.append(E('div','duel-age',`Leeftijd ${game.age}/3`),E('div','duel-wonder-limit',`${game.builtWonderCount}/7 wonders gebouwd`));
+  boardHead.append(E('div','duel-age',`Tijdperk ${game.age}/3`),E('div','duel-wonder-limit',`${game.builtWonderCount}/7 wonders gebouwd`));
   boardWrap.append(boardHead);
 
   const board=E('div','duel-board');
@@ -91,7 +91,7 @@ function renderDuel({room,game,state,els,E,action,titlebar}){
       node.append(E('span','duel-card-type',COLOR_LABELS[card.color]||''),E('strong','duel-card-name',card.name),E('span','duel-card-cost',constructionCostText(card)),E('small','duel-card-effect',cardEffectText(card)));
       if(node.disabled&&card.available)node.title='Beschikbaar zodra jij aan de beurt bent.';
     }else{
-      node.append(E('span','duel-card-back-mark','VII'),E('small','duel-card-back-age',`Leeftijd ${game.age}`));
+      node.append(E('span','duel-card-back-mark','VII'),E('small','duel-card-back-age',`Tijdperk ${game.age}`));
     }
     if(game.canAct&&card.available&&!game.pendingProgressFor)node.onclick=()=>openCardChoice({E,boardWrap,game,card,me,action});
     board.append(node);
@@ -109,7 +109,7 @@ function renderDuel({room,game,state,els,E,action,titlebar}){
 
   const tabs=E('nav','duel-tabs');
   const cardsTab=E('button',`duel-tab${selectedTab==='cards'?' active':''}`);
-  cardsTab.type='button';cardsTab.append(E('strong','','Kaarten'),E('small','',`Leeftijd ${game.age}/3`));
+  cardsTab.type='button';cardsTab.append(E('strong','','Kaarten'),E('small','',`Tijdperk ${game.age}/3`));
   const realmTab=E('button',`duel-tab${selectedTab==='realm'?' active':''}`);
   realmTab.type='button';realmTab.append(E('strong','','Jouw wonders'),E('small','','Vooruitgang'));
   const selectTab=(name)=>{
