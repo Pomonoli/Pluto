@@ -360,6 +360,15 @@ const RELEASES = [
     features:[
       'Ragnarok: verover in realtime een gedeelde hexkaart met je vikingclan, bouw je gebied uit en overleef het oordeel der goden.'
     ]
+  },
+  {
+    version:'1.20.0',
+    features:[
+      'The Deep Bleu C heeft een nieuwe art direction: een "deep water, warm land"-kleurenpalet, een RPG-avonturier met kap en cape als speelfiguur, en een schermvullende kaart met zwevende actieknoppen in plaats van een vaste zijbalk.'
+    ],
+    improvements:[
+      'The Deep Bleu C: een geopend paneel (Vishandel, Aquarium, Vaardigheden, ...) schuift nu als een sheet over de kaart heen in plaats van het scherm te vervangen.'
+    ]
   }
 ];
 

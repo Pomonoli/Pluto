@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.20.0 — The Deep Bleu C: nieuwe art direction
+
+- Nieuw "deep water, warm land"-kleurenpalet (lagoon/ocean/deep, sand/kelp/rock, koraal/goud-accenten) op alle hex-tegels, gebouwen en UI.
+- De speler is nu een RPG-avonturier met kap en cape i.p.v. de vorige visser-look; het werktuig (hengel/bijl/houweel) verschijnt nog steeds enkel tijdens de bijhorende actie.
+- De kaart is nu schermvullend en blijft altijd zichtbaar. De 10 actieknoppen zweven voortaan in drie vaste zones rond de rand (systeem linksboven, contextueel rechts, productie onderaan met de Haven als goud uitgelichte ankerknop) in plaats van in een vaste zijbalk.
+- Een geopend paneel (Vishandel, Aquarium, Vaardigheden, ...) schuift nu als een sheet over de kaart heen in plaats van het scherm te vervangen.
+
 ## v1.19.0 — Age of Civilization: Deathmatch
 
 - Nieuwe Deathmatch-modus: na tijdperk 7 gaat het spel door met late-game content tot er maximaal één toren overblijft.

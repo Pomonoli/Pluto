@@ -2,15 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.19.0
+## Nieuw in versie 1.20.0
 
-**Age of Civilization** krijgt de nieuwe Deathmatch-modus: speel na tijdperk 7 door tot er maximaal één toren overblijft, met doorlopende late-game content en een overzichtelijke aanvalstabel.
-
-**Ragnarok** is een nieuwe realtime game voor 2-6 spelers: verover een gedeelde hexkaart met je vikingclan, verzamel grondstoffen, breid uit, upgrade pionnen en overleef het oordeel der goden. Iedereen speelt gelijktijdig, zonder beurten.
-
-## Nieuw in versie 1.18.0
-
-**The Deep Bleu C** heeft er een hele laag bij: naast vissen kun je nu ook hout hakken en steen delven bij de nieuwe Haven, Houthakkerij en Steengroeve, met vijf sets van 10 soorten per grondstof. De hex-tegels zijn twee keer zo groot met kleur en reliëf, je speler is een 2D-chibi visser die z'n hengel/bijl/houweel alleen vasthoudt tijdens de actie, en een nieuwe vaardigheden-skilltree (Vissen, Houthakken, Delven, Verzamelen, Handelen) loopt van niveau 1 tot 99 op basis van je vangsten, ontdekkingen en ruilen.
+**The Deep Bleu C** heeft een nieuwe art direction: een "deep water, warm land"-kleurenpalet op de hele kaart, een RPG-avonturier met kap en cape als speelfiguur, en een schermvullende kaart met zwevende actieknoppen in plaats van een vaste zijbalk — een geopend paneel schuift nu als een sheet over de kaart heen.
 
 ## Nieuw in versie 1.0.0
 
