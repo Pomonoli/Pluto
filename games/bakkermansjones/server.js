@@ -10,18 +10,28 @@
  *   tick(game, now)
  *   results(game, durationMs)
  *
- * De dag loopt van 03:00 (bakken) tot 12:00 (winkel dicht) in speltijd-
- * minuten. tick() zet die speltijd-klok verder op basis van verstreken
- * werkelijke tijd (zoals Ragnarok dat doet), zodat de simulatie ook
- * doorloopt zonder speleractie: ovens worden klaar, klanten komen en gaan,
- * en willekeurige tegenslagen kunnen toeslaan.
+ * De dag is opgedeeld in fases (game.phase), telkens met een eigen scherm:
+ *   prep         — 00:00-07:00, bakken. Alleen oven/recepten/voorraad.
+ *   shopPrompt   — pop-up "winkel openen?", klok gepauzeerd.
+ *   shop         — 07:00-12:00, klanten bedienen en bestellingen leveren.
+ *   closePrompt  — pop-up "winkel sluit", klok gepauzeerd.
+ *   supermarket  — 12:00-15:00, ingrediënten inkopen voor de volgende dag.
+ *   dayEnd       — pop-up met dagoverzicht, klok gepauzeerd.
+ *
+ * tick() zet de speltijd-klok verder op basis van verstreken werkelijke tijd
+ * (zoals Ragnarok dat doet), zodat de simulatie doorloopt zonder speleractie
+ * binnen een actieve fase (prep/shop/supermarket). Bij elke fase-overgang
+ * naar een pop-up wordt de klok automatisch gepauzeerd; de speler bevestigt
+ * met een actie om verder te gaan.
  */
 
-const DAY_START = 180;   // 03:00 in minuten sinds middernacht
-const SHOP_START = 420;  // 07:00
-const DAY_END = 720;     // 12:00
-const DAILY_COST = 35;   // vaste kosten per dag (huur, energie)
-const TICK_BASE_MS = 250; // bij snelheid 1x kost één speltijd-minuut dit aantal ms
+const DAY_START = 0;          // 00:00 in minuten sinds middernacht
+const SHOP_START = 420;       // 07:00
+const SHOP_END = 720;         // 12:00
+const SUPERMARKET_END = 900;  // 15:00 — einde van de dag
+const DAILY_COST = 35;        // vaste kosten per dag (huur, energie)
+const TICK_BASE_MS = 250;     // bij snelheid 1x kost één speltijd-minuut dit aantal ms
+const PAUSING_PHASES = new Set(['shopPrompt', 'closePrompt', 'dayEnd']);
 
 const RECIPES = {
   stokbrood: { key: 'stokbrood', naam: 'Stokbrood', batch: 4, bakMin: 18, prijs: 2.60, kost: { bloem: 3, gist: 1 }, koeling: false },
@@ -32,6 +42,8 @@ const RECIPES = {
 };
 
 const INGREDIENT_META = { bloem: 'Bloem', gist: 'Gist', boter: 'Boter', suiker: 'Suiker', eieren: 'Eieren', room: 'Room' };
+const INGREDIENT_PRICES = { bloem: 0.15, gist: 0.40, boter: 0.35, suiker: 0.20, eieren: 0.25, room: 0.60 };
+const BUY_BATCH = 10; // eenheden per aankoopklik in de supermarkt
 
 const START_INGREDIENTS = { bloem: 70, gist: 12, boter: 28, suiker: 18, eieren: 22, room: 8 };
 const EMPTY_SHELF = { stokbrood: 0, pistolet: 0, croissant: 0, koffiekoek: 0, taart: 0 };
@@ -146,11 +158,11 @@ function createGame(roomPlayers) {
     playerId: roomPlayers[0].id,
     gameOver: false,
     resultText: '',
+    phase: 'prep',
     day: 1,
     clockMin: DAY_START,
     paused: false,
     speed: 2,
-    dayEndPending: false,
     money: 150,
     reputation: 60,
     ingredients: { ...START_INGREDIENTS },
@@ -251,18 +263,46 @@ function completeOven(game, idx) {
 
 function maybeTriggerEvent(game) {
   if (game.eventsToday >= game.maxEventsToday) return;
-  if (game.clockMin < 200) return;
+  if (game.clockMin < 60) return;
   if (Math.random() >= 0.0025) return;
-  const eligible = EVENTS.filter((e) => e.id !== 'school' || game.clockMin >= SHOP_START);
+  const eligible = EVENTS.filter((e) => e.id !== 'school' || game.phase === 'shop');
   const ev = eligible[Math.floor(Math.random() * eligible.length)];
   ev.apply(game);
   game.eventsToday += 1;
   addLog(game, `${ev.title} — ${ev.desc}`, ev.tone);
 }
 
+function openShop(game) {
+  if (game.phase !== 'shopPrompt') throw new Error('De winkel kan nu niet geopend worden.');
+  game.phase = 'shop';
+  game.paused = false;
+  addLog(game, 'De winkel is open!', 'info');
+}
+
+function closeShop(game) {
+  if (game.customerQueue.length) {
+    game.customerQueue.forEach(() => {
+      game.stats.missed += 1;
+      game.reputation = clampNum(game.reputation - 2, 0, 100);
+    });
+    addLog(game, 'De winkel sluit — de rest van de rij gaat onverrichter zake naar huis.', 'bad');
+    game.customerQueue = [];
+  }
+  addLog(game, 'De winkel is gesloten voor vandaag.', 'info');
+  game.phase = 'closePrompt';
+  game.paused = true;
+}
+
+function goToSupermarket(game) {
+  if (game.phase !== 'closePrompt') throw new Error('Je kunt nu niet naar de supermarkt.');
+  game.phase = 'supermarket';
+  game.paused = false;
+  addLog(game, 'Tijd om inkopen te doen voor morgen.', 'info');
+}
+
 function endDay(game) {
   game.money -= DAILY_COST;
-  game.dayEndPending = true;
+  game.phase = 'dayEnd';
   game.paused = true;
   if (game.money < 0) {
     game.gameOver = true;
@@ -275,22 +315,30 @@ function advanceOneMinute(game) {
   game.ovens.forEach((o, idx) => { if (o && game.clockMin >= o.endMin) completeOven(game, idx); });
   game.mods = game.mods.filter((m) => m.endMin > game.clockMin);
   checkDeadlines(game);
-  if (game.clockMin >= SHOP_START) {
+  if (game.phase === 'shop') {
     updateCustomerPatience(game);
     maybeSpawnCustomer(game);
   }
   maybeTriggerEvent(game);
-  if (game.clockMin >= DAY_END) endDay(game);
+
+  if (game.phase === 'prep' && game.clockMin >= SHOP_START) {
+    game.phase = 'shopPrompt';
+    game.paused = true;
+  } else if (game.phase === 'shop' && game.clockMin >= SHOP_END) {
+    closeShop(game);
+  } else if (game.phase === 'supermarket' && game.clockMin >= SUPERMARKET_END) {
+    endDay(game);
+  }
 }
 
 function goToNextDay(game) {
-  if (!game.dayEndPending) throw new Error('De dag is nog niet voorbij.');
+  if (game.phase !== 'dayEnd') throw new Error('De dag is nog niet voorbij.');
   const wasBroken = game.koelingBroken;
   game.day += 1;
   game.clockMin = DAY_START;
+  game.phase = 'prep';
   game.ovens = [null, null, null];
   game.shelf = { ...EMPTY_SHELF };
-  game.ingredients = { ...START_INGREDIENTS };
   game.koelingBroken = false;
   game.mods = [];
   game.customerQueue = [];
@@ -300,7 +348,6 @@ function goToNextDay(game) {
   game.eventsToday = 0;
   game.maxEventsToday = 2 + (game.day > 4 ? 1 : 0);
   game.stats = { served: 0, missed: 0, revenueToday: 0, ordersDone: 0, ordersFailed: 0 };
-  game.dayEndPending = false;
   game.paused = false;
   game.minuteAccumMs = 0;
   if (wasBroken) addLog(game, 'De koelgroep is \'s nachts hersteld.', 'good');
@@ -312,7 +359,7 @@ function goToNextDay(game) {
 function bakeRecipe(game, key) {
   const r = RECIPES[key];
   if (!r) throw new Error('Onbekend recept.');
-  if (game.dayEndPending) throw new Error('De dag is voorbij.');
+  if (game.phase !== 'prep') throw new Error('Je kunt enkel bakken tijdens de voorbereiding.');
   if (r.koeling && game.koelingBroken) throw new Error('De koeling is stuk — geen taarten mogelijk.');
   const idx = game.ovens.findIndex((o) => o === null);
   if (idx === -1) throw new Error('Geen vrije oven.');
@@ -323,6 +370,7 @@ function bakeRecipe(game, key) {
 }
 
 function serveCustomer(game, id) {
+  if (game.phase !== 'shop') throw new Error('De winkel is niet open.');
   const c = game.customerQueue.find((x) => x.id === id);
   if (!c) throw new Error('Klant niet gevonden.');
   const r = RECIPES[c.wants.key];
@@ -338,6 +386,7 @@ function serveCustomer(game, id) {
 }
 
 function deliverOrder(game, id) {
+  if (game.phase !== 'shop') throw new Error('De winkel is niet open.');
   const o = game.orders.find((x) => x.id === id);
   if (!o || o.status !== 'open') throw new Error('Bestelling niet beschikbaar.');
   if ((game.shelf[o.product] || 0) < o.qty) throw new Error('Niet genoeg op de plank.');
@@ -350,6 +399,7 @@ function deliverOrder(game, id) {
 }
 
 function deliverEvent(game) {
+  if (game.phase !== 'shop') throw new Error('De winkel is niet open.');
   const ev = game.event;
   if (!ev || ev.status !== 'open') throw new Error('Geen openstaand evenement.');
   for (const k in ev.needs) { if ((game.shelf[k] || 0) < ev.needs[k]) throw new Error('Niet genoeg op de plank.'); }
@@ -368,6 +418,22 @@ function repairKoeling(game) {
   addLog(game, 'De koelgroep is hersteld.', 'good');
 }
 
+function buyIngredient(game, key) {
+  if (game.phase !== 'supermarket') throw new Error('Je kunt nu niet inkopen.');
+  const price = INGREDIENT_PRICES[key];
+  if (!price) throw new Error('Onbekend ingrediënt.');
+  const cost = price * BUY_BATCH;
+  if (game.money < cost) throw new Error('Te weinig geld.');
+  game.money -= cost;
+  game.ingredients[key] = (game.ingredients[key] || 0) + BUY_BATCH;
+  addLog(game, `${BUY_BATCH}× ${INGREDIENT_META[key]} ingeslagen (-€${fmtMoney(cost)}).`, 'info');
+}
+
+function togglePause(game) {
+  if (PAUSING_PHASES.has(game.phase)) throw new Error('Nu even niet.');
+  game.paused = !game.paused;
+}
+
 function setSpeed(game, n) {
   if (![1, 2, 4].includes(n)) throw new Error('Ongeldige snelheid.');
   game.speed = n;
@@ -382,8 +448,11 @@ function handleAction(game, playerId, action, payload = {}) {
   else if (action === 'deliverOrder') deliverOrder(game, String(payload.id || ''));
   else if (action === 'deliverEvent') deliverEvent(game);
   else if (action === 'repairKoeling') repairKoeling(game);
-  else if (action === 'togglePause') game.paused = !game.paused;
+  else if (action === 'buyIngredient') buyIngredient(game, String(payload.key || ''));
+  else if (action === 'togglePause') togglePause(game);
   else if (action === 'setSpeed') setSpeed(game, Number(payload.value));
+  else if (action === 'openShop') openShop(game);
+  else if (action === 'goToSupermarket') goToSupermarket(game);
   else if (action === 'nextDay') goToNextDay(game);
   else throw new Error('Onbekende actie.');
 }
@@ -395,7 +464,7 @@ function tick(game, now) {
   const last = game.lastTickAt || now;
   const elapsedMs = Math.min(Math.max(0, now - last), 4000);
   game.lastTickAt = now;
-  if (game.paused || game.dayEndPending) return false;
+  if (game.paused) return false;
 
   const msPerMinute = TICK_BASE_MS / game.speed;
   game.minuteAccumMs = (game.minuteAccumMs || 0) + elapsedMs;
@@ -407,7 +476,7 @@ function tick(game, now) {
     advanceOneMinute(game);
     changed = true;
     guard += 1;
-    if (game.dayEndPending || game.gameOver) break;
+    if (game.gameOver || PAUSING_PHASES.has(game.phase)) break;
   }
   return changed;
 }
@@ -419,19 +488,22 @@ function serialize(game) {
     kind: 'bakkermansjones',
     gameOver: game.gameOver,
     resultText: game.resultText,
+    phase: game.phase,
     day: game.day,
     clockMin: game.clockMin,
     dayStart: DAY_START,
     shopStart: SHOP_START,
-    dayEnd: DAY_END,
+    shopEnd: SHOP_END,
+    supermarketEnd: SUPERMARKET_END,
     dailyCost: DAILY_COST,
     paused: game.paused,
     speed: game.speed,
-    dayEndPending: game.dayEndPending,
     money: game.money,
     reputation: game.reputation,
     ingredients: { ...game.ingredients },
     ingredientMeta: INGREDIENT_META,
+    ingredientPrices: INGREDIENT_PRICES,
+    buyBatch: BUY_BATCH,
     recipes: RECIPES,
     ovens: game.ovens.map((o) => (o ? { recipeKey: o.recipeKey, startMin: o.startMin, endMin: o.endMin } : null)),
     shelf: { ...game.shelf },
@@ -460,5 +532,6 @@ function results(game, durationMs) {
 module.exports = {
   createGame, handleAction, serialize, tick, results,
   // geëxporteerd voor tests / intern hergebruik
-  RECIPES, INGREDIENT_META, DAY_START, SHOP_START, DAY_END, DAILY_COST
+  RECIPES, INGREDIENT_META, INGREDIENT_PRICES, BUY_BATCH,
+  DAY_START, SHOP_START, SHOP_END, SUPERMARKET_END, DAILY_COST
 };
