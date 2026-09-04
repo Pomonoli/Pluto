@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.20.0
+## Nieuw in versie 1.21.0
 
-**The Deep Bleu C** heeft een nieuwe art direction: een "deep water, warm land"-kleurenpalet op de hele kaart, een RPG-avonturier met kap en cape als speelfiguur, en een schermvullende kaart met zwevende actieknoppen in plaats van een vaste zijbalk — een geopend paneel schuift nu als een sheet over de kaart heen.
+**Bakkermans Jones** is een nieuwe solo game: draai een vroege bakkersdienst, bak van 03:00 tot 07:00, bedien klanten en lever bestellingen tot de winkel om 12:00 sluit, en overleef willekeurige tegenslagen zoals een kapotte koeling of stroomstoring.
 
 ## Nieuw in versie 1.0.0
 
@@ -17,6 +17,7 @@ Actieve spellen gebruiken zoveel mogelijk de volledige schermhoogte zonder pagin
 | --- | ---: | :---: |
 | 7 Wonders Duel | 2 | Ja |
 | Age of Civilization | 2-7 | Ja |
+| Bakkermans Jones | 1 | Niet van toepassing |
 | Blackjack | 1-4 | Ja |
 | Carcassonne | 2-5 | Ja |
 | Cascadia | 2-4 | Ja |

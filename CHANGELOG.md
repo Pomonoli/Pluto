@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.21.0 — Bakkermans Jones
+
+- Nieuwe solo game Bakkermans Jones: draai een vroege bakkersdienst — bak van 03:00 tot 07:00, bedien klanten en lever bestellingen tot de winkel om 12:00 sluit.
+- De klok loopt automatisch door (instelbaar op 1×/2×/4× snelheid, of pauzeerbaar); ovens, klanten en een dagelijks evenement met deadline lopen intussen door.
+- Willekeurige tegenslagen (kapotte koeling, stroomstoring, late levering, wegenwerken) en meevallers (foodblogger, schoolreis) houden elke dienst anders. Geld onder nul aan het einde van de dag betekent faillissement.
+
 ## v1.20.0 — The Deep Bleu C: nieuwe art direction
 
 - Nieuw "deep water, warm land"-kleurenpalet (lagoon/ocean/deep, sand/kelp/rock, koraal/goud-accenten) op alle hex-tegels, gebouwen en UI.

@@ -1,0 +1,222 @@
+.bj-root {
+  --bj-crust: #3A2417;
+  --bj-paper: #FBF0DC;
+  --bj-panel: #FFF8EA;
+  --bj-oven: #E14B3C;
+  --bj-oven-dark: #B93529;
+  --bj-butter: #F5B942;
+  --bj-butter-tint: #FFF3D6;
+  --bj-mint: #2E9E8C;
+  --bj-mint-dark: #1F7A6B;
+  --bj-choco: #8B5A34;
+  --bj-line: #3A241733;
+  --bj-line-strong: #3A241755;
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: var(--bj-crust);
+  font-family: 'Nunito', system-ui, sans-serif;
+}
+.bj-root h2, .bj-root h3 { font-family: 'Baloo 2', 'Nunito', system-ui, sans-serif; margin: 0; text-wrap: balance; }
+.bj-root .tabular { font-variant-numeric: tabular-nums; }
+.bj-muted { color: var(--bj-choco); opacity: .8; font-size: 13.5px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bj-root * { transition: none !important; animation: none !important; }
+}
+
+/* ---------------- buttons ---------------- */
+.bj-btn {
+  font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 14px;
+  border: 3px solid var(--bj-crust);
+  border-radius: 12px;
+  background: var(--bj-butter);
+  color: var(--bj-crust);
+  padding: 9px 16px;
+  box-shadow: 0 4px 0 var(--bj-crust);
+  cursor: pointer;
+  transition: transform .08s ease, box-shadow .08s ease;
+}
+.bj-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 0 var(--bj-crust); }
+.bj-btn:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 var(--bj-crust); }
+.bj-btn:disabled { opacity: .45; cursor: not-allowed; box-shadow: 0 4px 0 var(--bj-crust); transform: none; }
+.bj-btn.bj-primary { background: var(--bj-oven); color: #fff; }
+.bj-btn.bj-ghost { background: var(--bj-panel); }
+.bj-btn.bj-small { padding: 6px 12px; font-size: 12.5px; border-width: 2.5px; box-shadow: 0 3px 0 var(--bj-crust); }
+.bj-btn.bj-round { width: 42px; height: 42px; padding: 0; font-size: 16px; border-radius: 50%; }
+.bj-btn:focus-visible { outline: 3px solid var(--bj-mint-dark); outline-offset: 2px; }
+
+/* ---------------- header ---------------- */
+.bj-header {
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  padding: 12px 16px; background: var(--bj-panel);
+  border: 3px solid var(--bj-crust); border-radius: 16px;
+  box-shadow: 0 4px 0 var(--bj-crust);
+}
+.bj-daylabel { font-family: 'Baloo 2', sans-serif; font-size: 12px; font-weight: 800; color: var(--bj-choco); letter-spacing: .04em; text-transform: uppercase; }
+
+.bj-clockblock { display: flex; align-items: center; gap: 10px; }
+.bj-clock { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 24px; }
+.bj-phase { font: 800 11px 'Nunito', sans-serif; letter-spacing: .06em; text-transform: uppercase; border: 2px solid var(--bj-crust); border-radius: 999px; padding: 5px 12px; }
+.bj-phase-bake { background: #e9e0f2; color: #4a3466; }
+.bj-phase-shop { background: #e9f5f2; color: var(--bj-mint-dark); }
+
+.bj-controls { display: flex; align-items: center; gap: 10px; }
+.bj-speedgroup { display: flex; border: 3px solid var(--bj-crust); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 0 var(--bj-crust); }
+.bj-speedbtn {
+  font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 13px;
+  border: none; background: var(--bj-panel); color: var(--bj-crust);
+  padding: 8px 12px; cursor: pointer;
+}
+.bj-speedbtn + .bj-speedbtn { border-left: 3px solid var(--bj-crust); }
+.bj-speedbtn.active { background: var(--bj-mint); color: #fff; }
+.bj-speedbtn:disabled { opacity: .5; cursor: not-allowed; }
+
+.bj-stats { display: flex; align-items: center; gap: 16px; margin-left: auto; }
+.bj-money-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--bj-butter); border: 3px solid var(--bj-crust); border-radius: 999px;
+  padding: 7px 16px 7px 8px; box-shadow: 0 4px 0 var(--bj-crust);
+  font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 16px;
+}
+.bj-coin {
+  width: 22px; height: 22px; border-radius: 50%; background: #fff2c9; border: 2.5px solid var(--bj-crust);
+  display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--bj-oven-dark);
+}
+.bj-rep-block { display: flex; align-items: center; gap: 8px; }
+.bj-rep-label { font-size: 11px; font-weight: 800; color: var(--bj-choco); text-transform: uppercase; letter-spacing: .04em; }
+.bj-rep-meter { width: 84px; height: 10px; background: var(--bj-butter-tint); border: 2px solid var(--bj-crust); border-radius: 999px; overflow: hidden; }
+.bj-rep-fill { display: block; height: 100%; background: var(--bj-mint); }
+
+/* ---------------- icons ---------------- */
+.bj-icon, .bj-icon-small { display: inline-flex; flex: none; }
+.bj-icon svg { width: 32px; height: 32px; }
+.bj-icon-small svg { width: 18px; height: 18px; }
+
+/* ---------------- board ---------------- */
+.bj-board { display: grid; grid-template-columns: 270px 1fr 310px; gap: 16px; align-items: start; }
+.bj-col {
+  background: var(--bj-panel); border: 4px solid var(--bj-crust); border-radius: 18px;
+  padding: 16px; box-shadow: 0 6px 0 var(--bj-crust);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.bj-col h2 {
+  font-size: 14px; text-transform: uppercase; letter-spacing: .05em; color: var(--bj-choco);
+  border-bottom: 2px dashed var(--bj-line-strong); padding-bottom: 8px; margin-bottom: 2px;
+}
+.bj-col h2:not(:first-child) { margin-top: 8px; }
+
+/* ---------------- oven kolom ---------------- */
+.bj-oven-list { display: flex; flex-direction: column; gap: 8px; }
+.bj-oven-card { border: 3px solid var(--bj-crust); border-radius: 12px; padding: 8px 10px; background: var(--bj-paper); }
+.bj-oven-card.active { background: var(--bj-butter-tint); }
+.bj-oven-empty { font-size: 13px; color: var(--bj-choco); opacity: .7; padding: 6px 0; text-align: center; }
+.bj-oven-top { display: flex; align-items: center; gap: 8px; }
+.bj-oven-name { font-weight: 800; font-size: 13.5px; }
+.bj-oven-meta { font-size: 11.5px; color: var(--bj-choco); }
+.bj-progress { height: 8px; background: var(--bj-butter-tint); border: 2px solid var(--bj-crust); border-radius: 999px; overflow: hidden; margin-top: 6px; }
+.bj-progress span { display: block; height: 100%; background: var(--bj-mint); }
+
+.bj-chaos-banner {
+  background: repeating-linear-gradient(-45deg, var(--bj-oven) 0 12px, var(--bj-oven-dark) 12px 24px);
+  border: 3px solid var(--bj-crust); border-radius: 12px; padding: 10px 12px; color: #fff;
+}
+.bj-chaos-banner .bj-ch-title { display: flex; align-items: center; gap: 6px; font: 800 13px 'Baloo 2', sans-serif; margin-bottom: 4px; }
+.bj-chaos-banner p { margin: 0 0 8px; font-size: 11.5px; font-weight: 700; }
+
+.bj-ingredient-list { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 12px; }
+.bj-ing-row { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--bj-line); padding: 4px 0; font-size: 13px; font-weight: 700; }
+.bj-ing-row.empty span:last-child { color: var(--bj-oven-dark); }
+
+/* ---------------- recepten ---------------- */
+.bj-recipe-list { display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto; padding-right: 2px; }
+.bj-recipe-btn {
+  display: flex; align-items: center; gap: 10px; text-align: left;
+  border: 3px solid var(--bj-crust); border-radius: 12px; background: var(--bj-butter-tint);
+  padding: 8px 10px; box-shadow: 0 4px 0 var(--bj-crust); cursor: pointer;
+  transition: transform .08s ease, box-shadow .08s ease;
+}
+.bj-recipe-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 0 var(--bj-crust); }
+.bj-recipe-btn:disabled { opacity: .5; filter: grayscale(.25); cursor: not-allowed; box-shadow: 0 4px 0 var(--bj-crust); transform: none; }
+.bj-recipe-text { display: flex; flex-direction: column; gap: 1px; }
+.bj-recipe-name { font-weight: 800; font-size: 14px; }
+.bj-recipe-meta { font-size: 11.5px; color: var(--bj-choco); font-weight: 700; }
+.bj-recipe-cost { font-size: 11px; color: var(--bj-choco); opacity: .8; }
+
+/* ---------------- stage / fasegebied ---------------- */
+.bj-tip-card { background: var(--bj-paper); border: 3px dashed var(--bj-line-strong); border-radius: 12px; padding: 14px; }
+.bj-tip-card h3 { font-size: 14px; margin-bottom: 4px; }
+.bj-tip-card p { margin: 0; font-size: 13.5px; color: var(--bj-choco); font-weight: 600; }
+
+.bj-area-title { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--bj-choco); margin: 4px 0 2px; }
+.bj-shelf-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 8px; }
+.bj-shelf-item {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  border: 2.5px solid var(--bj-crust); border-radius: 10px; background: var(--bj-paper); padding: 6px 2px;
+}
+.bj-shelf-item .bj-icon svg { width: 28px; height: 28px; }
+.bj-shelf-item span.tabular { font-weight: 800; font-size: 13px; }
+
+.bj-customer-list { display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto; padding-right: 2px; }
+.bj-customer-card {
+  display: flex; align-items: center; gap: 10px;
+  border: 3px solid var(--bj-crust); border-left-width: 8px; border-radius: 12px;
+  background: var(--bj-panel); padding: 8px 10px; box-shadow: 0 4px 0 var(--bj-crust);
+}
+.bj-customer-card.bj-stripe-good { border-left-color: var(--bj-mint); }
+.bj-customer-card.bj-stripe-mid { border-left-color: var(--bj-butter); }
+.bj-customer-card.bj-stripe-low { border-left-color: var(--bj-oven); }
+.bj-customer-text { flex: 1; min-width: 0; }
+.bj-customer-want { font-weight: 800; font-size: 13.5px; }
+.bj-patience-bar { height: 6px; background: var(--bj-butter-tint); border: 2px solid var(--bj-crust); border-radius: 999px; overflow: hidden; margin-top: 4px; }
+.bj-stripe-good .bj-patience-bar span { background: var(--bj-mint); }
+.bj-stripe-mid .bj-patience-bar span { background: var(--bj-butter); }
+.bj-stripe-low .bj-patience-bar span { background: var(--bj-oven); }
+.bj-patience-bar span { display: block; height: 100%; }
+
+/* ---------------- bestellingen / tickets ---------------- */
+.bj-orders-list { display: flex; flex-direction: column; gap: 12px; }
+.bj-ticket {
+  border: 3px solid var(--bj-crust); border-radius: 5px 5px 14px 14px;
+  background: var(--bj-panel); box-shadow: 0 5px 0 var(--bj-crust);
+}
+.bj-ticket-head {
+  background: var(--bj-oven); color: #fff; font: 800 12px 'Baloo 2', sans-serif; letter-spacing: .02em;
+  padding: 8px 10px 6px; border-bottom: 3px solid var(--bj-crust); border-radius: 3px 3px 0 0;
+}
+.bj-ticket-event .bj-ticket-head { background: var(--bj-mint); }
+.bj-ticket-done { opacity: .6; }
+.bj-ticket-done .bj-ticket-head { background: var(--bj-mint-dark); }
+.bj-ticket-failed { opacity: .6; }
+.bj-ticket-failed .bj-ticket-head { background: #8a8a8a; }
+.bj-ticket-body { padding: 10px; }
+.bj-ticket-item { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 12.5px; margin-bottom: 5px; }
+.bj-ticket-item .bj-icon svg { width: 20px; height: 20px; }
+.bj-ticket-time { font: 800 11px 'Nunito', sans-serif; color: var(--bj-choco); margin-bottom: 8px; }
+
+/* ---------------- log ---------------- */
+.bj-log-list { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; padding-right: 2px; }
+.bj-log-item {
+  font-size: 12.5px; font-weight: 600; border-left: 5px solid var(--bj-choco);
+  background: var(--bj-paper); border-radius: 0 8px 8px 0; padding: 6px 8px;
+}
+.bj-log-time { font-weight: 800; margin-right: 6px; color: var(--bj-choco); }
+.bj-log-item.bj-log-good { border-left-color: var(--bj-mint); }
+.bj-log-item.bj-log-bad { border-left-color: var(--bj-oven); }
+.bj-log-item.bj-log-info { border-left-color: var(--bj-choco); }
+
+/* ---------------- dagafsluiting ---------------- */
+.bj-dayend-card {
+  background: var(--bj-panel); border: 4px solid var(--bj-crust); border-radius: 18px;
+  padding: 18px 20px; box-shadow: 0 6px 0 var(--bj-crust); max-width: 420px;
+}
+.bj-dayend-card h3 { font-size: 18px; margin-bottom: 10px; color: var(--bj-oven); }
+.bj-modal-row { display: flex; justify-content: space-between; font-weight: 700; font-size: 13.5px; padding: 5px 0; border-bottom: 1px dashed var(--bj-line); }
+.bj-dayend-card .bj-btn { margin-top: 14px; width: 100%; }
+
+/* ---------------- responsive ---------------- */
+@media (max-width: 980px) {
+  .bj-board { grid-template-columns: 1fr; }
+  .bj-stats { margin-left: 0; width: 100%; justify-content: space-between; }
+}

@@ -369,6 +369,13 @@ const RELEASES = [
     improvements:[
       'The Deep Bleu C: een geopend paneel (Vishandel, Aquarium, Vaardigheden, ...) schuift nu als een sheet over de kaart heen in plaats van het scherm te vervangen.'
     ]
+  },
+  {
+    version:'1.21.0',
+    games:['Bakkermans Jones'],
+    features:[
+      'Bakkermans Jones: draai een vroege bakkersdienst — bak van 03:00 tot 07:00, bedien klanten en lever bestellingen en een dagelijks evenement tot de winkel om 12:00 sluit, en overleef willekeurige tegenslagen zoals een kapotte koeling of stroomstoring.'
+    ]
   }
 ];
 

@@ -1,0 +1,333 @@
+const RECIPE_ORDER = ['stokbrood', 'pistolet', 'croissant', 'koffiekoek', 'taart'];
+
+const ICONS = {
+  stokbrood: `<svg viewBox="0 0 100 100"><rect x="10" y="40" width="80" height="22" rx="11" fill="#F5B942" stroke="#3A2417" stroke-width="6"/><line x1="28" y1="40" x2="22" y2="62" stroke="#3A2417" stroke-width="5"/><line x1="46" y1="40" x2="40" y2="62" stroke="#3A2417" stroke-width="5"/><line x1="64" y1="40" x2="58" y2="62" stroke="#3A2417" stroke-width="5"/></svg>`,
+  pistolet: `<svg viewBox="0 0 100 100"><circle cx="50" cy="52" r="30" fill="#F5B942" stroke="#3A2417" stroke-width="6"/><line x1="38" y1="40" x2="62" y2="64" stroke="#3A2417" stroke-width="5"/><line x1="62" y1="40" x2="38" y2="64" stroke="#3A2417" stroke-width="5"/></svg>`,
+  croissant: `<svg viewBox="0 0 100 100"><path d="M14 58C22 30 46 20 70 26c14 3 20 14 16 22-10-6-20-4-26 4-8-10-20-11-30-4-6 4-10 8-16 10z" fill="#F5B942" stroke="#3A2417" stroke-width="6" stroke-linejoin="round"/></svg>`,
+  koffiekoek: `<svg viewBox="0 0 100 100"><circle cx="50" cy="54" r="30" fill="#E8B87C" stroke="#3A2417" stroke-width="6"/><path d="M50 34c11 0 18 8 18 18s-9 16-16 12" fill="none" stroke="#3A2417" stroke-width="4" stroke-linecap="round"/><path d="M28 66c6 6 10-6 16 0" fill="none" stroke="#E14B3C" stroke-width="4" stroke-linecap="round"/></svg>`,
+  taart: `<svg viewBox="0 0 100 100"><rect x="18" y="52" width="64" height="32" rx="6" fill="#8B5A34" stroke="#3A2417" stroke-width="6"/><path d="M18 52c0-11 9-18 32-18s32 7 32 18" fill="#FBF0DC" stroke="#3A2417" stroke-width="6"/><path d="M22 50c7-9 13 7 20-2s13 9 20-1s13 6 18-2" fill="none" stroke="#E14B3C" stroke-width="4"/><circle cx="50" cy="30" r="6" fill="#E14B3C" stroke="#3A2417" stroke-width="4"/></svg>`
+};
+const WARN_SVG = `<svg viewBox="0 0 100 100"><path d="M50 8 92 84H8Z" fill="#3A2417"/><path d="M50 18 84 78H16Z" fill="#fff"/><rect x="45" y="38" width="10" height="24" rx="4" fill="#3A2417"/><circle cx="50" cy="70" r="5.5" fill="#3A2417"/></svg>`;
+
+function fmtMoney(n) { return Number(n || 0).toFixed(2).replace('.', ','); }
+function fmtClock(min) {
+  const h = Math.floor(min / 60) % 24;
+  const m = min % 60;
+  return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+}
+function clampNum(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+function svgSpan(E, className, markup) {
+  const span = E('span', className);
+  span.innerHTML = markup;
+  return span;
+}
+
+export function render({ game, els, E, action, titlebar, sound }) {
+  const inShop = game.clockMin >= game.shopStart;
+  const status = game.gameOver
+    ? (game.resultText || 'Bakkermans Jones is gesloten.')
+    : `Dag ${game.day} · ${fmtClock(game.clockMin)} · ${inShop ? 'Winkel open' : 'Bakken'}`;
+  els.gameStage.append(titlebar('Bakkermans Jones', status));
+
+  const root = E('div', 'bj-root');
+  root.append(renderHeader({ game, E, action }));
+  if (game.dayEndPending) root.append(renderDayEndCard({ game, E, action }));
+  root.append(renderBoard({ game, E, action, sound }));
+  els.gameStage.append(root);
+}
+
+function renderHeader({ game, E, action }) {
+  const header = E('div', 'bj-header');
+
+  header.append(E('div', 'bj-daylabel', `Dag ${game.day}`));
+
+  const clockBlock = E('div', 'bj-clockblock');
+  clockBlock.append(E('span', 'bj-clock tabular', fmtClock(game.clockMin)));
+  const inShop = game.clockMin >= game.shopStart;
+  clockBlock.append(E('span', `bj-phase ${inShop ? 'bj-phase-shop' : 'bj-phase-bake'}`, inShop ? 'Winkel open' : 'Bakken'));
+  header.append(clockBlock);
+
+  const controls = E('div', 'bj-controls');
+  const pauseBtn = E('button', 'bj-btn bj-ghost bj-round', game.paused ? '▶' : '⏸');
+  pauseBtn.type = 'button';
+  pauseBtn.disabled = game.gameOver || game.dayEndPending;
+  pauseBtn.onclick = () => action('togglePause');
+  controls.append(pauseBtn);
+
+  const speedGroup = E('div', 'bj-speedgroup');
+  [1, 2, 4].forEach((n) => {
+    const btn = E('button', `bj-speedbtn ${game.speed === n ? 'active' : ''}`, `${n}×`);
+    btn.type = 'button';
+    btn.disabled = game.gameOver;
+    btn.onclick = () => action('setSpeed', { value: n });
+    speedGroup.append(btn);
+  });
+  controls.append(speedGroup);
+  header.append(controls);
+
+  const stats = E('div', 'bj-stats');
+  const moneyPill = E('div', 'bj-money-pill');
+  moneyPill.append(E('span', 'bj-coin', '€'), E('span', 'tabular', fmtMoney(game.money)));
+  stats.append(moneyPill);
+
+  const repBlock = E('div', 'bj-rep-block');
+  repBlock.append(E('span', 'bj-rep-label', 'Reputatie'));
+  const meter = E('div', 'bj-rep-meter');
+  const fill = E('span', 'bj-rep-fill');
+  fill.style.width = `${clampNum(game.reputation, 0, 100)}%`;
+  meter.append(fill);
+  repBlock.append(meter, E('span', 'tabular', String(Math.round(game.reputation))));
+  stats.append(repBlock);
+  header.append(stats);
+
+  return header;
+}
+
+function renderDayEndCard({ game, E, action }) {
+  const card = E('div', 'bj-dayend-card');
+  if (game.gameOver) {
+    card.append(
+      E('h3', '', 'Failliet…'),
+      E('p', '', `Bakkermans Jones moet helaas de deuren sluiten. Eindstand: €${fmtMoney(game.money)} op dag ${game.day}.`)
+    );
+    return card;
+  }
+  card.append(E('h3', '', `Dag ${game.day} afgesloten`));
+  const rows = [
+    ['Omzet klanten', `+€${fmtMoney(game.stats.revenueToday)}`],
+    ['Klanten bediend / gemist', `${game.stats.served} / ${game.stats.missed}`],
+    ['Bestellingen voltooid / mislukt', `${game.stats.ordersDone} / ${game.stats.ordersFailed}`],
+    ['Vaste kosten', `-€${fmtMoney(game.dailyCost)}`],
+    ['Geld nu', `€${fmtMoney(game.money)}`],
+    ['Reputatie', `${Math.round(game.reputation)}/100`]
+  ];
+  rows.forEach(([label, value]) => {
+    const row = E('div', 'bj-modal-row');
+    row.append(E('span', '', label), E('span', 'tabular', value));
+    card.append(row);
+  });
+  const btn = E('button', 'bj-btn bj-primary', 'Volgende dag →');
+  btn.type = 'button';
+  btn.onclick = () => action('nextDay');
+  card.append(btn);
+  return card;
+}
+
+function renderBoard({ game, E, action, sound }) {
+  const board = E('div', 'bj-board');
+  board.append(renderOvenColumn({ game, E, action }));
+  board.append(renderStageColumn({ game, E, action, sound }));
+  board.append(renderSideColumn({ game, E, action, sound }));
+  return board;
+}
+
+function renderOvenColumn({ game, E, action }) {
+  const col = E('div', 'bj-col');
+  col.append(E('h2', '', 'De oven'));
+  const list = E('div', 'bj-oven-list');
+  game.ovens.forEach((o, idx) => {
+    if (o) {
+      const r = game.recipes[o.recipeKey];
+      const total = o.endMin - o.startMin;
+      const done = clampNum(game.clockMin - o.startMin, 0, total || 1);
+      const pct = total > 0 ? Math.round((done / total) * 100) : 100;
+      const card = E('div', 'bj-oven-card active');
+      const top = E('div', 'bj-oven-top');
+      top.append(svgSpan(E, 'bj-icon', ICONS[o.recipeKey] || ''));
+      const info = E('div', '');
+      info.append(E('div', 'bj-oven-name', r.naam), E('div', 'bj-oven-meta tabular', `nog ${Math.max(0, o.endMin - game.clockMin)} min`));
+      top.append(info);
+      const progress = E('div', 'bj-progress');
+      const span = E('span', '');
+      span.style.width = `${pct}%`;
+      progress.append(span);
+      card.append(top, progress);
+      list.append(card);
+    } else {
+      const card = E('div', 'bj-oven-card');
+      card.append(E('div', 'bj-oven-empty', `Oven ${idx + 1} · vrij`));
+      list.append(card);
+    }
+  });
+  col.append(list);
+
+  if (game.koelingBroken) {
+    const banner = E('div', 'bj-chaos-banner');
+    const title = E('div', 'bj-ch-title');
+    title.append(svgSpan(E, 'bj-icon-small', WARN_SVG), document.createTextNode('Koeling stuk'));
+    banner.append(title, E('p', '', 'Geen taarten mogelijk tot herstel.'));
+    const btn = E('button', 'bj-btn bj-small', 'Herstel (€80)');
+    btn.type = 'button';
+    btn.disabled = game.money < 80 || game.gameOver || game.dayEndPending;
+    btn.onclick = () => action('repairKoeling');
+    banner.append(btn);
+    col.append(banner);
+  }
+
+  col.append(E('h2', '', 'Voorraad'));
+  const ingList = E('div', 'bj-ingredient-list');
+  Object.entries(game.ingredients).forEach(([key, value]) => {
+    const row = E('div', `bj-ing-row${value <= 0 ? ' empty' : ''}`);
+    row.append(E('span', '', game.ingredientMeta[key] || key), E('span', 'tabular', String(value)));
+    ingList.append(row);
+  });
+  col.append(ingList);
+  return col;
+}
+
+function renderStageColumn({ game, E, action, sound }) {
+  const col = E('div', 'bj-col');
+  col.append(E('h2', '', 'Recepten'));
+  const recipeList = E('div', 'bj-recipe-list');
+  RECIPE_ORDER.forEach((key) => {
+    const r = game.recipes[key];
+    const hasOven = game.ovens.some((o) => o === null);
+    const hasIng = Object.entries(r.kost).every(([ing, amt]) => (game.ingredients[ing] || 0) >= amt);
+    const koelBlocked = r.koeling && game.koelingBroken;
+    const disabled = !hasOven || !hasIng || koelBlocked || game.dayEndPending || game.gameOver;
+    const btn = E('button', 'bj-recipe-btn');
+    btn.type = 'button';
+    btn.disabled = disabled;
+    btn.title = koelBlocked ? 'Koeling is stuk' : !hasOven ? 'Geen vrije oven' : !hasIng ? 'Te weinig ingrediënten' : '';
+    btn.append(svgSpan(E, 'bj-icon', ICONS[key] || ''));
+    const text = E('span', 'bj-recipe-text');
+    text.append(
+      E('span', 'bj-recipe-name', r.naam),
+      E('span', 'bj-recipe-meta', `${r.batch}× · ${r.bakMin} min · €${fmtMoney(r.prijs)}/stuk`),
+      E('span', 'bj-recipe-cost', Object.entries(r.kost).map(([k, v]) => `${v} ${game.ingredientMeta[k] || k}`).join(' · '))
+    );
+    btn.append(text);
+    btn.onclick = () => { sound('score'); action('bake', { key }); };
+    recipeList.append(btn);
+  });
+  col.append(recipeList);
+  col.append(renderPhaseArea({ game, E, action, sound }));
+  return col;
+}
+
+function renderPhaseArea({ game, E, action, sound }) {
+  const wrap = E('div', 'bj-phase-area');
+  const inShop = game.clockMin >= game.shopStart;
+  if (!inShop) {
+    const tip = E('div', 'bj-tip-card');
+    tip.append(E('h3', '', 'Voorbereiding'), E('p', '', 'De winkel opent om 07:00. Bak vast voorraad op en werk aan de bestellingen van vandaag — klanten komen zo binnen.'));
+    wrap.append(tip);
+    return wrap;
+  }
+
+  wrap.append(E('h3', 'bj-area-title', 'Op de plank'));
+  const shelfGrid = E('div', 'bj-shelf-grid');
+  RECIPE_ORDER.forEach((key) => {
+    const item = E('div', 'bj-shelf-item');
+    item.append(svgSpan(E, 'bj-icon', ICONS[key] || ''), E('span', 'tabular', String(game.shelf[key] || 0)));
+    shelfGrid.append(item);
+  });
+  wrap.append(shelfGrid);
+
+  wrap.append(E('h3', 'bj-area-title', 'Klanten'));
+  const customerList = E('div', 'bj-customer-list');
+  if (!game.customerQueue.length) customerList.append(E('p', 'bj-muted', 'Nog geen klanten binnen.'));
+  game.customerQueue.forEach((c) => {
+    const r = game.recipes[c.wants.key];
+    const left = c.patience - (game.clockMin - c.bornAt);
+    const pct = clampNum((left / c.patience) * 100, 0, 100);
+    const stripe = pct > 50 ? 'good' : pct > 25 ? 'mid' : 'low';
+    const canServe = (game.shelf[c.wants.key] || 0) >= c.wants.qty;
+    const card = E('div', `bj-customer-card bj-stripe-${stripe}`);
+    card.append(svgSpan(E, 'bj-icon', ICONS[c.wants.key] || ''));
+    const text = E('div', 'bj-customer-text');
+    text.append(E('div', 'bj-customer-want', `${c.wants.qty}× ${r.naam}`));
+    const patienceBar = E('div', 'bj-patience-bar');
+    const span = E('span', '');
+    span.style.width = `${pct}%`;
+    patienceBar.append(span);
+    text.append(patienceBar);
+    card.append(text);
+    const btn = E('button', 'bj-btn bj-primary bj-small', 'Bedien');
+    btn.type = 'button';
+    btn.disabled = !canServe || game.gameOver;
+    btn.onclick = () => { sound('score'); action('serveCustomer', { id: c.id }); };
+    card.append(btn);
+    customerList.append(card);
+  });
+  wrap.append(customerList);
+  return wrap;
+}
+
+function renderSideColumn({ game, E, action, sound }) {
+  const col = E('div', 'bj-col');
+  col.append(E('h2', '', 'Bestellingen & evenement'));
+  const ordersList = E('div', 'bj-orders-list');
+  if (!game.orders.length && !game.event) ordersList.append(E('p', 'bj-muted', 'Geen openstaande bestellingen.'));
+
+  game.orders.forEach((o) => {
+    const r = game.recipes[o.product];
+    const can = o.status === 'open' && (game.shelf[o.product] || 0) >= o.qty;
+    const statusLabel = o.status === 'open' ? `vóór ${fmtClock(o.due)}` : o.status === 'done' ? 'voltooid' : 'mislukt';
+    const ticket = E('div', `bj-ticket bj-ticket-${o.status}`);
+    ticket.append(E('div', 'bj-ticket-head', `Bestelling · ${r.naam}`));
+    const body = E('div', 'bj-ticket-body');
+    const item = E('div', 'bj-ticket-item');
+    item.append(svgSpan(E, 'bj-icon', ICONS[o.product] || ''), E('span', '', `${o.qty}× ${r.naam}`));
+    body.append(item, E('div', 'bj-ticket-time', `${statusLabel} · +€${fmtMoney(o.reward)}`));
+    if (o.status === 'open') {
+      const btn = E('button', 'bj-btn bj-primary bj-small', 'Leveren');
+      btn.type = 'button';
+      btn.disabled = !can || game.gameOver;
+      btn.onclick = () => { sound('score'); action('deliverOrder', { id: o.id }); };
+      body.append(btn);
+    }
+    ticket.append(body);
+    ordersList.append(ticket);
+  });
+
+  if (game.event) {
+    const ev = game.event;
+    const ticket = E('div', `bj-ticket bj-ticket-event bj-ticket-${ev.status}`);
+    ticket.append(E('div', 'bj-ticket-head', `Evenement · ${ev.title}`));
+    const body = E('div', 'bj-ticket-body');
+    Object.entries(ev.needs).forEach(([k, v]) => {
+      const item = E('div', 'bj-ticket-item');
+      item.append(svgSpan(E, 'bj-icon', ICONS[k] || ''), E('span', '', `${game.shelf[k] || 0}/${v}× ${game.recipes[k].naam}`));
+      body.append(item);
+    });
+    const can = ev.status === 'open' && Object.entries(ev.needs).every(([k, v]) => (game.shelf[k] || 0) >= v);
+    const statusLabel = ev.status === 'open' ? `vóór ${fmtClock(ev.due)}` : ev.status === 'done' ? 'voltooid' : 'mislukt';
+    body.append(E('div', 'bj-ticket-time', `${statusLabel} · +€${fmtMoney(ev.reward)}`));
+    if (ev.status === 'open') {
+      const btn = E('button', 'bj-btn bj-primary bj-small', 'Leveren');
+      btn.type = 'button';
+      btn.disabled = !can || game.gameOver;
+      btn.onclick = () => { sound('score'); action('deliverEvent'); };
+      body.append(btn);
+    }
+    ticket.append(body);
+    ordersList.append(ticket);
+  }
+  col.append(ordersList);
+
+  col.append(E('h2', '', 'Gebeurtenissen'));
+  const logList = E('div', 'bj-log-list');
+  game.log.forEach((l) => {
+    const row = E('div', `bj-log-item bj-log-${l.tone}`);
+    row.append(E('span', 'bj-log-time tabular', fmtClock(l.min)), document.createTextNode(l.text));
+    logList.append(row);
+  });
+  col.append(logList);
+  return col;
+}
+
+export function metric({ game }) {
+  return { text: `€${fmtMoney(game.money)} · dag ${game.day}`, score: Math.round(game.money) };
+}
+
+export function isWinner() { return false; }
+
+export function presentResult({ room, game }) {
+  const me = room.players.find((p) => p.id === room.meId);
+  return {
+    title: me?.name || 'Bakkermans Jones',
+    copy: game.resultText || `Failliet na dag ${game.day}.`
+  };
+}
