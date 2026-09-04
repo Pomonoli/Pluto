@@ -19,3 +19,15 @@ test('Solitaire trekt maximaal drie kaarten per draw', () => {
   assert.equal(game.stock.length,0);
   assert.equal(game.waste.at(-1).id,'A♣');
 });
+
+test('Solitaire kan direct met een vers bord opnieuw beginnen', () => {
+  const game=solitaire.createGame([{id:'solo'}]);
+  solitaire.handleAction(game,'solo','draw');
+  assert.equal(game.moves,1);
+  solitaire.handleAction(game,'solo','restart');
+  assert.equal(game.playerId,'solo');
+  assert.equal(game.moves,0);
+  assert.equal(game.stock.length,24);
+  assert.equal(game.waste.length,0);
+  assert.deepEqual(game.tableau.map(pile=>pile.length),[1,2,3,4,5,6,7]);
+});

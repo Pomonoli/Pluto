@@ -24,5 +24,8 @@ test('7 Wonders Duel gebruikt een fixed scherm met kaarten- en rijk-tabs',()=>{
   assert.match(css,/\.duel-science-line\{[^}]*font-size:\.9rem/);
   assert.match(css,/\.duel-card\{[^}]*max-height:61px/);
   assert.match(css,/@media\(max-width:470px\)\{[\s\S]*?\.duel-header\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(css,/@media\(max-width:470px\)\{[\s\S]*?\.duel-card-effect\{display:block/);
+  assert.doesNotMatch(client,/Leeftijd/);
+  assert.doesNotMatch(server,/Leeftijd/);
 });
 

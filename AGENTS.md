@@ -2,6 +2,21 @@
 
 Dit bestand bevat de canonieke repositorybrede instructies voor Codex en Claude Code.
 
+## Scope
+
+- Voor game-specifieke wijzigingen: begin in `games/<game>/` en wijzig gedeelde platformcode alleen als dat noodzakelijk is.
+- Vermijd unrelated refactors en wijzigingen buiten de gevraagde scope.
+- Lees `ARCHITECTURE.md` alleen wanneer de wijziging gedeelde infrastructuur raakt of de juiste locatie onduidelijk is.
+- Als een GitHub issue de taak beschrijft, geldt die issue als functionele requirements; leid dezelfde requirements niet opnieuw af tenzij de code of issue tegenstrijdig is.
+
+## Game-specifieke visuele stijl
+
+- Bij UI- of visuele wijzigingen in een game: lees eerst `games/<game>/STYLE.md` en volg die als canonieke, compacte samenvatting van de gewenste stijl.
+- Is `STYLE.md` leeg, behoud dan de bestaande visuele taal van de game en de expliciete requirements van de taak; verzin geen nieuw designsysteem.
+- Raadpleeg een moodboard of andere visuele referentie in de gamemap alleen wanneer extra visuele context nodig is. `STYLE.md` blijft de primaire Codex-referentie.
+- Voor zuiver logische/server-side wijzigingen hoeft `STYLE.md` niet geladen te worden.
+- Wanneer een moodboard wordt toegevoegd of gewijzigd, werk `STYLE.md` mee bij en houd het kort, concreet en implementatiegericht.
+
 ## Release- en versioneringsregels
 
 Bij **elke wijziging aan Pluto die naar GitHub gaat**, gelden onderstaande

@@ -260,7 +260,7 @@ function renderGameOver(E,game,you){
   const ranked=[...game.players].sort((a,b)=>(b.hp-a.hp)||(b.gold-a.gold));
   for(const player of ranked){
     const row=E('div',`civ-final-row${game.winnerId===player.id?' winner':''}`),info=E('div');
-    info.append(E('div','civ-fname',`${player.isYou?'Jij · ':''}${player.name}${player.leaderName?` · ${player.leaderName}`:''}`),E('div','civ-breakdown',`Goud ${player.gold}`));
+    info.append(E('div','civ-fname',`${player.isYou?'Jij · ':''}${player.name}${player.leaderName?` · ${player.leaderName}`:''}`),E('div','civ-breakdown',`Goud ${player.gold} · ATK ${player.attack} · DEF ${player.defence} · Inkomen +${player.income}`));
     row.append(info,E('div','civ-fscore',`${player.hp}/100`));
     table.append(row);
   }

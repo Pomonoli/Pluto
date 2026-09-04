@@ -2,6 +2,10 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
+## Nieuw in versie 1.21.1
+
+De game-interface is op meerdere plekken verfijnd: Hartenjagen spreidt resterende kaarten beter, Solitaire kan direct herstarten en toont een verbeterd leaderboard, Age of Civilization heeft een bereikbaar eindoverzicht, en Ragnarok, CycClub en 7 Wonders Duel zijn leesbaarder en mobielvriendelijker.
+
 ## Nieuw in versie 1.21.0
 
 **Bakkermans Jones** is een nieuwe solo game: draai een vroege bakkersdienst, bak van 03:00 tot 07:00, bedien klanten en lever bestellingen tot de winkel om 12:00 sluit, en overleef willekeurige tegenslagen zoals een kapotte koeling of stroomstoring.
