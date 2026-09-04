@@ -9,22 +9,37 @@ const ICONS = {
 };
 const WARN_SVG = `<svg viewBox="0 0 100 100"><path d="M50 8 92 84H8Z" fill="#3A2417"/><path d="M50 18 84 78H16Z" fill="#fff"/><rect x="45" y="38" width="10" height="24" rx="4" fill="#3A2417"/><circle cx="50" cy="70" r="5.5" fill="#3A2417"/></svg>`;
 
-// Bakker: rond, warm figuurtje met schort — dezelfde dikke-contourenstijl als de producticonen.
-const BAKER_SVG = `<svg viewBox="0 0 100 150">
-  <rect x="36" y="104" width="11" height="30" rx="5" fill="#2B1C12" stroke="#3A2417" stroke-width="4"/>
-  <rect x="53" y="104" width="11" height="30" rx="5" fill="#2B1C12" stroke="#3A2417" stroke-width="4"/>
-  <rect x="22" y="58" width="56" height="52" rx="16" fill="#F5B942" stroke="#3A2417" stroke-width="6"/>
-  <path d="M30 64c-2 20-2 34 4 46h32c6-12 6-26 4-46" fill="#FBF0DC" stroke="#3A2417" stroke-width="6"/>
-  <rect x="42" y="72" width="16" height="12" rx="3" fill="none" stroke="#3A2417" stroke-width="3"/>
-  <circle cx="18" cy="72" r="11" fill="#F5B942" stroke="#3A2417" stroke-width="5"/>
-  <circle cx="82" cy="72" r="11" fill="#F5B942" stroke="#3A2417" stroke-width="5"/>
-  <circle cx="15" cy="93" r="8" fill="#F2C29B" stroke="#3A2417" stroke-width="4"/>
-  <circle cx="85" cy="93" r="8" fill="#F2C29B" stroke="#3A2417" stroke-width="4"/>
-  <circle cx="50" cy="32" r="23" fill="#F2C29B" stroke="#3A2417" stroke-width="6"/>
-  <path d="M27 26a23 23 0 0 1 46 0c0-9-9-19-23-19s-23 10-23 19z" fill="#8B5A34" stroke="#3A2417" stroke-width="5"/>
-  <circle cx="42" cy="34" r="2.6" fill="#3A2417"/>
-  <circle cx="58" cy="34" r="2.6" fill="#3A2417"/>
-  <path d="M41 41q9 7 18 0" fill="none" stroke="#3A2417" stroke-width="3" stroke-linecap="round"/>
+// Bakkermans Jones: twee bakkers, dezelfde dikke-contourenstijl als de producticonen.
+// bakerFigure() tekent één figuur op een 0-100/0-150 grid; BAKER_SVG plaatst er twee naast
+// elkaar (jong/blond in het zwart met een broodmand, ouder/donker in het wit met een schraper).
+function bakerFigure({ shirt, hair, prop }) {
+  return `
+    <rect x="36" y="104" width="11" height="30" rx="5" fill="#2B1C12" stroke="#3A2417" stroke-width="4"/>
+    <rect x="53" y="104" width="11" height="30" rx="5" fill="#2B1C12" stroke="#3A2417" stroke-width="4"/>
+    <rect x="22" y="58" width="56" height="52" rx="16" fill="${shirt}" stroke="#3A2417" stroke-width="6"/>
+    <path d="M30 64c-2 20-2 34 4 46h32c6-12 6-26 4-46" fill="#FBF0DC" stroke="#3A2417" stroke-width="6"/>
+    <rect x="42" y="72" width="16" height="12" rx="3" fill="none" stroke="#3A2417" stroke-width="3"/>
+    <circle cx="18" cy="72" r="11" fill="${shirt}" stroke="#3A2417" stroke-width="5"/>
+    <circle cx="82" cy="72" r="11" fill="${shirt}" stroke="#3A2417" stroke-width="5"/>
+    <circle cx="15" cy="93" r="8" fill="#F2C29B" stroke="#3A2417" stroke-width="4"/>
+    <circle cx="85" cy="93" r="8" fill="#F2C29B" stroke="#3A2417" stroke-width="4"/>
+    ${prop || ''}
+    <circle cx="50" cy="32" r="23" fill="#F2C29B" stroke="#3A2417" stroke-width="6"/>
+    ${hair}
+    <circle cx="42" cy="34" r="2.6" fill="#3A2417"/>
+    <circle cx="58" cy="34" r="2.6" fill="#3A2417"/>
+    <path d="M41 41q9 7 18 0" fill="none" stroke="#3A2417" stroke-width="3" stroke-linecap="round"/>
+  `;
+}
+
+const HAIR_BLOND = `<ellipse cx="50" cy="16" rx="25" ry="16" fill="#F0B23A" stroke="#3A2417" stroke-width="5"/>`;
+const HAIR_DARK = `<ellipse cx="50" cy="18" rx="24" ry="13" fill="#3A2B22" stroke="#3A2417" stroke-width="5"/>`;
+const PROP_BASKET = `<path d="M4 88h26l-3 14a4 4 0 0 1-4 3H11a4 4 0 0 1-4-3z" fill="#C98A4B" stroke="#3A2417" stroke-width="4" stroke-linejoin="round"/><path d="M8 88c1-8 5-12 9-12s8 4 9 12" fill="none" stroke="#3A2417" stroke-width="3"/><rect x="9" y="80" width="12" height="9" rx="2" fill="#F5B942" stroke="#3A2417" stroke-width="3"/>`;
+const PROP_SCRAPER = `<rect x="82" y="82" width="16" height="10" rx="2" fill="#DCE3E6" stroke="#3A2417" stroke-width="3.5"/><rect x="88" y="90" width="4" height="12" rx="2" fill="#8B5A34" stroke="#3A2417" stroke-width="3"/>`;
+
+const BAKER_SVG = `<svg viewBox="0 0 190 150">
+  <g transform="translate(-6,0) scale(.86)">${bakerFigure({ shirt: '#2B2320', hair: HAIR_BLOND, prop: PROP_BASKET })}</g>
+  <g transform="translate(96,0) scale(.86)">${bakerFigure({ shirt: '#FFFFFF', hair: HAIR_DARK, prop: PROP_SCRAPER })}</g>
 </svg>`;
 
 const CUSTOMER_COLORS = ['#2E9E8C', '#E14B3C', '#8B5A34', '#C98A2E'];
