@@ -2,6 +2,10 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
+## Nieuw in versie 1.22.1
+
+De gamecontainer zelf benut op mobiel, tablet en desktop het volledige scherm, zonder buitenmarges, omlijsting of afzonderlijke oranje Pluto-header. Terugknop, gametitel en het bestaande driepuntenmenu liggen in deze game-oppervlakte en houden rekening met veilige schermranden. Age of Civilization vermijdt daarbij een dubbele gametitel en toont de spelerskaarten tijdens de leiderskeuze weer duidelijk.
+
 ## Nieuw in versie 1.22.0
 
 **The Deep Bleu C** is nu een overlevingseiland: de kaart is één landmassa vol meren, volledig omringd door zee tot aan de rand van de platte wereld (een waterval die in het niets stort). Nieuwe gezondheid-, energie- en pantserbalken — jaag op wilde dieren en eet de buit op voor energie. De Inventaris heeft een gear-screen voor uitrusting, en de Marktplaats verkoopt nu ook kleding, wapens en schilden naast vis, hout, steen en vlees.

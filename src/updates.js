@@ -405,6 +405,13 @@ const RELEASES = [
     improvements:[
       'The Deep Bleu C: de kaart is nu één eiland vol meren, volledig omringd door zee en oceaan, met een wereldrand-waterval die in het niets stort.'
     ]
+  },
+  {
+    version:'1.22.1',
+    improvements:[
+      'De gamecontainer is op mobiel, tablet en desktop zelf de schermvullende, randloze ondergrond; terugknop, gametitel en spelmenu liggen voortaan in deze game-oppervlakte.',
+      'Age of Civilization toont geen dubbele titel meer, houdt de tijdperk- en beurtstatus op één regel en maakt de spelerskaarten tijdens de leiderskeuze weer duidelijk leesbaar.'
+    ]
   }
 ];
 

@@ -28,9 +28,9 @@ function iconNode(E,type,className='civ-tile-icon'){
 }
 
 export function render(api){renderCivilization(api)}
-function renderCivilization({game,state,els,E,action,titlebar,logBox,sound}) {
+function renderCivilization({game,state,els,E,action,logBox,sound}) {
   if (game.phase === 'picking') {
-    renderPicking(E, action, sound, game, els, titlebar, logBox);
+    renderPicking(E, action, sound, game, els, logBox);
     return;
   }
 
@@ -44,7 +44,7 @@ function renderCivilization({game,state,els,E,action,titlebar,logBox,sound}) {
   const root=E('div','civ-root');
   root.style.setProperty('--civ-accent',theme(game.age).palette.gold||'#B8895A');
   const openModal=(options)=>showCivModal(E,root,options);
-  root.append(renderBrandBar(E,status),renderTopStrip(E,game),renderEraBanner(E,game),renderStats(E,you),renderCivicRow(E,action,sound,game,you,openModal),renderYourGrid(E,action,sound,game,you,openModal));
+  root.append(E('div','civ-turn-status',status),renderTopStrip(E,game),renderEraBanner(E,game),renderStats(E,you),renderCivicRow(E,action,sound,game,you,openModal),renderYourGrid(E,action,sound,game,you,openModal));
 
   if(game.phase==='draft'){
     if(!you.acted&&game.yourHand.length)root.append(renderDraft(E,action,sound,game,you,openModal));
@@ -56,20 +56,14 @@ function renderCivilization({game,state,els,E,action,titlebar,logBox,sound}) {
   }
   else root.append(renderGameOver(E,game,you));
 
-  els.gameStage.append(titlebar('Age of Civilization',''),root,logBox(game.log||[]));
+  els.gameStage.append(root,logBox(game.log||[]));
 }
 
-function renderBrandBar(E,status){
-  const bar=E('div','civ-brand-bar');
-  const logo=E('div','civ-logo');logo.append(E('span','','AGE OF'),E('strong','','CIVILIZATION'));
-  bar.append(logo,E('div','civ-turn-status',status));
-  return bar;
-}
-
-function renderPicking(E, action, sound, game, els, titlebar, logBox) {
+function renderPicking(E, action, sound, game, els, logBox) {
   const root=E('div','civ-root civ-picking');
   const you=game.players.find((p)=>p.isYou);
   const picker=game.players.find((p)=>p.id===game.pickerId);
+  root.append(renderTopStrip(E,game));
   root.append(E('div','civ-pick-title','Kies je leider'));
   root.append(E('div','civ-pick-sub', game.isYourPick ? 'Jij bent aan de beurt.' : `Wachten op ${picker?picker.name:'…'}…`));
 
@@ -93,8 +87,7 @@ function renderPicking(E, action, sound, game, els, titlebar, logBox) {
   });
   root.append(list);
 
-  const strip=renderTopStrip(E,game);
-  els.gameStage.append(titlebar('Age of Civilization','Leiderskeuze'),strip,root,logBox(game.log||[]));
+  els.gameStage.append(root,logBox(game.log||[]));
 }
 
 function renderTopStrip(E,game){

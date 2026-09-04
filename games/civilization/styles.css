@@ -3,9 +3,6 @@
 /* Age of Civilization — walnut workshop shell, parchment game pieces. */
 @media(min-width:761px){#gameStage:has(.civ-root){max-width:920px}}
 #gameStage:has(.civ-root){display:flex;flex-direction:column;overflow:hidden!important;background:repeating-linear-gradient(7deg,#2b1b13 0 11px,#3c2618 11px 23px,#321f15 23px 34px);border:1px solid #6d4828;border-radius:18px;padding:10px;box-shadow:inset 0 0 0 1px rgba(255,222,158,.08),0 18px 44px rgba(18,10,5,.28)}
-#gameStage:has(.civ-root)>.game-titlebar{flex:none;align-items:center;margin:0 0 6px;padding:0 2px;min-height:34px}
-#gameStage:has(.civ-root)>.game-titlebar .eyebrow{font:800 clamp(.7rem,2.8vw,.95rem)/1 Cinzel,Georgia,serif;color:#fff0ce;letter-spacing:.045em}
-#gameStage:has(.civ-root)>.game-titlebar .game-status:empty{display:none}
 #gameStage:has(.civ-root)>.civ-root{flex:1;min-height:0}
 #gameStage:has(.civ-root)>.log-box{display:none!important}
 #gameStage:has(.civ-root .civ-gameover){overflow-y:auto!important}
@@ -13,10 +10,7 @@
 
 .civ-root{--civ-accent:#d9a541;--civ-wood:#2b1b13;--civ-wood-mid:#3c2618;--civ-parch:#f3dfb3;--civ-parch-mid:#e9d09a;--civ-off:#fff6e4;--civ-text:#2b2018;--civ-text-dim:#69513c;--civ-danger:#a84936;--civ-good:#6d8f58;--civ-attack:#c16f3e;--civ-defence:#54aeb8;--civ-income:#a67e21;position:relative;display:flex;flex-direction:column;min-height:0;overflow:hidden;gap:clamp(3px,.65vh,7px);padding:0 1px 2px;color:var(--civ-text);font-family:Inter,ui-sans-serif,system-ui,sans-serif;font-size:1rem}
 .civ-root h2{margin:0;font-family:Cinzel,Georgia,serif}
-.civ-brand-bar{display:grid;grid-template-columns:minmax(92px,auto) 1fr;align-items:center;gap:10px;min-height:31px;padding:4px 7px;border-block:1px solid rgba(217,165,65,.28)}
-.civ-logo{display:flex;flex-direction:column;font:700 .51rem/1 Cinzel,Georgia,serif;letter-spacing:.15em;color:#cb7c24;text-shadow:0 1px #120a06}.civ-logo strong{font-size:.66rem;color:#f0cb7d;letter-spacing:.06em}
-.civ-turn-status{min-width:0;text-align:right;color:#ead8b7;font-size:clamp(.48rem,1.7vw,.63rem);line-height:1.25;font-weight:700}
-
+.civ-turn-status{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;color:#ead8b7;font-size:clamp(.48rem,1.7vw,.63rem);line-height:1.25;font-weight:700}
 .civ-top-strip{display:flex;align-items:stretch;gap:4px;overflow:hidden;padding:1px}
 .civ-player-chip {flex: 1 1 0; min-width:0;width:auto;box-sizing:border-box;position:relative;display:flex;flex-direction:column;gap:2px;padding:5px 6px;background:linear-gradient(145deg,var(--civ-off),var(--civ-parch));border:1px solid #b88b52;border-radius:10px;box-shadow:0 2px 0 rgba(31,18,10,.22)}
 .civ-player-chip.you{border-width:2px;border-color:var(--civ-accent);padding:4px 5px}.civ-player-chip.dead{opacity:.48;filter:saturate(.35)}.civ-player-chip.picking{border-color:var(--civ-good);box-shadow:0 0 0 1px rgba(109,143,88,.35),0 2px 0 rgba(31,18,10,.22)}
@@ -55,7 +49,7 @@
 .civ-picking{gap:8px}.civ-pick-title{text-align:center;color:#e6bd72;font:800 1.08rem Cinzel,serif}.civ-pick-sub{text-align:center;color:#ead8b7;font-size:.73rem;margin-top:-4px}.civ-leader-list{min-height:0;flex:1;display:grid;grid-template-columns:repeat(2,1fr);gap:7px;overflow-y:auto}.civ-leader-card{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 7px;text-align:center;color:inherit;font-family:inherit;cursor:pointer;background:linear-gradient(var(--civ-off),var(--civ-parch));border:1px solid #b88b52;border-radius:11px}.civ-leader-card:not(:disabled):hover{border-color:var(--civ-accent)}.civ-leader-card:disabled{opacity:.48;cursor:not-allowed}.civ-medallion{position:relative;width:45px;height:45px}.civ-leader-name{font:800 .72rem Cinzel,serif}.civ-leader-attribute{font-size:.55rem;color:#9b641d}.civ-leader-bonus{font-size:.55rem;color:var(--civ-text-dim);line-height:1.25}.civ-leader-owner{font-size:.53rem;color:var(--civ-good);font-weight:800}
 .civ-lobby-options{display:grid;gap:9px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--panel)}.civ-lobby-options-head{display:flex;justify-content:space-between;gap:12px;align-items:baseline}.civ-lobby-options-head small{color:var(--muted);font-size:.75rem}.civ-mode-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.civ-mode-choice{min-width:0;padding:11px;border:1px solid var(--border);border-radius:10px;background:var(--panel);color:var(--text);text-align:left;cursor:pointer}.civ-mode-choice.active{border-color:#d9a541;box-shadow:inset 0 0 0 1px #d9a541;background:color-mix(in srgb,#d9a541 11%,var(--panel))}.civ-mode-choice:disabled{cursor:default}.civ-mode-choice strong,.civ-mode-choice small{display:block}.civ-mode-choice small{margin-top:3px;color:var(--muted);font-size:.68rem;line-height:1.35}
 
-@media(max-height:700px){.civ-root{gap:2px}.civ-brand-bar{min-height:25px;padding-block:2px}.civ-top-strip{max-height:50px}.civ-player-chip{padding:3px 5px}.civ-player-chip.you{padding:2px 4px}.civ-stats-row{padding:3px 5px}.civ-tile{min-height:44px}.civ-civic{min-height:47px}.civ-card{min-height:52px;padding:3px;gap:1px}.civ-icon-badge{width:21px;height:21px}.civ-glyph{transform:scale(.78)}.civ-card-name{min-height:0}}
+@media(max-height:700px){.civ-root{gap:2px}.civ-top-strip{max-height:50px}.civ-player-chip{padding:3px 5px}.civ-player-chip.you{padding:2px 4px}.civ-stats-row{padding:3px 5px}.civ-tile{min-height:44px}.civ-civic{min-height:47px}.civ-card{min-height:52px;padding:3px;gap:1px}.civ-icon-badge{width:21px;height:21px}.civ-glyph{transform:scale(.78)}.civ-card-name{min-height:0}}
 @media(min-height:720px){.civ-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.civ-grid .civ-tile{min-height:clamp(61px,8.5vh,80px)}}
 @media(max-width:760px){.civ-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(min-width:761px){.civ-root{gap:clamp(5px,.8vh,9px)}.civ-player-chip{padding:6px 8px}.civ-chip-name{font-size:.7rem}.civ-chip-leader{font-size:.56rem}.civ-tile-name,.civ-card-name{font-size:.58rem}.civ-tile-perk,.civ-card-perk,.civ-tile-upgrade{font-size:.49rem}}

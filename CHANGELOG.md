@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.22.1 — Schermvullende gameshell
+
+- De bestaande gamecontainer is op mobiel, tablet en desktop zelf de schermvullende, randloze ondergrond; buitenmarges, afgeronde omlijsting en de afzonderlijke oranje Pluto-header zijn verwijderd.
+- Terugknop, gametitel en bestaand driepuntenmenu liggen in de gamecontainer boven het spel, met veilige afstand tot toestelranden en spelinhoud.
+- Age of Civilization toont zijn titel alleen nog in de bovenbanner, houdt de tijdperk- en beurtstatus op één regel en maakt de spelerskaarten tijdens de leiderskeuze weer duidelijk leesbaar.
+
 ## v1.22.0 — The Deep Bleu C: overleven op een eiland
 
 - De kaart is nu één eiland vol meren, volledig omringd door zee en oceaan; aan de rand van de wereld stort een waterval in het niets (klassiek platte-aarde-thema).
@@ -7,7 +13,6 @@
 - Wilde dieren verschijnen verspreid over het eiland — jaag erop met hetzelfde tijdig-toeslaan-ritme als hakken/delven, en eet de buit op voor energie of verkoop het.
 - De Inventaris krijgt een gear-screen: uitrusting (kleding, wapens, schilden) kopen op de Marktplaats en aan-/uitdoen vanuit je Inventaris.
 - De Marktplaats verkoopt nu ook basiskleding, wapens en schilden naast vis, hout, steen en vlees.
-
 ## v1.21.2 — Age of Civilization: alchemistenatelier
 
 - Age of Civilization gebruikt een volledig vernieuwde visuele stijl met donker walnoothout, warm perkament, messing en amber.
