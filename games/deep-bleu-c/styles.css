@@ -1,134 +1,202 @@
-.dbc-wrap{display:flex;flex:1;min-height:0;overflow:hidden;flex-direction:column;gap:12px;padding:4px 0 16px}
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Baloo+2:wght@500;600;700;800&display=swap');
 
-.dbc-hud{display:flex;gap:10px;flex-wrap:wrap}
-.dbc-hud>div{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:6px 12px;font-weight:600}
+/* "Deep water, warm land" palet — zie de art-styleguide: blauwtinten voor
+   water/diepte, zand/kelp/rock voor land, koraal/goud als warme accenten.
+   Alles hieronder is gescopet onder .dbc-wrap zodat het geen andere games
+   raakt. */
+.dbc-wrap{
+  --dbc-deep:#0A3049; --dbc-deep-2:#0D3E5C; --dbc-ocean:#1C6E8C; --dbc-lagoon:#3FB6C4;
+  --dbc-foam:#E4F7F1; --dbc-sand:#F0D9A8; --dbc-sand-2:#D9BD82; --dbc-kelp:#4C8C6B; --dbc-kelp-2:#396B52;
+  --dbc-coral:#FF7F59; --dbc-coral-2:#E5674A; --dbc-sunset:#FFC15E; --dbc-ink:#0B2536;
+  --dbc-rock:#9C8567; --dbc-rock-2:#7A6650;
+  display:flex;flex:1;min-height:0;overflow:hidden;flex-direction:column;gap:12px;padding:4px 0 16px;
+  font-family:'Baloo 2',system-ui,sans-serif;
+}
 
-.dbc-play-area{display:grid;flex:1;min-height:0;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:stretch;overflow:hidden}
-.dbc-map-wrap{position:relative;flex:1;min-width:0;min-height:0;border-radius:14px;overflow:hidden;border:1px solid var(--border);background:#1f5a8a;line-height:0}
+/* ============ VOLLEDIG SCHERMVULLENDE KAART ============ */
+.dbc-stage{position:relative;flex:1;min-height:0;border-radius:20px;overflow:hidden;box-shadow:0 10px 30px rgba(10,48,73,.25)}
+.dbc-map-wrap{position:absolute;inset:0;background:var(--dbc-deep);line-height:0}
 .dbc-map{width:100%;height:100%;display:block;touch-action:manipulation}
-.dbc-tile{cursor:pointer;stroke:rgba(15,25,10,.05);stroke-width:1.1;stroke-linejoin:round}
+.dbc-tile{cursor:pointer;stroke:rgba(10,48,73,.18);stroke-width:1.1;stroke-linejoin:round}
 .dbc-tile:hover{filter:brightness(1.08)}
 .dbc-tile-decor{pointer-events:none}
-.dbc-tile-tree-trunk{fill:#6b4423}
-.dbc-tile-tree-shadow{fill:rgba(0,0,0,.18)}
-.dbc-tile-tree-leaf{fill:#3f8a3a;stroke:#215a22;stroke-width:.8;stroke-linejoin:round}
-.dbc-tile-tree-highlight{fill:#7fc46a;opacity:.85}
-.dbc-tile-hill-shadow{fill:rgba(0,0,0,.16)}
-.dbc-tile-hill-face{fill:#a3895c;stroke:#7a6440;stroke-width:.7;stroke-linejoin:round}
-.dbc-tile-hill-highlight{fill:none;stroke:#d4bb8a;stroke-width:1.4;stroke-linecap:round;opacity:.8}
-.dbc-tile-peak-face{fill:#8b867f;stroke:#565048;stroke-width:.8;stroke-linejoin:round}
+.dbc-tile-tree-trunk{fill:#4a3524}
+.dbc-tile-tree-shadow{fill:rgba(10,48,73,.2)}
+.dbc-tile-tree-leaf{fill:var(--dbc-kelp);stroke:var(--dbc-kelp-2);stroke-width:.8;stroke-linejoin:round}
+.dbc-tile-tree-highlight{fill:#8fd0ae;opacity:.85}
+.dbc-tile-hill-shadow{fill:rgba(10,48,73,.18)}
+.dbc-tile-hill-face{fill:var(--dbc-rock);stroke:var(--dbc-rock-2);stroke-width:.7;stroke-linejoin:round}
+.dbc-tile-hill-highlight{fill:none;stroke:var(--dbc-sand);stroke-width:1.4;stroke-linecap:round;opacity:.8}
+.dbc-tile-peak-face{fill:#8f8a83;stroke:#524d46;stroke-width:.8;stroke-linejoin:round}
 .dbc-tile-peak-shadow{fill:#635e58}
-.dbc-tile-peak-snow{fill:#f2f5f7;opacity:.9}
-.dbc-tile-wave{fill:none;stroke:#eaf7fb;stroke-width:1.3;stroke-linecap:round;opacity:.75}
-.dbc-tile-grass{fill:none;stroke:#3f7a34;stroke-width:1.1;stroke-linecap:round;opacity:.7}
-.dbc-tile-sand-dot{fill:#c9a967;opacity:.65}
-.dbc-building-bg{fill:#2b2320;stroke:var(--accent);stroke-width:2}
+.dbc-tile-peak-snow{fill:var(--dbc-foam);opacity:.9}
+.dbc-tile-wave{fill:none;stroke:var(--dbc-foam);stroke-width:1.3;stroke-linecap:round;opacity:.7}
+.dbc-tile-grass{fill:none;stroke:var(--dbc-kelp-2);stroke-width:1.1;stroke-linecap:round;opacity:.7}
+.dbc-tile-sand-dot{fill:var(--dbc-sand-2);opacity:.65}
+.dbc-building-bg{fill:var(--dbc-ink);stroke:var(--dbc-coral);stroke-width:2}
 .dbc-building.locked .dbc-building-bg{opacity:.55}
 .dbc-building-icon{font-size:16px;text-anchor:middle;pointer-events:none}
-.dbc-angler-shadow{fill:rgba(0,0,0,.25)}
-.dbc-boat-shadow{fill:rgba(0,0,0,.2)}
+.dbc-angler-shadow{fill:rgba(10,48,73,.35)}
+.dbc-angler-cape{fill:var(--dbc-ocean);opacity:.92}
+.dbc-angler-belt{fill:var(--dbc-ink)}
+.dbc-angler-hood-trim{fill:var(--dbc-sunset)}
+.dbc-boat-shadow{fill:rgba(10,48,73,.25)}
 .dbc-boat-hull{fill:#7a5636;stroke:#4a3220;stroke-width:.6}
 .dbc-boat-mast{stroke:#4a3220;stroke-width:1}
-.dbc-boat-sail{fill:#f4ede0;stroke:#c9bfa8;stroke-width:.5}
-.dbc-fish-line{fill:none;stroke:#2b2320;stroke-width:1;stroke-linecap:round}
-.dbc-fish-hook{fill:none;stroke:#2b2320;stroke-width:1.2}
+.dbc-boat-sail{fill:var(--dbc-foam);stroke:#c9bfa8;stroke-width:.5}
+.dbc-fish-line{fill:none;stroke:var(--dbc-ink);stroke-width:1;stroke-linecap:round}
+.dbc-fish-hook{fill:none;stroke:var(--dbc-ink);stroke-width:1.2}
 .dbc-tool-handle{stroke:#7a5636;stroke-width:1.4;stroke-linecap:round}
 .dbc-tool-axe-head{fill:#aab2b8;stroke:#4d5459;stroke-width:.8;stroke-linejoin:round}
 .dbc-tool-pick-head{fill:none;stroke:#7d838a;stroke-width:2.6;stroke-linecap:round}
-.dbc-player-other{opacity:.95}
-.dbc-player-label{font-size:9px;font-weight:700;fill:#fff;paint-order:stroke;stroke:#0d1117;stroke-width:2.5px;pointer-events:none}
-.dbc-player-fishing{font-size:11px;pointer-events:none}
+.dbc-player-other{opacity:.96}
+.dbc-player-label{font-size:9px;font-weight:700;fill:#fff;paint-order:stroke;stroke:var(--dbc-ink);stroke-width:2.5px;pointer-events:none}
+.dbc-player-fishing{font-size:12px;pointer-events:none}
 
-.dbc-fishing-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(10,14,20,.45)}
+/* ============ ZWEVENDE HUD ============ */
+.dbc-stat-pills{position:absolute;top:14px;left:14px;z-index:4;display:flex;gap:8px;flex-wrap:wrap;max-width:calc(100% - 90px)}
+.dbc-stat-pill{
+  display:flex;align-items:center;gap:5px;white-space:nowrap;
+  background:rgba(10,48,73,.78);border:2px solid var(--dbc-foam);border-radius:999px;
+  padding:5px 12px;color:var(--dbc-foam);font-weight:700;font-size:13px;backdrop-filter:blur(2px);
+}
+
+/* Elke knoppengroep krijgt een eigen ondoorzichtig "eilandje": zonder een
+   eigen achtergrond kan een gebouwicoontje op de kaart eronder precies op
+   dezelfde plek als een knop uitkomen (allebei clusteren rond het dorp bij
+   spawn) en door elkaar heen lopen. */
+.dbc-rail-topleft{
+  position:absolute;top:64px;left:14px;z-index:4;display:flex;flex-direction:column;gap:10px;
+  padding:10px 10px 16px;background:rgba(10,48,73,.94);border:1px solid rgba(228,247,241,.25);border-radius:14px;
+}
+.dbc-rail-right{
+  position:absolute;top:50%;right:14px;transform:translateY(-50%);z-index:4;display:flex;flex-direction:column;gap:12px;
+  padding:10px 10px 16px;background:rgba(10,48,73,.94);border:1px solid rgba(228,247,241,.25);border-radius:14px;
+}
+.dbc-dock-bottom{
+  position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:4;
+  display:flex;justify-content:center;align-items:flex-end;gap:12px;
+  padding:10px 18px 8px;background:rgba(10,48,73,.82);border:1px solid rgba(228,247,241,.25);border-radius:999px;
+}
+
+.dbc-icon-col{display:flex;flex-direction:column;align-items:center;gap:4px}
+.dbc-icon-btn{
+  width:50px;height:50px;border-radius:50%;border:3px solid var(--dbc-foam);
+  background:radial-gradient(circle at 32% 28%, var(--dbc-lagoon), var(--dbc-ocean) 65%, var(--dbc-deep-2) 100%);
+  color:#fff;font-size:21px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
+  box-shadow:0 4px 0 var(--dbc-deep), 0 6px 10px rgba(0,0,0,.25);
+}
+.dbc-icon-btn:hover{filter:brightness(1.08)}
+.dbc-icon-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--dbc-deep),0 2px 5px rgba(0,0,0,.2)}
+.dbc-icon-btn.square{border-radius:15px;width:44px;height:44px;font-size:19px}
+.dbc-icon-btn.primary{
+  width:68px;height:68px;font-size:29px;margin-bottom:4px;
+  background:radial-gradient(circle at 32% 28%, var(--dbc-sunset), var(--dbc-coral) 65%, var(--dbc-coral-2) 100%);
+  box-shadow:0 5px 0 var(--dbc-coral-2), 0 8px 14px rgba(0,0,0,.3);
+}
+.dbc-icon-label{font-size:10px;font-weight:700;color:var(--dbc-foam);text-shadow:0 1px 3px rgba(0,0,0,.7);white-space:nowrap}
+
+.dbc-fishing-overlay{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(10,48,73,.55)}
 .dbc-fishing-overlay .dbc-fishing{width:100%;max-width:340px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
-
-.dbc-sidebar{display:flex;min-width:0;padding:12px;border:1px solid var(--border);border-radius:14px;background:var(--panel);align-items:stretch}
-.dbc-minimap{display:block;width:100%;aspect-ratio:1;image-rendering:pixelated;border:1px solid var(--border);border-radius:10px;cursor:pointer}
 
 .dbc-loading,.dbc-hint{padding:14px;text-align:center;color:var(--muted);background:var(--panel);border:1px solid var(--border);border-radius:12px}
 
-.dbc-action-bar{display:grid;flex:1;grid-template-columns:1fr;gap:8px}
-.dbc-action-btn{background:var(--panel2,rgba(255,255,255,.04));border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-weight:600;cursor:pointer;color:var(--text);text-align:left}
-.dbc-action-btn:hover{border-color:var(--accent)}
-
-.dbc-detail-screen{display:flex;flex:1;min-height:0;flex-direction:column;gap:12px;overflow-y:auto;overscroll-behavior:contain}
-.dbc-back-button{align-self:flex-start}
-
-@media(max-width:640px){
-  .dbc-play-area{display:flex;flex-direction:column}
-  .dbc-sidebar{padding:10px}
-  .dbc-action-bar{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .dbc-sidebar .dbc-action-btn{min-width:0}
+/* ============ PANEEL-SHEET (schuift over de kaart) ============ */
+.dbc-sheet-overlay{position:absolute;inset:0;z-index:6;display:flex;align-items:flex-end;background:rgba(10,48,73,.5)}
+.dbc-sheet{
+  width:100%;max-height:88%;overflow-y:auto;overscroll-behavior:contain;
+  background:var(--dbc-deep-2);border-radius:22px 22px 0 0;border:2px solid var(--dbc-lagoon);border-bottom:none;
+  box-shadow:0 -10px 30px rgba(0,0,0,.35);padding:6px 16px 20px;display:flex;flex-direction:column;gap:12px;
+  color:var(--dbc-foam);
+}
+.dbc-sheet-header{position:sticky;top:0;display:flex;justify-content:center;align-items:center;padding:8px 0 2px;background:var(--dbc-deep-2);z-index:1}
+.dbc-sheet-handle{width:40px;height:5px;border-radius:4px;background:rgba(228,247,241,.35)}
+.dbc-sheet-close{
+  position:absolute;right:0;top:4px;width:32px;height:32px;border-radius:50%;
+  border:2px solid var(--dbc-foam);background:var(--dbc-deep);color:var(--dbc-foam);
+  font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
 }
 
-.dbc-panel{display:flex;flex-direction:column;gap:8px;padding:12px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px}
-.dbc-panel h4{margin:0}
-.dbc-panel-copy{margin:0;color:var(--muted)}
+.dbc-panel{display:flex;flex-direction:column;gap:8px}
+.dbc-panel h4{margin:0;font-family:'Caveat',cursive;font-weight:700;font-size:30px;color:var(--dbc-sunset);line-height:1}
+.dbc-panel-copy{margin:0;color:rgba(228,247,241,.72);font-size:14px}
 .dbc-world-map-panel{align-items:center}
 .dbc-world-map-panel>h4,.dbc-world-map-panel>.dbc-panel-copy{align-self:stretch}
-.dbc-world-map{display:block;width:min(100%,680px);aspect-ratio:1;image-rendering:pixelated;border:1px solid var(--border);border-radius:10px;background:#1f5a8a}
+.dbc-world-map{display:block;width:min(100%,680px);aspect-ratio:1;image-rendering:pixelated;border:2px solid var(--dbc-lagoon);border-radius:10px;background:var(--dbc-deep)}
 
 .dbc-gear-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
-.dbc-gear-card{display:flex;flex-direction:column;gap:6px;background:var(--panel2,rgba(255,255,255,.04));border:1px solid var(--border);border-radius:10px;padding:10px}
-.dbc-gear-title{font-weight:700}
-.dbc-gear-help{margin:0;color:var(--muted);font-size:13px}
+.dbc-gear-card{display:flex;flex-direction:column;gap:6px;background:rgba(228,247,241,.06);border:1px solid rgba(228,247,241,.18);border-radius:10px;padding:10px}
+.dbc-gear-title{font-weight:700;color:var(--dbc-foam)}
+.dbc-gear-help{margin:0;color:rgba(228,247,241,.65);font-size:13px}
 
 .dbc-leaderboard{width:100%;border-collapse:collapse}
-.dbc-leaderboard th,.dbc-leaderboard td{padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)}
-.dbc-leaderboard th{color:var(--muted);font-size:12px;text-transform:uppercase}
+.dbc-leaderboard th,.dbc-leaderboard td{padding:6px 8px;text-align:left;border-bottom:1px solid rgba(228,247,241,.2);color:var(--dbc-foam)}
+.dbc-leaderboard th{color:rgba(228,247,241,.6);font-size:12px;text-transform:uppercase}
 
-.dbc-fishing{display:flex;flex-direction:column;gap:8px;align-items:center;padding:18px;background:var(--panel);border:1px solid var(--accent);border-radius:12px;text-align:center}
+.dbc-fishing{display:flex;flex-direction:column;gap:8px;align-items:center;padding:18px;background:var(--dbc-deep-2);border:2px solid var(--dbc-sunset);border-radius:12px;text-align:center;color:var(--dbc-foam)}
 .dbc-fishing-text{font-weight:700;line-height:1.4;margin:0}
 .dbc-fishing-result{font-weight:600}
 .dbc-catch-icon{font-size:44px;line-height:1.2}
-.dbc-catch-detail{color:var(--muted);line-height:1.4;margin:0}
-.dbc-timer-track{width:100%;max-width:280px;height:10px;border-radius:6px;background:var(--panel2,rgba(255,255,255,.08));overflow:hidden}
-.dbc-timer-fill{height:100%;background:var(--accent);transition-property:width;transition-timing-function:linear}
+.dbc-catch-detail{color:rgba(228,247,241,.7);line-height:1.4;margin:0}
+.dbc-timer-track{width:100%;max-width:280px;height:10px;border-radius:6px;background:rgba(228,247,241,.15);overflow:hidden}
+.dbc-timer-fill{height:100%;background:var(--dbc-sunset);transition-property:width;transition-timing-function:linear}
 .dbc-fishing-button{min-width:180px}
-
-.dbc-building-panel{display:flex;flex-direction:column;gap:6px;padding:12px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px}
-.dbc-building-panel p{margin:0;color:var(--muted)}
 
 .dbc-sets h4,.dbc-inventory h4{margin:0 0 8px}
 .dbc-set-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
-.dbc-set-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:10px}
-.dbc-set-title{font-weight:700;margin-bottom:6px}
-.dbc-set-reward{margin:0 0 8px;color:var(--accent);font-size:12px;font-weight:600}
+.dbc-set-card{background:rgba(228,247,241,.06);border:1px solid rgba(228,247,241,.18);border-radius:10px;padding:10px}
+.dbc-set-title{font-weight:700;margin-bottom:6px;color:var(--dbc-foam)}
+.dbc-set-reward{margin:0 0 8px;color:var(--dbc-sunset);font-size:12px;font-weight:600}
 .dbc-set-fish{display:flex;flex-wrap:wrap;gap:6px}
-.dbc-fish-chip{font-size:12px;padding:3px 8px;border-radius:999px;background:var(--panel2,rgba(255,255,255,.06));border:1px solid var(--border)}
-.dbc-fish-chip.discovered{color:var(--success);border-color:var(--success)}
-.dbc-fish-chip.unknown{color:var(--muted)}
+.dbc-fish-chip{font-size:12px;padding:3px 8px;border-radius:999px;background:rgba(228,247,241,.1);border:1px solid rgba(228,247,241,.25);color:var(--dbc-foam)}
+.dbc-fish-chip.discovered{color:var(--dbc-sunset);border-color:var(--dbc-sunset)}
+.dbc-fish-chip.unknown{color:rgba(228,247,241,.45)}
 
 .dbc-inventory-actions{display:flex;gap:8px;flex-wrap:wrap}
 .dbc-inventory-list{display:flex;flex-direction:column;gap:6px}
-.dbc-inventory-row{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:6px 10px}
+.dbc-inventory-row{display:flex;align-items:center;gap:10px;background:rgba(228,247,241,.06);border:1px solid rgba(228,247,241,.18);border-radius:10px;padding:6px 10px;color:var(--dbc-foam)}
 .dbc-inventory-check{flex:0 0 auto;width:18px;height:18px;cursor:pointer}
 .dbc-inventory-label{flex:1;min-width:0}
-.dbc-inventory-price{flex:0 0 auto;font-weight:700;color:var(--accent)}
-.dbc-empty{color:var(--muted);margin:0}
+.dbc-inventory-price{flex:0 0 auto;font-weight:700;color:var(--dbc-sunset)}
+.dbc-empty{color:rgba(228,247,241,.6);margin:0}
 
 .dbc-trade-players{display:flex;flex-wrap:wrap;gap:8px}
-.dbc-trade-player-btn{background:var(--panel2,rgba(255,255,255,.04));border:1px solid var(--border);border-radius:999px;padding:6px 12px;cursor:pointer;color:var(--text);font-weight:600}
-.dbc-trade-player-btn.active{border-color:var(--accent);color:var(--accent)}
-.dbc-trade-builder{display:flex;flex-direction:column;gap:10px;padding:10px;background:var(--panel2,rgba(255,255,255,.04));border:1px solid var(--border);border-radius:10px}
+.dbc-trade-player-btn{background:rgba(228,247,241,.08);border:1px solid rgba(228,247,241,.25);border-radius:999px;padding:6px 12px;cursor:pointer;color:var(--dbc-foam);font-weight:600}
+.dbc-trade-player-btn.active{border-color:var(--dbc-sunset);color:var(--dbc-sunset)}
+.dbc-trade-builder{display:flex;flex-direction:column;gap:10px;padding:10px;background:rgba(228,247,241,.05);border:1px solid rgba(228,247,241,.18);border-radius:10px}
 .dbc-trade-columns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.dbc-trade-column h5{margin:0 0 6px}
-.dbc-trade-item{display:flex;align-items:center;gap:6px;font-size:13px;padding:2px 0;cursor:pointer}
+.dbc-trade-column h5{margin:0 0 6px;color:var(--dbc-foam)}
+.dbc-trade-item{display:flex;align-items:center;gap:6px;font-size:13px;padding:2px 0;cursor:pointer;color:var(--dbc-foam)}
 .dbc-trade-cash-row{display:flex;gap:14px;flex-wrap:wrap}
-.dbc-trade-cash{display:flex;align-items:center;gap:6px;font-size:13px}
-.dbc-trade-cash-input{width:80px;padding:4px 6px;border-radius:6px;border:1px solid var(--border);background:var(--panel);color:var(--text)}
+.dbc-trade-cash{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--dbc-foam)}
+.dbc-trade-cash-input{width:80px;padding:4px 6px;border-radius:6px;border:1px solid rgba(228,247,241,.3);background:var(--dbc-deep);color:var(--dbc-foam)}
 .dbc-trade-list{display:flex;flex-direction:column;gap:8px}
-.dbc-trade-card{background:var(--panel2,rgba(255,255,255,.04));border:1px solid var(--border);border-radius:10px;padding:10px}
-.dbc-trade-card-title{font-weight:700;margin-bottom:4px}
-.dbc-trade-card-line{margin:0;color:var(--muted);font-size:13px}
+.dbc-trade-card{background:rgba(228,247,241,.06);border:1px solid rgba(228,247,241,.18);border-radius:10px;padding:10px}
+.dbc-trade-card-title{font-weight:700;margin-bottom:4px;color:var(--dbc-foam)}
+.dbc-trade-card-line{margin:0;color:rgba(228,247,241,.7);font-size:13px}
 .dbc-trade-card-actions{display:flex;gap:8px;margin-top:8px}
 
-/* The map is the fixed game viewport; the controls occupy the strip below it. */
+/* Knoppen binnen deze game volgen het koraal/goud-palet i.p.v. het generieke
+   Pluto-thema — enkel binnen .dbc-wrap, andere games blijven ongemoeid. */
+.dbc-wrap .primary{background:var(--dbc-coral);border-color:var(--dbc-coral-2);color:#fff}
+.dbc-wrap .primary:hover{background:var(--dbc-coral-2)}
+.dbc-wrap .secondary{background:rgba(228,247,241,.08);border-color:rgba(228,247,241,.3);color:var(--dbc-foam)}
+.dbc-wrap .secondary:hover{border-color:var(--dbc-foam)}
+
+/* The map is the fixed game viewport; the controls float on top of it. */
 #gameStage:has(.dbc-wrap){display:flex;flex-direction:column;overflow:hidden!important}
 #gameStage:has(.dbc-wrap)>.dbc-wrap{width:100%;min-height:0}
 
 @media(max-width:640px){
   .dbc-trade-columns{grid-template-columns:1fr}
+  .dbc-icon-btn{width:44px;height:44px;font-size:18px}
+  .dbc-icon-btn.square{width:38px;height:38px;font-size:16px;border-radius:12px}
+  .dbc-icon-btn.primary{width:58px;height:58px;font-size:24px}
+  .dbc-rail-topleft{top:54px;left:10px;gap:8px}
+  .dbc-rail-right{right:10px;gap:9px}
+  .dbc-dock-bottom{gap:8px;bottom:10px}
+  .dbc-icon-label{font-size:9px}
+  .dbc-stat-pill{font-size:11px;padding:4px 9px}
 }
 
 @media(min-width:761px){#gameStage:has(.dbc-wrap){width:100%;max-width:1180px}}

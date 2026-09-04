@@ -33,14 +33,16 @@ const REEL_WINDOW_MS = 1300;
 // Twee tinten per tegeltype (licht boven, donker onder) i.p.v. een platte
 // kleur: geeft elke hex een subtiel "belicht van boven"-reliëf via een
 // gradient, zonder dat naburige tegels van hetzelfde type een zichtbare naad
-// krijgen (iedere hex herhaalt dezelfde gradient-oriëntatie).
+// krijgen (iedere hex herhaalt dezelfde gradient-oriëntatie). Kleuren volgen
+// het "deep water, warm land"-palet uit de art-styleguide: lagoon/ocean/deep
+// voor water, grass/kelp/rock voor land, in aflopende diepte.
 const TILE_SHADES = {
-  L: ['#a3db7b', '#74ae4f'], B: ['#f3e0ac', '#dcbd76'], f: ['#5b9c4e', '#2d5b2a'], h: ['#b39c70', '#816d49'], p: ['#9b9591', '#5c5754'],
-  r: ['#8ad2ec', '#4a9bc4'], k: ['#63b6e8', '#2f7fb3'], a: ['#3d7cb8', '#1c3f66'], m: ['#3fd0bb', '#1c8272'], z: ['#f5fbfe', '#c3dbe6']
+  L: ['#7FC168', '#5FA24C'], B: ['#F0D9A8', '#D9BD82'], f: ['#5FA282', '#396B52'], h: ['#B49B76', '#8A7358'], p: ['#9C8567', '#7A6650'],
+  r: ['#5FC2CE', '#2E8CA8'], k: ['#3FB6C4', '#1C6E8C'], a: ['#1C6E8C', '#0A3049'], m: ['#3FC4A8', '#1C8272'], z: ['#F2FAF7', '#CFE9E1']
 };
 const MINIMAP_RGB = {
-  L: [143, 194, 108], B: [227, 205, 147], f: [63, 122, 58], h: [138, 127, 107], p: [92, 86, 72],
-  r: [95, 179, 218], k: [63, 143, 196], a: [34, 85, 127], m: [31, 154, 143], z: [220, 232, 240]
+  L: [127, 193, 104], B: [240, 217, 168], f: [95, 162, 130], h: [180, 155, 118], p: [156, 133, 103],
+  r: [95, 194, 206], k: [63, 182, 196], a: [28, 110, 140], m: [63, 196, 168], z: [242, 250, 247]
 };
 const WATER_CHARS = new Set(['r', 'k', 'a', 'm', 'z']);
 const WOOD_TILE = 'f';
@@ -50,6 +52,27 @@ const GEAR_LABELS = { rod: { icon: '🎣', label: 'Hengel', help: 'Ruimer tijdve
   boat: { icon: '🚤', label: 'Boot', help: 'Vaar verder over rivieren, kust en open zee — koop deze upgrade bij de Haven of de Handelsmarkt.' },
   axe: { icon: '🪓', label: 'Bijl', help: 'Ruimer tijdvenster om raak te hakken bij een boom.' },
   pickaxe: { icon: '⛏️', label: 'Houweel', help: 'Ruimer tijdvenster om raak te houwen bij een rots.' } };
+
+// De 10 actieknoppen, ingedeeld in drie vaste zones rond de rand van de
+// volledig zichtbare kaart (i.p.v. een lijst in een zijbalk) — linksboven
+// systeem/voortgang, rechts contextuele acties, onderaan de productieknoppen
+// met de Haven als goud uitgelichte ankerknop in het midden.
+const TOPLEFT_BUTTONS = [
+  { id: 'monument', icon: '🏆', label: 'Hall of Fame', square: true },
+  { id: 'vaardigheden', icon: '⭐', label: 'Vaardigheden', square: true },
+  { id: 'world-map', icon: '🗺️', label: 'Map', square: true }
+];
+const RIGHT_BUTTONS = [
+  { id: 'aquarium', icon: '🐠', label: 'Aquarium' },
+  { id: 'ruilen', icon: '🤝', label: 'Ruilen' }
+];
+const DOCK_BUTTONS = [
+  { id: 'vishandel', icon: '🐟', label: 'Vishandel' },
+  { id: 'lumberyard', icon: '🪓', label: 'Hout' },
+  { id: 'haven', icon: '⚓', label: 'Haven', primary: true },
+  { id: 'quarry', icon: '⛏️', label: 'Steen' },
+  { id: 'markt', icon: '🏪', label: 'Markt' }
+];
 const GATHER_UI = {
   wood: { verb: 'Hakken', icon: '🪓', bg: 'Je bijl staat klaar bij de stam...' },
   rock: { verb: 'Houwen', icon: '⛏️', bg: 'Je houweel staat klaar bij de rots...' }
@@ -156,50 +179,68 @@ function renderDeepBleuC(room, game) {
   els.gameStage.append(titlebar('The Deep Bleu C', statusFor(you)));
 
   const wrap = E('div', 'dbc-wrap');
-  wrap.append(renderHud(you));
-
-  if (activePanel !== 'map') {
-    wrap.append(renderDetailScreen(you, others));
-  } else {
-    const loadedWorld = ensureWorld();
-    wrap.append(loadedWorld ? renderPlayArea(you, loadedWorld, others) : E('div', 'dbc-loading', 'Kaart wordt geladen...'));
-  }
+  const loadedWorld = ensureWorld();
+  wrap.append(loadedWorld ? renderStage(you, loadedWorld, others) : E('div', 'dbc-loading', 'Kaart wordt geladen...'));
 
   els.gameStage.append(wrap, logBox(game.log));
 }
 
-function renderDetailScreen(you, others) {
-  const screen = E('div', 'dbc-detail-screen');
-  const back = E('button', 'secondary dbc-back-button', '← Terug naar de kaart');
-  back.type = 'button';
-  back.onclick = () => { activePanel = 'map'; renderGame(state.room); };
-  screen.append(back);
-  screen.append(renderActivePanel(you, others));
-  return screen;
-}
-
-function renderPlayArea(you, worldData, others) {
+// De kaart blijft altijd zichtbaar op de achtergrond, schermvullend; een open
+// paneel (Vishandel, Aquarium, ...) schuift eroverheen als een los "sheet"
+// in plaats van de kaart te vervangen — zo blijft de wereld altijd in beeld.
+function renderStage(you, worldData, others) {
   const camX = clampInt(you.x - Math.floor(COLS / 2), 0, worldData.width - COLS);
   const camY = clampInt(you.y - Math.floor(ROWS / 2), 0, worldData.height - ROWS);
-
-  const area = E('div', 'dbc-play-area');
-  area.append(renderMapWrap(you, worldData, camX, camY, others));
-  area.append(renderSidebar());
-  return area;
+  const stage = E('div', 'dbc-stage');
+  stage.append(renderMapWrap(you, worldData, camX, camY, others));
+  if (activePanel !== 'map') stage.append(renderPanelSheet(you, others));
+  return stage;
 }
 
-function renderSidebar() {
-  const sidebar = E('div', 'dbc-sidebar');
-  sidebar.append(renderActionBar());
-  return sidebar;
+function renderStatPills(you) {
+  const wrap = E('div', 'dbc-stat-pills');
+  wrap.append(E('div', 'dbc-stat-pill', `💰 €${you.cash}`));
+  wrap.append(E('div', 'dbc-stat-pill', `📖 ${you.discovered.length}`));
+  wrap.append(E('div', 'dbc-stat-pill', `⭐ Lv. ${you.totalLevel}`));
+  return wrap;
 }
 
-function renderHud(you) {
-  const hud = E('div', 'dbc-hud');
-  hud.append(E('div', 'dbc-cash', `\u{1F4B0} €${you.cash}`));
-  hud.append(E('div', 'dbc-discovered', `\u{1F4D6} ${you.discovered.length} soorten`));
-  hud.append(E('div', 'dbc-total-level', `⭐ Level ${you.totalLevel}`));
-  return hud;
+function renderIconButton(b) {
+  const col = E('div', 'dbc-icon-col');
+  const btn = E('button', `dbc-icon-btn${b.primary ? ' primary' : ''}${b.square ? ' square' : ''}`, b.icon);
+  btn.type = 'button';
+  btn.title = b.label;
+  btn.onclick = () => {
+    activePanel = b.id;
+    if (b.id === 'monument') loadLeaderboard();
+    renderGame(state.room);
+  };
+  col.append(btn, E('div', 'dbc-icon-label', b.label));
+  return col;
+}
+
+function renderButtonRail(className, buttons) {
+  const rail = E('div', className);
+  buttons.forEach((b) => rail.append(renderIconButton(b)));
+  return rail;
+}
+
+function renderPanelSheet(you, others) {
+  const overlay = E('div', 'dbc-sheet-overlay');
+  overlay.onclick = (event) => {
+    if (event.target === overlay) { activePanel = 'map'; renderGame(state.room); }
+  };
+  const sheet = E('div', 'dbc-sheet');
+  const header = E('div', 'dbc-sheet-header');
+  header.append(E('div', 'dbc-sheet-handle'));
+  const close = E('button', 'dbc-sheet-close', '✕');
+  close.type = 'button';
+  close.setAttribute('aria-label', 'Sluiten');
+  close.onclick = () => { activePanel = 'map'; renderGame(state.room); };
+  header.append(close);
+  sheet.append(header, renderActivePanel(you, others));
+  overlay.append(sheet);
+  return overlay;
 }
 
 function handleTileClick(wx, wy, tile, you) {
@@ -253,16 +294,24 @@ function appendTool(g, tool) {
   }
 }
 
-// Kleine 2D visser-avatar (chibi trainer met pet, geïnspireerd op klassieke
-// top-down RPG-personages) — de voorste arm (en het werktuig erin) wijst
-// standaard naar rechts/voren; facingLeftFor spiegelt de hele groep bij het
-// naar links lopen.
-function appendAnglerFigure(g, { accent = 'var(--accent)', skin = '#f2c199', jeans = '#33456a', hair = '#3a2a1a', tool = null } = {}) {
+// RPG-avonturier (kap, cape, gereedschap) i.p.v. het vorige platte
+// visser-silhouet — de voorste arm (en het werktuig erin) wijst standaard
+// naar rechts/voren; facingLeftFor spiegelt de hele groep bij het naar links
+// lopen. Kap en cape blijven vaste, neutrale tinten (net als de mantel in de
+// art-styleguide) zodat het "accent" de speler blijft onderscheiden via de
+// tuniek, ook met meerdere spelers tegelijk in beeld.
+function appendAnglerFigure(g, { accent = 'var(--accent)', skin = '#e8b98a', hood = '#2e5c4a', boots = '#3c2f22', tool = null } = {}) {
   g.append(svgEl('ellipse', { cx: 0, cy: 10, rx: 9, ry: 3, class: 'dbc-angler-shadow' }));
-  g.append(svgEl('rect', { x: -4.5, y: 1, width: 4, height: 9, rx: 2, fill: jeans }));
-  g.append(svgEl('rect', { x: 0.5, y: 1, width: 4, height: 9, rx: 2, fill: jeans }));
+  // cape, achter de tuniek, waaiert uit naar de rugzijde
+  g.append(svgEl('path', { d: 'M -6 -8 Q -15 -1 -10 9 Q -6 6 -4 -2 Z', class: 'dbc-angler-cape' }));
+  // laarzen
+  g.append(svgEl('rect', { x: -4.2, y: 2, width: 3.6, height: 7.5, rx: 1.6, fill: boots }));
+  g.append(svgEl('rect', { x: 0.6, y: 2, width: 3.6, height: 7.5, rx: 1.6, fill: boots }));
+  // achterste arm
   g.append(svgEl('path', { d: 'M -5 -6 Q -9 -3 -8 2', fill: 'none', stroke: skin, 'stroke-width': 3, 'stroke-linecap': 'round' }));
-  g.append(svgEl('rect', { x: -6, y: -9, width: 12, height: 12, rx: 4, fill: accent, stroke: '#fff', 'stroke-width': 1.2 }));
+  // tuniek, per speler gekleurd via accent
+  g.append(svgEl('path', { d: 'M -7 -9 Q 0 -12 7 -9 L 6 2 Q 0 6 -6 2 Z', fill: accent, stroke: '#fff', 'stroke-width': 1.1 }));
+  g.append(svgEl('rect', { x: -6, y: 0, width: 12, height: 2.4, rx: 1, class: 'dbc-angler-belt' }));
   if (tool) {
     g.append(svgEl('path', { d: 'M 5 -5 Q 10 -6 12 -3', fill: 'none', stroke: skin, 'stroke-width': 3, 'stroke-linecap': 'round' }));
     appendTool(g, tool);
@@ -270,10 +319,13 @@ function appendAnglerFigure(g, { accent = 'var(--accent)', skin = '#f2c199', jea
     g.append(svgEl('path', { d: 'M 5 -6 Q 9 -3 8 2', fill: 'none', stroke: skin, 'stroke-width': 3, 'stroke-linecap': 'round' }));
   }
   g.append(svgEl('circle', { cx: 0, cy: -13, r: 5.5, fill: skin, stroke: '#0d1117', 'stroke-width': 0.6 }));
-  g.append(svgEl('path', { d: 'M -5.5 -15 Q -6.5 -19 -2 -18', fill: hair }));
-  g.append(svgEl('path', { d: 'M -6 -15 Q -6 -22 0 -22 Q 6 -22 6 -15 Z', fill: accent, stroke: '#fff', 'stroke-width': 0.8 }));
-  g.append(svgEl('ellipse', { cx: 5, cy: -15, rx: 4, ry: 1.6, fill: accent, stroke: '#fff', 'stroke-width': 0.6 }));
-  g.append(svgEl('circle', { cx: 0, cy: -18.5, r: 1.5, fill: '#fff' }));
+  // kap
+  g.append(svgEl('path', {
+    d: 'M -6.5 -13 Q -8.5 -25 0 -25 Q 8.5 -25 6.5 -13 Q 3 -18.5 0 -18.5 Q -3 -18.5 -6.5 -13 Z',
+    fill: hood, stroke: '#fff', 'stroke-width': 0.8
+  }));
+  g.append(svgEl('path', { d: 'M -1.6 -25 L 1.6 -25 L 0 -29.5 Z', class: 'dbc-angler-hood-trim' }));
+  g.append(svgEl('circle', { cx: 0, cy: -15.5, r: 1.3, fill: '#fff' }));
 }
 
 function toolFor(fishingPhase, gatheringKind) {
@@ -295,11 +347,11 @@ function renderOtherPlayerMarker(svg, p, camX, camY, colorIndex) {
   appendAnglerFigure(g, { accent: color, tool: toolFor(p.fishingPhase, p.gatheringKind) });
   svg.append(g);
   if (p.fishingPhase || p.gatheringKind) {
-    const icon = svgEl('text', { x: cx, y: cy - 32, class: 'dbc-player-fishing', 'text-anchor': 'middle' });
+    const icon = svgEl('text', { x: cx, y: cy - 38, class: 'dbc-player-fishing', 'text-anchor': 'middle' });
     icon.textContent = p.fishingPhase ? '🎣' : GATHER_UI[p.gatheringKind].icon;
     svg.append(icon);
   }
-  const label = svgEl('text', { x: cx, y: cy - 25, class: 'dbc-player-label', 'text-anchor': 'middle' });
+  const label = svgEl('text', { x: cx, y: cy - 31, class: 'dbc-player-label', 'text-anchor': 'middle' });
   label.textContent = p.name;
   svg.append(label);
 }
@@ -474,6 +526,13 @@ function renderMapWrap(you, worldData, camX, camY, others = []) {
   const wrapDiv = E('div', 'dbc-map-wrap');
   wrapDiv.append(svg);
 
+  wrapDiv.append(renderStatPills(you));
+  if (activePanel === 'map') {
+    wrapDiv.append(renderButtonRail('dbc-rail-topleft', TOPLEFT_BUTTONS));
+    wrapDiv.append(renderButtonRail('dbc-rail-right', RIGHT_BUTTONS));
+    wrapDiv.append(renderButtonRail('dbc-dock-bottom', DOCK_BUTTONS));
+  }
+
   const activityPanel = renderFishingPanel(you.fishing) || renderGatheringPanel(you.gathering);
   if (activityPanel) {
     const overlay = E('div', 'dbc-fishing-overlay');
@@ -578,33 +637,6 @@ function renderGatheringPanel(gathering) {
   return panel;
 }
 
-function renderActionBar() {
-  const bar = E('div', 'dbc-action-bar');
-  const buttons = [
-    { id: 'vishandel', icon: '🐟', label: 'Vishandel' },
-    { id: 'aquarium', icon: '🏛️', label: 'Aquarium' },
-    { id: 'lumberyard', icon: '🪵', label: 'Houthakkerij' },
-    { id: 'quarry', icon: '⛏️', label: 'Steengroeve' },
-    { id: 'markt', icon: '⚖️', label: 'Markt' },
-    { id: 'haven', icon: '⚓', label: 'Haven' },
-    { id: 'ruilen', icon: '🤝', label: 'Ruilen' },
-    { id: 'vaardigheden', icon: '⭐', label: 'Vaardigheden' },
-    { id: 'monument', icon: '🏆', label: 'Hall of Fame' },
-    { id: 'world-map', label: 'Map' }
-  ];
-  buttons.forEach((b) => {
-    const btn = E('button', 'dbc-action-btn', b.label);
-    btn.type = 'button';
-    btn.onclick = () => {
-      activePanel = b.id;
-      if (b.id === 'monument') loadLeaderboard();
-      renderGame(state.room);
-    };
-    bar.append(btn);
-  });
-  return bar;
-}
-
 function renderActivePanel(you, others) {
   if (activePanel === 'vishandel') return renderVishandelPanel(you);
   if (activePanel === 'aquarium') return renderAquariumPanel(you);
@@ -654,7 +686,7 @@ function renderVishandelPanel(you) {
 
 function renderAquariumPanel(you) {
   const wrap = E('div', 'dbc-panel');
-  wrap.append(E('h4', '', '🏛️ Aquarium-Museum'));
+  wrap.append(E('h4', '', '🐠 Aquarium-Museum'));
   wrap.append(E('p', 'dbc-panel-copy', 'Volledige sets geven een eenmalige bonus en een blijvend hogere verkoopprijs.'));
   wrap.append(renderSets(you));
   return wrap;
@@ -693,7 +725,7 @@ function renderHavenPanel(you) {
 
 function renderMarktPanel(you) {
   const wrap = E('div', 'dbc-panel');
-  wrap.append(E('h4', '', '⚖️ Handelsmarkt'));
+  wrap.append(E('h4', '', '🏪 Handelsmarkt'));
   wrap.append(E('p', 'dbc-panel-copy', 'Investeer in betere uitrusting.'));
   const grid = E('div', 'dbc-gear-grid');
   Object.keys(GEAR_LABELS).forEach((key) => {
