@@ -436,6 +436,12 @@ const RELEASES = [
     improvements:[
       "Age of Civilization toont heldenportretten en aanklikbare spelerskaarten; Pluto-releases kunnen voortaan lokaal veilig worden gepubliceerd."
     ]
+  },
+  {
+    version:"1.22.6",
+    improvements:[
+      "Releases kunnen starten met niet-gecommitteerd werk"
+    ]
   }
 ];
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.22.6 — Releases kunnen starten met niet-gecommitteerd werk
+
+- Releases kunnen starten met niet-gecommitteerd werk
+
 ## v1.22.5 — Age of Civilization toont heldenportretten en aanklikbare spelerskaarten; Pluto-releases kunnen voortaan lokaal veilig worden gepubliceerd.
 
 - Age of Civilization toont heldenportretten en aanklikbare spelerskaarten; Pluto-releases kunnen voortaan lokaal veilig worden gepubliceerd.

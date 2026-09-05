@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.22.5
+## Nieuw in versie 1.22.6
 
-Age of Civilization toont heldenportretten en aanklikbare spelerskaarten; Pluto-releases kunnen voortaan lokaal veilig worden gepubliceerd.
+Releases kunnen starten met niet-gecommitteerd werk
 
 ## Nieuw in versie 1.22.0
 
