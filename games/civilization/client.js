@@ -59,18 +59,24 @@ function renderCivilization({game,state,els,E,action,logBox,sound}) {
     :you.acted?`${ageLabel} · beurt ${game.turnInAge}/${game.turnsPerAge} · wachten`:`${ageLabel} · beurt ${game.turnInAge}/${game.turnsPerAge} · kies een actie`;
   const root=E('div','civ-root');
   root.style.setProperty('--civ-accent',theme(game.age).palette.gold||'#B8895A');
-  const openModal=(options)=>showCivModal(E,root,options);
-  root.append(E('div','civ-turn-status',status),renderTopStrip(E,game),renderEraBanner(E,game),renderStats(E,you),renderCivicRow(E,action,sound,game,you,openModal),renderYourGrid(E,action,sound,game,you,openModal));
+  const openModal=(options)=>{
+    state.civModalOptions=options;
+    showCivModal(E,root,options,()=>{if(state.civModalOptions===options)state.civModalOptions=null});
+  };
+  root.append(E('div','civ-turn-status',status),renderTopStrip(E,game,openModal),renderEraBanner(E,game),renderStats(E,you),renderCivicRow(E,action,sound,game,you,openModal),renderYourGrid(E,action,sound,game,you,openModal));
 
   if(game.phase==='draft'){
     if(!you.acted&&game.yourHand.length)root.append(renderDraft(E,action,sound,game,you,openModal));
     else if(!you.acted)root.append(E('div','civ-waiting','Geen kaarten of upgrades meer beschikbaar.'));
     else root.append(E('div','civ-waiting','Wachten op andere spelers…'));
   } else if(game.phase==='wave') {
+    state.civModalOptions=null;
     root.append(renderWave(E,game));
     if(!game.hasAcknowledgedWave)showCombatModal(E,root,game,you,action,sound);
   }
-  else root.append(renderGameOver(E,game,you));
+  else {state.civModalOptions=null;root.append(renderGameOver(E,game,you))}
+
+  if(game.phase==='draft'&&state.civModalOptions)showCivModal(E,root,state.civModalOptions,()=>{state.civModalOptions=null});
 
   els.gameStage.append(root,logBox(game.log||[]));
 }
@@ -106,13 +112,16 @@ function renderPicking(E, action, sound, game, els, logBox) {
   els.gameStage.append(root,logBox(game.log||[]));
 }
 
-function renderTopStrip(E,game){
+function renderTopStrip(E,game,openModal=null){
   const strip=E('div','civ-top-strip');
   game.players.forEach((player)=>{
     const chip=E('button',`civ-player-chip${player.isYou?' you':''}${player.alive===false?' dead':''}${player.id===game.pickerId?' picking':''}`);
     chip.type='button';
     chip.title=player.isYou?'Jouw spelerdetails':`${player.name} bekijken`;
-    chip.onclick=()=>showCivModal(E,strip.parentElement||strip,{eyebrow:'Speler',title:player.isYou?'Jij':player.name,content:playerDetails(E,player),health:player.hp,confirmLabel:'Sluiten'});
+    chip.onclick=()=>{
+      const options={eyebrow:'Speler',title:player.isYou?'Jij':player.name,content:playerDetails(E,player),health:player.hp,confirmLabel:'Sluiten'};
+      if(openModal)openModal(options);else showCivModal(E,strip.parentElement||strip,options);
+    };
     const head=E('div','civ-chip-head');
     if(player.leaderKey){
       head.classList.add('with-portrait');
@@ -195,7 +204,7 @@ function renderYourGrid(E,action,sound,game,you,openModal){
     const bt=buildingTheme(game.age,tile.type);
     const node=E('button','civ-tile filled');node.type='button';
     node.style.setProperty('--tile-accent',bt.color);
-    node.append(iconNode(E,{age:game.age,name:tile.name}),E('div','civ-tile-name',tile.name),E('div','civ-tile-level',`Niv. ${tile.level}`));
+    node.append(iconNode(E,{age:tile.assetAge||game.age,name:tile.name}),E('div','civ-tile-name',tile.name),E('div','civ-tile-level',`Niv. ${tile.level}`));
     node.append(E('div','civ-tile-perk',statGainText(tile)));
     if(!tile.maxed){
       const afford=you.gold>=tile.upgradeCost;
@@ -204,7 +213,7 @@ function renderYourGrid(E,action,sound,game,you,openModal){
       node.onclick=()=>openModal({
         eyebrow:'Jouw stad',
         title:tile.name,
-        art:iconNode(E,{age:game.age,name:tile.name},'civ-modal-icon'),
+        art:iconNode(E,{age:tile.assetAge||game.age,name:tile.name},'civ-modal-icon'),
         body:`Niveau ${tile.level} → ${tile.level+1}`,
         badges:statBadges(tile,{next:true}),
         cost:tile.upgradeCost,
@@ -240,10 +249,10 @@ function playerDetails(E,player){
   return details;
 }
 
-function showCivModal(E,root,{eyebrow,title,body='',art=null,content=null,badges=[],health=null,cost=null,confirmLabel='',confirmDisabled=false,onConfirm=null,secondaryLabel='',onSecondary=null,required=false}){
+function showCivModal(E,root,{eyebrow,title,body='',art=null,content=null,badges=[],health=null,cost=null,confirmLabel='',confirmDisabled=false,onConfirm=null,secondaryLabel='',onSecondary=null,required=false},onDismiss=()=>{}){
   root.querySelector('.civ-modal-backdrop')?.remove();
   const backdrop=E('div','civ-modal-backdrop'),modal=E('div','civ-modal'),actions=E('div','civ-detail-actions civ-modal-actions');
-  const close=()=>backdrop.remove();
+  const close=()=>{backdrop.remove();onDismiss()};
   if(!required)backdrop.onclick=(event)=>{if(event.target===backdrop)close()};
   if(art){
     const header=E('div','civ-modal-header'),copy=E('div','civ-modal-copy');

@@ -363,7 +363,7 @@ function handleAction(game, playerId, action, payload) {
     if (p.gold < card.cost) throw new Error('Je hebt niet genoeg goud.');
 
     p.gold -= card.cost;
-    p.grid[slot] = { type: card.type, name: card.name, level: 1, variantIndex: card.variantIndex, base: { attack: card.attack, defence: card.defence, income: card.income } };
+    p.grid[slot] = { type: card.type, name: card.name, assetAge: contentAge(game.age), level: 1, variantIndex: card.variantIndex, base: { attack: card.attack, defence: card.defence, income: card.income } };
     p.built.add(card.name);
     if (card.type === 'wonder') p.wonderBuilt = true;
     p.acted = true;
@@ -395,6 +395,7 @@ function handleAction(game, playerId, action, payload) {
       p.gold -= cost;
       tile.level += 1;
       tile.name = reskinName(tile.type, game.age, tile.variantIndex);
+      tile.assetAge = contentAge(game.age);
       game.log.push(`${p.name} upgrade ${tile.name} (niveau ${tile.level}).`);
       p.acted = true;
     }
@@ -532,7 +533,7 @@ function playNpc(game, player) {
     const { card } = affordable[0];
     const slot = player.grid.findIndex((v) => v === null);
     player.gold -= card.cost;
-    player.grid[slot] = { type: card.type, name: card.name, level: 1, variantIndex: card.variantIndex, base: { attack: card.attack, defence: card.defence, income: card.income } };
+    player.grid[slot] = { type: card.type, name: card.name, assetAge: contentAge(game.age), level: 1, variantIndex: card.variantIndex, base: { attack: card.attack, defence: card.defence, income: card.income } };
     player.built.add(card.name);
     if (card.type === 'wonder') player.wonderBuilt = true;
     game.log.push(`${player.name} bouwt ${card.name}.`);
@@ -646,6 +647,7 @@ function serialize(game, requesterId, connected) {
       grid: p.grid.map((tile) => tile ? {
         type: tile.type,
         name: tile.name,
+        assetAge: tile.assetAge || contentAge(game.age),
         level: tile.level,
         attack: tileStat(tile.base.attack, tile.level),
         defence: tileStat(tile.base.defence, tile.level),

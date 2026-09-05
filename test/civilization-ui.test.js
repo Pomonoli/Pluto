@@ -13,6 +13,9 @@ test('Age of Civilization houdt spelerkaarten vast, toont details en laat onbeta
   assert.match(css,/@media\(max-width:760px\)\{[\s\S]*?\.civ-grid\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)\}/);
   assert.match(css,/\.civ-modal-backdrop\{position:absolute;[^}]*place-items:center/);
   assert.match(client,/function showCivModal/);
+  assert.match(client,/state\.civModalOptions=options/);
+  assert.match(client,/if\(game\.phase==='draft'&&state\.civModalOptions\)showCivModal/);
+  assert.match(client,/age:tile\.assetAge\|\|game\.age/);
   assert.match(client,/function renderLobbyOptions/);
   assert.match(client,/\['classic','Classic'/);
   assert.match(client,/\['deathmatch','Deathmatch'/);
@@ -25,7 +28,7 @@ test('Age of Civilization houdt spelerkaarten vast, toont details en laat onbeta
   assert.match(client,/Goud \$\{player\.gold\} · ATK \$\{player\.attack\} · DEF \$\{player\.defence\} · Inkomen \+\$\{player\.income\}/);
   assert.match(css,/\.civ-chip-name \{[^}]*text-overflow:ellipsis/);
   assert.match(client,/const chip=E\('button',`civ-player-chip/);
-  assert.match(client,/chip\.onclick=\(\)=>showCivModal/);
+  assert.match(client,/chip\.onclick=\(\)=>\{[\s\S]*?if\(openModal\)openModal\(options\)/);
   assert.match(client,/const name=E\('span','civ-chip-name'/);
   assert.match(client,/eyebrow:'Speler'/);
   assert.match(client,/function playerDetails/);

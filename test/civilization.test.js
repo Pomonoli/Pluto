@@ -73,6 +73,17 @@ test('Age of Civilization start met twee geheime handen, 21 beurten en drie vast
   assert.ok(view.yourHand.every((card)=>['attack','defence','economy','wonder'].includes(card.type)));
 });
 
+test('gebouwde kaarten behouden de juiste afbeeldings-age bij een volgende beurt',()=>{
+  const game=civilization.createGame(players());
+  pickLeaders(game);
+  buildFirstAffordable(game,'a');
+  const built=game.players.a.grid.find(Boolean);
+  assert.equal(built.assetAge,1);
+  game.age=2;
+  const view=civilization.serialize(game,'a');
+  assert.equal(view.players.find((player)=>player.isYou).grid.find(Boolean).assetAge,1);
+});
+
 test('Deathmatch gebruikt de late-game content na tijdperk 7 en eindigt niet zolang meerdere torens leven',()=>{
   const game=civilization.createGame(players(),{mode:'deathmatch'});
   pickLeaders(game);
