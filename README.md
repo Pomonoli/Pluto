@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.22.6
+## Nieuw in versie 1.22.7
 
-Releases kunnen starten met niet-gecommitteerd werk
+Grotere gebouwiconen in Age of Civilization-pop-ups
 
 ## Nieuw in versie 1.22.0
 

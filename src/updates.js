@@ -442,6 +442,12 @@ const RELEASES = [
     improvements:[
       "Releases kunnen starten met niet-gecommitteerd werk"
     ]
+  },
+  {
+    version:"1.22.7",
+    improvements:[
+      "Grotere gebouwiconen in Age of Civilization-pop-ups"
+    ]
   }
 ];
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.22.7 — Grotere gebouwiconen in Age of Civilization-pop-ups
+
+- Grotere gebouwiconen in Age of Civilization-pop-ups
+
 ## v1.22.6 — Releases kunnen starten met niet-gecommitteerd werk
 
 - Releases kunnen starten met niet-gecommitteerd werk
