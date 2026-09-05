@@ -2,13 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.23.3
+## Nieuw in versie 1.24.0
 
-Gebouwen in **The Big Blue C** (Vishandel, Aquarium-Museum, Handelsmarkt, Houthakkerij, Steengroeve, Haven, aanlegsteigers) zijn nu echte kleine illustraties met muur, dak en uithangbord in plaats van een icoon in een kader. Alle actieknoppen staan nu samen in één rail rechts, en de Winkel verkoopt nu ook een Energiedrank en een Gezondheidsdrank.
-
-## Nieuw in versie 1.23.0
-
-**The Deep Bleu C** heet nu **The Big Blue C** en heeft een volledig nieuwe visuele stijl: een licht, zongebleekt Noords palet waarbij het water donkerder wordt naarmate de zone zwaarder is. De jacht gebruikt nu een dobbelsteen-gevecht (aanvallen, verdedigen, eten, vluchten), er is een nieuw kooksysteem met tijdelijke buffs, combat-gear heeft slijtage en kan gerepareerd worden, je kunt een aanlegsteiger bouwen, en een dag/nacht-cyclus ontgrendelt nachtsoorten.
+The Blue is een nieuwe game: spoel aan op een eigen eiland, vis met hengel en geluk, hak hout en delf erts, vecht in een dobbelgevecht tegen wild zwijn en wolf, kook je vangst voor energie en tijdelijke buffs, bouw en repareer gereedschap met slijtage, en vul een codex terwijl dag overgaat in nacht.
 
 ## Nieuw in versie 1.0.0
 

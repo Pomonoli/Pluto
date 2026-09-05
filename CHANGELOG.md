@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.24.0 — The Blue is een nieuwe game: spoel aan op een eigen eiland, vis met hengel en geluk, hak hout en delf erts, vecht in een dobbelgevecht tegen wild zwijn en wolf, kook je vangst voor energie en tijdelijke buffs, bouw en repareer gereedschap met slijtage, en vul een codex terwijl dag overgaat in nacht.
+
+- The Blue is een nieuwe game: spoel aan op een eigen eiland, vis met hengel en geluk, hak hout en delf erts, vecht in een dobbelgevecht tegen wild zwijn en wolf, kook je vangst voor energie en tijdelijke buffs, bouw en repareer gereedschap met slijtage, en vul een codex terwijl dag overgaat in nacht.
+
 ## v1.23.3 — The Big Blue C: echte gebouwen, alle knoppen rechts, drankjes in de winkel
 
 - Gebouwen (Vishandel, Aquarium-Museum, Handelsmarkt, Houthakkerij, Steengroeve, Haven, aanlegsteigers) zijn nu echte kleine illustraties — muur, dak, deur, venster en een hangend uithangbord — in plaats van een icoon in een kader. Hall of Fame is nu een obelisk, havens en aanlegsteigers zijn een dokplateau op palen.

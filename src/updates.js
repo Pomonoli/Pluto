@@ -482,6 +482,12 @@ const RELEASES = [
       "The Big Blue C: gebouwen zijn nu echte kleine illustraties (muur, dak, deur, uithangbord) in plaats van een icoon in een kader; Hall of Fame is een obelisk, havens en aanlegsteigers zijn een dokplateau op palen.",
       "The Big Blue C: alle actieknoppen staan nu samen in één rail aan de rechterkant."
     ]
+  },
+  {
+    version:"1.24.0",
+    improvements:[
+      "The Blue is een nieuwe game: spoel aan op een eigen eiland, vis met hengel en geluk, hak hout en delf erts, vecht in een dobbelgevecht tegen wild zwijn en wolf, kook je vangst voor energie en tijdelijke buffs, bouw en repareer gereedschap met slijtage, en vul een codex terwijl dag overgaat in nacht."
+    ]
   }
 ];
 
