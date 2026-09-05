@@ -448,6 +448,18 @@ const RELEASES = [
     improvements:[
       "Grotere gebouwiconen in Age of Civilization-pop-ups"
     ]
+  },
+  {
+    version:"1.23.0",
+    features:[
+      "The Big Blue C (voorheen The Deep Bleu C): de jacht op wild gebruikt nu een dobbelsteen-gevecht (aanvallen, verdedigen, eten, vluchten) in plaats van een tijdvenster.",
+      "The Big Blue C: nieuw kooksysteem — een Kampvuur roostert vlees gratis, een Kookvuur bereidt gerechten met een tijdelijke buff.",
+      "The Big Blue C: combat-gear heeft nu slijtage en kan gerepareerd worden; je kunt een aanlegsteiger bouwen vanuit de Inventaris."
+    ],
+    improvements:[
+      "The Big Blue C: volledig nieuwe visuele stijl met een licht, zongebleekt Noords palet — het water wordt donkerder naarmate de zone zwaarder is (Ondiep, Kelpwouden, Wadzee, Rifzee).",
+      "The Big Blue C: een versnelde dag/nacht-cyclus ontgrendelt nachtsoorten bij het vissen en jagen."
+    ]
   }
 ];
 

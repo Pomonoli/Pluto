@@ -2,13 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.22.7
+## Nieuw in versie 1.23.0
 
-Grotere gebouwiconen in Age of Civilization-pop-ups
-
-## Nieuw in versie 1.22.0
-
-**The Deep Bleu C** is nu een overlevingseiland: de kaart is één landmassa vol meren, volledig omringd door zee tot aan de rand van de platte wereld (een waterval die in het niets stort). Nieuwe gezondheid-, energie- en pantserbalken — jaag op wilde dieren en eet de buit op voor energie. De Inventaris heeft een gear-screen voor uitrusting, en de Marktplaats verkoopt nu ook kleding, wapens en schilden naast vis, hout, steen en vlees.
+**The Deep Bleu C** heet nu **The Big Blue C** en heeft een volledig nieuwe visuele stijl: een licht, zongebleekt Noords palet waarbij het water donkerder wordt naarmate de zone zwaarder is. De jacht gebruikt nu een dobbelsteen-gevecht (aanvallen, verdedigen, eten, vluchten), er is een nieuw kooksysteem met tijdelijke buffs, combat-gear heeft slijtage en kan gerepareerd worden, je kunt een aanlegsteiger bouwen, en een dag/nacht-cyclus ontgrendelt nachtsoorten.
 
 ## Nieuw in versie 1.0.0
 
@@ -21,12 +17,12 @@ Alle games zijn ondergebracht in zelfstandige modules onder `games/`. Iedere gam
 | 7 Wonders Duel | 2 | Ja |
 | Age of Civilization | 2-7 | Ja |
 | Bakkermans Jones | 1 | Niet van toepassing |
+| The Big Blue C | 1-4 | Niet van toepassing |
 | Blackjack | 1-4 | Ja |
 | Carcassonne | 2-5 | Ja |
 | Cascadia | 2-4 | Ja |
 | Cluedo | 2-6 | Ja |
 | CycClub | 1-6 | Ja |
-| The Deep Bleu C | 1-4 | Niet van toepassing |
 | Hartenjagen | 4 | Ja |
 | Hofslag | 2-4 | Ja |
 | Isle of Skye | 2-4 | Ja |

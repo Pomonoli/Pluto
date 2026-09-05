@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.23.0 — The Big Blue C: catch · cook · create
+
+- The Deep Bleu C heet nu The Big Blue C, met een volledig nieuwe visuele stijl: een licht, zongebleekt Noords palet (Grenze/Barlow-typografie, bleke berkenpanelen) waarbij het water donkerder wordt naarmate de zone zwaarder is — Ondiep, Kelpwouden, Wadzee, Rifzee.
+- De jacht op wild gebruikt nu een dobbelsteen-gevecht (aanvallen, verdedigen, eten, vluchten) in plaats van een tijdvenster-QTE; vissen, hakken en delven blijven ongewijzigd.
+- Nieuw kooksysteem: een Kampvuur roostert vlees gratis voor meer energie, een Kookvuur bereidt gerechten met een tijdelijke buff (lijnsterkte, energieherstel, een extra dobbelsteen bij een aanval, of nachtzicht).
+- Combat-gear (kleding, wapens, schilden) heeft nu slijtage en kan gerepareerd worden — reparatie herstelt de sterkte maar verlaagt het maximum een beetje.
+- Je kunt nu een aanlegsteiger bouwen vanuit de Inventaris.
+- Een versnelde dag/nacht-cyclus ontgrendelt nachtsoorten bij het vissen en jagen en geeft de kaart 's nachts een koelere tint.
+
 ## v1.22.7 — Grotere gebouwiconen in Age of Civilization-pop-ups
 
 - Grotere gebouwiconen in Age of Civilization-pop-ups
