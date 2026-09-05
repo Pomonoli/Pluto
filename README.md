@@ -2,6 +2,10 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
+## Nieuw in versie 1.23.1
+
+Age of Civ icons gefixt
+
 ## Nieuw in versie 1.23.0
 
 **The Deep Bleu C** heet nu **The Big Blue C** en heeft een volledig nieuwe visuele stijl: een licht, zongebleekt Noords palet waarbij het water donkerder wordt naarmate de zone zwaarder is. De jacht gebruikt nu een dobbelsteen-gevecht (aanvallen, verdedigen, eten, vluchten), er is een nieuw kooksysteem met tijdelijke buffs, combat-gear heeft slijtage en kan gerepareerd worden, je kunt een aanlegsteiger bouwen, en een dag/nacht-cyclus ontgrendelt nachtsoorten.

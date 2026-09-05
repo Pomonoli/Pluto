@@ -460,6 +460,12 @@ const RELEASES = [
       "The Big Blue C: volledig nieuwe visuele stijl met een licht, zongebleekt Noords palet — het water wordt donkerder naarmate de zone zwaarder is (Ondiep, Kelpwouden, Wadzee, Rifzee).",
       "The Big Blue C: een versnelde dag/nacht-cyclus ontgrendelt nachtsoorten bij het vissen en jagen."
     ]
+  },
+  {
+    version:"1.23.1",
+    improvements:[
+      "Age of Civ icons gefixt"
+    ]
   }
 ];
 

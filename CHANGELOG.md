@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.23.1 — Age of Civ icons gefixt
+
+- Age of Civ icons gefixt
+
 ## v1.23.0 — The Big Blue C: catch · cook · create
 
 - The Deep Bleu C heet nu The Big Blue C, met een volledig nieuwe visuele stijl: een licht, zongebleekt Noords palet (Grenze/Barlow-typografie, bleke berkenpanelen) waarbij het water donkerder wordt naarmate de zone zwaarder is — Ondiep, Kelpwouden, Wadzee, Rifzee.
