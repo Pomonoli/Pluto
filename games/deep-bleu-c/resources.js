@@ -214,8 +214,9 @@ const ROCK_SETS = [
 ];
 
 // Wilde dieren, gejaagd op graslandtegels — zelfde patroon als hout/steen,
-// maar met een extra `energy`-veld: elk stuk vlees herstelt energie wanneer
-// je het opeet (zie doEat in server.js), naast de gewone verkoopprijs.
+// maar met twee extra velden: `energy` (hoeveel een stuk vlees herstelt bij
+// het opeten, zie doEat) en `combat` (hp/dobbelstenen/pantser voor het
+// dobbelgevecht bij de jacht, zie DICE_BY_TIER en doHuntAction in server.js).
 const ANIMAL_SETS = [
   {
     id: 'kleinwild',
@@ -225,13 +226,13 @@ const ANIMAL_SETS = [
     description: 'Snel, schuw en overal op het eiland te vinden.',
     rewardGear: null,
     items: [
-      { id: 'konijn', name: 'Konijn', icon: '🐇', rarity: 'common', minKg: 0.5, maxKg: 2, basePrice: 5, energy: 8 },
-      { id: 'fazant', name: 'Fazant', icon: '🐦', rarity: 'common', minKg: 0.5, maxKg: 1.5, basePrice: 6, energy: 9 },
-      { id: 'eekhoorn', name: 'Eekhoorn', icon: '🐿️', rarity: 'common', minKg: 0.1, maxKg: 0.5, basePrice: 3, energy: 4 },
-      { id: 'egel', name: 'Egel', icon: '🦔', rarity: 'uncommon', minKg: 0.3, maxKg: 1, basePrice: 8, energy: 6 },
-      { id: 'vos', name: 'Vos', icon: '🦊', rarity: 'uncommon', minKg: 3, maxKg: 8, basePrice: 14, energy: 12 },
-      { id: 'das', name: 'Das', icon: '🦡', rarity: 'rare', minKg: 6, maxKg: 14, basePrice: 22, energy: 16 },
-      { id: 'havik', name: 'Havik', icon: '🦅', rarity: 'epic', minKg: 0.5, maxKg: 1.5, basePrice: 48, energy: 14 }
+      { id: 'konijn', name: 'Konijn', icon: '🐇', rarity: 'common', minKg: 0.5, maxKg: 2, basePrice: 5, energy: 8, combat: { hp: 12, dice: { count: 1, sides: 4 }, armor: 0 } },
+      { id: 'fazant', name: 'Fazant', icon: '🐦', rarity: 'common', minKg: 0.5, maxKg: 1.5, basePrice: 6, energy: 9, combat: { hp: 10, dice: { count: 1, sides: 4 }, armor: 0 } },
+      { id: 'eekhoorn', name: 'Eekhoorn', icon: '🐿️', rarity: 'common', minKg: 0.1, maxKg: 0.5, basePrice: 3, energy: 4, combat: { hp: 8, dice: { count: 1, sides: 4 }, armor: 0 } },
+      { id: 'egel', name: 'Egel', icon: '🦔', rarity: 'uncommon', minKg: 0.3, maxKg: 1, basePrice: 8, energy: 6, combat: { hp: 16, dice: { count: 1, sides: 6 }, armor: 1 } },
+      { id: 'vos', name: 'Vos', icon: '🦊', rarity: 'uncommon', minKg: 3, maxKg: 8, basePrice: 14, energy: 12, combat: { hp: 22, dice: { count: 1, sides: 6 }, armor: 1 } },
+      { id: 'das', name: 'Das', icon: '🦡', rarity: 'rare', minKg: 6, maxKg: 14, basePrice: 22, energy: 16, combat: { hp: 30, dice: { count: 2, sides: 6 }, armor: 2 } },
+      { id: 'havik', name: 'Havik', icon: '🦅', rarity: 'epic', minKg: 0.5, maxKg: 1.5, basePrice: 48, energy: 14, combat: { hp: 26, dice: { count: 2, sides: 6 }, armor: 1 } }
     ]
   },
   {
@@ -242,11 +243,25 @@ const ANIMAL_SETS = [
     description: 'Groot, gevaarlijk en zeldzamer — maar de moeite waard.',
     rewardGear: null,
     items: [
-      { id: 'ree', name: 'Ree', icon: '🦌', rarity: 'common', minKg: 15, maxKg: 30, basePrice: 20, energy: 24 },
-      { id: 'wild-zwijn', name: 'Wild Zwijn', icon: '🐗', rarity: 'uncommon', minKg: 40, maxKg: 90, basePrice: 34, energy: 32 },
-      { id: 'steenbok', name: 'Steenbok', icon: '🐐', rarity: 'uncommon', minKg: 20, maxKg: 45, basePrice: 30, energy: 28 },
-      { id: 'wolf', name: 'Wolf', icon: '🐺', rarity: 'rare', minKg: 25, maxKg: 45, basePrice: 55, energy: 30 },
-      { id: 'hert', name: 'Edelhert', icon: '🦌', rarity: 'epic', minKg: 60, maxKg: 140, basePrice: 95, energy: 45 }
+      { id: 'ree', name: 'Ree', icon: '🦌', rarity: 'common', minKg: 15, maxKg: 30, basePrice: 20, energy: 24, combat: { hp: 35, dice: { count: 1, sides: 8 }, armor: 1 } },
+      { id: 'wild-zwijn', name: 'Wild Zwijn', icon: '🐗', rarity: 'uncommon', minKg: 40, maxKg: 90, basePrice: 34, energy: 32, combat: { hp: 55, dice: { count: 2, sides: 8 }, armor: 3 } },
+      { id: 'steenbok', name: 'Steenbok', icon: '🐐', rarity: 'uncommon', minKg: 20, maxKg: 45, basePrice: 30, energy: 28, combat: { hp: 48, dice: { count: 2, sides: 6 }, armor: 2 } },
+      { id: 'wolf', name: 'Wolf', icon: '🐺', rarity: 'rare', minKg: 25, maxKg: 45, basePrice: 55, energy: 30, combat: { hp: 60, dice: { count: 2, sides: 8 }, armor: 3 } },
+      { id: 'hert', name: 'Edelhert', icon: '🦌', rarity: 'epic', minKg: 60, maxKg: 140, basePrice: 95, energy: 45, combat: { hp: 90, dice: { count: 3, sides: 8 }, armor: 4 } }
+    ]
+  },
+  {
+    id: 'nachtdieren',
+    biome: 'wildernis',
+    name: 'Nachtdieren',
+    icon: '🦉',
+    description: 'Enkel actief als het donker is.',
+    rewardGear: null,
+    nightOnly: true,
+    items: [
+      { id: 'uil', name: 'Uil', icon: '🦉', rarity: 'common', minKg: 0.3, maxKg: 1, basePrice: 10, energy: 7, combat: { hp: 14, dice: { count: 1, sides: 4 }, armor: 0 } },
+      { id: 'vleermuis', name: 'Vleermuis', icon: '🦇', rarity: 'uncommon', minKg: 0.05, maxKg: 0.3, basePrice: 12, energy: 5, combat: { hp: 10, dice: { count: 1, sides: 4 }, armor: 0 } },
+      { id: 'nachtwolf', name: 'Nachtwolf', icon: '🐺', rarity: 'rare', minKg: 25, maxKg: 45, basePrice: 60, energy: 26, combat: { hp: 50, dice: { count: 2, sides: 6 }, armor: 2 } }
     ]
   }
 ];
@@ -258,7 +273,7 @@ function buildIndex(sets) {
   const flat = [];
   for (const set of sets) {
     for (const item of set.items) {
-      const enriched = { ...item, biome: set.biome, setId: set.id };
+      const enriched = { ...item, biome: set.biome, setId: set.id, nightOnly: Boolean(set.nightOnly) };
       byId.set(item.id, enriched);
       flat.push(enriched);
     }
@@ -270,7 +285,12 @@ const INDEX = { wood: buildIndex(WOOD_SETS), rock: buildIndex(ROCK_SETS), meat: 
 const SETS_BY_KIND = { wood: WOOD_SETS, rock: ROCK_SETS, meat: ANIMAL_SETS };
 
 function setsFor(kind) { return SETS_BY_KIND[kind] || []; }
-function poolFor(kind) { return INDEX[kind] ? INDEX[kind].flat : []; }
+// `isNight` filtert nightOnly-soorten (enkel relevant voor 'meat'; hout/steen
+// hebben geen nachtsoorten, dus daar verandert de aanroep zonder opts niets).
+function poolFor(kind, { isNight = true } = {}) {
+  const flat = INDEX[kind] ? INDEX[kind].flat : [];
+  return isNight ? flat : flat.filter((item) => !item.nightOnly);
+}
 function getItem(kind, id) { return INDEX[kind] ? INDEX[kind].byId.get(id) || null : null; }
 
 function priceFor(kind, id, weightKg, bonusMultiplier = 1) {

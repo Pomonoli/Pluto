@@ -32,28 +32,28 @@ const HOOK_WINDOW_MS = 900;
 const REEL_WINDOW_MS = 1300;
 // Eén platte kleur per tegeltype i.p.v. een per-tegel gradient: een gradient
 // die zichzelf op iedere hex herhaalt creëert net een zichtbaar herhalend
-// "hex-grid"-patroon, ook zonder rand. Met exact dezelfde vlakke kleur voor
-// elke tegel van hetzelfde type — en zonder rand — lopen aangrenzende tegels
-// naadloos in elkaar over tot één doorlopend landschap; het hexraster blijft
-// alleen bestaan als onzichtbare plaatsingslogica. Eén losse, kaartbrede
-// lichtval (zie appendAtmosphere) zorgt nog voor een vleugje diepte, los van
-// de tegelgrenzen. Kleuren volgen het "deep water, warm land"-palet uit de
-// art-styleguide: lagoon/ocean/deep voor water, grass/kelp/rock voor land.
+// "hex-grid"-patroon, ook zonder rand. Kleuren volgen het v3-styleguide-palet
+// ("The Big Blue C"): zongebleekt en aards op het land, water dat donkerder
+// wordt naarmate de zone zwaarder is (Ondiep → Kelpwouden → Wadzee → Rifzee).
 // 'w' is de wereldrand: een platte-aarde-waterval die in het niets stort.
 const TILE_COLOR = {
-  L: '#74B85F', B: '#EAD1A0', f: '#4F9270', h: '#A88F6C', p: '#8E7A5C',
-  r: '#4CB2C0', k: '#33A6B8', a: '#175F7F', m: '#0D2A40', w: '#141E24'
+  L: '#8FAE72', B: '#A8875F', f: '#3F6247', h: '#949D98', p: '#7C8480',
+  r: '#8FC6CC', k: '#4E8FA0', a: '#2A5A6B', m: '#17414F', w: '#0B1D24'
 };
 const MINIMAP_RGB = {
-  L: [127, 193, 104], B: [240, 217, 168], f: [95, 162, 130], h: [180, 155, 118], p: [156, 133, 103],
-  r: [95, 194, 206], k: [63, 182, 196], a: [28, 110, 140], m: [18, 48, 72], w: [4, 8, 10]
+  L: [143, 174, 114], B: [168, 135, 95], f: [63, 98, 71], h: [148, 157, 152], p: [124, 132, 128],
+  r: [143, 198, 204], k: [78, 143, 160], a: [42, 90, 107], m: [23, 65, 79], w: [11, 29, 36]
 };
 const WATER_CHARS = new Set(['r', 'k', 'a', 'm']);
 const WOOD_TILE = 'f';
 const ROCK_TILE = 'p';
+// De zonenaam bij het huidige tegeltype — vervangt de speltitel niet (elke
+// andere game op dit platform toont er ook zijn eigen naam), maar staat wel
+// prominent in de statusregel, zoals het ontwerp vraagt.
+const ZONE_NAME_BY_TILE = { r: 'Ondiep', k: 'Kelpwouden', a: 'Wadzee', m: 'Rifzee' };
 const GEAR_LABELS = { rod: { icon: '🎣', label: 'Hengel', help: 'Ruimer tijdvenster om aan te slaan bij een beet.' },
   bait: { icon: '🪱', label: 'Aas', help: 'Grotere kans op zeldzame en epische vis.' },
-  boat: { icon: '🚤', label: 'Boot', help: 'Vaar verder over rivieren, kust en open zee — koop deze upgrade in je Inventaris.' },
+  boat: { icon: '🚤', label: 'Vaartuig', help: 'Vaar verder van kust tot Rifzee — koop deze upgrade in je Inventaris.' },
   axe: { icon: '🪓', label: 'Bijl', help: 'Ruimer tijdvenster om raak te hakken bij een boom.' },
   pickaxe: { icon: '⛏️', label: 'Houweel', help: 'Ruimer tijdvenster om raak te houwen bij een rots.' } };
 const GEAR_CATEGORY_META = {
@@ -61,6 +61,15 @@ const GEAR_CATEGORY_META = {
   weapons: { icon: '⚔️', label: 'Wapens' },
   shields: { icon: '🛡️', label: 'Schilden' }
 };
+// Kookrecepten — puur weergave; de server (recipes.js) is de bron van
+// waarheid en valideert alles zelf.
+const DISH_DISPLAY = [
+  { id: 'vislijn-stoofpot', name: 'Vislijnstoofpot', icon: '🍲', cost: 15, buffIcon: '🎣', buffLabel: 'Lijnsterkte' },
+  { id: 'winterkost', name: 'Winterkost', icon: '🥘', cost: 15, buffIcon: '🔥', buffLabel: 'Warme Maag' },
+  { id: 'jagerspot', name: 'Jagerspot', icon: '🍖', cost: 20, buffIcon: '🎲', buffLabel: 'Jachtlust' },
+  { id: 'nachtbrouwsel', name: 'Nachtbrouwsel', icon: '🍵', cost: 20, buffIcon: '🌙', buffLabel: 'Nachtzicht' }
+];
+const QUALITY_LABEL = { raw: 'Rauw', roasted: 'Geroosterd', dish: 'Gerecht' };
 
 // De actieknoppen staan rechts, verticaal gecentreerd, in dezelfde blauwe
 // stijl als elkaar (geen apart uitgelichte "primary"-knop meer) — zo blijft
@@ -76,8 +85,7 @@ const RIGHT_BUTTONS = [
 ];
 const GATHER_UI = {
   wood: { verb: 'Hakken', icon: '🪓', bg: 'Je bijl staat klaar bij de stam...' },
-  rock: { verb: 'Houwen', icon: '⛏️', bg: 'Je houweel staat klaar bij de rots...' },
-  animal: { verb: 'Aanvallen', icon: '🏹', bg: 'Je sluipt op het dier af...' }
+  rock: { verb: 'Houwen', icon: '⛏️', bg: 'Je houweel staat klaar bij de rots...' }
 };
 const SKILL_LABELS = {
   fishing: { icon: '🎣', label: 'Vissen', help: 'Xp per gevangen vis — hoe zeldzamer, hoe meer.' },
@@ -108,7 +116,7 @@ function ensureWorld() {
       world = data;
       if (state?.room) renderGame(state.room);
     })
-    .catch((error) => { console.error('Deep Bleu C wereld laden mislukt:', error); worldPromise = null; });
+    .catch((error) => { console.error('Big Blue C wereld laden mislukt:', error); worldPromise = null; });
   return null;
 }
 
@@ -122,7 +130,7 @@ function loadLeaderboard() {
       leaderboardData = data.ok ? (data.leaderboard || []) : [];
       if (state?.room) renderGame(state.room);
     })
-    .catch((error) => { console.error('Deep Bleu C leaderboard laden mislukt:', error); leaderboardData = []; })
+    .catch((error) => { console.error('Big Blue C leaderboard laden mislukt:', error); leaderboardData = []; })
     .finally(() => { leaderboardPromise = null; });
 }
 
@@ -161,7 +169,14 @@ export function metric({ player }) {
   return { text: `€${player.cash} · ${player.discoveredCount} soorten`, score: player.discoveredCount };
 }
 
+function zoneNameFor(you) {
+  if (!world) return null;
+  const tile = world.tiles[you.y * world.width + you.x];
+  return ZONE_NAME_BY_TILE[tile] || null;
+}
+
 function statusFor(you) {
+  if (you.combat) return you.combat.log[0] || 'Een dier valt aan!';
   const fishing = you.fishing;
   if (fishing?.phase === 'bite') return 'Beet! Trek nu aan!';
   if (fishing?.phase === 'reel') return 'Haal de vis binnen!';
@@ -172,18 +187,21 @@ function statusFor(you) {
   if (gathering?.phase === 'reel') return gathering.haulText;
   if (gathering?.phase === 'cast') return GATHER_UI[gathering.kind].bg;
   if (gathering?.phase === 'result') return gathering.item ? `${gathering.resultVerb}: ${gathering.item.name}` : 'Het glipte weg.';
-  return `€${you.cash} · ${you.discovered.length} soorten ontdekt`;
+  const zone = zoneNameFor(you);
+  return `${zone ? `${zone} · ` : ''}€${you.cash} · ${you.discovered.length} soorten ontdekt`;
 }
 
 function renderDeepBleuC(room, game) {
   const you = game.you;
   const others = (game.players || []).filter((p) => p.id !== you.id);
   els.gameStage.replaceChildren();
-  els.gameStage.append(titlebar('The Deep Bleu C', statusFor(you)));
+  els.gameStage.append(titlebar('The Big Blue C', statusFor(you)));
 
   const wrap = E('div', 'dbc-wrap');
   const loadedWorld = ensureWorld();
-  wrap.append(loadedWorld ? renderStage(you, loadedWorld, others) : E('div', 'dbc-loading', 'Kaart wordt geladen...'));
+  wrap.append(loadedWorld
+    ? renderStage(you, loadedWorld, others, game.harbors || [], game.dayPhase || 'day')
+    : E('div', 'dbc-loading', 'Kaart wordt geladen...'));
 
   els.gameStage.append(wrap, logBox(game.log));
 }
@@ -191,17 +209,18 @@ function renderDeepBleuC(room, game) {
 // De kaart blijft altijd zichtbaar op de achtergrond, schermvullend; een open
 // paneel (Inventaris, Marktplaats, ...) schuift eroverheen als een los "sheet"
 // in plaats van de kaart te vervangen — zo blijft de wereld altijd in beeld.
-function renderStage(you, worldData, others) {
+function renderStage(you, worldData, others, harbors, dayPhase) {
   const camX = clampInt(you.x - Math.floor(COLS / 2), 0, worldData.width - COLS);
   const camY = clampInt(you.y - Math.floor(ROWS / 2), 0, worldData.height - ROWS);
   const stage = E('div', 'dbc-stage');
-  stage.append(renderMapWrap(you, worldData, camX, camY, others));
-  if (activePanel !== 'map') stage.append(renderPanelSheet(you, others));
+  stage.append(renderMapWrap(you, worldData, camX, camY, others, harbors, dayPhase));
+  if (activePanel !== 'map') stage.append(renderPanelSheet(you, others, harbors));
   return stage;
 }
 
-function renderStatPills(you) {
+function renderStatPills(you, dayPhase) {
   const wrap = E('div', 'dbc-stat-pills');
+  wrap.append(E('div', 'dbc-stat-pill', `${dayPhase === 'night' ? '🌙' : '☀️'}`));
   wrap.append(E('div', 'dbc-stat-pill', `💰 €${you.cash}`));
   wrap.append(E('div', 'dbc-stat-pill', `📖 ${you.discovered.length}`));
   wrap.append(E('div', 'dbc-stat-pill', `⭐ Lv. ${you.totalLevel}`));
@@ -222,12 +241,19 @@ function renderStatBar(icon, value, max, kind) {
 
 // Gezondheid en energie als vullende balken (ze putten uit/herstellen);
 // pantser is een afgeleide, niet-vullende waarde uit je uitrusting, dus die
-// krijgt een badge in plaats van een balk.
+// krijgt een badge in plaats van een balk. Actieve buffs krijgen hun eigen
+// badge met resterende tijd.
 function renderStatBars(you) {
   const wrap = E('div', 'dbc-stat-bars');
   wrap.append(renderStatBar('❤️', you.stats.health, you.stats.maxHealth, 'health'));
   wrap.append(renderStatBar('⚡', you.stats.energy, you.stats.maxEnergy, 'energy'));
   wrap.append(E('div', 'dbc-stat-armor', `🛡️ ${you.stats.armor}`));
+  (you.buffs || []).forEach((buff) => {
+    const minutes = Math.max(1, Math.round(buff.remainingMs / 60000));
+    const badge = E('div', 'dbc-stat-clock', `${buff.icon} ${minutes}m`);
+    badge.title = `${buff.label} — ${buff.help}`;
+    wrap.append(badge);
+  });
   return wrap;
 }
 
@@ -251,7 +277,7 @@ function renderButtonRail(className, buttons) {
   return rail;
 }
 
-function renderPanelSheet(you, others) {
+function renderPanelSheet(you, others, harbors) {
   const overlay = E('div', 'dbc-sheet-overlay');
   overlay.onclick = (event) => {
     if (event.target === overlay) { activePanel = 'map'; renderGame(state.room); }
@@ -264,7 +290,7 @@ function renderPanelSheet(you, others) {
   close.setAttribute('aria-label', 'Sluiten');
   close.onclick = () => { activePanel = 'map'; renderGame(state.room); };
   header.append(close);
-  sheet.append(header, renderActivePanel(you, others));
+  sheet.append(header, renderActivePanel(you, others, harbors));
   overlay.append(sheet);
   return overlay;
 }
@@ -274,13 +300,14 @@ function isWildlifeTile(wx, wy) {
 }
 
 function handleTileClick(wx, wy, tile, you) {
+  if (you.combat) return;
   if (you.fishing && you.fishing.phase !== 'result' && you.fishing.phase !== 'cast') return;
   if (you.gathering && you.gathering.phase !== 'result' && you.gathering.phase !== 'cast') return;
   const adjacent = hexDistance(you.x, you.y, wx, wy) <= 1;
   if (adjacent && WATER_CHARS.has(tile)) { action('cast', { x: wx, y: wy }); return; }
   if (adjacent && tile === WOOD_TILE) { action('gatherStart', { kind: 'wood', x: wx, y: wy }); return; }
   if (adjacent && tile === ROCK_TILE) { action('gatherStart', { kind: 'rock', x: wx, y: wy }); return; }
-  if (adjacent && isWildlifeTile(wx, wy)) { action('gatherStart', { kind: 'animal', x: wx, y: wy }); return; }
+  if (adjacent && isWildlifeTile(wx, wy)) { action('huntStart', { x: wx, y: wy }); return; }
   action('move', { x: wx, y: wy });
 }
 
@@ -309,8 +336,9 @@ function facingLeftFor(id, entity) {
 const OTHER_PLAYER_COLORS = ['#ff9f43', '#4dd0e1', '#c77dff', '#ffe066'];
 
 // Werktuig in de voorste hand — enkel getekend zolang de bijhorende actie
-// bezig is: hengel bij vissen, bijl bij hakken, houweel bij delven, boog bij
-// jagen. Anders hangt die hand net als de andere gewoon leeg naast het lichaam.
+// bezig is: hengel bij vissen, bijl bij hakken, houweel bij delven, wapen bij
+// een dobbelgevecht. Anders hangt die hand net als de andere gewoon leeg
+// naast het lichaam.
 function appendTool(g, tool) {
   if (tool === 'rod') {
     g.append(svgEl('line', { x1: 12, y1: -3, x2: 22, y2: -13, class: 'dbc-tool-handle' }));
@@ -363,11 +391,11 @@ function appendAnglerFigure(g, { accent = 'var(--accent)', skin = '#e8b98a', hoo
   g.append(svgEl('circle', { cx: 0, cy: -15.5, r: 1.3, fill: '#fff' }));
 }
 
-function toolFor(fishingPhase, gatheringKind) {
+function toolFor(fishingPhase, gatheringKind, inCombat) {
   if (fishingPhase) return 'rod';
   if (gatheringKind === 'wood') return 'axe';
   if (gatheringKind === 'rock') return 'pickaxe';
-  if (gatheringKind === 'animal') return 'weapon';
+  if (inCombat) return 'weapon';
   return null;
 }
 
@@ -380,11 +408,11 @@ function renderOtherPlayerMarker(svg, p, camX, camY, colorIndex) {
     class: 'dbc-player dbc-player-other',
     transform: `translate(${cx},${cy}) scale(${facingLeft ? -1 : 1},1)`
   });
-  appendAnglerFigure(g, { accent: color, tool: toolFor(p.fishingPhase, p.gatheringKind) });
+  appendAnglerFigure(g, { accent: color, tool: toolFor(p.fishingPhase, p.gatheringKind, p.inCombat) });
   svg.append(g);
-  if (p.fishingPhase || p.gatheringKind) {
+  if (p.fishingPhase || p.gatheringKind || p.inCombat) {
     const icon = svgEl('text', { x: cx, y: cy - 38, class: 'dbc-player-fishing', 'text-anchor': 'middle' });
-    icon.textContent = p.fishingPhase ? '🎣' : GATHER_UI[p.gatheringKind].icon;
+    icon.textContent = p.fishingPhase ? '🎣' : p.inCombat ? '⚔️' : GATHER_UI[p.gatheringKind].icon;
     svg.append(icon);
   }
   const label = svgEl('text', { x: cx, y: cy - 31, class: 'dbc-player-label', 'text-anchor': 'middle' });
@@ -403,9 +431,8 @@ function tileHash(wx, wy) {
 
 // Eén gedeelde, kaartbrede lichtval (lichter bovenaan, donkerder onderaan) —
 // userSpaceOnUse over de volle viewBox, dus volledig los van de individuele
-// tegelgrenzen. Dit vervangt de vorige per-tegel gradient als enige bron van
-// "reliëf": een zwak overlay-vlak erover heen geeft het landschap een
-// vleugje diepte zonder ooit een hex-vormig patroon te herhalen.
+// tegelgrenzen. 's Nachts komt daar een blauwige, donkerder overlay bij (zie
+// appendNightOverlay) zodat het hele eiland zichtbaar in sfeer verandert.
 function buildTileDefs() {
   const defs = svgEl('defs');
   const grad = svgEl('linearGradient', {
@@ -499,7 +526,7 @@ function appendTileDecor(svg, tile, cx, cy, wx, wy) {
   else if (tile === 'B') { if (seed < 0.4) appendSandDecor(svg, cx, cy, seed); }
 }
 
-function renderMapWrap(you, worldData, camX, camY, others = []) {
+function renderMapWrap(you, worldData, camX, camY, others = [], harbors = [], dayPhase = 'day') {
   const svg = svgEl('svg', {
     viewBox: `${VIEW_BOX.minX} ${VIEW_BOX.minY} ${VIEW_BOX.width} ${VIEW_BOX.height}`,
     // Keep hexagons proportional while scaling the visible map just enough
@@ -507,7 +534,7 @@ function renderMapWrap(you, worldData, camX, camY, others = []) {
     preserveAspectRatio: 'xMidYMid slice',
     class: 'dbc-map',
     role: 'img',
-    'aria-label': 'Kaart van The Deep Bleu C'
+    'aria-label': 'Kaart van The Big Blue C'
   });
   svg.append(buildTileDefs());
 
@@ -573,8 +600,24 @@ function renderMapWrap(you, worldData, camX, camY, others = []) {
     svg.append(g);
   });
 
+  // Door spelers gebouwde aanlegsteigers — hetzelfde icoonkader als een
+  // gebouw, maar dynamisch (per sessie), niet onderdeel van de vaste wereld.
+  harbors.forEach((harbor) => {
+    if (harbor.x < camX || harbor.x >= camX + COLS || harbor.y < camY || harbor.y >= camY + ROWS) return;
+    const occupied = (you.x === harbor.x && you.y === harbor.y) || others.some((other) => other.x === harbor.x && other.y === harbor.y);
+    if (occupied) return;
+    const { cx, cy } = hexPoints(harbor.x - camX, harbor.y - camY);
+    const g = svgEl('g', { class: 'dbc-building active', transform: `translate(${cx},${cy})` });
+    g.append(svgEl('rect', { x: -14, y: -14, width: 28, height: 28, rx: 6, class: 'dbc-building-bg' }));
+    const label = svgEl('text', { x: 0, y: 6, class: 'dbc-building-icon' });
+    label.textContent = '⚓';
+    g.append(label);
+    svg.append(g);
+  });
+
   // Wilde dieren: klein icoontje op hun vaste graslandplek, aanklikbaar zoals
-  // een boom (hout) of rots (steen) — start een jacht i.p.v. een gewone stap.
+  // een boom (hout) of rots (steen) — start een dobbelgevecht i.p.v. een
+  // gewone stap.
   (worldData.wildlife || []).forEach((spot) => {
     if (spot.x < camX || spot.x >= camX + COLS || spot.y < camY || spot.y >= camY + ROWS) return;
     const occupied = (you.x === spot.x && you.y === spot.y) || others.some((other) => other.x === spot.x && other.y === spot.y);
@@ -593,50 +636,35 @@ function renderMapWrap(you, worldData, camX, camY, others = []) {
     class: 'dbc-player',
     transform: `translate(${px},${py}) scale(${facingLeft ? -1 : 1},1)`
   });
-  appendAnglerFigure(player, { tool: toolFor(you.fishing, you.gathering?.kind) });
+  appendAnglerFigure(player, { tool: toolFor(you.fishing, you.gathering?.kind, Boolean(you.combat)) });
   svg.append(player);
+
+  // 's Nachts krijgt de hele kaart een koelere, donkerdere waas — het palet
+  // is zelf de dag/nacht-indicator, net als bij de zeezones.
+  if (dayPhase === 'night') {
+    svg.append(svgEl('rect', {
+      x: VIEW_BOX.minX, y: VIEW_BOX.minY, width: VIEW_BOX.width, height: VIEW_BOX.height,
+      fill: '#17414F', opacity: '0.32', 'pointer-events': 'none'
+    }));
+  }
 
   const wrapDiv = E('div', 'dbc-map-wrap');
   wrapDiv.append(svg);
 
-  wrapDiv.append(renderStatPills(you));
+  wrapDiv.append(renderStatPills(you, dayPhase));
   wrapDiv.append(renderStatBars(you));
   if (activePanel === 'map') {
     wrapDiv.append(renderButtonRail('dbc-rail-topleft', TOPLEFT_BUTTONS));
     wrapDiv.append(renderButtonRail('dbc-rail-right', RIGHT_BUTTONS));
   }
 
-  const activityPanel = renderFishingPanel(you.fishing) || renderGatheringPanel(you.gathering);
+  const activityPanel = renderFishingPanel(you.fishing) || renderCombatPanel(you.combat) || renderGatheringPanel(you.gathering);
   if (activityPanel) {
     const overlay = E('div', 'dbc-fishing-overlay');
     overlay.append(activityPanel);
     wrapDiv.append(overlay);
   }
   return wrapDiv;
-}
-
-function renderMinimap(you, worldData, camX, camY) {
-  if (!minimapBase || minimapWorldRef !== worldData) buildMinimapBase(worldData);
-  const canvas = document.createElement('canvas');
-  canvas.className = 'dbc-minimap';
-  canvas.width = worldData.width;
-  canvas.height = worldData.height;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(minimapBase, 0, 0);
-  ctx.strokeStyle = 'rgba(255,255,255,.9)';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(camX, camY, COLS, ROWS);
-  ctx.fillStyle = '#ff5c5c';
-  ctx.beginPath();
-  ctx.arc(you.x, you.y, 2.5, 0, Math.PI * 2);
-  ctx.fill();
-  canvas.onclick = (event) => {
-    const rect = canvas.getBoundingClientRect();
-    const x = Math.round(((event.clientX - rect.left) / rect.width) * worldData.width);
-    const y = Math.round(((event.clientY - rect.top) / rect.height) * worldData.height);
-    action('move', { x, y });
-  };
-  return canvas;
 }
 
 function timerBar(msRemaining) {
@@ -710,8 +738,46 @@ function renderGatheringPanel(gathering) {
   return panel;
 }
 
-function renderActivePanel(you, others) {
-  if (activePanel === 'inventaris') return renderInventarisPanel(you);
+// Dobbelgevecht: één beest, vier knoppen, een korte logregel per worp — geen
+// reactietijd nodig, elke beurt is één druk op de knop.
+function combatBarRow(label, value, max, kind) {
+  const row = E('div', `dbc-combat-bar-row dbc-combat-bar-${kind}`);
+  row.append(E('span', 'dbc-combat-bar-label', label));
+  const track = E('div', 'dbc-combat-bar-track');
+  const fill = E('div', 'dbc-combat-bar-fill');
+  fill.style.width = `${Math.max(0, Math.min(100, (value / max) * 100))}%`;
+  track.append(fill);
+  row.append(track);
+  row.append(E('span', '', `${Math.max(0, value)}/${max}`));
+  return row;
+}
+
+function renderCombatPanel(combat) {
+  if (!combat) return null;
+  const panel = E('div', 'dbc-combat');
+  panel.append(E('div', 'dbc-combat-heading', `${combat.icon} ${combat.name}`));
+  const bars = E('div', 'dbc-combat-bars');
+  bars.append(combatBarRow('Jij', combat.youHealth, combat.youMaxHealth, 'you'));
+  bars.append(combatBarRow(combat.name, combat.enemyHp, combat.enemyMaxHp, 'enemy'));
+  panel.append(bars);
+  panel.append(E('div', 'dbc-combat-log', combat.log[0] || 'Kies je actie...'));
+  const actions = E('div', 'dbc-combat-actions');
+  const attack = E('button', 'primary', '⚔️ Aanvallen');
+  attack.onclick = () => action('huntAction', { choice: 'attack' });
+  const defend = E('button', 'secondary', '🛡️ Verdedigen');
+  defend.onclick = () => action('huntAction', { choice: 'defend' });
+  const drink = E('button', 'secondary', '🍖 Eten');
+  drink.disabled = !combat.canDrink;
+  drink.onclick = () => action('huntAction', { choice: 'drink' });
+  const flee = E('button', 'secondary', '🏃 Vluchten');
+  flee.onclick = () => action('huntAction', { choice: 'flee' });
+  actions.append(attack, defend, drink, flee);
+  panel.append(actions);
+  return panel;
+}
+
+function renderActivePanel(you, others, harbors) {
+  if (activePanel === 'inventaris') return renderInventarisPanel(you, harbors);
   if (activePanel === 'markt') return renderMarktplaatsPanel(you, others);
   if (activePanel === 'vaardigheden') return renderVaardighedenPanel(you);
   if (activePanel === 'monument') return renderMonumentPanel(you);
@@ -736,7 +802,7 @@ function renderMapPanel(you) {
   canvas.height = world.height;
   const ctx = canvas.getContext('2d');
   ctx.drawImage(minimapBase, 0, 0);
-  ctx.fillStyle = '#ff5c5c';
+  ctx.fillStyle = '#A34433';
   ctx.beginPath();
   ctx.arc(you.x, you.y, 1.8, 0, Math.PI * 2);
   ctx.fill();
@@ -744,8 +810,14 @@ function renderMapPanel(you) {
   return wrap;
 }
 
-// Boot-tiertekst — de index is het bootniveau (0..3).
-const BOAT_TIER_TEXT = ['Je kunt nog niet het water op.', 'Je vaart over rivieren.', 'Je vaart over rivieren en de kust.', 'Je vaart overal, tot op open zee.'];
+// Vaartuignaam per bootniveau (0..3), met de zone die je er vanaf kunt
+// bereiken — de dobbelsteen/het schip communiceert zelf de voortgang.
+const BOAT_TIER_TEXT = [
+  'Kano — je kunt nog niet het water op.',
+  'Vlot — je vaart over de kustwateren (Kelpwouden).',
+  'Sloep — je vaart tot in de Wadzee.',
+  'Langschip — je vaart overal, tot in de Rifzee.'
+];
 
 function renderSubtabs(tabs, activeId, onSelect) {
   const row = E('div', 'dbc-subtab-row');
@@ -759,7 +831,8 @@ function renderSubtabs(tabs, activeId, onSelect) {
 }
 
 // Uitrusting: per categorie de eigen items als aan/uit-knoppen (actief item
-// gemarkeerd). Kopen gebeurt op de Marktplaats; hier enkel bekijken/wisselen.
+// gemarkeerd), met een slijtagebalk en een Herstellen-knop zodra een stuk
+// niet meer volledig intact is. Kopen gebeurt op de Marktplaats.
 function renderEquipSection(you) {
   const wrap = E('div', 'dbc-equip-section');
   wrap.append(E('h5', '', 'Uitrusting'));
@@ -771,17 +844,23 @@ function renderEquipSection(you) {
     if (!slot.owned.length) {
       card.append(E('p', 'dbc-gear-help', 'Nog niets gekocht — bezoek de Marktplaats.'));
     } else {
-      const row = E('div', 'dbc-equip-row');
-      slot.owned.forEach((id) => {
-        const item = slot.catalog.find((entry) => entry.id === id);
+      slot.owned.forEach((ownedEntry) => {
+        const item = slot.catalog.find((entry) => entry.id === ownedEntry.id);
         if (!item) return;
-        const isEquipped = slot.equipped === id;
+        const isEquipped = slot.equipped === ownedEntry.id;
+        const row = E('div', 'dbc-equip-row');
         const btn = E('button', `dbc-subtab-btn${isEquipped ? ' active' : ''}`, `${item.icon} ${item.name}`);
         btn.type = 'button';
-        btn.onclick = () => action('equipGear', { category, id: isEquipped ? null : id });
+        btn.onclick = () => action('equipGear', { category, id: isEquipped ? null : ownedEntry.id });
         row.append(btn);
+        row.append(E('span', 'dbc-inventory-quality', `🔧 ${ownedEntry.durability}/${ownedEntry.maxDurability}`));
+        if (ownedEntry.durability < ownedEntry.maxDurability) {
+          const repair = E('button', 'secondary', 'Herstellen');
+          repair.onclick = () => action('repairGear', { category, id: ownedEntry.id });
+          row.append(repair);
+        }
+        card.append(row);
       });
-      card.append(row);
     }
     wrap.append(card);
   });
@@ -796,7 +875,28 @@ const INVENTARIS_TABS = [
   { id: 'bouwen', icon: '🔨', label: 'Bouwen' }
 ];
 
-function renderInventarisPanel(you) {
+function renderBouwenSection(you, harbors) {
+  const wrap = E('div', 'dbc-panel');
+  const mine = (harbors || []).find((harbor) => harbor.ownerId === you.id);
+  if (mine) {
+    const card = E('div', 'dbc-gear-card');
+    card.append(E('div', 'dbc-gear-title', '⚓ Aanlegsteiger'));
+    card.append(E('p', 'dbc-gear-help', `Gebouwd op (${mine.x}, ${mine.y}). Je boot ligt hier veilig terwijl je in deze wereld bent.`));
+    wrap.append(card);
+    return wrap;
+  }
+  const card = E('div', 'dbc-build-stub');
+  card.append(E('div', 'dbc-gear-title', '⚓ Aanlegsteiger bouwen'));
+  card.append(E('p', 'dbc-gear-help', `Kost €${200} en moet op een strandtegel staan — loop naar het strand en bouw hier.`));
+  const button = E('button', 'primary', `Bouw hier (€200)`);
+  button.disabled = you.cash < 200;
+  button.onclick = () => action('buildHarbor', { x: you.x, y: you.y });
+  card.append(button);
+  wrap.append(card);
+  return wrap;
+}
+
+function renderInventarisPanel(you, harbors) {
   const wrap = E('div', 'dbc-panel');
   wrap.append(E('h4', '', '🎒 Inventaris'));
   wrap.append(E('p', 'dbc-panel-copy', 'Al je bezittingen, je setvoortgang en je uitrusting op één plek.'));
@@ -831,10 +931,7 @@ function renderInventarisPanel(you) {
     wrap.append(grid);
     wrap.append(renderEquipSection(you));
   } else if (inventarisTab === 'bouwen') {
-    const stub = E('div', 'dbc-build-stub');
-    stub.append(E('div', 'dbc-gear-title', '🔨 Bouwen'));
-    stub.append(E('p', 'dbc-gear-help', 'Binnenkort beschikbaar: bouw eigen constructies met je verzamelde hout en steen.'));
-    wrap.append(stub);
+    wrap.append(renderBouwenSection(you, harbors));
   }
   return wrap;
 }
@@ -849,11 +946,11 @@ function renderShopSection(you) {
     wrap.append(E('h5', '', `${meta.icon} ${meta.label}`));
     const grid = E('div', 'dbc-gear-grid');
     slot.catalog.forEach((item) => {
-      const owned = slot.owned.includes(item.id);
+      const owned = slot.owned.some((entry) => entry.id === item.id);
       const card = E('div', 'dbc-gear-card');
       const statLine = item.armor ? `Pantser +${item.armor}` : `Aanval +${item.attack}`;
       card.append(E('div', 'dbc-gear-title', `${item.icon} ${item.name}`));
-      card.append(E('p', 'dbc-gear-help', statLine));
+      card.append(E('p', 'dbc-gear-help', `${statLine} · slijtvastheid ${item.maxDurability}`));
       const button = E('button', 'secondary', owned ? 'In bezit' : `Kopen (€${item.price})`);
       button.disabled = owned || you.cash < item.price;
       button.onclick = () => action('buyGear', { category, id: item.id });
@@ -1128,9 +1225,33 @@ const INVENTORY_LABELS = {
   meat: { title: 'Vlees', empty: 'Nog niets buitgemaakt.', itemKey: 'item' }
 };
 
+// Kookvuur: een vaste rij recepten (zie DISH_DISPLAY) die het eerste
+// niet-'dish' stuk vlees omzet naar een gerecht met een buff — geen aparte
+// "kies je tweede ingrediënt"-stap nodig, de server kiest het beschikbare
+// vlees automatisch.
+function renderCookSection(you) {
+  const wrap = E('div', 'dbc-inventory');
+  wrap.append(E('h4', '', '🔥 Kookvuur'));
+  wrap.append(E('p', 'dbc-panel-copy', 'Bereidt het eerste rauwe of geroosterde stuk vlees tot een gerecht met een tijdelijke buff.'));
+  const hasRaw = you.meatInventory.some((item) => item.quality !== 'dish');
+  const grid = E('div', 'dbc-gear-grid');
+  DISH_DISPLAY.forEach((dish) => {
+    const card = E('div', 'dbc-gear-card');
+    card.append(E('div', 'dbc-gear-title', `${dish.icon} ${dish.name}`));
+    card.append(E('p', 'dbc-gear-help', `${dish.buffIcon} ${dish.buffLabel}`));
+    const button = E('button', 'secondary', `Bereiden (€${dish.cost})`);
+    button.disabled = !hasRaw || you.cash < dish.cost;
+    button.onclick = () => action('cook', { station: 'kookvuur', recipeId: dish.id });
+    card.append(button);
+    grid.append(card);
+  });
+  wrap.append(grid);
+  return wrap;
+}
+
 // `mode` bepaalt de actie per rij: 'sell' (Marktplaats, standaard) toont
 // selectie + verkoopknoppen, 'readOnly' (Inventaris: vis/hout/steen) toont
-// enkel de lijst, 'eat' (Inventaris: vlees) toont een Eet-knop i.p.v. Verkoop.
+// enkel de lijst, 'eat' (Inventaris: vlees) toont kwaliteit + Roosteren/Eet.
 function renderInventory(you, kind = 'fish', { mode = 'sell' } = {}) {
   const list = kind === 'fish' ? you.inventory : kind === 'wood' ? you.woodInventory : kind === 'rock' ? you.rockInventory : you.meatInventory;
   const labels = INVENTORY_LABELS[kind];
@@ -1139,6 +1260,7 @@ function renderInventory(you, kind = 'fish', { mode = 'sell' } = {}) {
   wrap.append(E('h4', '', `${labels.title} (${list.length})`));
   if (!list.length) {
     wrap.append(E('p', 'dbc-empty', labels.empty));
+    if (mode === 'eat') wrap.append(renderCookSection(you));
     return wrap;
   }
 
@@ -1176,7 +1298,15 @@ function renderInventory(you, kind = 'fish', { mode = 'sell' } = {}) {
     }
     row.append(E('span', 'dbc-inventory-label', `${entry.icon} ${entry.name} · ${item.weightKg.toFixed(1)} kg`));
     if (mode === 'eat') {
+      const qualityChip = E('span', `dbc-inventory-quality ${item.quality}`, QUALITY_LABEL[item.quality] || 'Rauw');
+      if (item.buff) qualityChip.title = `${item.buff.icon} ${item.buff.label}`;
+      row.append(qualityChip);
       row.append(E('span', 'dbc-inventory-price', `⚡${entry.energy}`));
+      if (item.quality === 'raw') {
+        const roast = E('button', 'secondary', 'Roosteren');
+        roast.onclick = () => action('cook', { station: 'kampvuur', uid: item.uid });
+        row.append(roast);
+      }
       const eatButton = E('button', 'secondary', 'Eet');
       eatButton.onclick = () => action('eat', { uid: item.uid });
       row.append(eatButton);
@@ -1191,5 +1321,6 @@ function renderInventory(you, kind = 'fish', { mode = 'sell' } = {}) {
     listWrap.append(row);
   });
   wrap.append(listWrap);
+  if (mode === 'eat') wrap.append(renderCookSection(you));
   return wrap;
 }

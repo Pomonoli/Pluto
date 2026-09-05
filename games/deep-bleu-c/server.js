@@ -1,9 +1,10 @@
 'use strict';
 
-const { getWorld, isWalkable, isWater, resourceAt, nearestWalkable, findPath, hexDistance, biomeAt } = require('./worldgen');
+const { getWorld, isWalkable, isWater, resourceAt, nearestWalkable, findPath, hexDistance, biomeAt, tileAt } = require('./worldgen');
 const { SETS, fishForBiome, getFish, priceFor: fishPriceFor } = require('./fish');
 const resources = require('./resources');
 const gear = require('./gear');
+const recipes = require('./recipes');
 
 const STEP_MS = 170;
 const HOOK_WINDOW_MS = 900;
@@ -33,9 +34,34 @@ const GEAR_LABEL = { rod: 'hengel', bait: 'aas', boat: 'boot', axe: 'bijl', pick
 const MAX_HEALTH = 100;
 const MAX_ENERGY = 100;
 const ENERGY_COST_PER_ACTION = 3;
-const HUNT_DAMAGE_MIN = 6;
-const HUNT_DAMAGE_MAX = 16;
 const FAINT_HEALTH_RESTORE = 0.5;
+
+// Dobbelgevecht bij de jacht: dobbelsteentier 0 = geen wapen/pantser (1d4),
+// tier 1-4 komt overeen met de vier winkeltiers in gear.js. Zo communiceert
+// de dobbelsteen zelf de kwaliteit van je uitrusting, zonder dat een speler
+// getallen hoeft te lezen.
+const DICE_BY_TIER = [
+  { count: 1, sides: 4 }, { count: 1, sides: 6 }, { count: 1, sides: 8 }, { count: 2, sides: 8 }, { count: 2, sides: 10 }
+];
+const HUNTING_SKILL_BONUS_STEP = 10;
+const FLEE_CHANCE = { common: 0.65, uncommon: 0.55, rare: 0.45, epic: 0.35 };
+const HUNT_GEAR_WEAR = 3;
+const DRINK_HEAL_PLAIN = 8;
+const DRINK_HEAL_DISH = 15;
+const HARBOR_COST = 200;
+
+// Slijtage op combat-gear (kleding/wapens/schilden): elk stuk heeft een eigen
+// (speler-specifieke) `maxDurability` die bij reparatie een beetje daalt —
+// zo hoeft een prijs-/statwijziging in gear.js nooit al opgeslagen spelerdata
+// te raken, en blijft "je moet ooit een nieuwe maken" een echt eindpunt.
+const REPAIR_COST_PER_POINT = 2;
+const REPAIR_MAX_LOSS_FRACTION = 0.1;
+
+// Dag/nacht: een versnelde, sessie-gebonden cyclus (geen wandkloktijd — een
+// sessie duurt vaak maar 10-15 minuten) die nachtsoorten ontgrendelt en de
+// kaart een andere sfeer geeft.
+const DAY_LENGTH_MS = 22 * 60 * 1000;
+const NIGHT_FRACTION = 0.32;
 
 // Vaardigheden-skilltree: elke vangst/kap/delving/jacht/nieuwe-soort-ontdekking/
 // ruil levert xp op voor de bijhorende vaardigheid, van niveau 1 tot 99 — net
@@ -103,24 +129,9 @@ const GATHER_CONFIG = {
     lateMiss: 'Mis geslagen! Het houweel ketst af.',
     haulMiss: 'Het brok viel terug, je moet opnieuw beginnen.',
     resultVerb: 'Gedolven'
-  },
-  // Jagen heeft geen `toolKey` (levelbonus): die komt in plaats daarvan van je
-  // uitgeruste wapen (zie weaponTierBonus). Een mislukte jacht kost bovendien
-  // gezondheid — het dier verweert zich — verminderd door je uitgeruste pantser.
-  animal: {
-    toolKey: null,
-    label: 'wild dier',
-    startLog: 'Je sluipt op het dier af...',
-    strikeText: 'Nu! Val aan!',
-    strikeVerb: 'Aanvallen',
-    haulText: 'Maak de vangst af!',
-    haulVerb: 'Buit binnenhalen',
-    earlyMiss: 'Het dier merkt je nog niet, wacht op je kans.',
-    lateMiss: 'Mis! Het dier bijt van zich af.',
-    haulMiss: 'Het dier rukt los en verwondt je in de worsteling.',
-    resultVerb: 'Buit',
-    dealsDamage: true
   }
+  // Jagen op wild ('animal') gebruikt geen tijdvenster-QTE meer, maar een
+  // dobbelsteen-gevecht — zie doHuntStart/doHuntAction hieronder.
 };
 
 function inventoryFieldFor(kind) {
@@ -152,11 +163,41 @@ function equippedItem(player, category) {
 function armorValue(player) {
   return (equippedItem(player, 'clothes')?.armor || 0) + (equippedItem(player, 'shields')?.armor || 0);
 }
-function weaponTierBonus(player) {
+// Dobbelsteentier (0..4) van het uitgeruste wapen/pantser — index in
+// DICE_BY_TIER. Pantser heeft geen aparte "tier"-lijst; de gecombineerde
+// armorValue wordt in plaats daarvan gewoon in buckets van 6 verdeeld.
+function weaponTier(player) {
   const weapon = equippedItem(player, 'weapons');
   if (!weapon) return 0;
-  const tier = gear.WEAPONS.findIndex((entry) => entry.id === weapon.id) + 1;
-  return tier * TOOL_STRIKE_BONUS_MS;
+  const idx = gear.WEAPONS.findIndex((entry) => entry.id === weapon.id);
+  return idx === -1 ? 0 : idx + 1;
+}
+function armorTier(player) {
+  return Math.max(0, Math.min(DICE_BY_TIER.length - 1, Math.floor(armorValue(player) / 6)));
+}
+function rollDice(count, sides) {
+  let total = 0;
+  for (let i = 0; i < count; i += 1) total += 1 + Math.floor(Math.random() * sides);
+  return total;
+}
+function skillBonus(player, skillKey) {
+  return Math.floor(levelForXp(player.skills[skillKey]) / HUNTING_SKILL_BONUS_STEP);
+}
+
+// Buffs komen van gerechten (recipes.js) en zijn puur sessie-gebonden (niet
+// opgeslagen tussen bezoeken) — vervallen automatisch via tick().
+function hasBuff(player, buffId) {
+  return (player.buffs || []).some((b) => b.id === buffId && b.until > Date.now());
+}
+function applyBuff(player, buffId) {
+  if (!recipes.getBuff(buffId)) return;
+  player.buffs = (player.buffs || []).filter((b) => b.id !== buffId);
+  player.buffs.push({ id: buffId, until: Date.now() + recipes.BUFF_DURATION_MS });
+}
+
+function dayPhaseFor(game) {
+  const elapsed = (Date.now() - game.clock.startedAt) % DAY_LENGTH_MS;
+  return elapsed / DAY_LENGTH_MS >= (1 - NIGHT_FRACTION) ? 'night' : 'day';
 }
 
 // Ruilen werkt over alle vier voorraadtypes heen. `nextUid` is één gedeelde
@@ -182,6 +223,7 @@ function defaultSetBonuses() { return Object.fromEntries(allSets().map((set) => 
 function defaultStats() { return { health: MAX_HEALTH, energy: MAX_ENERGY }; }
 function defaultGearOwned() { return Object.fromEntries(gear.CATEGORIES.map((category) => [category, []])); }
 function defaultEquipped() { return Object.fromEntries(gear.CATEGORIES.map((category) => [category, null])); }
+function defaultGearDurability() { return Object.fromEntries(gear.CATEGORIES.map((category) => [category, {}])); }
 
 function sanitizeItems(kind, discoveredRaw, inventoryRaw) {
   const known = new Set(resources.poolFor(kind).map((item) => item.id));
@@ -189,6 +231,12 @@ function sanitizeItems(kind, discoveredRaw, inventoryRaw) {
   const inventory = Array.isArray(inventoryRaw)
     ? inventoryRaw.filter((item) => item && known.has(item.speciesId) && Number.isFinite(item.weightKg))
     : [];
+  if (kind === 'meat') {
+    for (const item of inventory) {
+      if (item.quality !== 'roasted' && item.quality !== 'dish') item.quality = 'raw';
+      if (item.quality !== 'dish') delete item.buffId;
+    }
+  }
   return { discovered, inventory };
 }
 
@@ -223,6 +271,22 @@ function sanitizeSaved(saved) {
     const id = saved?.equipped?.[category];
     if (id && gearOwned[category].includes(id)) equipped[category] = id;
   }
+  const gearDurability = defaultGearDurability();
+  for (const category of gear.CATEGORIES) {
+    const rawCategory = saved?.gearDurability?.[category] || {};
+    for (const id of gearOwned[category]) {
+      const item = gear.getGear(category, id);
+      if (!item) continue;
+      const rawEntry = rawCategory[id];
+      const maxDurability = Number.isFinite(Number(rawEntry?.maxDurability))
+        ? Math.max(10, Math.min(item.maxDurability, Math.round(Number(rawEntry.maxDurability))))
+        : item.maxDurability;
+      const durability = Number.isFinite(Number(rawEntry?.durability))
+        ? Math.max(0, Math.min(maxDurability, Math.round(Number(rawEntry.durability))))
+        : maxDurability;
+      gearDurability[category][id] = { durability, maxDurability };
+    }
+  }
   const stats = defaultStats();
   const health = Number(saved?.stats?.health);
   if (Number.isFinite(health)) stats.health = Math.max(0, Math.min(MAX_HEALTH, Math.round(health)));
@@ -240,6 +304,7 @@ function sanitizeSaved(saved) {
     meatInventory: meat.inventory,
     gear: toolLevels,
     gearOwned,
+    gearDurability,
     equipped,
     stats,
     setBonuses,
@@ -249,7 +314,8 @@ function sanitizeSaved(saved) {
 }
 
 function weightedFish(list, player) {
-  const raretyMultiplier = BAIT_RARE_MULTIPLIER ** (player?.gear?.bait || 0);
+  const buffMultiplier = hasBuff(player, 'lineStrength') ? 1.4 : 1;
+  const raretyMultiplier = BAIT_RARE_MULTIPLIER ** (player?.gear?.bait || 0) * buffMultiplier;
   const weightFor = (fish) => {
     const base = RARITY_WEIGHT[fish.rarity] || 1;
     return fish.rarity === 'rare' || fish.rarity === 'epic' ? base * raretyMultiplier : base;
@@ -305,6 +371,7 @@ function createGame(roomPlayers) {
       meatDiscovered: saved ? saved.meatDiscovered : [],
       gear: saved ? saved.gear : defaultGear(),
       gearOwned: saved ? saved.gearOwned : defaultGearOwned(),
+      gearDurability: saved ? saved.gearDurability : defaultGearDurability(),
       equipped: saved ? saved.equipped : defaultEquipped(),
       stats: saved ? saved.stats : defaultStats(),
       setBonuses: saved ? saved.setBonuses : defaultSetBonuses(),
@@ -312,6 +379,8 @@ function createGame(roomPlayers) {
       heaviestKg: saved ? saved.heaviestKg : 0,
       fishing: null,
       gathering: null,
+      combat: null,
+      buffs: [],
       nextUid: 1
     };
   });
@@ -320,7 +389,9 @@ function createGame(roomPlayers) {
     resultText: '',
     log: ['Je staat klaar om uit te varen.'],
     players,
-    trades: []
+    trades: [],
+    harbors: [],
+    clock: { startedAt: Date.now() }
   };
 }
 
@@ -342,6 +413,7 @@ function afterStateChange(room, { db }) {
       meatDiscovered: player.meatDiscovered,
       gear: player.gear,
       gearOwned: player.gearOwned,
+      gearDurability: player.gearDurability,
       equipped: player.equipped,
       stats: player.stats,
       setBonuses: player.setBonuses,
@@ -352,6 +424,7 @@ function afterStateChange(room, { db }) {
 }
 
 function doMove(game, player, payload) {
+  if (player.combat) throw new Error('Je zit midden in een gevecht — vecht het uit of vlucht.');
   const world = getWorld();
   const tx = Math.round(Number(payload.x));
   const ty = Math.round(Number(payload.y));
@@ -371,6 +444,7 @@ function doMove(game, player, payload) {
 }
 
 function doCast(game, player, payload) {
+  if (player.combat) throw new Error('Je zit midden in een gevecht — vecht het uit of vlucht.');
   const world = getWorld();
   if (player.path.length) throw new Error('Blijf even stilstaan om te vissen.');
   if (player.fishing && player.fishing.phase !== 'result') throw new Error('Je hengel ligt al uit.');
@@ -392,7 +466,7 @@ function doHook(game, player) {
     player.fishing = null;
     throw new Error(fishing?.phase === 'cast' ? 'Nog geen beet, wacht even.' : 'Te laat! De vis is ontsnapt.');
   }
-  const species = fishForBiome(fishing.biome);
+  const species = fishForBiome(fishing.biome, dayPhaseFor(game) === 'night');
   const fish = weightedFish(species, player);
   const weightKg = rollWeight(fish);
   player.fishing = {
@@ -454,38 +528,31 @@ function applySetCompletionBonus(game, player, kind) {
   }
 }
 
-// Een mislukte jachtpoging (te laat toegeslagen, of de buit ontglipt bij het
-// afmaken) laat het dier zich verweren — schade verminderd door pantser, kan
-// de speler laten flauwvallen (teruggebracht naar het dorp, halve gezondheid).
-function applyHuntDamage(game, player) {
-  const raw = HUNT_DAMAGE_MIN + Math.random() * (HUNT_DAMAGE_MAX - HUNT_DAMAGE_MIN);
-  const damage = Math.max(1, Math.round(raw - armorValue(player)));
-  player.stats.health = Math.max(0, player.stats.health - damage);
-  game.log.unshift(`Het dier verwondt je: -${damage} gezondheid.`);
-  if (player.stats.health <= 0) {
-    const world = getWorld();
-    player.x = world.spawn.x;
-    player.y = world.spawn.y;
-    player.path = [];
-    player.stats.health = Math.round(MAX_HEALTH * FAINT_HEALTH_RESTORE);
-    game.log.unshift(`${player.name} valt flauw en wordt teruggebracht naar het dorp.`);
-  }
+// De speler die tijdens een gevecht (dobbelgevecht bij de jacht) flauwvalt,
+// wordt teruggebracht naar het dorp op halve gezondheid — nooit permadeath.
+function faintPlayer(game, player) {
+  const world = getWorld();
+  player.x = world.spawn.x;
+  player.y = world.spawn.y;
+  player.path = [];
+  player.stats.health = Math.round(MAX_HEALTH * FAINT_HEALTH_RESTORE);
+  game.log.unshift(`${player.name} valt flauw en wordt teruggebracht naar het dorp.`);
 }
 
 function doGatherStart(game, player, payload) {
+  if (player.combat) throw new Error('Je zit midden in een gevecht — vecht het uit of vlucht.');
   const kind = String(payload.kind || '');
   const config = GATHER_CONFIG[kind];
   if (!config) throw new Error('Onbekende verzamelactie.');
   const world = getWorld();
   if (player.path.length) throw new Error('Blijf even stilstaan.');
-  const busyLabel = config.toolKey ? GEAR_LABEL[config.toolKey] : 'jacht';
-  if (player.gathering && player.gathering.phase !== 'result') throw new Error(`Je ${busyLabel} is al bezig.`);
+  if (player.gathering && player.gathering.phase !== 'result') throw new Error(`Je ${GEAR_LABEL[config.toolKey]} is al bezig.`);
   if (player.stats.energy <= 0) throw new Error('Je bent te uitgeput. Eet iets om energie te herstellen.');
   const tx = Math.round(Number(payload.x));
   const ty = Math.round(Number(payload.y));
   if (hexDistance(player.x, player.y, tx, ty) > 1) throw new Error('Dat is te ver weg.');
   if (resourceAt(world, tx, ty) !== kind) {
-    throw new Error(kind === 'wood' ? 'Daar staat geen boom.' : kind === 'rock' ? 'Daar zit geen delfbare rots.' : 'Daar zit geen wild dier.');
+    throw new Error(kind === 'wood' ? 'Daar staat geen boom.' : 'Daar zit geen delfbare rots.');
   }
   const now = Date.now();
   player.gathering = { kind, phase: 'cast', bitesAt: now + BITE_MIN_MS + Math.random() * (BITE_MAX_MS - BITE_MIN_MS) };
@@ -499,7 +566,6 @@ function doGatherStrike(game, player) {
   if (!gathering || gathering.phase !== 'bite' || now > gathering.hookDeadline) {
     player.gathering = null;
     const early = gathering?.phase === 'cast';
-    if (!early && config?.dealsDamage) applyHuntDamage(game, player);
     throw new Error(early ? (config?.earlyMiss || 'Nog niet klaar.') : (config?.lateMiss || 'Te laat.'));
   }
   const item = weightedItem(resources.poolFor(gathering.kind));
@@ -519,7 +585,6 @@ function doGatherHaul(game, player) {
   const now = Date.now();
   if (!gathering || gathering.phase !== 'reel' || now > gathering.reelDeadline) {
     player.gathering = null;
-    if (config?.dealsDamage) applyHuntDamage(game, player);
     throw new Error(config?.haulMiss || 'Het glipte weg.');
   }
   const kind = gathering.kind;
@@ -542,7 +607,7 @@ function doGatherHaul(game, player) {
     resultUntil: now + RESULT_DISPLAY_MS
   };
   game.log.unshift(`${config.resultVerb}: ${item.name} (${gathering.weightKg.toFixed(1)} kg)${isNew ? ' — nieuw!' : ''}`);
-  const skillKey = kind === 'wood' ? 'woodcutting' : kind === 'rock' ? 'mining' : 'hunting';
+  const skillKey = kind === 'wood' ? 'woodcutting' : 'mining';
   addXp(game, player, skillKey, RARITY_XP[item.rarity] || 0);
   if (isNew) { addXp(game, player, 'collecting', COLLECT_XP); applySetCompletionBonus(game, player, kind); }
 }
@@ -602,25 +667,62 @@ function doBuyUpgrade(game, player, payload) {
   game.log.unshift(`Upgrade gekocht: ${category} niveau ${player.gear[category]}.`);
 }
 
+// Kwaliteit (raw/roasted/dish, zie doCook) vermenigvuldigt de energie die een
+// stuk vlees geeft; een 'dish' hangt bovendien een tijdelijke buff aan het
+// eten vast (zie recipes.js).
+function consumeMeat(player, item) {
+  const entry = resources.getItem('meat', item.speciesId);
+  const base = entry?.energy || 0;
+  const multiplier = recipes.QUALITY_MULTIPLIER[item.quality] || 1;
+  const gained = Math.round(base * multiplier);
+  player.stats.energy = Math.min(MAX_ENERGY, player.stats.energy + gained);
+  if (item.quality === 'dish' && item.buffId) applyBuff(player, item.buffId);
+  return { gained, name: entry?.name || 'iets' };
+}
+
 function doEat(game, player, payload) {
   if (!player.meatInventory.length) throw new Error('Je hebt niets om te eten.');
   const uid = String(payload.uid || '');
 
   if (uid === 'all') {
-    const gained = player.meatInventory.reduce((sum, item) => sum + (resources.getItem('meat', item.speciesId)?.energy || 0), 0);
-    player.stats.energy = Math.min(MAX_ENERGY, player.stats.energy + gained);
+    let total = 0;
+    for (const item of player.meatInventory) total += consumeMeat(player, item).gained;
     player.meatInventory = [];
-    game.log.unshift(`Je eet alles op en herstelt ${gained} energie.`);
+    game.log.unshift(`Je eet alles op en herstelt ${total} energie.`);
     return;
   }
 
   const index = player.meatInventory.findIndex((item) => item.uid === uid);
   if (index === -1) throw new Error('Dat heb je niet.');
   const [item] = player.meatInventory.splice(index, 1);
-  const entry = resources.getItem('meat', item.speciesId);
-  const gained = entry?.energy || 0;
-  player.stats.energy = Math.min(MAX_ENERGY, player.stats.energy + gained);
-  game.log.unshift(`Je eet ${entry?.name || 'iets'} op en herstelt ${gained} energie.`);
+  const { gained, name } = consumeMeat(player, item);
+  game.log.unshift(`Je eet ${name} op en herstelt ${gained} energie.`);
+}
+
+function doCook(game, player, payload) {
+  const station = String(payload.station || '');
+  if (station === 'kampvuur') {
+    const uid = String(payload.uid || '');
+    const item = player.meatInventory.find((entry) => entry.uid === uid);
+    if (!item) throw new Error('Dat heb je niet.');
+    if (item.quality !== 'raw') throw new Error('Dit is al bereid.');
+    item.quality = 'roasted';
+    game.log.unshift('Je roostert het vlees boven het kampvuur.');
+    return;
+  }
+  if (station === 'kookvuur') {
+    const dish = recipes.getDish(String(payload.recipeId || ''));
+    if (!dish) throw new Error('Onbekend recept.');
+    const candidate = player.meatInventory.find((entry) => entry.quality !== 'dish');
+    if (!candidate) throw new Error('Je hebt geen vlees om te bereiden.');
+    if (player.cash < dish.cost) throw new Error('Onvoldoende geld voor kruiden en voorraad.');
+    player.cash -= dish.cost;
+    candidate.quality = 'dish';
+    candidate.buffId = dish.buff.id;
+    game.log.unshift(`Je bereidt ${dish.name} — geeft ${dish.buff.label} bij het eten.`);
+    return;
+  }
+  throw new Error('Onbekend kookstation.');
 }
 
 function doBuyGear(game, player, payload) {
@@ -632,6 +734,7 @@ function doBuyGear(game, player, payload) {
   if (player.cash < item.price) throw new Error('Onvoldoende geld.');
   player.cash -= item.price;
   player.gearOwned[category].push(item.id);
+  player.gearDurability[category][item.id] = { durability: item.maxDurability, maxDurability: item.maxDurability };
   game.log.unshift(`Gekocht: ${item.name} voor €${item.price}.`);
 }
 
@@ -642,6 +745,161 @@ function doEquipGear(game, player, payload) {
   if (id && !player.gearOwned[category].includes(id)) throw new Error('Dat bezit je niet.');
   player.equipped[category] = id;
   game.log.unshift(id ? `Uitgerust: ${gear.getGear(category, id).name}.` : 'Uitrusting verwijderd.');
+}
+
+function doRepairGear(game, player, payload) {
+  const category = String(payload.category || '');
+  if (!gear.CATEGORIES.includes(category)) throw new Error('Onbekende categorie.');
+  const id = String(payload.id || '');
+  const state = player.gearDurability[category]?.[id];
+  if (!state) throw new Error('Dat bezit je niet.');
+  if (state.durability >= state.maxDurability) throw new Error('Dit is al volledig intact.');
+  const missing = state.maxDurability - state.durability;
+  const cost = Math.max(1, Math.ceil(missing * REPAIR_COST_PER_POINT));
+  if (player.cash < cost) throw new Error('Onvoldoende geld.');
+  player.cash -= cost;
+  // Repareren verlaagt het maximum een beetje — uiteindelijk moet je een
+  // nieuwe maken, precies zoals het ontwerp beschrijft.
+  const wear = Math.max(1, Math.round(state.maxDurability * REPAIR_MAX_LOSS_FRACTION));
+  state.maxDurability = Math.max(10, state.maxDurability - wear);
+  state.durability = state.maxDurability;
+  game.log.unshift(`Gerepareerd voor €${cost} — maximale slijtvastheid daalt naar ${state.maxDurability}.`);
+}
+
+function doBuildHarbor(game, player, payload) {
+  const world = getWorld();
+  if (game.harbors.some((harbor) => harbor.ownerId === player.id)) throw new Error('Je hebt al een aanlegsteiger gebouwd.');
+  const tx = Math.round(Number(payload.x));
+  const ty = Math.round(Number(payload.y));
+  if (hexDistance(player.x, player.y, tx, ty) > 1) throw new Error('Dat is te ver weg.');
+  if (tileAt(world, tx, ty) !== 'B') throw new Error('Een aanlegsteiger moet aan een strand liggen.');
+  if (player.cash < HARBOR_COST) throw new Error('Onvoldoende geld.');
+  player.cash -= HARBOR_COST;
+  game.harbors.push({ id: `harbor-${player.id}`, x: tx, y: ty, ownerId: player.id, ownerName: player.name, tier: 1 });
+  game.log.unshift(`${player.name} bouwt een aanlegsteiger.`);
+}
+
+// ---- Dobbelgevecht bij de jacht -------------------------------------------
+
+function degradeEquippedGear(game, player) {
+  for (const category of gear.CATEGORIES) {
+    const id = player.equipped[category];
+    if (!id) continue;
+    const state = player.gearDurability[category]?.[id];
+    if (!state) continue;
+    state.durability = Math.max(0, state.durability - HUNT_GEAR_WEAR);
+    if (state.durability <= 0) {
+      const item = gear.getGear(category, id);
+      player.gearOwned[category] = player.gearOwned[category].filter((ownedId) => ownedId !== id);
+      delete player.gearDurability[category][id];
+      player.equipped[category] = null;
+      game.log.unshift(`${item?.name || 'Uitrusting'} is versleten en kapot gegaan.`);
+    }
+  }
+}
+
+function doHuntStart(game, player, payload) {
+  if (player.combat) throw new Error('Je zit al midden in een gevecht.');
+  if (player.path.length) throw new Error('Blijf even stilstaan.');
+  if (player.gathering && player.gathering.phase !== 'result') throw new Error('Je bent al bezig.');
+  if (player.stats.energy <= 0) throw new Error('Je bent te uitgeput. Eet iets om energie te herstellen.');
+  const world = getWorld();
+  const tx = Math.round(Number(payload.x));
+  const ty = Math.round(Number(payload.y));
+  if (hexDistance(player.x, player.y, tx, ty) > 1) throw new Error('Dat is te ver weg.');
+  if (resourceAt(world, tx, ty) !== 'animal') throw new Error('Daar zit geen wild dier.');
+  const item = weightedItem(resources.poolFor('meat', { isNight: dayPhaseFor(game) === 'night' }));
+  player.combat = { speciesId: item.id, enemyHp: item.combat.hp, enemyMaxHp: item.combat.hp, log: [`Een ${item.name} valt aan!`] };
+  game.log.unshift(`${player.name} begint een jacht op een ${item.name}.`);
+}
+
+function enemyStrikes(game, player, item, { mitigation = 0, freeHit = false } = {}) {
+  const { count, sides } = item.combat.dice;
+  const roll = rollDice(count, sides);
+  const rawDamage = Math.max(1, roll - (freeHit ? 0 : armorValue(player)));
+  const damage = Math.max(1, Math.round(rawDamage * (1 - mitigation)));
+  player.combat.log.unshift(`${item.name} valt terug (${count}d${sides} → ${roll}) — ${damage} schade.`);
+  player.stats.health = Math.max(0, player.stats.health - damage);
+  if (player.stats.health <= 0) {
+    player.combat = null;
+    faintPlayer(game, player);
+  }
+}
+
+function drinkDuringHunt(player) {
+  if (!player.meatInventory.length) throw new Error('Je hebt niets om te eten tijdens het gevecht.');
+  const rank = { dish: 2, roasted: 1, raw: 0 };
+  let best = player.meatInventory[0];
+  for (const candidate of player.meatInventory) {
+    if ((rank[candidate.quality] || 0) > (rank[best.quality] || 0)) best = candidate;
+  }
+  player.meatInventory.splice(player.meatInventory.indexOf(best), 1);
+  const entry = resources.getItem('meat', best.speciesId);
+  const heal = best.quality === 'dish' ? DRINK_HEAL_DISH : DRINK_HEAL_PLAIN;
+  player.stats.health = Math.min(MAX_HEALTH, player.stats.health + heal);
+  player.combat.log.unshift(`Je eet ${entry?.name || 'iets'} op: +${heal} gezondheid.`);
+  if (best.quality === 'dish' && best.buffId) applyBuff(player, best.buffId);
+}
+
+function resolveHuntVictory(game, player, item) {
+  const isNew = !player.meatDiscovered.includes(item.id);
+  if (isNew) player.meatDiscovered.push(item.id);
+  const weightKg = rollWeight(item);
+  player.meatInventory.push({ uid: `${player.id}-${player.nextUid++}`, speciesId: item.id, weightKg, caughtAt: Date.now(), quality: 'raw' });
+  player.stats.energy = Math.max(0, player.stats.energy - ENERGY_COST_PER_ACTION);
+  degradeEquippedGear(game, player);
+  player.combat = null;
+  game.log.unshift(`Buit: ${item.name} (${weightKg.toFixed(1)} kg)${isNew ? ' — nieuw!' : ''}`);
+  addXp(game, player, 'hunting', RARITY_XP[item.rarity] || 0);
+  if (isNew) { addXp(game, player, 'collecting', COLLECT_XP); applySetCompletionBonus(game, player, 'meat'); }
+}
+
+function doHuntAction(game, player, payload) {
+  const combat = player.combat;
+  if (!combat) throw new Error('Je bent niet aan het jagen.');
+  const item = resources.getItem('meat', combat.speciesId);
+  const choice = String(payload.choice || '');
+
+  if (choice === 'attack') {
+    const tier = weaponTier(player);
+    const { count, sides } = DICE_BY_TIER[tier];
+    const extraDie = hasBuff(player, 'extraDie') ? 1 : 0;
+    const bonus = skillBonus(player, 'hunting');
+    const roll = rollDice(count + extraDie, sides) + bonus;
+    const damage = Math.max(1, roll - item.combat.armor);
+    combat.enemyHp = Math.max(0, combat.enemyHp - damage);
+    combat.log.unshift(`Je gooit ${count + extraDie}d${sides}+${bonus} (${roll}) tegen pantser ${item.combat.armor} → ${damage} schade.`);
+    if (combat.enemyHp <= 0) { resolveHuntVictory(game, player, item); return; }
+    enemyStrikes(game, player, item);
+    return;
+  }
+  if (choice === 'defend') {
+    const tier = armorTier(player);
+    const { count, sides } = DICE_BY_TIER[tier];
+    const roll = rollDice(count, sides);
+    combat.log.unshift(`Je verdedigt je (${count}d${sides} → ${roll}) en herstelt wat energie.`);
+    player.stats.energy = Math.min(MAX_ENERGY, player.stats.energy + 5);
+    enemyStrikes(game, player, item, { mitigation: 0.5 });
+    return;
+  }
+  if (choice === 'drink') {
+    drinkDuringHunt(player);
+    enemyStrikes(game, player, item);
+    return;
+  }
+  if (choice === 'flee') {
+    const chance = FLEE_CHANCE[item.rarity] ?? 0.5;
+    if (Math.random() < chance) {
+      combat.log.unshift('Je ontsnapt.');
+      game.log.unshift(`${player.name} vlucht weg van een ${item.name}.`);
+      player.combat = null;
+      return;
+    }
+    combat.log.unshift('Vluchten mislukt!');
+    enemyStrikes(game, player, item, { freeHit: true });
+    return;
+  }
+  throw new Error('Onbekende actie.');
 }
 
 function doProposeTrade(game, player, payload) {
@@ -741,8 +999,13 @@ function handleAction(game, playerId, action, payload = {}) {
   if (action === 'gatherHaul') return doGatherHaul(game, player);
   if (action === 'buyUpgrade') return doBuyUpgrade(game, player, payload);
   if (action === 'eat') return doEat(game, player, payload);
+  if (action === 'cook') return doCook(game, player, payload);
   if (action === 'buyGear') return doBuyGear(game, player, payload);
   if (action === 'equipGear') return doEquipGear(game, player, payload);
+  if (action === 'repairGear') return doRepairGear(game, player, payload);
+  if (action === 'buildHarbor') return doBuildHarbor(game, player, payload);
+  if (action === 'huntStart') return doHuntStart(game, player, payload);
+  if (action === 'huntAction') return doHuntAction(game, player, payload);
   if (action === 'proposeTrade') return doProposeTrade(game, player, payload);
   if (action === 'respondTrade') return doRespondTrade(game, player, payload);
   throw new Error('Onbekende actie.');
@@ -783,23 +1046,30 @@ function tick(game, now = Date.now()) {
     if (!gathering) continue;
     const config = GATHER_CONFIG[gathering.kind];
     if (gathering.phase === 'cast' && now >= gathering.bitesAt) {
-      const toolBonus = config.toolKey ? (player.gear[config.toolKey] || 0) * TOOL_STRIKE_BONUS_MS : weaponTierBonus(player);
-      const strikeWindow = HOOK_WINDOW_MS + toolBonus;
+      const strikeWindow = HOOK_WINDOW_MS + (player.gear[config.toolKey] || 0) * TOOL_STRIKE_BONUS_MS;
       player.gathering = { ...gathering, phase: 'bite', hookDeadline: now + strikeWindow };
       game.log.unshift(config.strikeText);
       changed = true;
     } else if (gathering.phase === 'bite' && now > gathering.hookDeadline) {
       player.gathering = null;
       game.log.unshift(config.lateMiss);
-      if (config.dealsDamage) applyHuntDamage(game, player);
       changed = true;
     } else if (gathering.phase === 'reel' && now > gathering.reelDeadline) {
       player.gathering = null;
       game.log.unshift(config.haulMiss);
-      if (config.dealsDamage) applyHuntDamage(game, player);
       changed = true;
     } else if (gathering.phase === 'result' && now >= gathering.resultUntil) {
       player.gathering = null;
+      changed = true;
+    }
+  }
+  for (const player of game.players) {
+    const before = (player.buffs || []).length;
+    player.buffs = (player.buffs || []).filter((b) => b.until > now);
+    if (player.buffs.length !== before) changed = true;
+    if (hasBuff(player, 'energyRegen') && now >= (player.nextEnergyRegenAt || 0) && player.stats.energy < MAX_ENERGY) {
+      player.stats.energy = Math.min(MAX_ENERGY, player.stats.energy + 2);
+      player.nextEnergyRegenAt = now + 5000;
       changed = true;
     }
   }
@@ -865,9 +1135,42 @@ function serializeItemSets(kind, discoveredList) {
 function serializeGearSlot(player, category) {
   return {
     catalog: gear.catalogFor(category),
-    owned: player.gearOwned[category],
+    owned: player.gearOwned[category].map((id) => {
+      const state = player.gearDurability[category]?.[id];
+      const item = gear.getGear(category, id);
+      return {
+        id,
+        durability: state?.durability ?? item?.maxDurability ?? 0,
+        maxDurability: state?.maxDurability ?? item?.maxDurability ?? 0
+      };
+    }),
     equipped: player.equipped[category]
   };
+}
+
+function serializeCombat(player) {
+  if (!player.combat) return null;
+  const item = itemLookup('meat', player.combat.speciesId);
+  return {
+    speciesId: player.combat.speciesId,
+    name: item?.name || '',
+    icon: item?.icon || '🐾',
+    enemyHp: player.combat.enemyHp,
+    enemyMaxHp: player.combat.enemyMaxHp,
+    youHealth: player.stats.health,
+    youMaxHealth: MAX_HEALTH,
+    log: player.combat.log.slice(0, 4),
+    canDrink: player.meatInventory.length > 0
+  };
+}
+
+function serializeBuffs(player, now) {
+  return (player.buffs || [])
+    .filter((b) => b.until > now)
+    .map((b) => {
+      const buff = recipes.getBuff(b.id);
+      return { id: b.id, label: buff?.label || b.id, icon: buff?.icon || '✨', help: buff?.help || '', remainingMs: b.until - now };
+    });
 }
 
 function serialize(game, requesterId) {
@@ -879,6 +1182,8 @@ function serialize(game, requesterId) {
     kind: game.gameKey,
     gameOver: false,
     world: { width: world.width, height: world.height, buildings: world.buildings, boats: world.boats, wildlife: world.wildlife },
+    harbors: game.harbors,
+    dayPhase: dayPhaseFor(game),
     players: game.players.map((p) => ({
       id: p.id,
       name: p.name,
@@ -889,6 +1194,7 @@ function serialize(game, requesterId) {
       discoveredCount: p.discovered.length,
       fishingPhase: p.fishing ? p.fishing.phase : null,
       gatheringKind: p.gathering ? p.gathering.kind : null,
+      inCombat: Boolean(p.combat),
       inventory: p.inventory.map((item) => ({ uid: item.uid, speciesId: item.speciesId, weightKg: item.weightKg, fish: getFish(item.speciesId) }))
     })),
     you: {
@@ -926,7 +1232,8 @@ function serialize(game, requesterId) {
       meatInventory: player.meatInventory.map((item) => ({
         ...item,
         item: resources.getItem('meat', item.speciesId),
-        price: priceForKind('meat', item.speciesId, item.weightKg, bonusFor(player, 'meat', item))
+        price: priceForKind('meat', item.speciesId, item.weightKg, bonusFor(player, 'meat', item)),
+        buff: item.buffId ? recipes.getBuff(item.buffId) : null
       })),
       discovered: player.discovered,
       sets: SETS.map((set) => ({
@@ -959,6 +1266,8 @@ function serialize(game, requesterId) {
       totalLevel: SKILL_KEYS.reduce((sum, key) => sum + levelForXp(player.skills[key]), 0),
       fishing: serializeFishing(player.fishing, now),
       gathering: serializeGathering(player.gathering, now),
+      combat: serializeCombat(player),
+      buffs: serializeBuffs(player, now),
       nearBuilding: nearBuilding
         ? { id: nearBuilding.id, type: nearBuilding.type, name: nearBuilding.name, active: nearBuilding.active }
         : null,

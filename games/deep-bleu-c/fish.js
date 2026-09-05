@@ -165,6 +165,22 @@ const SETS = [
       { id: 'murene', name: 'Murene', icon: '🐍', rarity: 'rare', minKg: 1, maxKg: 12, basePrice: 30 },
       { id: 'tonijnhaai', name: 'Tonijnhaai', icon: '🦈', rarity: 'epic', minKg: 15, maxKg: 100, basePrice: 80 }
     ]
+  },
+  {
+    id: 'nacht-diepte',
+    biome: 'atlantisch',
+    name: 'Nachtdiepte',
+    icon: '🌑',
+    description: 'Vissen die enkel in het donker naar de oppervlakte komen.',
+    rewardGear: 'bait',
+    nightOnly: true,
+    fish: [
+      { id: 'lantaarnvis', name: 'Lantaarnvis', icon: '🐟', rarity: 'common', minKg: 0.05, maxKg: 0.4, basePrice: 9 },
+      { id: 'spookgarnaal', name: 'Spookgarnaal', icon: '🦐', rarity: 'common', minKg: 0.02, maxKg: 0.1, basePrice: 7 },
+      { id: 'nachtaal', name: 'Nachtaal', icon: '🐍', rarity: 'uncommon', minKg: 0.3, maxKg: 3, basePrice: 18 },
+      { id: 'schaduwrog', name: 'Schaduwrog', icon: '🐡', rarity: 'rare', minKg: 2, maxKg: 20, basePrice: 40 },
+      { id: 'maanvis', name: 'Maanvis', icon: '🌕', rarity: 'epic', minKg: 5, maxKg: 40, basePrice: 95 }
+    ]
   }
 ];
 
@@ -175,12 +191,16 @@ const SETS_BY_BIOME = new Map();
 for (const set of SETS) {
   if (!SETS_BY_BIOME.has(set.biome)) SETS_BY_BIOME.set(set.biome, []);
   SETS_BY_BIOME.get(set.biome).push(set);
-  for (const fish of set.fish) FISH_BY_ID.set(fish.id, { ...fish, biome: set.biome, setId: set.id });
+  for (const fish of set.fish) FISH_BY_ID.set(fish.id, { ...fish, biome: set.biome, setId: set.id, nightOnly: Boolean(set.nightOnly) });
 }
 
-function fishForBiome(biome) {
+// `isNight` bepaalt of nachtsoorten (nightOnly-sets) meedoen: overdag vallen
+// ze weg, 's nachts komen ze er gewoon bovenop — bestaande soorten blijven
+// dus altijd vangbaar, ongeacht tijdstip.
+function fishForBiome(biome, isNight = false) {
   const sets = SETS_BY_BIOME.get(biome);
-  return sets ? sets.flatMap((set) => set.fish) : null;
+  if (!sets) return null;
+  return sets.filter((set) => isNight || !set.nightOnly).flatMap((set) => set.fish);
 }
 
 function getFish(id) {
