@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.22.4
+## Nieuw in versie 1.22.5
 
-Alle games gebruiken dezelfde schermvullende gameshell als Age of Civilization. De gedeelde, transparante bovenbanner zweeft boven het spel met de gamenaam in een eigen knopvormige bubbel; de buitenste gamesurface loopt zonder afgeronde hoeken door tot aan de schermranden.
+Age of Civilization toont heldenportretten en aanklikbare spelerskaarten; Pluto-releases kunnen voortaan lokaal veilig worden gepubliceerd.
 
 ## Nieuw in versie 1.22.0
 
@@ -13,7 +13,6 @@ Alle games gebruiken dezelfde schermvullende gameshell als Age of Civilization. 
 ## Nieuw in versie 1.0.0
 
 Alle games zijn ondergebracht in zelfstandige modules onder `games/`. Iedere game beheert daar zijn eigen serverlogica, client-entrypoint, metadata, spelregels en resultaten, en de server ontdekt deze mappen automatisch zonder een hardcoded gamelijst in de centrale registry.
-Actieve spellen gebruiken zoveel mogelijk de volledige schermhoogte zonder paginascroll. De ongebruikte chat en aparte vertrekknoppen zijn verwijderd; het Pluto-logo brengt je rechtstreeks terug naar Home.
 
 ## Games
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.22.5 — Age of Civilization toont heldenportretten en aanklikbare spelerskaarten; Pluto-releases kunnen voortaan lokaal veilig worden gepubliceerd.
+
+- Age of Civilization toont heldenportretten en aanklikbare spelerskaarten; Pluto-releases kunnen voortaan lokaal veilig worden gepubliceerd.
+
 ## v1.22.4 — Gamesurface zonder afgeronde hoeken
 
 - De buitenste fullscreen-gamesurface heeft geen afgeronde hoeken meer en vult het scherm tot aan de randen; interne kaarten en panelen behouden hun eigen vormgeving.

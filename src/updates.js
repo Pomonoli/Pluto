@@ -430,6 +430,12 @@ const RELEASES = [
     improvements:[
       'De buitenste fullscreen-gamesurface loopt nu zonder afgeronde hoeken door tot aan de schermranden.'
     ]
+  },
+  {
+    version:"1.22.5",
+    improvements:[
+      "Age of Civilization toont heldenportretten en aanklikbare spelerskaarten; Pluto-releases kunnen voortaan lokaal veilig worden gepubliceerd."
+    ]
   }
 ];
 
