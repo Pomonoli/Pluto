@@ -12,7 +12,7 @@
   --dbc-shallow:#8FC6CC; --dbc-sea:#4E8FA0; --dbc-sea-deep:#2A5A6B; --dbc-abyss:#17414F;
   --dbc-birch:#F6F2E7; --dbc-ember:#C4611F; --dbc-ember-lit:#EFA04A; --dbc-blood:#A34433;
   --dbc-paper:#FBFCF8; --dbc-panel-bg:#F3F6EF; --dbc-rule:#C7D2C6; --dbc-ink:#24332C; --dbc-ink-2:#5C6B62;
-  display:flex;flex:1;min-height:0;overflow:hidden;flex-direction:column;gap:12px;padding:4px 0 16px;
+  display:flex;flex:1;min-height:0;overflow:hidden;flex-direction:column;
   font-family:'Barlow',system-ui,sans-serif;color:var(--dbc-ink);
 }
 
@@ -239,18 +239,24 @@
 .dbc-wrap button:disabled{opacity:.5;cursor:not-allowed}
 
 /* The map is the fixed game viewport; the controls float on top of it. */
-#gameStage:has(.dbc-wrap){display:flex;flex-direction:column;overflow:hidden!important}
+#gameStage:has(.dbc-wrap){display:flex;flex-direction:column;overflow:hidden!important;padding:0}
 #gameStage:has(.dbc-wrap)>.dbc-wrap{width:100%;min-height:0}
+
+/* De gedeelde gamebanner zweeft boven de schermvullende kaart. Houd de HUD
+   eronder vrij, zonder de kaart zelf kleiner te maken. */
+body.game-active #gameStage:has(.dbc-wrap){padding:0}
+body.game-active #gameStage:has(.dbc-wrap) .dbc-stat-pills{top:calc(68px + env(safe-area-inset-top))}
+body.game-active #gameStage:has(.dbc-wrap) .dbc-stat-bars{top:calc(102px + env(safe-area-inset-top))}
+body.game-active #gameStage:has(.dbc-wrap) .dbc-rail-topleft{top:calc(118px + env(safe-area-inset-top))}
 
 @media(max-width:640px){
   .dbc-trade-columns{grid-template-columns:1fr}
   .dbc-icon-btn{width:44px;height:44px;font-size:18px}
   .dbc-icon-btn.square{width:38px;height:38px;font-size:16px;border-radius:6px}
-  .dbc-rail-topleft{top:54px;left:10px;gap:8px}
+  .dbc-rail-topleft{left:10px;gap:8px}
   .dbc-rail-right{right:10px;gap:9px}
   .dbc-icon-label{font-size:9px}
   .dbc-stat-pill{font-size:11px;padding:4px 9px}
-  .dbc-stat-bars{top:44px}
   .dbc-stat-bar-track{width:44px}
 }
 

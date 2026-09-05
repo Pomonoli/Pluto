@@ -47,10 +47,6 @@ const MINIMAP_RGB = {
 const WATER_CHARS = new Set(['r', 'k', 'a', 'm']);
 const WOOD_TILE = 'f';
 const ROCK_TILE = 'p';
-// De zonenaam bij het huidige tegeltype — vervangt de speltitel niet (elke
-// andere game op dit platform toont er ook zijn eigen naam), maar staat wel
-// prominent in de statusregel, zoals het ontwerp vraagt.
-const ZONE_NAME_BY_TILE = { r: 'Ondiep', k: 'Kelpwouden', a: 'Wadzee', m: 'Rifzee' };
 const GEAR_LABELS = { rod: { icon: '🎣', label: 'Hengel', help: 'Ruimer tijdvenster om aan te slaan bij een beet.' },
   bait: { icon: '🪱', label: 'Aas', help: 'Grotere kans op zeldzame en epische vis.' },
   boat: { icon: '🚤', label: 'Vaartuig', help: 'Vaar verder van kust tot Rifzee — koop deze upgrade in je Inventaris.' },
@@ -96,8 +92,8 @@ const SKILL_LABELS = {
   trading: { icon: '🤝', label: 'Handelen', help: 'Xp voor beide spelers bij elke voltooide ruil.' }
 };
 
-let state, els, E, action, titlebar, logBox, renderGame;
-function bind(api) { ({ state, els, E, action, titlebar, logBox, renderGame } = api); }
+let state, els, E, action, logBox, renderGame;
+function bind(api) { ({ state, els, E, action, logBox, renderGame } = api); }
 
 // Bump whenever worldgen.js changes shape/size — the API response is served
 // with a long-lived immutable cache header, so without a version query a
@@ -169,33 +165,10 @@ export function metric({ player }) {
   return { text: `€${player.cash} · ${player.discoveredCount} soorten`, score: player.discoveredCount };
 }
 
-function zoneNameFor(you) {
-  if (!world) return null;
-  const tile = world.tiles[you.y * world.width + you.x];
-  return ZONE_NAME_BY_TILE[tile] || null;
-}
-
-function statusFor(you) {
-  if (you.combat) return you.combat.log[0] || 'Een dier valt aan!';
-  const fishing = you.fishing;
-  if (fishing?.phase === 'bite') return 'Beet! Trek nu aan!';
-  if (fishing?.phase === 'reel') return 'Haal de vis binnen!';
-  if (fishing?.phase === 'cast') return 'Je wacht op een beet...';
-  if (fishing?.phase === 'result') return fishing.fish ? `Gevangen: ${fishing.fish.name}` : 'Vis ontsnapt.';
-  const gathering = you.gathering;
-  if (gathering?.phase === 'bite') return gathering.strikeText;
-  if (gathering?.phase === 'reel') return gathering.haulText;
-  if (gathering?.phase === 'cast') return GATHER_UI[gathering.kind].bg;
-  if (gathering?.phase === 'result') return gathering.item ? `${gathering.resultVerb}: ${gathering.item.name}` : 'Het glipte weg.';
-  const zone = zoneNameFor(you);
-  return `${zone ? `${zone} · ` : ''}€${you.cash} · ${you.discovered.length} soorten ontdekt`;
-}
-
 function renderDeepBleuC(room, game) {
   const you = game.you;
   const others = (game.players || []).filter((p) => p.id !== you.id);
   els.gameStage.replaceChildren();
-  els.gameStage.append(titlebar('The Big Blue C', statusFor(you)));
 
   const wrap = E('div', 'dbc-wrap');
   const loadedWorld = ensureWorld();
