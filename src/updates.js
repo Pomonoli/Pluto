@@ -412,6 +412,12 @@ const RELEASES = [
       'De gamecontainer is op mobiel, tablet en desktop zelf de schermvullende, randloze ondergrond; terugknop, gametitel en spelmenu liggen voortaan in deze game-oppervlakte.',
       'Age of Civilization toont geen dubbele titel meer, houdt de tijdperk- en beurtstatus op één regel en maakt de spelerskaarten tijdens de leiderskeuze weer duidelijk leesbaar.'
     ]
+  },
+  {
+    version:'1.22.2',
+    improvements:[
+      'The Deep Bleu C toont het hexraster niet langer zichtbaar op de kaart: elk tegeltype heeft één platte kleur zonder tegelrand, zodat aangrenzende tegels van hetzelfde type naadloos in elkaar overlopen tot doorlopend terrein.'
+    ]
   }
 ];
 

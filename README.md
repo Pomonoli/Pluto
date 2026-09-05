@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.22.1
+## Nieuw in versie 1.22.2
 
-De gamecontainer zelf benut op mobiel, tablet en desktop het volledige scherm, zonder buitenmarges, omlijsting of afzonderlijke oranje Pluto-header. Terugknop, gametitel en het bestaande driepuntenmenu liggen in deze game-oppervlakte en houden rekening met veilige schermranden. Age of Civilization vermijdt daarbij een dubbele gametitel en toont de spelerskaarten tijdens de leiderskeuze weer duidelijk.
+**The Deep Bleu C** toont het hexraster niet langer zichtbaar op de kaart: elk tegeltype heeft nu één platte kleur zonder tegelrand, zodat aangrenzende tegels van hetzelfde type naadloos in elkaar overlopen tot doorlopend terrein, met bomen, heuvels, bergen en andere natuurdecors als losse objecten erbovenop.
 
 ## Nieuw in versie 1.22.0
 

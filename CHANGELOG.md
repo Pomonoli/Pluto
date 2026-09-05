@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.22.2 — The Deep Bleu C: hexraster visueel verwijderd
+
+- Elk tegeltype toont nu één platte kleur zonder tegelrand in plaats van een per-tegel gradient, zodat aangrenzende tegels van hetzelfde type naadloos in elkaar overlopen tot doorlopend terrein — het hexraster is niet langer zichtbaar op de kaart.
+- Eén kaartbrede lichtval (los van de tegelgrenzen) geeft nog een vleugje diepte; bomen, heuvels, bergen, golven, gras en zandvlekken blijven als losse decoratieve objecten op dat terrein staan.
+
 ## v1.22.1 — Schermvullende gameshell
 
 - De bestaande gamecontainer is op mobiel, tablet en desktop zelf de schermvullende, randloze ondergrond; buitenmarges, afgeronde omlijsting en de afzonderlijke oranje Pluto-header zijn verwijderd.
