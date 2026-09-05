@@ -170,6 +170,7 @@ function renderCivicRow(E,action,sound,game,you,openModal){
         openModal({
           eyebrow:'Vast gebouw',
           title:civic.name,
+          art:iconNode(E,{age:game.age,name:civic.name,fixed:true},'civ-modal-icon'),
           body:'Aanduiden ontketent meteen een eenmalige, permanente gebeurtenis. Dit kan maar 1x per spel.',
           badges:[`+${civic.eventBonusPct}% ${civic.statLabel}`,'Eenmalig permanent'],
           cost:civic.upgradeCost,
@@ -203,6 +204,7 @@ function renderYourGrid(E,action,sound,game,you,openModal){
       node.onclick=()=>openModal({
         eyebrow:'Jouw stad',
         title:tile.name,
+        art:iconNode(E,{age:game.age,name:tile.name},'civ-modal-icon'),
         body:`Niveau ${tile.level} → ${tile.level+1}`,
         badges:statBadges(tile,{next:true}),
         cost:tile.upgradeCost,
@@ -238,13 +240,20 @@ function playerDetails(E,player){
   return details;
 }
 
-function showCivModal(E,root,{eyebrow,title,body='',content=null,badges=[],health=null,cost=null,confirmLabel='',confirmDisabled=false,onConfirm=null,secondaryLabel='',onSecondary=null,required=false}){
+function showCivModal(E,root,{eyebrow,title,body='',art=null,content=null,badges=[],health=null,cost=null,confirmLabel='',confirmDisabled=false,onConfirm=null,secondaryLabel='',onSecondary=null,required=false}){
   root.querySelector('.civ-modal-backdrop')?.remove();
   const backdrop=E('div','civ-modal-backdrop'),modal=E('div','civ-modal'),actions=E('div','civ-detail-actions civ-modal-actions');
   const close=()=>backdrop.remove();
   if(!required)backdrop.onclick=(event)=>{if(event.target===backdrop)close()};
-  modal.append(E('div','civ-modal-eyebrow',eyebrow),E('div','civ-detail-name',title));
-  if(body)modal.append(E('div','civ-detail-desc',body));
+  if(art){
+    const header=E('div','civ-modal-header'),copy=E('div','civ-modal-copy');
+    copy.append(E('div','civ-modal-eyebrow',eyebrow),E('div','civ-detail-name',title));
+    if(body)copy.append(E('div','civ-detail-desc',body));
+    header.append(copy,art);modal.append(header);
+  } else {
+    modal.append(E('div','civ-modal-eyebrow',eyebrow),E('div','civ-detail-name',title));
+    if(body)modal.append(E('div','civ-detail-desc',body));
+  }
   if(content)modal.append(content);
   if(badges.length){const badgeRow=E('div','civ-modal-badges');badges.forEach((badge)=>badgeRow.append(E('span','civ-modal-badge',badge)));modal.append(badgeRow)}
   if(health!==null){const tower=E('div','civ-modal-tower',`Toren ${health}/100`),track=E('div','civ-hp-track'),fill=E('div','civ-hp-fill');fill.style.width=`${Math.max(0,health)}%`;track.append(fill);tower.append(track);modal.append(tower)}
@@ -263,6 +272,7 @@ function renderDraft(E,action,sound,game,you,openModal){
     const canBuild=you.gold>=card.cost&&you.grid.some((slot)=>slot===null);
     openModal({
       eyebrow:'Kaart',title:card.name,body:card.desc,cost:card.cost,
+      art:iconNode(E,{age:game.age,name:card.name},'civ-modal-icon'),
       badges:statBadges(card),confirmLabel:'Bouw',confirmDisabled:!canBuild,onConfirm:()=>{sound('score');action('build',{handIndex:card.idx})},
       secondaryLabel:'Gooi weg voor goud',onSecondary:()=>{sound('card');action('discard',{handIndex:card.idx})}
     });
