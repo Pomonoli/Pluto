@@ -30,16 +30,19 @@ function computeCoreBounds() {
 const VIEW_BOX = computeCoreBounds();
 const HOOK_WINDOW_MS = 900;
 const REEL_WINDOW_MS = 1300;
-// Twee tinten per tegeltype (licht boven, donker onder) i.p.v. een platte
-// kleur: geeft elke hex een subtiel "belicht van boven"-reliëf via een
-// gradient, zonder dat naburige tegels van hetzelfde type een zichtbare naad
-// krijgen (iedere hex herhaalt dezelfde gradient-oriëntatie). Kleuren volgen
-// het "deep water, warm land"-palet uit de art-styleguide: lagoon/ocean/deep
-// voor water, grass/kelp/rock voor land, in aflopende diepte. 'w' is de
-// wereldrand: een platte-aarde-waterval die in het niets stort.
-const TILE_SHADES = {
-  L: ['#7FC168', '#5FA24C'], B: ['#F0D9A8', '#D9BD82'], f: ['#5FA282', '#396B52'], h: ['#B49B76', '#8A7358'], p: ['#9C8567', '#7A6650'],
-  r: ['#5FC2CE', '#2E8CA8'], k: ['#3FB6C4', '#1C6E8C'], a: ['#1C6E8C', '#0A3049'], m: ['#123048', '#050F18'], w: ['#1A2E38', '#020608']
+// Eén platte kleur per tegeltype i.p.v. een per-tegel gradient: een gradient
+// die zichzelf op iedere hex herhaalt creëert net een zichtbaar herhalend
+// "hex-grid"-patroon, ook zonder rand. Met exact dezelfde vlakke kleur voor
+// elke tegel van hetzelfde type — en zonder rand — lopen aangrenzende tegels
+// naadloos in elkaar over tot één doorlopend landschap; het hexraster blijft
+// alleen bestaan als onzichtbare plaatsingslogica. Eén losse, kaartbrede
+// lichtval (zie appendAtmosphere) zorgt nog voor een vleugje diepte, los van
+// de tegelgrenzen. Kleuren volgen het "deep water, warm land"-palet uit de
+// art-styleguide: lagoon/ocean/deep voor water, grass/kelp/rock voor land.
+// 'w' is de wereldrand: een platte-aarde-waterval die in het niets stort.
+const TILE_COLOR = {
+  L: '#74B85F', B: '#EAD1A0', f: '#4F9270', h: '#A88F6C', p: '#8E7A5C',
+  r: '#4CB2C0', k: '#33A6B8', a: '#175F7F', m: '#0D2A40', w: '#141E24'
 };
 const MINIMAP_RGB = {
   L: [127, 193, 104], B: [240, 217, 168], f: [95, 162, 130], h: [180, 155, 118], p: [156, 133, 103],
@@ -398,14 +401,21 @@ function tileHash(wx, wy) {
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 }
 
+// Eén gedeelde, kaartbrede lichtval (lichter bovenaan, donkerder onderaan) —
+// userSpaceOnUse over de volle viewBox, dus volledig los van de individuele
+// tegelgrenzen. Dit vervangt de vorige per-tegel gradient als enige bron van
+// "reliëf": een zwak overlay-vlak erover heen geeft het landschap een
+// vleugje diepte zonder ooit een hex-vormig patroon te herhalen.
 function buildTileDefs() {
   const defs = svgEl('defs');
-  Object.entries(TILE_SHADES).forEach(([key, [light, dark]]) => {
-    const grad = svgEl('linearGradient', { id: `dbc-grad-${key}`, x1: '0.2', y1: '0', x2: '0.5', y2: '1' });
-    grad.append(svgEl('stop', { offset: '0%', 'stop-color': light }));
-    grad.append(svgEl('stop', { offset: '100%', 'stop-color': dark }));
-    defs.append(grad);
+  const grad = svgEl('linearGradient', {
+    id: 'dbc-atmosphere', gradientUnits: 'userSpaceOnUse',
+    x1: '0', y1: VIEW_BOX.minY, x2: '0', y2: VIEW_BOX.minY + VIEW_BOX.height
   });
+  grad.append(svgEl('stop', { offset: '0%', 'stop-color': '#fff', 'stop-opacity': '0.12' }));
+  grad.append(svgEl('stop', { offset: '55%', 'stop-color': '#fff', 'stop-opacity': '0' }));
+  grad.append(svgEl('stop', { offset: '100%', 'stop-color': '#000', 'stop-opacity': '0.16' }));
+  defs.append(grad);
   return defs;
 }
 
@@ -516,12 +526,19 @@ function renderMapWrap(you, worldData, camX, camY, others = []) {
       const tile = worldData.tiles[wy * worldData.width + wx] || 'L';
       const { cx, cy } = hexPoints(col, row);
       const points = hexCorners(cx, cy, HEX_DRAW_SIZE).map(([px, py]) => `${px},${py}`).join(' ');
-      const hex = svgEl('polygon', { points, fill: `url(#dbc-grad-${tile})`, class: 'dbc-tile' });
+      const hex = svgEl('polygon', { points, fill: TILE_COLOR[tile] || TILE_COLOR.L, class: 'dbc-tile' });
       if (row >= 0 && row < ROWS && col >= 0 && col < COLS) hex.onclick = () => handleTileClick(wx, wy, tile, you);
       svg.append(hex);
       decorQueue.push({ tile, cx, cy, wx, wy });
     }
   }
+  // Kaartbrede lichtval bovenop de vlakke tegelkleuren, los van tegelgrenzen
+  // (zie buildTileDefs) — vóór de reliëfdecors zodat bomen/rotsen/golven
+  // fris en scherp blijven.
+  svg.append(svgEl('rect', {
+    x: VIEW_BOX.minX, y: VIEW_BOX.minY, width: VIEW_BOX.width, height: VIEW_BOX.height,
+    fill: 'url(#dbc-atmosphere)', 'pointer-events': 'none'
+  }));
   decorQueue.forEach(({ tile, cx, cy, wx, wy }) => appendTileDecor(svg, tile, cx, cy, wx, wy));
 
   // Decoratieve bootjes in de Haven — puur sfeer, de bootupgrade zelf koop je
