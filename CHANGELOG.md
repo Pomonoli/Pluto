@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.23.3 — The Big Blue C: echte gebouwen, alle knoppen rechts, drankjes in de winkel
+
+- Gebouwen (Vishandel, Aquarium-Museum, Handelsmarkt, Houthakkerij, Steengroeve, Haven, aanlegsteigers) zijn nu echte kleine illustraties — muur, dak, deur, venster en een hangend uithangbord — in plaats van een icoon in een kader. Hall of Fame is nu een obelisk, havens en aanlegsteigers zijn een dokplateau op palen.
+- Alle actieknoppen (Inventaris, Marktplaats, Hall of Fame, Vaardigheden, Map) staan nu samen in één rail aan de rechterkant.
+- De Winkel in de Marktplaats verkoopt nu ook een Energiedrank en een Gezondheidsdrank die je gezondheid of energie meteen aanvullen.
+
 ## v1.23.2 — The Big Blue C gebruikt nu een schermvullende kaart met de gamebanner als overlay en zonder dubbele statusregel.
 
 - The Big Blue C gebruikt nu een schermvullende kaart met de gamebanner als overlay en zonder dubbele statusregel.

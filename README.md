@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.23.2
+## Nieuw in versie 1.23.3
 
-The Big Blue C gebruikt nu een schermvullende kaart met de gamebanner als overlay en zonder dubbele statusregel.
+Gebouwen in **The Big Blue C** (Vishandel, Aquarium-Museum, Handelsmarkt, Houthakkerij, Steengroeve, Haven, aanlegsteigers) zijn nu echte kleine illustraties met muur, dak en uithangbord in plaats van een icoon in een kader. Alle actieknoppen staan nu samen in één rail rechts, en de Winkel verkoopt nu ook een Energiedrank en een Gezondheidsdrank.
 
 ## Nieuw in versie 1.23.0
 

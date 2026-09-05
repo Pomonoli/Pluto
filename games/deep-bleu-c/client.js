@@ -70,14 +70,13 @@ const QUALITY_LABEL = { raw: 'Rauw', roasted: 'Geroosterd', dish: 'Gerecht' };
 // De actieknoppen staan rechts, verticaal gecentreerd, in dezelfde blauwe
 // stijl als elkaar (geen apart uitgelichte "primary"-knop meer) — zo blijft
 // de speler zelf altijd centraal op de kaart in beeld.
-const TOPLEFT_BUTTONS = [
+// Alle actieknoppen in één rail aan de rechterkant, verticaal gecentreerd.
+const RIGHT_BUTTONS = [
+  { id: 'inventaris', icon: '🎒', label: 'Inventaris' },
+  { id: 'markt', icon: '🏪', label: 'Marktplaats' },
   { id: 'monument', icon: '🏆', label: 'Hall of Fame', square: true },
   { id: 'vaardigheden', icon: '⭐', label: 'Vaardigheden', square: true },
   { id: 'world-map', icon: '🗺️', label: 'Map', square: true }
-];
-const RIGHT_BUTTONS = [
-  { id: 'inventaris', icon: '🎒', label: 'Inventaris' },
-  { id: 'markt', icon: '🏪', label: 'Marktplaats' }
 ];
 const GATHER_UI = {
   wood: { verb: 'Hakken', icon: '🪓', bg: 'Je bijl staat klaar bij de stam...' },
@@ -488,6 +487,80 @@ function appendVoidDecor(svg, cx, cy, seed) {
   svg.append(g);
 }
 
+// Echte kleine gebouwen i.p.v. een icoon-in-kader: muur + dak + deur + venster
+// plus een hangend uithangbord met het bestaande emoji-icoon. Een lichte
+// zijmuur-sliver geeft het geheel dimensie (dezelfde 2.5D-kanteling als de
+// speler- en boomfiguren), zonder de hex-positionering aan te raken.
+const BUILDING_VARIANT = {
+  vishandel: { roof: 'pitched', roofColor: 'var(--dbc-sea-deep)' },
+  aquarium: { roof: 'dome', roofColor: 'var(--dbc-stone)' },
+  markt: { roof: 'tent', roofColor: 'var(--dbc-ember)' },
+  lumberyard: { roof: 'pitched', roofColor: 'var(--dbc-bark-2)', accessory: 'logs' },
+  quarry: { roof: 'pitched', roofColor: 'var(--dbc-iron)', accessory: 'rocks' }
+};
+
+function appendCottage(g, variant) {
+  g.append(svgEl('ellipse', { cx: 0, cy: 15, rx: 15, ry: 3.4, class: 'dbc-bldg-shadow' }));
+  g.append(svgEl('rect', { x: -9, y: -4, width: 20, height: 16, class: 'dbc-bldg-wall-side' }));
+  g.append(svgEl('rect', { x: -11, y: -6, width: 20, height: 16, class: 'dbc-bldg-wall' }));
+  g.append(svgEl('rect', { x: -3, y: 2, width: 6, height: 8, rx: 1, class: 'dbc-bldg-door' }));
+  g.append(svgEl('rect', { x: -8, y: -2, width: 5, height: 5, rx: 0.6, class: 'dbc-bldg-window' }));
+  if (variant.roof === 'dome') {
+    g.append(svgEl('path', { d: 'M -13 -6 Q -1 -22 11 -6 Z', style: `fill:${variant.roofColor}`, class: 'dbc-bldg-roof' }));
+    g.append(svgEl('circle', { cx: -1, cy: -18, r: 1.6, class: 'dbc-bldg-roof-finial' }));
+  } else if (variant.roof === 'tent') {
+    g.append(svgEl('path', { d: 'M -14 -6 L -1 -19 L 12 -6 Z', style: `fill:${variant.roofColor}`, class: 'dbc-bldg-roof' }));
+    g.append(svgEl('path', { d: 'M -14 -6 L -1 -19 L -1 -6 Z', class: 'dbc-bldg-roof-shade' }));
+  } else {
+    g.append(svgEl('path', { d: 'M -14 -6 L -1 -17 L 12 -6 Z', style: `fill:${variant.roofColor}`, class: 'dbc-bldg-roof' }));
+    g.append(svgEl('path', { d: 'M -1 -17 L 12 -6 L 9 -6 L -1 -14 Z', class: 'dbc-bldg-roof-shade' }));
+  }
+  if (variant.accessory === 'logs') {
+    const logs = svgEl('g', { transform: 'translate(13,6)' });
+    [0, 1, 2].forEach((i) => logs.append(svgEl('circle', { cx: 0, cy: -i * 3.4, r: 3, class: 'dbc-bldg-log' })));
+    g.append(logs);
+  } else if (variant.accessory === 'rocks') {
+    const rocks = svgEl('g', { transform: 'translate(13,7)' });
+    rocks.append(svgEl('circle', { cx: -2, cy: 0, r: 3.4, class: 'dbc-bldg-rock' }));
+    rocks.append(svgEl('circle', { cx: 3, cy: 1.4, r: 2.6, class: 'dbc-bldg-rock' }));
+    g.append(rocks);
+  }
+}
+
+// Hall of Fame krijgt een obelisk i.p.v. een huisje — thematisch een monument,
+// geen winkel.
+function appendObelisk(g) {
+  g.append(svgEl('ellipse', { cx: 0, cy: 13, rx: 12, ry: 3, class: 'dbc-bldg-shadow' }));
+  g.append(svgEl('rect', { x: -10, y: 8, width: 20, height: 4, rx: 1, class: 'dbc-bldg-base' }));
+  g.append(svgEl('polygon', { points: '-5,8 -4,-16 4,-16 5,8', class: 'dbc-bldg-obelisk' }));
+  g.append(svgEl('polygon', { points: '0,-16 4,-16 5,8 2.5,8', class: 'dbc-bldg-obelisk-shade' }));
+  g.append(svgEl('polygon', { points: '-2,-16 2,-16 0,-22', class: 'dbc-bldg-obelisk-tip' }));
+}
+
+// Haven en speler-aanlegsteigers krijgen een dokplateau op palen i.p.v. een
+// huisje.
+function appendDock(g) {
+  g.append(svgEl('ellipse', { cx: 0, cy: 13, rx: 15, ry: 3.4, class: 'dbc-bldg-shadow' }));
+  g.append(svgEl('rect', { x: -14, y: 1, width: 28, height: 8, rx: 1.4, class: 'dbc-bldg-dock-deck' }));
+  [-11, -3, 5, 12].forEach((dx) => g.append(svgEl('rect', { x: dx - 1.2, y: 8, width: 2.4, height: 7, class: 'dbc-bldg-dock-pile' })));
+  g.append(svgEl('line', { x1: -10, y1: 1, x2: -10, y2: -13, class: 'dbc-bldg-dock-pole' }));
+  g.append(svgEl('path', { d: 'M -10 -13 L 0 -9 L -10 -6 Z', class: 'dbc-bldg-dock-flag' }));
+}
+
+function appendBuildingArt(svg, cx, cy, { type, icon, active }) {
+  const g = svgEl('g', { class: `dbc-building ${active ? 'active' : 'locked'}`, transform: `translate(${cx},${cy})` });
+  if (type === 'monument') appendObelisk(g);
+  else if (type === 'haven' || type === 'harbor') appendDock(g);
+  else appendCottage(g, BUILDING_VARIANT[type] || BUILDING_VARIANT.vishandel);
+  const sign = svgEl('g', { transform: 'translate(0,-20)' });
+  sign.append(svgEl('rect', { x: -8, y: -8, width: 16, height: 14, rx: 3, class: 'dbc-bldg-sign' }));
+  const label = svgEl('text', { x: 0, y: 3, class: 'dbc-bldg-sign-icon', 'text-anchor': 'middle' });
+  label.textContent = icon;
+  sign.append(label);
+  g.append(sign);
+  svg.append(g);
+}
+
 function appendTileDecor(svg, tile, cx, cy, wx, wy) {
   const seed = tileHash(wx, wy);
   if (tile === 'f') appendTreeDecor(svg, cx, cy, seed);
@@ -556,46 +629,34 @@ function renderMapWrap(you, worldData, camX, camY, others = [], harbors = [], da
 
   worldData.buildings.forEach((building) => {
     if (building.x < camX || building.x >= camX + COLS || building.y < camY || building.y >= camY + ROWS) return;
-    // Sla het gebouwicoontje over als een speler er precies op staat — anders
-    // piept het zwarte icoonkader achter de visserfiguur uit.
+    // Sla het gebouw over als een speler er precies op staat — anders piept
+    // het gebouw achter de visserfiguur uit.
     const occupied = (you.x === building.x && you.y === building.y)
       || others.some((other) => other.x === building.x && other.y === building.y);
     if (occupied) return;
     const { cx, cy } = hexPoints(building.x - camX, building.y - camY);
-    const g = svgEl('g', {
-      class: `dbc-building ${building.active ? 'active' : 'locked'}`,
-      transform: `translate(${cx},${cy})`
-    });
-    g.append(svgEl('rect', { x: -14, y: -14, width: 28, height: 28, rx: 6, class: 'dbc-building-bg' }));
-    const label = svgEl('text', { x: 0, y: 6, class: 'dbc-building-icon' });
-    label.textContent = building.icon;
-    g.append(label);
-    svg.append(g);
+    appendBuildingArt(svg, cx, cy, { type: building.type, icon: building.icon, active: building.active });
   });
 
-  // Door spelers gebouwde aanlegsteigers — hetzelfde icoonkader als een
-  // gebouw, maar dynamisch (per sessie), niet onderdeel van de vaste wereld.
+  // Door spelers gebouwde aanlegsteigers — dynamisch (per sessie), niet
+  // onderdeel van de vaste wereld, maar visueel dezelfde dok-illustratie.
   harbors.forEach((harbor) => {
     if (harbor.x < camX || harbor.x >= camX + COLS || harbor.y < camY || harbor.y >= camY + ROWS) return;
     const occupied = (you.x === harbor.x && you.y === harbor.y) || others.some((other) => other.x === harbor.x && other.y === harbor.y);
     if (occupied) return;
     const { cx, cy } = hexPoints(harbor.x - camX, harbor.y - camY);
-    const g = svgEl('g', { class: 'dbc-building active', transform: `translate(${cx},${cy})` });
-    g.append(svgEl('rect', { x: -14, y: -14, width: 28, height: 28, rx: 6, class: 'dbc-building-bg' }));
-    const label = svgEl('text', { x: 0, y: 6, class: 'dbc-building-icon' });
-    label.textContent = '⚓';
-    g.append(label);
-    svg.append(g);
+    appendBuildingArt(svg, cx, cy, { type: 'harbor', icon: '⚓', active: true });
   });
 
-  // Wilde dieren: klein icoontje op hun vaste graslandplek, aanklikbaar zoals
-  // een boom (hout) of rots (steen) — start een dobbelgevecht i.p.v. een
-  // gewone stap.
+  // Wilde dieren: klein icoontje met slagschaduw op hun vaste graslandplek,
+  // aanklikbaar zoals een boom (hout) of rots (steen) — start een
+  // dobbelgevecht i.p.v. een gewone stap.
   (worldData.wildlife || []).forEach((spot) => {
     if (spot.x < camX || spot.x >= camX + COLS || spot.y < camY || spot.y >= camY + ROWS) return;
     const occupied = (you.x === spot.x && you.y === spot.y) || others.some((other) => other.x === spot.x && other.y === spot.y);
     if (occupied) return;
     const { cx, cy } = hexPoints(spot.x - camX, spot.y - camY);
+    svg.append(svgEl('ellipse', { cx, cy: cy + 6, rx: 6, ry: 1.8, class: 'dbc-wildlife-shadow' }));
     const icon = svgEl('text', { x: cx, y: cy + 4, class: 'dbc-wildlife-icon', 'text-anchor': 'middle' });
     icon.textContent = '🐇';
     svg.append(icon);
@@ -627,7 +688,6 @@ function renderMapWrap(you, worldData, camX, camY, others = [], harbors = [], da
   wrapDiv.append(renderStatPills(you, dayPhase));
   wrapDiv.append(renderStatBars(you));
   if (activePanel === 'map') {
-    wrapDiv.append(renderButtonRail('dbc-rail-topleft', TOPLEFT_BUTTONS));
     wrapDiv.append(renderButtonRail('dbc-rail-right', RIGHT_BUTTONS));
   }
 
@@ -909,10 +969,30 @@ function renderInventarisPanel(you, harbors) {
   return wrap;
 }
 
+// Drankjes werken meteen bij aankoop (geen inventarisplek) — de knop toont
+// zelf waarom hij uitstaat: vol of te weinig geld.
+function renderConsumableShop(you) {
+  const wrap = E('div', 'dbc-gear-grid');
+  (you.consumableShop || []).forEach((item) => {
+    const full = item.kind === 'energy' ? you.stats.energy >= you.stats.maxEnergy : you.stats.health >= you.stats.maxHealth;
+    const card = E('div', 'dbc-gear-card');
+    card.append(E('div', 'dbc-gear-title', `${item.icon} ${item.name}`));
+    card.append(E('p', 'dbc-gear-help', `Herstelt ${item.restore} ${item.kind === 'energy' ? 'energie' : 'gezondheid'}.`));
+    const button = E('button', 'secondary', full ? 'Al vol' : `Kopen (€${item.price})`);
+    button.disabled = full || you.cash < item.price;
+    button.onclick = () => action('buyConsumable', { kind: item.kind });
+    card.append(button);
+    wrap.append(card);
+  });
+  return wrap;
+}
+
 // Winkel: per categorie de volledige catalogus, met "In bezit" i.p.v. een
 // koopknop zodra je het al hebt.
 function renderShopSection(you) {
   const wrap = E('div', 'dbc-shop-section');
+  wrap.append(E('h5', '', '⚡ Drankjes'));
+  wrap.append(renderConsumableShop(you));
   Object.keys(GEAR_CATEGORY_META).forEach((category) => {
     const meta = GEAR_CATEGORY_META[category];
     const slot = you.gearShop[category];

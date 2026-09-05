@@ -38,9 +38,30 @@
 .dbc-tile-wave{fill:none;stroke:var(--dbc-haze);stroke-width:1.3;stroke-linecap:round;opacity:.7}
 .dbc-tile-grass{fill:none;stroke:var(--dbc-meadow-2);stroke-width:1.1;stroke-linecap:round;opacity:.7}
 .dbc-tile-sand-dot{fill:var(--dbc-bark);opacity:.55}
-.dbc-building-bg{fill:var(--dbc-birch);stroke:var(--dbc-ember);stroke-width:2}
-.dbc-building.locked .dbc-building-bg{opacity:.55}
-.dbc-building-icon{font-size:16px;text-anchor:middle;pointer-events:none}
+/* ============ ECHTE GEBOUWEN (i.p.v. icoon-in-kader) ============ */
+.dbc-building{pointer-events:none}
+.dbc-building.locked{opacity:.55}
+.dbc-bldg-shadow{fill:rgba(23,65,79,.28)}
+.dbc-bldg-wall{fill:var(--dbc-birch);stroke:var(--dbc-ink);stroke-width:.8}
+.dbc-bldg-wall-side{fill:var(--dbc-mist)}
+.dbc-bldg-door{fill:var(--dbc-bark-2)}
+.dbc-bldg-window{fill:var(--dbc-shallow);stroke:var(--dbc-ink);stroke-width:.6}
+.dbc-bldg-roof{stroke:var(--dbc-ink);stroke-width:.8;stroke-linejoin:round}
+.dbc-bldg-roof-shade{fill:rgba(36,51,44,.22)}
+.dbc-bldg-roof-finial{fill:var(--dbc-ember-lit)}
+.dbc-bldg-log{fill:var(--dbc-bark);stroke:var(--dbc-bark-2);stroke-width:.6}
+.dbc-bldg-rock{fill:var(--dbc-stone);stroke:var(--dbc-iron);stroke-width:.6}
+.dbc-bldg-base{fill:var(--dbc-iron)}
+.dbc-bldg-obelisk{fill:var(--dbc-stone);stroke:var(--dbc-iron);stroke-width:.8}
+.dbc-bldg-obelisk-shade{fill:rgba(36,51,44,.25)}
+.dbc-bldg-obelisk-tip{fill:var(--dbc-ember-lit)}
+.dbc-bldg-dock-deck{fill:var(--dbc-bark);stroke:var(--dbc-bark-2);stroke-width:.8}
+.dbc-bldg-dock-pile{fill:var(--dbc-bark-2)}
+.dbc-bldg-dock-pole{stroke:var(--dbc-bark-2);stroke-width:1.4}
+.dbc-bldg-dock-flag{fill:var(--dbc-ember)}
+.dbc-bldg-sign{fill:var(--dbc-birch);stroke:var(--dbc-ink);stroke-width:1}
+.dbc-bldg-sign-icon{font-size:13px;text-anchor:middle}
+.dbc-wildlife-shadow{fill:rgba(23,65,79,.25)}
 .dbc-angler-shadow{fill:rgba(23,65,79,.3)}
 .dbc-angler-cape{fill:var(--dbc-sea-deep);opacity:.92}
 .dbc-angler-belt{fill:var(--dbc-ink)}
@@ -97,10 +118,6 @@
    eigen achtergrond kan een gebouwicoontje op de kaart eronder precies op
    dezelfde plek als een knop uitkomen (allebei clusteren rond het dorp bij
    spawn) en door elkaar heen lopen. */
-.dbc-rail-topleft{
-  position:absolute;top:64px;left:14px;z-index:4;display:flex;flex-direction:column;gap:10px;
-  padding:10px 10px 16px;background:var(--dbc-birch);border:1.5px solid var(--dbc-ink);border-radius:6px;
-}
 .dbc-rail-right{
   position:absolute;top:50%;right:14px;transform:translateY(-50%);z-index:4;display:flex;flex-direction:column;gap:12px;
   padding:10px 10px 16px;background:var(--dbc-birch);border:1.5px solid var(--dbc-ink);border-radius:6px;
@@ -247,13 +264,11 @@
 body.game-active #gameStage:has(.dbc-wrap){padding:0}
 body.game-active #gameStage:has(.dbc-wrap) .dbc-stat-pills{top:calc(68px + env(safe-area-inset-top))}
 body.game-active #gameStage:has(.dbc-wrap) .dbc-stat-bars{top:calc(102px + env(safe-area-inset-top))}
-body.game-active #gameStage:has(.dbc-wrap) .dbc-rail-topleft{top:calc(118px + env(safe-area-inset-top))}
 
 @media(max-width:640px){
   .dbc-trade-columns{grid-template-columns:1fr}
   .dbc-icon-btn{width:44px;height:44px;font-size:18px}
   .dbc-icon-btn.square{width:38px;height:38px;font-size:16px;border-radius:6px}
-  .dbc-rail-topleft{left:10px;gap:8px}
   .dbc-rail-right{right:10px;gap:9px}
   .dbc-icon-label{font-size:9px}
   .dbc-stat-pill{font-size:11px;padding:4px 9px}

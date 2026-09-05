@@ -39,8 +39,9 @@
 
 ## HUD and layout
 
-- Vaste systeemacties linksboven; Inventaris/Marktplaats rechts, verticaal
-  gecentreerd.
+- Alle actieknoppen (Inventaris, Marktplaats, Hall of Fame, Vaardigheden,
+  Map) staan samen in één rail rechts, verticaal gecentreerd — geen losse
+  rail linksboven.
 - Gezondheid/energie als balken, pantser als badge, actieve buffs als kleine
   klok-badges — allemaal net onder de geld/soorten/level-pillen.
 - Dag/nacht toont zich als een ☀️/🌙-pil plus een koelere, donkerdere tint
@@ -52,9 +53,18 @@
 
 ## World and character style
 
-- Eén doorlopend terreinvlak (geen zichtbaar hexraster); reliëf komt uit een
-  kaartbrede lichtval en losse decor-objecten (bomen, rotsen, golven) met een
-  ovale slagschaduw, niet uit een per-tegel gradient.
+- Top-down camera, licht "2.5D": de kaart blijft het bestaande gedeelde
+  hex-coördinatensysteem (positie, camera, klikafhandeling ongewijzigd), maar
+  alles wat op het terrein staat toont een front-facade/dimensie i.p.v. een
+  plat silhouet — geen volledige derde-persoonscamera.
+- Eén doorlopend terreinvlak (geen zichtbaar hexraster, geen blur/waas);
+  reliëf komt uit een kaartbrede lichtval en losse decor-objecten (bomen,
+  rotsen, golven) met een ovale slagschaduw, niet uit een per-tegel gradient
+  of een geblurde textuur.
+- Gebouwen zijn echte kleine illustraties (muur, dak, deur, venster, hangend
+  uithangbord met het bestaande emoji-icoon) i.p.v. een icoon-in-kader; het
+  Hall of Fame-monument is een obelisk, havens/aanlegsteigers zijn een
+  dokplateau op palen — geen generieke iconenset.
 - Personages blijven chunky RPG-avonturiers (kap, cape, zichtbaar
   gereedschap/wapen); vermijd een vlak silhouet.
 - De wereldrand (buitenste rand van de kaart) is een donkere, vage waterval

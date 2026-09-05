@@ -33,6 +33,13 @@ const GEAR_LABEL = { rod: 'hengel', bait: 'aas', boat: 'boot', axe: 'bijl', pick
 // delving/jacht en herstelt door vlees te eten.
 const MAX_HEALTH = 100;
 const MAX_ENERGY = 100;
+// Directe drankjes in de Winkel — geen aparte inventarisplek, het effect
+// gebeurt meteen bij aankoop (net als het bestaande "Eten"-effect, maar dan
+// gekocht met geld i.p.v. gejaagd vlees).
+const CONSUMABLE_SHOP = [
+  { kind: 'energy', icon: '⚡', name: 'Energiedrank', price: 25, restore: 40 },
+  { kind: 'health', icon: '❤️', name: 'Gezondheidsdrank', price: 25, restore: 40 }
+];
 const ENERGY_COST_PER_ACTION = 3;
 const FAINT_HEALTH_RESTORE = 0.5;
 
@@ -738,6 +745,23 @@ function doBuyGear(game, player, payload) {
   game.log.unshift(`Gekocht: ${item.name} voor €${item.price}.`);
 }
 
+function doBuyConsumable(game, player, payload) {
+  const kind = String(payload.kind || '');
+  const item = CONSUMABLE_SHOP.find((entry) => entry.kind === kind);
+  if (!item) throw new Error('Onbekend product.');
+  if (player.cash < item.price) throw new Error('Onvoldoende geld.');
+  if (kind === 'energy') {
+    if (player.stats.energy >= MAX_ENERGY) throw new Error('Je energie is al vol.');
+    player.cash -= item.price;
+    player.stats.energy = Math.min(MAX_ENERGY, player.stats.energy + item.restore);
+  } else {
+    if (player.stats.health >= MAX_HEALTH) throw new Error('Je gezondheid is al vol.');
+    player.cash -= item.price;
+    player.stats.health = Math.min(MAX_HEALTH, player.stats.health + item.restore);
+  }
+  game.log.unshift(`Gekocht: ${item.name} voor €${item.price} (+${item.restore} ${kind === 'energy' ? 'energie' : 'gezondheid'}).`);
+}
+
 function doEquipGear(game, player, payload) {
   const category = String(payload.category || '');
   if (!gear.CATEGORIES.includes(category)) throw new Error('Onbekende categorie.');
@@ -1001,6 +1025,7 @@ function handleAction(game, playerId, action, payload = {}) {
   if (action === 'eat') return doEat(game, player, payload);
   if (action === 'cook') return doCook(game, player, payload);
   if (action === 'buyGear') return doBuyGear(game, player, payload);
+  if (action === 'buyConsumable') return doBuyConsumable(game, player, payload);
   if (action === 'equipGear') return doEquipGear(game, player, payload);
   if (action === 'repairGear') return doRepairGear(game, player, payload);
   if (action === 'buildHarbor') return doBuildHarbor(game, player, payload);
@@ -1214,6 +1239,7 @@ function serialize(game, requesterId) {
       gearCosts: GEAR_COSTS,
       gearMaxLevel: GEAR_MAX_LEVEL,
       gearShop: Object.fromEntries(gear.CATEGORIES.map((category) => [category, serializeGearSlot(player, category)])),
+      consumableShop: CONSUMABLE_SHOP,
       inventory: player.inventory.map((item) => ({
         ...item,
         fish: getFish(item.speciesId),

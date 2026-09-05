@@ -472,6 +472,16 @@ const RELEASES = [
     improvements:[
       "The Big Blue C gebruikt nu een schermvullende kaart met de gamebanner als overlay en zonder dubbele statusregel."
     ]
+  },
+  {
+    version:"1.23.3",
+    features:[
+      "The Big Blue C: de Winkel verkoopt nu een Energiedrank en een Gezondheidsdrank die je energie of gezondheid meteen aanvullen."
+    ],
+    improvements:[
+      "The Big Blue C: gebouwen zijn nu echte kleine illustraties (muur, dak, deur, uithangbord) in plaats van een icoon in een kader; Hall of Fame is een obelisk, havens en aanlegsteigers zijn een dokplateau op palen.",
+      "The Big Blue C: alle actieknoppen staan nu samen in één rail aan de rechterkant."
+    ]
   }
 ];
 
