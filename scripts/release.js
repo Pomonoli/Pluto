@@ -110,19 +110,40 @@ function restore(originals) {
   for (const [file, contents] of Object.entries(originals)) fs.writeFileSync(path.join(ROOT, file), contents);
 }
 
-function preflight() {
+function prepareMain(summary) {
   if (git(['rev-parse', '--abbrev-ref', 'HEAD'], { capture: true }).trim() !== 'main') {
     throw new Error('Releases mogen alleen vanaf main worden gemaakt.');
   }
-  if (git(['status', '--porcelain'], { capture: true }).trim()) {
-    throw new Error('De working tree bevat uncommitted of conflicterende wijzigingen. Commit of stash die eerst.');
+
+  const conflicts = git(['diff', '--name-only', '--diff-filter=U'], { capture: true }).trim();
+  if (conflicts) {
+    throw new Error(`Los eerst de conflicten in de working tree op:\n${conflicts}`);
   }
+
+  if (git(['status', '--porcelain'], { capture: true }).trim()) {
+    git(['add', '-A']);
+    try {
+      git(['commit', '-m', summary]);
+    } catch (error) {
+      throw new Error(`Bestaande wijzigingen konden niet worden gecommit met de release summary. ${error.message}`);
+    }
+  }
+
   git(['fetch', 'origin', 'main']);
-  const local = git(['rev-parse', 'HEAD'], { capture: true }).trim();
   const remote = git(['rev-parse', 'origin/main'], { capture: true }).trim();
   const common = git(['merge-base', 'HEAD', 'origin/main'], { capture: true }).trim();
-  if (common !== remote) throw new Error('main loopt achter op of wijkt af van origin/main. Synchroniseer eerst.');
-  if (!local) throw new Error('Lokale main kon niet worden vastgesteld.');
+  if (common !== remote) {
+    try {
+      git(['rebase', 'origin/main']);
+    } catch (error) {
+      try {
+        git(['rebase', '--abort'], { capture: true });
+      } catch (abortError) {
+        throw new Error(`Rebase op origin/main heeft conflicten en kon niet automatisch worden afgebroken. Los de rebase handmatig op. ${error.message}`);
+      }
+      throw new Error(`Rebase op origin/main heeft conflicten. De rebase is afgebroken en je lokale commits zijn behouden. Los de conflicten op en probeer opnieuw. ${error.message}`);
+    }
+  }
 }
 
 function main() {
@@ -134,7 +155,7 @@ function main() {
   const summary = summaries[0].trim();
   if (/\r|\n/.test(summary)) throw new Error('De release summary moet op één regel staan.');
 
-  preflight();
+  prepareMain(summary);
   const originals = Object.fromEntries(RELEASE_FILES.map(file => [file, fs.readFileSync(path.join(ROOT, file), 'utf8')]));
   const current = JSON.parse(originals['package.json']).version;
   const version = nextVersion(current, type);

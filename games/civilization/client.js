@@ -1,6 +1,7 @@
 import { ERA_THEMES } from './themes.js';
 
 const HERO_PORTRAIT_PATH = '/game-plugins/civilization/assets/heroes';
+const BUILDING_ASSET_PATH = '/game-plugins/civilization/assets';
 
 // Hint shown on the tile before it's designated: the exact bonus for the
 // current Age (10% per Age), applied the instant the building is picked.
@@ -16,11 +17,21 @@ export function renderLobbyOptions({room,container,E,socket,handleAck}){
   });
   wrap.append(head,choices);container.append(wrap);
 }
-function buildingTheme(age, type) { return theme(age).buildings[type] || { color: '#B8895A', icon: '' }; }
-function iconNode(E,type,className='civ-tile-icon'){
+function buildingTheme(age, type) { return theme(age).buildings[type] || { color: '#B8895A' }; }
+function assetSlug(name){
+  return name.toLowerCase().replace(/['’]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+}
+function iconNode(E,{age,name,fixed=false},className='civ-tile-icon'){
   const badge=E('span',`${className} civ-icon-badge`);
   badge.setAttribute('aria-hidden','true');
-  badge.append(E('span',`civ-glyph civ-glyph-${type}`));
+  const image=E('img','civ-building-icon');
+  image.src=fixed
+    ?`${BUILDING_ASSET_PATH}/buildings/${assetSlug(name)}.webp`
+    :`${BUILDING_ASSET_PATH}/cards/age-${Math.min(age,7)}/${assetSlug(name)}.webp`;
+  image.alt='';
+  image.loading='lazy';
+  image.decoding='async';
+  badge.append(image);
   return badge;
 }
 function heroPortrait(E,key,name,className=''){
@@ -149,7 +160,7 @@ function renderCivicRow(E,action,sound,game,you,openModal){
     const bt=buildingTheme(game.age,key);
     const node=E('button','civ-tile civ-civic filled');node.type='button';
     node.style.setProperty('--tile-accent',bt.color);
-    node.append(iconNode(E,key),E('div','civ-tile-name',civic.name));
+    node.append(iconNode(E,{age:game.age,name:civic.name,fixed:true}),E('div','civ-tile-name',civic.name));
     node.append(E('div','civ-tile-perk',civic.used?'Gebeurtenis actief':civicPreviewText(civic)));
     if(canAct&&!civic.used){
       const afford=you.gold>=civic.upgradeCost;
@@ -183,7 +194,7 @@ function renderYourGrid(E,action,sound,game,you,openModal){
     const bt=buildingTheme(game.age,tile.type);
     const node=E('button','civ-tile filled');node.type='button';
     node.style.setProperty('--tile-accent',bt.color);
-    node.append(iconNode(E,tile.type),E('div','civ-tile-name',tile.name),E('div','civ-tile-level',`Niv. ${tile.level}`));
+    node.append(iconNode(E,{age:game.age,name:tile.name}),E('div','civ-tile-name',tile.name),E('div','civ-tile-level',`Niv. ${tile.level}`));
     node.append(E('div','civ-tile-perk',statGainText(tile)));
     if(!tile.maxed){
       const afford=you.gold>=tile.upgradeCost;
@@ -261,7 +272,7 @@ function renderDraft(E,action,sound,game,you,openModal){
     const node=E('button',`civ-card${card.type==='wonder'?' wonder':''}`);node.type='button';node.dataset.index=String(card.idx);
     node.style.setProperty('--tile-accent',bt.color);
     if(card.cost>you.gold)node.classList.add('unaffordable');
-    node.append(iconNode(E,card.type,'civ-card-icon'),E('div','civ-card-name',card.name),E('div','civ-card-perk',statGainText(card)),E('div','civ-card-cost',`Kost ${card.cost}g`));
+    node.append(iconNode(E,{age:game.age,name:card.name},'civ-card-icon'),E('div','civ-card-name',card.name),E('div','civ-card-perk',statGainText(card)),E('div','civ-card-cost',`Kost ${card.cost}g`));
     node.onclick=()=>showDetail(card);hand.append(node)
   }
   wrap.append(hand);

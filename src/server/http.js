@@ -79,6 +79,15 @@ function configureHttp(app, runtime) {
     res.sendFile(filePath);
   });
 
+  app.get('/game-plugins/:key/assets/:folder/:subfolder/:asset', (req,res,next)=>{
+    const plugin=getGamePlugin(req.params.key),folder=String(req.params.folder||''),subfolder=String(req.params.subfolder||''),asset=String(req.params.asset||'');
+    if(!plugin||!/^[a-z0-9_-]+$/i.test(folder)||!/^[a-z0-9_-]+$/i.test(subfolder)||!/^[a-z0-9_-]+\.(?:svg|png|webp)$/i.test(asset))return next();
+    const filePath=path.join(plugin.directory,'assets',folder,subfolder,asset);
+    if(!fs.existsSync(filePath))return next();
+    res.setHeader('Cache-Control','public, max-age=3600');
+    res.sendFile(filePath);
+  });
+
   app.use('/game-plugins',(_req,res)=>res.status(404).json({ok:false,error:'Game-pluginbestand niet gevonden.'}));
 
   app.get('/api/auth/me', (req, res) => {
