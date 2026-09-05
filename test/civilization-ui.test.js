@@ -24,9 +24,17 @@ test('Age of Civilization houdt spelerkaarten vast, toont details en laat onbeta
   assert.match(css,/#gameStage:has\(\.civ-root \.civ-gameover\)\{overflow-y:auto!important\}/);
   assert.match(client,/Goud \$\{player\.gold\} · ATK \$\{player\.attack\} · DEF \$\{player\.defence\} · Inkomen \+\$\{player\.income\}/);
   assert.match(css,/\.civ-chip-name \{[^}]*text-overflow:ellipsis/);
+  assert.match(client,/const chip=E\('button',`civ-player-chip/);
+  assert.match(client,/chip\.onclick=\(\)=>showCivModal/);
+  assert.match(client,/const name=E\('span','civ-chip-name'/);
   assert.match(client,/eyebrow:'Speler'/);
   assert.match(client,/function playerDetails/);
   assert.match(client,/civ-player-details/);
+  assert.match(client,/assets\/heroes/);
+  assert.match(client,/heroPortrait\(E,leader\.key,leader\.name,'civ-leader-portrait'\)/);
+  assert.match(client,/heroPortrait\(E,player\.leaderKey,player\.leaderName,'civ-chip-portrait'\)/);
+  assert.match(client,/heroPortrait\(E,player\.leaderKey,player\.leaderName,'civ-player-portrait'\)/);
+  assert.match(css,/\.civ-hero-portrait\{[^}]*object-fit:cover/);
   assert.match(client,/if\(!afford\)node\.classList\.add\('unaffordable'\)/);
   assert.match(client,/confirmDisabled:!afford/);
   assert.match(client,/Kost \$\{cost\} goud/);

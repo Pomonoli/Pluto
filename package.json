@@ -9,7 +9,9 @@
     "test": "node scripts/run-tests.js",
     "check": "node scripts/run-tests.js --check",
     "test:all": "node scripts/run-tests.js --full",
-    "check:all": "node scripts/run-tests.js --check --full"
+    "check:all": "node scripts/run-tests.js --check --full",
+    "release:patch": "node scripts/release.js patch",
+    "release:minor": "node scripts/release.js minor"
   },
   "engines": {
     "node": ">=22"

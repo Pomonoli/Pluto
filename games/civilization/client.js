@@ -1,9 +1,6 @@
 import { ERA_THEMES } from './themes.js';
 
-const LEADER_ATTRIBUTES = {
-  cleopatra: 'crown', alexander: 'spear', einstein: 'atom', gandhi: 'peace',
-  bismarck: 'helm', lincoln: 'liberty', achilles: 'blade', harald: 'shield'
-};
+const HERO_PORTRAIT_PATH = '/game-plugins/civilization/assets/heroes';
 
 // Hint shown on the tile before it's designated: the exact bonus for the
 // current Age (10% per Age), applied the instant the building is picked.
@@ -25,6 +22,14 @@ function iconNode(E,type,className='civ-tile-icon'){
   badge.setAttribute('aria-hidden','true');
   badge.append(E('span',`civ-glyph civ-glyph-${type}`));
   return badge;
+}
+function heroPortrait(E,key,name,className=''){
+  const portrait=E('img',`civ-hero-portrait${className?` ${className}`:''}`);
+  portrait.src=`${HERO_PORTRAIT_PATH}/${key}.webp`;
+  portrait.alt=name||'';
+  portrait.loading='lazy';
+  portrait.decoding='async';
+  return portrait;
 }
 
 export function render(api){renderCivilization(api)}
@@ -72,7 +77,7 @@ function renderPicking(E, action, sound, game, els, logBox) {
     const card=E('button',`civ-leader-card${leader.taken?' taken':''}`);
     card.type='button';
     const medallion=E('div','civ-medallion');
-    medallion.append(iconNode(E,'leader','civ-medallion-base'),iconNode(E,LEADER_ATTRIBUTES[leader.key]||'crown','civ-medallion-attr'));
+    medallion.append(heroPortrait(E,leader.key,leader.name,'civ-leader-portrait'));
     card.append(medallion,E('div','civ-leader-name',leader.name),E('div','civ-leader-attribute',leader.attribute),E('div','civ-leader-bonus',leader.bonus));
     if(leader.taken){
       const owner=game.players.find((p)=>p.leaderKey===leader.key);
@@ -93,14 +98,20 @@ function renderPicking(E, action, sound, game, els, logBox) {
 function renderTopStrip(E,game){
   const strip=E('div','civ-top-strip');
   game.players.forEach((player)=>{
-    const chip=E('div',`civ-player-chip${player.isYou?' you':''}${player.alive===false?' dead':''}${player.id===game.pickerId?' picking':''}`);
+    const chip=E('button',`civ-player-chip${player.isYou?' you':''}${player.alive===false?' dead':''}${player.id===game.pickerId?' picking':''}`);
+    chip.type='button';
+    chip.title=player.isYou?'Jouw spelerdetails':`${player.name} bekijken`;
+    chip.onclick=()=>showCivModal(E,strip.parentElement||strip,{eyebrow:'Speler',title:player.isYou?'Jij':player.name,content:playerDetails(E,player),health:player.hp,confirmLabel:'Sluiten'});
     const head=E('div','civ-chip-head');
-    const name=E('button','civ-chip-name',`${player.isYou?'Jij':player.name}`);
-    name.type='button';
-    name.title=player.isYou?'Jouw spelerdetails':`${player.name} bekijken`;
-    name.onclick=()=>showCivModal(E,strip.parentElement||strip,{eyebrow:'Speler',title:player.isYou?'Jij':player.name,content:playerDetails(E,player),health:player.hp,confirmLabel:'Sluiten'});
-    head.append(name);
-    if(player.leaderName)head.append(E('span','civ-chip-leader',player.leaderName));
+    if(player.leaderKey){
+      head.classList.add('with-portrait');
+      head.append(heroPortrait(E,player.leaderKey,player.leaderName,'civ-chip-portrait'));
+    }
+    const labels=E('div','civ-chip-labels');
+    const name=E('span','civ-chip-name',`${player.isYou?'Jij':player.name}`);
+    labels.append(name);
+    if(player.leaderName)labels.append(E('span','civ-chip-leader',player.leaderName));
+    head.append(labels);
     chip.append(head);
     if(player.hp!==undefined){
       const track=E('div','civ-chip-hp-track'),fill=E('div','civ-chip-hp-fill');
@@ -210,7 +221,8 @@ function statBadges({attack=0,defence=0,income=0,nextAttack,nextDefence,nextInco
 function playerDetails(E,player){
   const details=E('div','civ-player-details');
   const leader=E('div','civ-player-leader');
-  leader.append(iconNode(E,LEADER_ATTRIBUTES[player.leaderKey]||'leader','civ-player-icon'),E('span','',player.leaderName||'Nog niet gekozen'));
+  if(player.leaderKey)leader.append(heroPortrait(E,player.leaderKey,player.leaderName,'civ-player-portrait'));
+  leader.append(E('span','',player.leaderName||'Nog niet gekozen'));
   details.append(leader,E('div','civ-player-power',player.leaderKey?heroPower(player.leaderKey):'Deze speler kiest nog een held.'));
   return details;
 }
