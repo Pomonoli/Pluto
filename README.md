@@ -38,6 +38,7 @@ Alle games zijn ondergebracht in zelfstandige modules onder `games/`. Iedere gam
 | Santorini | 2-4 | Ja |
 | Solitaire | 1 | Niet van toepassing |
 | Stratego | 2 | Ja |
+| The Blue | 1-4 | Niet van toepassing |
 | Ticket to Ride | 2-5 | Ja |
 
 Minigolf bevat daarnaast een Map Editor voor eigen banen.

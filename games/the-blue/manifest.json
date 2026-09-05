@@ -1,0 +1,14 @@
+{
+  "key": "the-blue",
+  "name": "The Blue",
+  "version": "1",
+  "description": "Catch · cook · create. Spoel aan op een eiland, vis met hengel en geluk, hak hout en delf erts, vecht in een dobbelgevecht tegen wild zwijn en wolf, kook je vangst voor energie en buffs, bouw een vlot voor dieper water, en vul je codex terwijl dag overgaat in nacht.",
+  "icon": "🌊",
+  "badge": "1-4",
+  "actionLabel": "Uitvaren",
+  "minPlayers": 1,
+  "maxPlayers": 4,
+  "supportsNpc": false,
+  "realtime": true,
+  "solo": false
+}
