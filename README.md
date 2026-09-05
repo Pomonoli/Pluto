@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.23.1
+## Nieuw in versie 1.23.2
 
-Age of Civ icons gefixt
+The Big Blue C gebruikt nu een schermvullende kaart met de gamebanner als overlay en zonder dubbele statusregel.
 
 ## Nieuw in versie 1.23.0
 

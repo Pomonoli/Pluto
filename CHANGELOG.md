@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.23.2 — The Big Blue C gebruikt nu een schermvullende kaart met de gamebanner als overlay en zonder dubbele statusregel.
+
+- The Big Blue C gebruikt nu een schermvullende kaart met de gamebanner als overlay en zonder dubbele statusregel.
+
 ## v1.23.1 — Age of Civ icons gefixt
 
 - Age of Civ icons gefixt

@@ -466,6 +466,12 @@ const RELEASES = [
     improvements:[
       "Age of Civ icons gefixt"
     ]
+  },
+  {
+    version:"1.23.2",
+    improvements:[
+      "The Big Blue C gebruikt nu een schermvullende kaart met de gamebanner als overlay en zonder dubbele statusregel."
+    ]
   }
 ];
 
