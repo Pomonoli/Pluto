@@ -293,9 +293,9 @@ html[data-theme="pluto-1-8-0"] body.game-active .ttr-city-label rect{fill:rgba(2
 html[data-theme="pluto-1-8-0"] body.game-active .ttr-city-label text{fill:#17243a;stroke:#fffaf6}
 html[data-theme="pluto-1-8-0"] body.game-active .mobile-game-header{
   color:#17243a;
-  background:linear-gradient(180deg,rgba(246,240,234,.94) 0%,rgba(246,240,234,.64) 62%,transparent 100%);
+  background:transparent;
 }
-html[data-theme="pluto-1-8-0"] body.game-active :is(.mobile-game-leave,.mobile-game-menu-button){
+html[data-theme="pluto-1-8-0"] body.game-active :is(.mobile-game-leave,.mobile-game-name,.mobile-game-menu-button){
   color:#17243a;
   background:rgba(255,250,246,.82);
   border-color:rgba(86,59,42,.14);

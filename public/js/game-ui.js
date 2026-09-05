@@ -83,7 +83,9 @@ function renderGamePlayerStrip(room,game) {
 
 function normalizeSelection(sel, game) { if (!sel || sel.game !== game.kind) return null; return sel; }
 
-function titlebar(name,status) {const wrap=E('div','game-titlebar');const left=E('div');left.append(E('span','eyebrow',name.toUpperCase()));wrap.append(left,E('div','game-status',status));return wrap}
+// The shared in-game header already owns the game name. Keep this helper for
+// game-specific status and actions without rendering a duplicate title.
+function titlebar(_name,status) {const wrap=E('div','game-titlebar');wrap.append(E('div','game-status',status));return wrap}
 function logBox(lines) { const box=E('div','log-box'); (lines||[]).slice(0,18).forEach(line=>box.append(E('div','log-line',line))); return box; }
 
 

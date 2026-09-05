@@ -418,6 +418,12 @@ const RELEASES = [
     improvements:[
       'The Deep Bleu C toont het hexraster niet langer zichtbaar op de kaart: elk tegeltype heeft één platte kleur zonder tegelrand, zodat aangrenzende tegels van hetzelfde type naadloos in elkaar overlopen tot doorlopend terrein.'
     ]
+  },
+  {
+    version:'1.22.3',
+    improvements:[
+      'Alle games gebruiken nu een schermvullende gameshell met een transparante gedeelde header, een knopvormige titelbubbel, veilige ruimte voor spelinhoud en zonder dubbele interne gametitels.'
+    ]
   }
 ];
 

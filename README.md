@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.22.2
+## Nieuw in versie 1.22.3
 
-**The Deep Bleu C** toont het hexraster niet langer zichtbaar op de kaart: elk tegeltype heeft nu één platte kleur zonder tegelrand, zodat aangrenzende tegels van hetzelfde type naadloos in elkaar overlopen tot doorlopend terrein, met bomen, heuvels, bergen en andere natuurdecors als losse objecten erbovenop.
+Alle games gebruiken nu dezelfde schermvullende gameshell als Age of Civilization. De gedeelde, transparante bovenbanner zweeft boven het spel met de gamenaam in een eigen knopvormige bubbel; dubbele interne gametitels zijn verwijderd en de spelinhoud houdt veilige afstand van de banner.
 
 ## Nieuw in versie 1.22.0
 

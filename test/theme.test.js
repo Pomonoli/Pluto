@@ -88,7 +88,7 @@ test('preview skin uses a compact header and edge-to-edge mobile navigation', ()
   assert.match(shared, /\.mobile-nav-item svg\{width:22px;height:22px;[^}]*stroke-width:2/);
   assert.match(shared, /\.mobile-nav-item span\{font-size:10px/);
   assert.match(css, /\.mobile-nav\{[\s\S]*?background:#fffaf6;[\s\S]*?backdrop-filter:none/);
-  assert.match(css, /body\.game-active \.mobile-game-header\{[\s\S]*?linear-gradient\(180deg,rgba\(246,240,234,\.94\)/);
+  assert.match(css, /body\.game-active \.mobile-game-header\{[\s\S]*?background:transparent/);
   assert.match(css, /\.mobile-nav\{[\s\S]*?left:0;[\s\S]*?bottom:0;[\s\S]*?width:100%;/);
   assert.match(css, /border-radius:18px 18px 0 0/);
 });

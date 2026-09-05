@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.22.3 — Uniforme schermvullende gameshell
+
+- Alle games vullen voortaan de volledige beschikbare viewport met behoud van hun eigen indeling, styling en logica.
+- De gedeelde in-game header ligt transparant over het spel; de gamenaam staat in een afgeronde bubbel die aansluit op de terug- en optieknop.
+- Spelinhoud houdt veilige afstand van de overlay en dubbele interne gametitels zijn centraal verwijderd zonder statussen of acties te verbergen.
+
 ## v1.22.2 — The Deep Bleu C: hexraster visueel verwijderd
 
 - Elk tegeltype toont nu één platte kleur zonder tegelrand in plaats van een per-tegel gradient, zodat aangrenzende tegels van hetzelfde type naadloos in elkaar overlopen tot doorlopend terrein — het hexraster is niet langer zichtbaar op de kaart.

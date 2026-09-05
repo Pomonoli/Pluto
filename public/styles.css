@@ -461,6 +461,7 @@ body.game-active main,body.game-active #roomView,body.game-active .room-layout,b
 body.game-active main,body.game-active #roomView,body.game-active .room-layout,body.game-active .room-main,body.game-active #gameSection{display:flex;flex-direction:column;gap:0}
 body.game-active .game-panel{position:relative;flex:1;min-height:0;width:100%;height:100%;max-width:none;margin:0;padding:0;border:0;border-radius:0;display:flex;flex-direction:column;overflow:hidden;box-shadow:none}
 body.game-active #gameStage{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
+body.game-active #gameStage{width:100%;max-width:none}
 body.game-active .log-box{display:none!important}
 @media(max-width:480px){
 .topbar{margin-left:-7px;margin-right:-7px;padding-left:7px;padding-right:7px}
@@ -1272,12 +1273,12 @@ body.room-active .room-main{display:flex;flex-direction:column}
 /* Shared in-game navigation overlay. */
 .mobile-game-header,.profile-mobile-stats,.mobile-register-toggle,.mobile-login-toggle{display:none}
 body.game-active .mobile-game-header{
-  position:absolute;z-index:970;top:0;left:0;width:100%;min-height:calc(58px + env(safe-area-inset-top));padding:env(safe-area-inset-top) max(12px,env(safe-area-inset-right)) 8px max(12px,env(safe-area-inset-left));display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px;color:var(--text);background:linear-gradient(180deg,rgba(8,12,21,.72) 0%,rgba(8,12,21,.34) 62%,transparent 100%);pointer-events:none
+  position:absolute;z-index:970;top:0;left:0;width:100%;min-height:calc(58px + env(safe-area-inset-top));padding:env(safe-area-inset-top) max(12px,env(safe-area-inset-right)) 8px max(12px,env(safe-area-inset-left));display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px;color:var(--text);background:transparent;pointer-events:none
 }
 body.game-active .mobile-game-header>*{pointer-events:auto}
 .mobile-game-leave,.mobile-game-menu-button{width:44px;min-width:44px;height:44px;min-height:44px;padding:0;display:grid;place-items:center;border:1px solid color-mix(in srgb,currentColor 16%,transparent);border-radius:50%;background:color-mix(in srgb,var(--panel) 72%,transparent);color:inherit;font-size:21px;touch-action:manipulation;box-shadow:0 4px 16px rgba(0,0,0,.14);backdrop-filter:blur(12px)}
 .mobile-game-leave:focus-visible,.mobile-game-menu-button:focus-visible{outline:2px solid currentColor;outline-offset:2px}
-.mobile-game-name{height:44px;min-width:0;display:grid;place-items:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;font-size:15px;line-height:1;text-shadow:0 1px 8px rgba(0,0,0,.55)}
+.mobile-game-name{justify-self:center;width:min(100%,360px);height:44px;min-width:0;padding:0 16px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;font-size:15px;line-height:42px;border:1px solid color-mix(in srgb,currentColor 16%,transparent);border-radius:999px;background:color-mix(in srgb,var(--panel) 72%,transparent);box-shadow:0 4px 16px rgba(0,0,0,.14);backdrop-filter:blur(12px)}
 .mobile-game-menu-wrap{position:relative}
 .mobile-game-menu{position:absolute;z-index:1000;top:calc(100% + 7px);right:0;width:min(220px,calc(100vw - 24px));padding:7px;display:grid;gap:5px;border:1px solid var(--border);border-radius:14px;background:var(--panel);box-shadow:0 18px 40px rgba(0,0,0,.28)}
 .mobile-game-menu.hidden{display:none}
@@ -1325,7 +1326,8 @@ body.game-active #gameStage{padding:calc(58px + env(safe-area-inset-top)) max(10
   body.game-active #gameStage>*{max-width:100%}
 }
 
-/* Browser/tablet content remains readable inside the fullscreen game surface. */
+/* Browser/tablet games use the complete fullscreen surface too. Individual
+   renderers remain responsible for their own internal layout and sizing. */
 @media(min-width:761px){
   #homeView{width:min(100%,1120px);margin-inline:auto}
   #lobbyBrowserView{width:min(100%,980px);margin-inline:auto}
@@ -1337,9 +1339,9 @@ body.game-active #gameStage{padding:calc(58px + env(safe-area-inset-top)) max(10
   .modal{width:min(680px,calc(100vw - 48px))}
   .account-modal{width:min(720px,calc(100vw - 48px))}
   body.game-active #gameStage{
-    align-self:center;
-    width:min(100%,1180px);
-    max-width:1180px;
+    align-self:stretch;
+    width:100%;
+    max-width:none;
     padding-inline:max(clamp(10px,1.5vw,18px),env(safe-area-inset-left),env(safe-area-inset-right));
     box-sizing:border-box;
   }

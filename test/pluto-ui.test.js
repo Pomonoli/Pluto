@@ -51,18 +51,22 @@ test('actieve spellen gebruiken een viewporthoge layout met gedeelde navigatie-o
   assert.match(css,/body\.game-active>\.app-shell>\.topbar\{display:none!important\}/);
   assert.match(css,/body\.game-active \.mobile-game-header\{[\s\S]*?position:absolute;[\s\S]*?env\(safe-area-inset-top\)[\s\S]*?display:grid/);
   assert.match(css,/body\.game-active #gameStage\{padding:calc\(58px \+ env\(safe-area-inset-top\)\)/);
+  assert.match(css,/body\.game-active #gameStage\{width:100%;max-width:none\}/);
   assert.match(html,/class="panel game-panel">[\s\S]*id="mobileGameHeader"[\s\S]*id="gameStage"/);
 });
 
-test('browser en tablet begrenzen gamebreedte zonder mobile te wijzigen',()=>{
+test('browser, tablet en mobile gebruiken de volledige gamesurface',()=>{
   const css=fs.readFileSync(path.join(root,'public/styles.css'),'utf8');
-  assert.match(css,/@media\(min-width:761px\)\{[\s\S]*?body\.game-active #gameStage\{[\s\S]*?width:min\(100%,1180px\);[\s\S]*?max-width:1180px/);
+  assert.match(css,/@media\(min-width:761px\)\{[\s\S]*?body\.game-active #gameStage\{[\s\S]*?align-self:stretch;[\s\S]*?width:100%;[\s\S]*?max-width:none/);
   assert.match(css,/@media\(max-width:760px\)\{[\s\S]*?body\.game-active #gameStage\{overflow:auto/);
   assert.ok(css.lastIndexOf('@media(min-width:761px)')>css.lastIndexOf('@media(max-width:760px)'));
-  for(const game of ['civilization','blackjack','cluedo','hartenjagen','hofslag','pesten','presidenten','quoridor','santorini','solitaire','stratego']){
-    const gameCss=fs.readFileSync(path.join(root,'games',game,'styles.css'),'utf8');
-    assert.match(gameCss,/@media\(min-width:761px\)\{#gameStage:has\(/,`${game} mist een desktop/tablet-breedtelimiet`);
-  }
+});
+
+test('gedeelde gameheader is de enige game-titel maar interne status en acties blijven bestaan',()=>{
+  const gameUi=fs.readFileSync(path.join(root,'public/js/game-ui.js'),'utf8');
+  assert.match(gameUi,/function titlebar\(_name,status\)/);
+  assert.doesNotMatch(gameUi,/name\.toUpperCase\(\)/);
+  assert.match(gameUi,/wrap\.append\(E\('div','game-status',status\)\)/);
 });
 
 test('homescreen bevat geen kaart meer om via een code te joinen',()=>{
@@ -173,6 +177,6 @@ test('settings en mobiele gameheader tonen compacte consistente metadata',()=>{
   assert.ok(html.includes(`>Pluto v${require('../package.json').version}</p>`));
   assert.match(css,/\.connection-pill,\.badge\{[^}]*white-space:nowrap;[^}]*flex-shrink:0/);
   assert.match(css,/\.mobile-game-leave,\.mobile-game-menu-button\{[^}]*border-radius:50%;[^}]*backdrop-filter:blur\(12px\)/);
-  assert.match(css,/\.mobile-game-name\{[^}]*height:44px;[^}]*place-items:center;[^}]*line-height:1/);
-  assert.match(light,/body\.game-active :is\(\.mobile-game-leave,\.mobile-game-menu-button\)\{[^}]*background:rgba\(255,250,246,\.82\);[^}]*border-color:rgba\(86,59,42,\.14\)/);
+  assert.match(css,/\.mobile-game-name\{[^}]*height:44px;[^}]*border-radius:999px;[^}]*backdrop-filter:blur\(12px\)/);
+  assert.match(light,/body\.game-active :is\(\.mobile-game-leave,\.mobile-game-name,\.mobile-game-menu-button\)\{[^}]*background:rgba\(255,250,246,\.82\);[^}]*border-color:rgba\(86,59,42,\.14\)/);
 });
