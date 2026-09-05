@@ -28,6 +28,33 @@ const SPECIALISMS = {
   puncheur:['mountain','sprint']
 };
 
+const TACTIC_HAND_SIZE = 3;
+const TACTIC_CARDS = [
+  {id:'leadout-train', name:'Treintje rijden', description:'Een gesloten kopgroep beschermt je sprinter op vlakke wegen.', terrainKey:'flat', multiplier:1.5, cost:15000},
+  {id:'sprint-leadout', name:'Bewaakte sprint', description:'De laatste man lanceert de sprinter op het perfecte moment.', terrainKey:'sprint', multiplier:1.5, cost:15000},
+  {id:'cobble-specialist', name:'Kasseienspecialist', description:'Je ploeg kent elke kasseistrook uit het hoofd.', terrainKey:'cobbles', multiplier:1.5, cost:15000},
+  {id:'mountain-ambush', name:'Hinderlaag in de klim', description:'Een vroege aanval verrast de klassementsrenners.', terrainKey:'mountain', multiplier:1.5, cost:18000},
+  {id:'aero-setup', name:'Aero-opstelling', description:'Tijdritmateriaal en houding zijn tot in de puntjes afgesteld.', terrainKey:'timeTrial', multiplier:1.6, cost:20000},
+  {id:'all-in', name:'Alles-of-niets', description:'Je ploeg gooit het roer om, wat het terrein ook is.', terrainKey:null, multiplier:1.2, cost:25000}
+];
+const TACTIC_CARD_BY_ID = new Map(TACTIC_CARDS.map((card) => [card.id, card]));
+
+function dominantTerrainKey(terrain){
+  return Object.entries(terrain).sort((a,b) => b[1]-a[1])[0]?.[0]||null;
+}
+
+function tacticMatches(card,catalogRace){
+  if(!card)return false;
+  if(card.terrainKey===null)return true;
+  return dominantTerrainKey(catalogRace.terrain)===card.terrainKey;
+}
+
+function offerTacticCards(team){
+  const owned=team.tacticCards||[];
+  if(!owned.length)return [];
+  return [...owned].sort(() => Math.random()-0.5).slice(0,TACTIC_HAND_SIZE);
+}
+
 // 2026-seizoen: de 10 grootste WorldTour-ploegen met hun actuele kernrenners.
 const TEAMS = [
   {id:'uae', name:'UAE Team Emirates XRG'},
@@ -300,19 +327,32 @@ function sanitizeRider(rider){
   };
 }
 
+function sanitizeTacticCards(saved){
+  if(!Array.isArray(saved))return [];
+  return [...new Set(saved.filter((id) => TACTIC_CARD_BY_ID.has(id)))];
+}
+
+function randomTacticCards(count){
+  return [...TACTIC_CARDS].sort(() => Math.random()-0.5).slice(0,count).map((card) => card.id);
+}
+
 function hydrateTeam(saved){
   const riders=Array.isArray(saved?.riders)&&saved.riders.length?saved.riders.map(sanitizeRider):starterRiders(STARTER_RIDERS);
   return {
     wallet:Math.max(0,Number(saved?.wallet??STARTING_WALLET)),
     riders,
     shop:{...defaultShop(),...(saved?.shop||{})},
+    tacticCards:sanitizeTacticCards(saved?.tacticCards),
     career:{...defaultCareer(),...(saved?.career||{})},
     raceCount:Math.max(0,Number(saved?.raceCount)||0)
   };
 }
 
 function defaultTeam(isNpc){
-  return {wallet:STARTING_WALLET, riders:starterRiders(isNpc?NPC_STARTER_RIDERS:STARTER_RIDERS), shop:defaultShop(), career:defaultCareer(), raceCount:0};
+  return {
+    wallet:STARTING_WALLET, riders:starterRiders(isNpc?NPC_STARTER_RIDERS:STARTER_RIDERS), shop:defaultShop(),
+    tacticCards:isNpc?randomTacticCards(2):[], career:defaultCareer(), raceCount:0
+  };
 }
 
 function weightedStat(stats,terrain){
@@ -360,7 +400,8 @@ function availableRiders(team){
 
 function startStageLineup(game,raceId){
   game.phase='lineup';
-  game.race={raceId, lineups:{}, npcTimers:{}, startedAt:Date.now()};
+  game.race={raceId, lineups:{}, npcTimers:{}, startedAt:Date.now(), tacticOffers:{}, tacticChoice:{}};
+  for(const player of game.players) game.race.tacticOffers[player.id]=offerTacticCards(player.team);
   for(const candidate of game.players) if(candidate.isNpc) autoLineup(game,candidate);
 }
 
@@ -368,6 +409,12 @@ function autoLineup(game,player){
   const catalogRace=currentCatalogRace(game.race.raceId);
   const ranked=availableRiders(player.team).sort((a,b) => scoreRiderForRace(b,catalogRace,player.team)-scoreRiderForRace(a,catalogRace,player.team));
   game.race.lineups[player.id]=ranked.slice(0,SQUAD_SIZE).map((rider) => rider.id);
+  const offered=game.race.tacticOffers[player.id]||[];
+  const matching=offered
+    .map((cardId) => TACTIC_CARD_BY_ID.get(cardId))
+    .filter((card) => tacticMatches(card,catalogRace))
+    .sort((a,b) => b.multiplier-a.multiplier)[0];
+  game.race.tacticChoice[player.id]=matching?.id||null;
 }
 
 function applyUnavailable(rider,team,races,status){
@@ -399,9 +446,9 @@ function riderSegmentModifier(rider,catalogRace,team){
   return statMod+fatigueMod;
 }
 
-function resolveRiderSegment(rider,catalogRace,team,roll,multiplier){
+function resolveRiderSegment(rider,catalogRace,team,roll,multiplier,tacticFactor=1){
   const riderModifier=riderSegmentModifier(rider,catalogRace,team);
-  const bonus=Math.round(riderModifier*multiplier);
+  const bonus=Math.round(riderModifier*multiplier*tacticFactor);
   if(roll===1){
     const crashChance=clamp(0.30-team.shop.medical*0.06,0.04,0.30);
     if(Math.random()<crashChance){
@@ -454,11 +501,13 @@ function resolveSegmentFor(game,player,apply){
   const catalogRace=currentCatalogRace(race.raceId);
   const roll=prog.pendingRoll.roll;
   const multiplierUsed=apply?prog.multiplier:1;
+  const tacticCard=TACTIC_CARD_BY_ID.get(race.tacticChoice?.[player.id]);
+  const tacticFactor=tacticMatches(tacticCard,catalogRace)?tacticCard.multiplier:1;
   for(const riderId of activeRiderIds(prog)){
     const rider=player.team.riders.find((candidate) => candidate.id===riderId);
     const state=prog.riders[riderId];
     if(!rider||!state)continue;
-    const segment=resolveRiderSegment(rider,catalogRace,player.team,roll,multiplierUsed);
+    const segment=resolveRiderSegment(rider,catalogRace,player.team,roll,multiplierUsed,tacticFactor);
     state.segments.push({n:race.segmentIndex+1, roll:segment.roll, total:segment.total, outcome:segment.outcome});
     if(segment.dnf)state.dnf=true;
     else state.pr+=segment.score;
@@ -765,6 +814,17 @@ function handleAction(game,playerId,action,payload={}){
     return;
   }
 
+  if(action==='buyTacticCard'){
+    if(game.phase!=='club')throw new Error('Dit kan alleen in de club.');
+    const card=TACTIC_CARD_BY_ID.get(payload.cardId);
+    if(!card)throw new Error('Onbekende tactiek.');
+    if(player.team.tacticCards.includes(card.id))throw new Error('Je bezit deze tactiek al.');
+    if(player.team.wallet<card.cost)throw new Error('Onvoldoende budget.');
+    player.team.wallet-=card.cost;
+    player.team.tacticCards.push(card.id);
+    return;
+  }
+
   if(action==='restRider'){
     if(game.phase!=='club')throw new Error('Dit kan alleen in de club.');
     const rider=player.team.riders.find((candidate) => candidate.id===payload.riderId);
@@ -814,7 +874,14 @@ function handleAction(game,playerId,action,payload={}){
       const rider=player.team.riders.find((candidate) => candidate.id===riderId);
       if(!rider||rider.status!=='active')throw new Error('Selecteer alleen beschikbare renners.');
     }
+    const offered=game.race.tacticOffers[playerId]||[];
+    let tacticCardId=null;
+    if(payload.tacticCardId){
+      if(!offered.includes(payload.tacticCardId))throw new Error('Deze tactiek is niet aangeboden voor deze rit.');
+      tacticCardId=payload.tacticCardId;
+    }
     game.race.lineups[playerId]=riderIds;
+    game.race.tacticChoice[playerId]=tacticCardId;
     maybeStartRacing(game);
     return;
   }
@@ -899,6 +966,7 @@ function serialize(game,requesterId,connected){
       ...RACE_CATALOG.map((race) => ({id:race.id, name:race.name, category:race.category, difficulty:race.difficulty, basePrize:race.basePrize, terrain:race.terrain})),
       ...GRAND_TOUR_CATALOG.map((tour) => ({id:tour.id, name:tour.name, category:tour.category, stages:tour.stages, overallPrize:tour.overallPrize, terrain:tour.terrain}))
     ],
+    tacticCatalog:TACTIC_CARDS,
     race:game.race?serializeRace(game,requesterId,catalogRace):null,
     grandTour:game.grandTour?serializeGrandTour(game):null,
     lastResult:game.lastResult,
@@ -907,6 +975,7 @@ function serialize(game,requesterId,connected){
     players:game.players.map((player) => ({
       id:player.id, name:player.name, isNpc:player.isNpc, connected:player.isNpc||connected.get(player.id),
       wallet:player.team.wallet, shop:player.team.shop, shopEffects:describeShopEffects(player.team.shop), career:player.team.career,
+      tacticCards:player.team.tacticCards,
       riders:player.team.riders.map(serializeRider)
     }))
   };
@@ -922,11 +991,20 @@ function serializeGrandTour(game){
   };
 }
 
+function serializeTacticOption(cardId,catalogRace){
+  const card=TACTIC_CARD_BY_ID.get(cardId);
+  return card?{...card, matches:tacticMatches(card,catalogRace)}:null;
+}
+
 function serializeRace(game,requesterId,catalogRace){
+  const offeredIds=game.race.tacticOffers?.[requesterId]||[];
+  const chosenId=game.race.tacticChoice?.[requesterId]??null;
   const base={
     raceId:game.race.raceId, raceName:catalogRace?.name||'', category:catalogRace?.category||'',
     terrain:catalogRace?.terrain||{}, squadSize:SQUAD_SIZE,
-    readyIds:Object.keys(game.race.lineups), myLineup:game.race.lineups[requesterId]??null
+    readyIds:Object.keys(game.race.lineups), myLineup:game.race.lineups[requesterId]??null,
+    myTacticOffers:offeredIds.map((cardId) => serializeTacticOption(cardId,catalogRace)).filter(Boolean),
+    myTacticChoice:chosenId?serializeTacticOption(chosenId,catalogRace):null
   };
   if(game.phase!=='racing'||!game.race.progress)return base;
   base.segmentIndex=game.race.segmentIndex;
@@ -993,5 +1071,5 @@ function afterStateChange(room,{db}){
 module.exports={
   meta, createGame, handleAction, serialize, tick, preparePlayers, afterStateChange,
   RACE_CATALOG, GRAND_TOUR_CATALOG, SHOP_COSTS, STAT_KEYS, SQUAD_SIZE, MAX_RIDERS, TEAMS, REAL_RIDERS,
-  STAGES_PER_GRAND_TOUR, SEGMENTS_PER_RACE
+  STAGES_PER_GRAND_TOUR, SEGMENTS_PER_RACE, TACTIC_CARDS, TACTIC_HAND_SIZE
 };

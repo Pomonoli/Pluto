@@ -58,6 +58,7 @@ function sellPrice(rider){return rider.sellValue??Math.round(rider.marketValue*0
 function cancelButtonLabel(game){return game.grandTour?'✕ Stop de ronde':'✕ Annuleer koers'}
 
 let selectedLineup=new Set();
+let selectedTactic=null;
 let lastRaceKey=null;
 let clubTab='roster';
 let scoutFilterStat='';
@@ -316,6 +317,34 @@ function renderRaceCatalogPanel(room,game,me){
   return panel;
 }
 
+function terrainKeyLabel(terrainKey){return terrainKey===null?'Universeel':STAT_LABELS[terrainKey]||terrainKey}
+
+function renderTacticsPanel(room,game,me){
+  const panel=E('div','panel cc-panel');
+  panel.append(panelHeading(`Tactieken (${me.tacticCards.length}/${(game.tacticCatalog||[]).length})`));
+  panel.append(E('p','muted','Koop tactiekkaarten om ze permanent in bezit te hebben. Voor elke rit krijg je een keuze uit maximaal drie kaarten uit je bezit om eenmalig in te zetten.'));
+  const grid=E('div','cc-tactic-grid');
+  (game.tacticCatalog||[]).forEach((card) => {
+    const owned=me.tacticCards.includes(card.id);
+    const box=E('div',`cc-tactic-card${owned?' cc-tactic-owned':''}`);
+    box.append(E('strong','',card.name));
+    box.append(E('p','cc-tactic-desc',card.description));
+    box.append(E('span','cc-tactic-terrain',terrainKeyLabel(card.terrainKey)));
+    box.append(E('span','cc-tactic-mult',`×${card.multiplier}`));
+    if(owned){
+      box.append(E('span','cc-tactic-owned-badge','✔ In bezit'));
+    } else {
+      const buy=E('button','primary',`🛒 ${euro(card.cost)}`);
+      buy.disabled=me.wallet<card.cost;
+      buy.onclick=() => action('buyTacticCard',{cardId:card.id});
+      box.append(buy);
+    }
+    grid.append(box);
+  });
+  panel.append(grid);
+  return panel;
+}
+
 function renderShopStatusBar(me,onOpen){
   const bar=E('div','cc-shop-status-bar');
   for(const category of Object.keys(SHOP_LABELS)){
@@ -364,7 +393,11 @@ function renderClub(room,game,me){
   const racesBack=tabBackButton();
   racesSection.append(racesBack,renderRaceCatalogPanel(room,game,me));
 
-  const sections={roster:rosterSection,scout:scoutSection,shop:shopSection,races:racesSection};
+  const tacticsSection=E('div','cc-tab-section');
+  const tacticsBack=tabBackButton();
+  tacticsSection.append(tacticsBack,renderTacticsPanel(room,game,me));
+
+  const sections={roster:rosterSection,scout:scoutSection,shop:shopSection,races:racesSection,tactics:tacticsSection};
   const applyTab=(tab) => {
     clubTab=tab;
     for(const key of Object.keys(sections))sections[key].classList.toggle('hidden',key!==tab);
@@ -372,6 +405,7 @@ function renderClub(room,game,me){
   scoutBack.onclick=() => applyTab('roster');
   shopBack.onclick=() => applyTab('roster');
   racesBack.onclick=() => applyTab('roster');
+  tacticsBack.onclick=() => applyTab('roster');
 
   const topBar=E('div','cc-top-tabs');
   topBar.append(renderShopStatusBar(me,() => applyTab('shop')));
@@ -379,6 +413,10 @@ function renderClub(room,game,me){
   scoutOpenBtn.type='button';
   scoutOpenBtn.onclick=() => applyTab('scout');
   topBar.append(scoutOpenBtn);
+  const tacticsOpenBtn=E('button','cc-tab-open-btn',`🎯 Tactieken (${me.tacticCards.length})`);
+  tacticsOpenBtn.type='button';
+  tacticsOpenBtn.onclick=() => applyTab('tactics');
+  topBar.append(tacticsOpenBtn);
   const racesOpenBtn=E('button','cc-tab-open-btn',`📅 Koerskalender (${game.raceCatalog.length})`);
   racesOpenBtn.type='button';
   racesOpenBtn.onclick=() => applyTab('races');
@@ -395,7 +433,7 @@ function renderClub(room,game,me){
   topBar.append(resetBtn);
   els.gameStage.append(topBar);
 
-  els.gameStage.append(rosterSection,scoutSection,shopSection,racesSection);
+  els.gameStage.append(rosterSection,scoutSection,shopSection,racesSection,tacticsSection);
   applyTab(clubTab);
 }
 
@@ -403,6 +441,7 @@ function renderLineup(room,game,me){
   const race=game.race;
   if(lastRaceKey!==race.raceId){
     selectedLineup=new Set(race.myLineup||[]);
+    selectedTactic=race.myTacticChoice?.id||null;
     lastRaceKey=race.raceId;
   }
   const catalogRace=game.raceCatalog.find((candidate) => candidate.id===race.raceId);
@@ -442,10 +481,44 @@ function renderLineup(room,game,me){
     panel.append(grid);
   }
 
+  const offeredTactics=race.myTacticOffers||[];
+  if(offeredTactics.length||race.myTacticChoice){
+    panel.append(E('h4','cc-category-title','Tactiek voor deze rit'));
+    if(submitted){
+      const chosen=race.myTacticChoice;
+      panel.append(E('p','muted',chosen?`Ingezet: ${chosen.name} (×${chosen.multiplier}, ${chosen.matches?'actief':'geen effect deze rit'})`:'Geen tactiek ingezet.'));
+    } else {
+      const tacticGrid=E('div','cc-tactic-grid');
+      const noneCard=E('label','cc-tactic-card cc-tactic-selectable');
+      const noneRadio=document.createElement('input');
+      noneRadio.type='radio';
+      noneRadio.name='cc-tactic-choice';
+      noneRadio.checked=!selectedTactic;
+      noneRadio.onchange=() => {selectedTactic=null};
+      noneCard.append(noneRadio,E('strong','','Geen tactiek'));
+      tacticGrid.append(noneCard);
+      offeredTactics.forEach((card) => {
+        const box=E('label',`cc-tactic-card cc-tactic-selectable${card.matches?' cc-tactic-matches':''}`);
+        const radio=document.createElement('input');
+        radio.type='radio';
+        radio.name='cc-tactic-choice';
+        radio.checked=selectedTactic===card.id;
+        radio.onchange=() => {selectedTactic=card.id};
+        box.append(radio,E('strong','',card.name));
+        box.append(E('p','cc-tactic-desc',card.description));
+        box.append(E('span','cc-tactic-terrain',terrainKeyLabel(card.terrainKey)));
+        box.append(E('span','cc-tactic-mult',`×${card.multiplier}`));
+        box.append(E('span','cc-tactic-match-tag',card.matches?'Past bij deze rit':'Geen effect hier'));
+        tacticGrid.append(box);
+      });
+      panel.append(tacticGrid);
+    }
+  }
+
   const actionsRow=E('div','cc-rider-actions');
   if(!submitted){
     const submit=E('button','primary',`✅ Opstelling bevestigen (max ${game.squadSize})`);
-    submit.onclick=() => {action('submitLineup',{riderIds:[...selectedLineup]});};
+    submit.onclick=() => {action('submitLineup',{riderIds:[...selectedLineup],tacticCardId:selectedTactic||undefined});};
     actionsRow.append(submit);
   } else actionsRow.append(E('span','muted','Wachten op de rest van het peloton…'));
   if(room.isHost){
@@ -565,6 +638,9 @@ function renderRacing(room,game,me){
   if(myProgress){
     statusRow.append(labelValue('Multiplier',`×${myProgress.multiplier.toFixed(3)}`));
     if(myProgress.bankStreak>0)statusRow.append(labelValue('Opgespaard',`${myProgress.bankStreak}×`));
+  }
+  if(race.myTacticChoice){
+    statusRow.append(labelValue('Tactiek',`${race.myTacticChoice.name}${race.myTacticChoice.matches?` (×${race.myTacticChoice.multiplier})`:' (geen effect)'}`));
   }
   panel.append(statusRow);
 

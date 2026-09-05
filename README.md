@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.16.0
+## Nieuw in versie 1.17.0
 
-CycClub: Tour de France, Giro d’Italia en Vuelta a España zijn nu volwaardige Grote Rondes van 21 ritten na elkaar, elk met de bestaande 8-segmenten dobbelstenenrit. Ze vervangen de losse Tour-, Giro- en Vuelta-ritten; de koerskalender toont voortaan eendagskoersen en de drie Grote Rondes apart. Elke rit levert een eigen ritzege en ritprijzengeld op, na elke rit zie je meteen de tussenstand van het eindklassement, een renner die valt of ziek wordt ligt voor de rest van de ronde eruit, en het eindklassement na de laatste rit bepaalt een groot bijkomend prijzengeld.
+CycClub heeft een nieuw tabblad "Tactieken" waar je permanente tactiekkaarten koopt (zoals Treintje rijden, Kasseienspecialist, Hinderlaag in de klim of Aero-opstelling). Voor elke rit krijg je een keuze uit maximaal drie kaarten uit je bezit die je eenmalig kan inzetten: sluit de tactiek aan bij het terrein van de rit, dan krijgen je renners een multiplier op hun segmentbonus voor de hele rit.
 
 ## Nieuw in versie 1.0.0
 

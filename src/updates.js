@@ -303,6 +303,12 @@ const RELEASES = [
       'CycClub: na elke rit van een Grote Ronde toont het ritresultaat meteen de tussenstand van het eindklassement, met een knop om direct de volgende rit te starten.',
       'CycClub: de erelijst houdt Grote Ronde-eindzeges nu apart bij van individuele ritzeges.'
     ]
+  },
+  {
+    version:'1.17.0',
+    features:[
+      'CycClub: een nieuw tabblad Tactieken laat je permanente tactiekkaarten kopen (Treintje rijden, Kasseienspecialist, Hinderlaag in de klim, Aero-opstelling, Bewaakte sprint, Alles-of-niets). Voor elke rit kies je uit maximaal drie kaarten uit je bezit om eenmalig in te zetten — past de tactiek bij het terrein van de rit, dan krijgen je renners een multiplier op hun segmentbonus.'
+    ]
   }
 ];
 

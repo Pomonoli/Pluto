@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.17.0 — CycClub: tactiekkaarten
+
+- CycClub heeft een nieuw tabblad "Tactieken" waar je permanente tactiekkaarten kan kopen (bv. Treintje rijden, Kasseienspecialist, Hinderlaag in de klim, Aero-opstelling, Bewaakte sprint, Alles-of-niets).
+- Voor elke rit krijg je een keuze uit maximaal drie kaarten uit je bezit, die je eenmalig voor die rit kan inzetten.
+- Sluit de tactiek aan bij het dominante terrein van de rit (bijvoorbeeld een treintje op vlakke wegen), dan krijgen je renners een multiplier op hun segmentbonus voor de hele rit; sluit het terrein niet aan, dan heeft de kaart geen effect.
+- De lineup-opstelling toont per aangeboden kaart of ze past bij de huidige rit, en de rit zelf toont welke tactiek actief is.
+- NPC-ploegen kopen geen kaarten maar starten met een kleine willekeurige verzameling en kiezen automatisch de best passende kaart.
+
 ## v1.16.0 — CycClub: volwaardige Grote Rondes van 21 ritten
 
 - Tour de France, Giro d’Italia en Vuelta a España zijn nu volwaardige Grote Rondes: je rijdt 21 ritten na elkaar, elk met de bestaande 8-segmenten dobbelstenenrit, tot de ronde is uitgereden.
