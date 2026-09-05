@@ -424,6 +424,12 @@ const RELEASES = [
     improvements:[
       'Alle games gebruiken nu een schermvullende gameshell met een transparante gedeelde header, een knopvormige titelbubbel, veilige ruimte voor spelinhoud en zonder dubbele interne gametitels.'
     ]
+  },
+  {
+    version:'1.22.4',
+    improvements:[
+      'De buitenste fullscreen-gamesurface loopt nu zonder afgeronde hoeken door tot aan de schermranden.'
+    ]
   }
 ];
 

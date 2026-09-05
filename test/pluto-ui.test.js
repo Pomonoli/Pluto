@@ -51,7 +51,7 @@ test('actieve spellen gebruiken een viewporthoge layout met gedeelde navigatie-o
   assert.match(css,/body\.game-active>\.app-shell>\.topbar\{display:none!important\}/);
   assert.match(css,/body\.game-active \.mobile-game-header\{[\s\S]*?position:absolute;[\s\S]*?env\(safe-area-inset-top\)[\s\S]*?display:grid/);
   assert.match(css,/body\.game-active #gameStage\{padding:calc\(58px \+ env\(safe-area-inset-top\)\)/);
-  assert.match(css,/body\.game-active #gameStage\{width:100%;max-width:none\}/);
+  assert.match(css,/body\.game-active #gameStage\{width:100%;max-width:none;border-radius:0\}/);
   assert.match(html,/class="panel game-panel">[\s\S]*id="mobileGameHeader"[\s\S]*id="gameStage"/);
 });
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.22.4 — Gamesurface zonder afgeronde hoeken
+
+- De buitenste fullscreen-gamesurface heeft geen afgeronde hoeken meer en vult het scherm tot aan de randen; interne kaarten en panelen behouden hun eigen vormgeving.
+
 ## v1.22.3 — Uniforme schermvullende gameshell
 
 - Alle games vullen voortaan de volledige beschikbare viewport met behoud van hun eigen indeling, styling en logica.

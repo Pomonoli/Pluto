@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.22.3
+## Nieuw in versie 1.22.4
 
-Alle games gebruiken nu dezelfde schermvullende gameshell als Age of Civilization. De gedeelde, transparante bovenbanner zweeft boven het spel met de gamenaam in een eigen knopvormige bubbel; dubbele interne gametitels zijn verwijderd en de spelinhoud houdt veilige afstand van de banner.
+Alle games gebruiken dezelfde schermvullende gameshell als Age of Civilization. De gedeelde, transparante bovenbanner zweeft boven het spel met de gamenaam in een eigen knopvormige bubbel; de buitenste gamesurface loopt zonder afgeronde hoeken door tot aan de schermranden.
 
 ## Nieuw in versie 1.22.0
 
