@@ -2,6 +2,10 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
+## Nieuw in versie 1.17.1
+
+Het CycClub-ritprofiel tijdens het rijden is herwerkt in de stijl van een echt wielerprofiel: de vulling kleurt van geel/oranje naar dieprood naarmate het stijgingspercentage toeneemt, met een hoogte-as, kilometermarkeringen, een start- en finishvlag en gecategoriseerde beklimmingen.
+
 ## Nieuw in versie 1.17.0
 
 CycClub heeft een nieuw tabblad "Tactieken" waar je permanente tactiekkaarten koopt (zoals Treintje rijden, Kasseienspecialist, Hinderlaag in de klim of Aero-opstelling). Voor elke rit krijg je een keuze uit maximaal drie kaarten uit je bezit die je eenmalig kan inzetten: sluit de tactiek aan bij het terrein van de rit, dan krijgen je renners een multiplier op hun segmentbonus voor de hele rit.

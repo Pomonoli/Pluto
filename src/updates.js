@@ -309,6 +309,12 @@ const RELEASES = [
     features:[
       'CycClub: een nieuw tabblad Tactieken laat je permanente tactiekkaarten kopen (Treintje rijden, Kasseienspecialist, Hinderlaag in de klim, Aero-opstelling, Bewaakte sprint, Alles-of-niets). Voor elke rit kies je uit maximaal drie kaarten uit je bezit om eenmalig in te zetten — past de tactiek bij het terrein van de rit, dan krijgen je renners een multiplier op hun segmentbonus.'
     ]
+  },
+  {
+    version:'1.17.1',
+    improvements:[
+      'CycClub: het ritprofiel tijdens het rijden is herwerkt in de stijl van een echt wielerprofiel, met een gekleurde vulling naar stijgingspercentage, een hoogte-as, kilometermarkeringen, een start- en finishvlag en gecategoriseerde beklimmingen.'
+    ]
   }
 ];
 

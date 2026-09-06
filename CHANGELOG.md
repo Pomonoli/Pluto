@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.17.1 — CycClub: hoogteprofiel in wielerstijl
+
+- Het ritprofiel tijdens het rijden is herwerkt in de stijl van een echt wielerprofiel: de vulling kleurt per stuk van geel/oranje naar dieprood naarmate het stijgingspercentage toeneemt.
+- Het profiel toont nu een hoogte-as in meter, afstandsmarkeringen in kilometer, een start- en finishvlag, en gecategoriseerde beklimmingen met hun hoogte.
+
 ## v1.17.0 — CycClub: tactiekkaarten
 
 - CycClub heeft een nieuw tabblad "Tactieken" waar je permanente tactiekkaarten kan kopen (bv. Treintje rijden, Kasseienspecialist, Hinderlaag in de klim, Aero-opstelling, Bewaakte sprint, Alles-of-niets).

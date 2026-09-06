@@ -573,41 +573,143 @@ function bikeIcon(cx,cy,cls){
   return g;
 }
 
+const PROFILE_RESOLUTION=90;
+const PROFILE_ALT_MIN=150,PROFILE_ALT_MAX=1900;
+const TERRAIN_DISTANCE_KM={flat:195,sprint:180,hilly:175,cobbles:230,mountain:155,timeTrial:38,stamina:190};
+const GRADIENT_BANDS=[
+  {max:0,color:'#f8e2b8'},
+  {max:3,color:'#f3c274'},
+  {max:6,color:'#ee9b48'},
+  {max:9,color:'#e0652f'},
+  {max:12,color:'#c62f28'},
+  {max:Infinity,color:'#7a1620'}
+];
+
+function altitudeM(h){return Math.round(PROFILE_ALT_MIN+(h/100)*(PROFILE_ALT_MAX-PROFILE_ALT_MIN))}
+function gradientColor(slopePct){return (GRADIENT_BANDS.find((band) => slopePct<=band.max)||GRADIENT_BANDS.at(-1)).color}
+function dominantTerrainKeyClient(terrain){return Object.entries(terrain||{}).sort((a,b) => b[1]-a[1])[0]?.[0]||'flat'}
+
 function buildProfilePoints(raceId,terrain){
   const rng=seededRandom(hashString(raceId||''));
   const ruggedness=(terrain?.mountain||0)+(terrain?.cobbles||0)*0.6+0.15;
-  const points=[35+rng()*15];
+  const shapePoints=[35+rng()*15];
   for(let i=1;i<=SEGMENTS_PER_RACE;i+=1){
     const delta=(rng()-0.45)*80*ruggedness;
-    points.push(clampNum(points[i-1]+delta,6,94));
+    shapePoints.push(clampNum(shapePoints[i-1]+delta,6,94));
   }
-  return points;
+  const points=[];
+  for(let i=0;i<PROFILE_RESOLUTION;i+=1){
+    const t=(i/(PROFILE_RESOLUTION-1))*SEGMENTS_PER_RACE;
+    const seg=Math.min(Math.floor(t),SEGMENTS_PER_RACE-1);
+    const localT=t-seg;
+    const base=shapePoints[seg]+(shapePoints[seg+1]-shapePoints[seg])*localT;
+    const jitter=(rng()-0.5)*9*ruggedness;
+    points.push(clampNum(base+jitter,4,97));
+  }
+  return {shapePoints,points};
+}
+
+function detectClimbs(points,maxClimbs=2){
+  const candidates=[];
+  for(let i=2;i<points.length-2;i+=1){
+    if(points[i]>=points[i-1]&&points[i]>=points[i+1]&&points[i]>points[i-2]&&points[i]>points[i+2]&&points[i]>=55){
+      candidates.push({index:i,height:points[i]});
+    }
+  }
+  const selected=[];
+  for(const climb of candidates.sort((a,b) => b.height-a.height)){
+    if(selected.length>=maxClimbs)break;
+    if(selected.some((s) => Math.abs(s.index-climb.index)<points.length*0.15))continue;
+    selected.push(climb);
+  }
+  return selected.sort((a,b) => a.index-b.index);
 }
 
 function buildProfileChart(race){
-  const width=640,height=150,padY=16;
-  const points=buildProfilePoints(race.raceId,race.terrain);
-  const segs=points.length-1;
-  const toXY=(i,h) => [Math.round((i/segs)*width),Math.round(height-padY-(h/100)*(height-padY*2))];
-  const linePoints=points.map((h,i) => toXY(i,h));
-  const pathD=linePoints.map(([x,y],i) => `${i===0?'M':'L'}${x},${y}`).join(' ');
-  const areaD=`${pathD} L${width},${height} L0,${height} Z`;
+  const width=680,height=200;
+  const marginLeft=38,marginRight=10,marginTop=34,marginBottom=22;
+  const plotWidth=width-marginLeft-marginRight,plotHeight=height-marginTop-marginBottom;
+  const {shapePoints,points}=buildProfilePoints(race.raceId,race.terrain);
+  const segs=shapePoints.length-1;
+  const totalKm=TERRAIN_DISTANCE_KM[dominantTerrainKeyClient(race.terrain)]||180;
+  const kmPerStep=totalKm/(points.length-1);
+
+  const toX=(fraction) => marginLeft+fraction*plotWidth;
+  const toY=(h) => marginTop+plotHeight-(h/100)*plotHeight;
+  const xyAt=(index) => [toX(index/(points.length-1)),toY(points[index])];
 
   const wrap=E('div','cc-profile-chart');
   const svg=SVGEl('svg',{viewBox:`0 0 ${width} ${height}`,preserveAspectRatio:'none',class:'cc-profile-svg'});
-  svg.append(SVGEl('path',{d:areaD,class:'cc-profile-area'}));
-  svg.append(SVGEl('path',{d:pathD,class:'cc-profile-line'}));
+
+  const baseline=marginTop+plotHeight;
+  const smoothWindow=6;
+  const smoothed=points.map((_,i) => {
+    const from=Math.max(0,i-smoothWindow),to=Math.min(points.length-1,i+smoothWindow);
+    let sum=0;for(let j=from;j<=to;j+=1)sum+=points[j];
+    return sum/(to-from+1);
+  });
+  for(let i=0;i<points.length-1;i+=1){
+    const [x1,y1]=xyAt(i),[x2,y2]=xyAt(i+1);
+    const deltaAltM=altitudeM(smoothed[i+1])-altitudeM(smoothed[i]);
+    const slopePct=(deltaAltM/(kmPerStep*1000))*100;
+    const quad=SVGEl('polygon',{points:`${x1},${baseline} ${x1},${y1} ${x2},${y2} ${x2},${baseline}`,fill:gradientColor(slopePct),stroke:'none'});
+    svg.append(quad);
+  }
+  const linePath=points.map((h,i) => {const [x,y]=xyAt(i);return `${i===0?'M':'L'}${x},${y}`}).join(' ');
+  svg.append(SVGEl('path',{d:linePath,class:'cc-profile-line'}));
+
+  const axis=SVGEl('g',{class:'cc-profile-axis'});
+  [0,0.33,0.66,1].forEach((fraction) => {
+    const y=marginTop+plotHeight-fraction*plotHeight;
+    axis.append(SVGEl('line',{x1:marginLeft,x2:width-marginRight,y1:y,y2:y,class:'cc-profile-grid'}));
+    const label=SVGEl('text',{x:marginLeft-6,y:y+3,class:'cc-profile-axis-label','text-anchor':'end'});
+    label.textContent=`${altitudeM(fraction*100)}m`;
+    axis.append(label);
+  });
+  shapePoints.forEach((_,i) => {
+    const x=toX(i/segs);
+    const label=SVGEl('text',{x,y:height-4,class:'cc-profile-axis-label','text-anchor':'middle'});
+    label.textContent=`${Math.round((i/segs)*totalKm*10)/10}`;
+    axis.append(label);
+  });
+  svg.append(axis);
+
+  const startFlag=SVGEl('g',{class:'cc-profile-flag cc-profile-flag-start',transform:`translate(${toX(0)},${baseline})`});
+  startFlag.append(SVGEl('circle',{r:8}),SVGEl('text',{y:3,'text-anchor':'middle'}));
+  startFlag.lastChild.textContent='S';
+  svg.append(startFlag);
+  const [finishX,finishY]=xyAt(points.length-1);
+  const finishFlag=SVGEl('g',{class:'cc-profile-flag cc-profile-flag-finish',transform:`translate(${finishX},${Math.max(marginTop+8,finishY-14)})`});
+  finishFlag.append(SVGEl('circle',{r:8}),SVGEl('text',{y:3,'text-anchor':'middle'}));
+  finishFlag.lastChild.textContent='M';
+  svg.append(finishFlag);
+
+  detectClimbs(points).forEach((climb,order) => {
+    const [x,y]=xyAt(climb.index);
+    const category=climb.height>=80?{label:'1',cls:'cc-profile-cat-1'}:{label:'2',cls:'cc-profile-cat-2'};
+    const guide=SVGEl('line',{x1:x,x2:x,y1:marginTop+10,y2:y,class:'cc-profile-guide'});
+    svg.append(guide);
+    const marker=SVGEl('g',{class:`cc-profile-climb-marker ${category.cls}`,transform:`translate(${x},${marginTop-2})`});
+    marker.append(SVGEl('circle',{r:7}),SVGEl('text',{y:3,'text-anchor':'middle'}));
+    marker.lastChild.textContent=category.label;
+    svg.append(marker);
+    const label=SVGEl('text',{x,y:marginTop-12,class:'cc-profile-climb-label','text-anchor':order%2?'end':'start'});
+    label.textContent=`${altitudeM(climb.height)} m`;
+    svg.append(label);
+  });
 
   const progressList=race.allProgress||[];
-  const currentIndex=Math.min(race.segmentIndex||0,segs);
-  const [baseX,baseY]=linePoints[currentIndex];
+  const currentFraction=Math.min((race.segmentIndex||0)/segs,1);
+  const baseX=toX(currentFraction);
+  const currentPointIndex=Math.min(Math.round(currentFraction*(points.length-1)),points.length-1);
+  const baseY=toY(points[currentPointIndex]);
   progressList.forEach((entry,index) => {
     const offset=(index-(progressList.length-1)/2)*18;
     const waiting=entry.awaitingConfirmation;
     const cls=`cc-profile-rider cc-profile-rider-${index%6}${waiting?'':' cc-profile-rider-confirmed'}`;
-    const bike=bikeIcon(baseX+offset,Math.max(10,baseY-10),cls);
+    const bike=bikeIcon(baseX+offset,Math.max(marginTop+10,baseY-10),cls);
     const title=SVGEl('title');
-    title.textContent=`${entry.playerName}${entry.isNpc?' (NPC)':''} — segment ${currentIndex}/${segs} · ${waiting?'moet nog rollen':'bevestigd'}`;
+    title.textContent=`${entry.playerName}${entry.isNpc?' (NPC)':''} — segment ${race.segmentIndex||0}/${segs} · ${waiting?'moet nog rollen':'bevestigd'}`;
     bike.append(title);
     svg.append(bike);
   });
