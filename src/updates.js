@@ -551,6 +551,12 @@ const RELEASES = [
     improvements:[
       "Cycclub fix"
     ]
+  },
+  {
+    version:"1.28.3",
+    improvements:[
+      "cycclub fix full"
+    ]
   }
 ];
 
