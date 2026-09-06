@@ -1,6 +1,7 @@
 {
   "key": "quoridor",
   "name": "Quoridor",
+  "category": "classic",
   "description": "Race naar de overkant en dwing omwegen af met slim geplaatste muren.",
   "version": "3",
   "icon": "🚧",

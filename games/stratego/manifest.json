@@ -1,6 +1,7 @@
 {
   "key": "stratego",
   "name": "Stratego",
+  "category": "classic",
   "version": "2",
   "description": "Snelle 1v1-versie van Stratego met 8 stukken per speler.",
   "icon": "⚔️",

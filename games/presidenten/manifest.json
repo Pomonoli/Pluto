@@ -1,6 +1,7 @@
 {
   "key": "presidenten",
   "name": "Presidenten",
+  "category": "classic",
   "description": "Speel hogere combinaties en raak als eerste je kaarten kwijt.",
   "version": "2",
   "icon": "👑",

@@ -1,6 +1,7 @@
 {
   "key": "solitaire",
   "name": "Solitaire",
+  "category": "classic",
   "description": "Klondike draw-3.",
   "version": "3",
   "icon": "🃏",

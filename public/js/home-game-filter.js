@@ -2,6 +2,7 @@
 
 const heading = document.getElementById('gamesHeading');
 const grid = document.getElementById('gameGrid');
+const categoryTabs = [...document.querySelectorAll('.games-category-tab')];
 
 if (heading && grid) {
   const style = document.createElement('style');
@@ -20,6 +21,10 @@ if (heading && grid) {
     .games-filter-divider{height:1px;margin:13px 0;background:var(--border)}
     .games-sort-select{width:100%;min-height:44px;margin-top:8px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--panel2);color:var(--text);font:inherit}
     .games-player-filter-empty{grid-column:1/-1;margin:0;padding:18px;border:1px dashed var(--border);border-radius:14px;color:var(--muted);text-align:center;font-size:12px}
+    .games-category-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:8px 0 18px;padding:4px;border:1px solid var(--border);border-radius:15px;background:var(--panel);box-shadow:0 10px 28px rgba(0,0,0,.08)}
+    .games-category-tab{min-height:42px;padding:8px 14px;border:0;border-radius:11px;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:800;cursor:pointer;box-shadow:none}
+    .games-category-tab.active{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--panel));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 24%,transparent)}
+    .games-category-tab:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 30%,transparent);outline-offset:2px}
     @media(max-width:760px){.games-player-filter-button{width:44px;height:44px;min-width:44px;min-height:44px;border-radius:11px}}
   `;
   document.head.append(style);
@@ -58,6 +63,7 @@ if (heading && grid) {
   let gamesByKey = new Map();
   let currentPlayers = 0;
   let currentSort = 'alphabetical';
+  let currentCategory = 'original';
   let accountPreference = false;
 
   function keepHeadingVisible() {
@@ -97,7 +103,9 @@ if (heading && grid) {
     for (const card of sorted) {
       const key = card.querySelector('[data-game]')?.dataset.game;
       const meta = gamesByKey.get(key);
-      const matches = !currentPlayers || !meta || (meta.minPlayers <= currentPlayers && meta.maxPlayers >= currentPlayers);
+      const matchesCategory = meta?.category === currentCategory;
+      const matchesPlayers = !currentPlayers || !meta || (meta.minPlayers <= currentPlayers && meta.maxPlayers >= currentPlayers);
+      const matches = matchesCategory && matchesPlayers;
       card.classList.toggle('hidden', !matches);
       if (matches) visible += 1;
     }
@@ -105,12 +113,39 @@ if (heading && grid) {
     value.textContent = currentPlayers === 0 ? 'Alle spelers' : `${currentPlayers} ${currentPlayers === 1 ? 'speler' : 'spelers'}`;
     button.classList.toggle('active', currentPlayers > 0);
     button.setAttribute('aria-label', currentPlayers > 0 ? `Filter actief: ${value.textContent}` : 'Filter games op aantal spelers');
-    empty.textContent = currentPlayers > 0 ? `Geen games voor ${value.textContent}.` : '';
+    empty.textContent = currentPlayers > 0 ? `Geen ${currentCategory === 'original' ? 'Originals' : 'Classics'} voor ${value.textContent}.` : `Geen games in deze categorie.`;
     empty.classList.toggle('hidden', visible > 0 || cards.length === 0);
     keepHeadingVisible();
   }
 
   button.addEventListener('click', () => setPopover(popover.classList.contains('hidden')));
+  function selectCategory(category, focus = false) {
+    currentCategory = category === 'classic' ? 'classic' : 'original';
+    categoryTabs.forEach((tab) => {
+      const selected = tab.dataset.category === currentCategory;
+      tab.classList.toggle('active', selected);
+      tab.setAttribute('aria-selected', selected ? 'true' : 'false');
+      tab.tabIndex = selected ? 0 : -1;
+      if (selected) {
+        grid.setAttribute('aria-labelledby', tab.id);
+        if (focus) tab.focus();
+      }
+    });
+    applyFilter();
+  }
+  categoryTabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => selectCategory(tab.dataset.category));
+    tab.addEventListener('keydown', (event) => {
+      let next = index;
+      if (event.key === 'ArrowRight') next = (index + 1) % categoryTabs.length;
+      else if (event.key === 'ArrowLeft') next = (index - 1 + categoryTabs.length) % categoryTabs.length;
+      else if (event.key === 'Home') next = 0;
+      else if (event.key === 'End') next = categoryTabs.length - 1;
+      else return;
+      event.preventDefault();
+      selectCategory(categoryTabs[next].dataset.category, true);
+    });
+  });
   range.addEventListener('input', () => {
     currentPlayers = Number(range.value) || 0;
     applyFilter();

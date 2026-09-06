@@ -1,6 +1,7 @@
 {
   "key": "ticket-to-ride",
   "name": "Ticket to Ride",
+  "category": "classic",
   "version": "2",
   "description": "Versimpelde Ticket to Ride voor 2 tot 5 spelers: verzamel kaarten, claim routes en verbind bestemmingen.",
   "icon": "🚂",

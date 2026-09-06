@@ -1,6 +1,7 @@
 {
   "key": "_template",
   "name": "Mijn spel",
+  "category": "original",
   "version": "1",
   "description": "Een korte beschrijving voor metadata en lobby's.",
   "icon": "🎲",

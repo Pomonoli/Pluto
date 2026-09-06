@@ -66,7 +66,11 @@
         </section>
 
         <div class="section-heading games-heading hidden" id="gamesHeading"><div><span class="eyebrow">GAMES</span></div></div>
-        <div class="game-grid" id="gameGrid">
+        <div class="games-category-tabs" role="tablist" aria-label="Gamecategorie">
+          <button type="button" id="originalGamesTab" class="games-category-tab active" role="tab" aria-selected="true" aria-controls="gameGrid" tabindex="0" data-category="original">Originals</button>
+          <button type="button" id="classicGamesTab" class="games-category-tab" role="tab" aria-selected="false" aria-controls="gameGrid" tabindex="-1" data-category="classic">Classics</button>
+        </div>
+        <div class="game-grid" id="gameGrid" role="tabpanel" aria-labelledby="originalGamesTab" tabindex="0">
         </div>
 
       </section>

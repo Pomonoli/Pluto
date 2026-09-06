@@ -1,6 +1,7 @@
 {
   "key": "cascadia",
   "name": "Cascadia",
+  "category": "classic",
   "description": "Bouw je eigen ecosysteem met habitats, dieren en slimme corridors.",
   "version": "1",
   "icon": "🏞️",

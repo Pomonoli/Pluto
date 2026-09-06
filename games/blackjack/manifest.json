@@ -1,6 +1,7 @@
 {
   "key": "blackjack",
   "name": "Blackjack",
+  "category": "classic",
   "description": "Versla de dealer zonder boven 21 te gaan.",
   "version": "2",
   "icon": "21",

@@ -1,6 +1,7 @@
 {
   "key": "minigolf",
   "name": "Minigolf",
+  "category": "original",
   "description": "Speel vijf slimme holes met elk een eigen route of gimmick.",
   "version": "4",
   "icon": "⛳",

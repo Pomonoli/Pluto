@@ -1,6 +1,7 @@
 {
   "key": "cluedo",
   "name": "Cluedo",
+  "category": "classic",
   "description": "Deduceer de dader, het wapen en de kamer zonder speelbord.",
   "version": "2",
   "icon": "🔎",

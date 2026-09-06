@@ -1,6 +1,7 @@
 {
   "key": "kingdomino",
   "name": "Kingdomino",
+  "category": "classic",
   "version": "1",
   "description": "Bouw een 5x5-koninkrijk met domino-terreinen, verbind gebieden en scoor met kronen.",
   "icon": "👑",

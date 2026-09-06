@@ -1,6 +1,7 @@
 {
   "key": "pesten",
   "name": "Pesten",
+  "category": "classic",
   "description": "Leg dezelfde kleur of waarde. Pestkaarten veranderen het spel.",
   "version": "2",
   "icon": "🔄",
