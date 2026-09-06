@@ -24,6 +24,7 @@ const ROLE_LABELS={climber:'Klimmer',sprinter:'Sprinter',allrounder:'Allrounder'
 const TACTIC_LABELS={recover:'Herstel',follow:'Volg',leadout:'Kop',attack:'Val aan',fetch_bidons:'Bidons'};
 const EVENT_LABELS={topdag:'Topdag',normaal:'Normale rit',pech:'Pech',valt:'Val'};
 const SEGMENT_OUTCOME_LABELS={topdag:'Topdag',normaal:'Normaal segment',pech:'Pech',valt:'Val'};
+const RACE_GROUP_LABELS={breakaway:'Kopgroep',chasers:'Volgers',peloton:'Peloton',tail:'Staart'};
 const TERRAIN_TYPE_LABELS={flat:'Vlak',hills:'Heuvels',mountain:'Berg',cobbles:'Kasseien',timeTrial:'Tijdrit'};
 const CLASSIFICATION_TABS=[
   {key:'gc', label:'Algemeen (Geel)', valueLabel:'Tijd', formatValue:(v) => `${v>0?'+':''}${v}s`},
@@ -212,7 +213,7 @@ function renderShopPanel(me){
 }
 
 function renderScoutPanel(room,game,me){
-  const panel=E('div','panel cc-panel');
+  const panel=E('div','panel cc-panel cc-scout-panel');
   const refresh=E('button','secondary','↻ Ververs');
   refresh.type='button';
   refresh.onclick=() => action('refreshScoutMarket');
@@ -618,6 +619,11 @@ function buildProfileChart(race){
   const xyAt=(index) => [toX(index/(points.length-1)),toY(points[index])];
 
   const wrap=E('div','cc-profile-chart');
+  if(race.leader){
+    const leader=E('div','cc-race-leader');
+    leader.append(E('span','','🚴 Op kop'),E('strong','',race.leader.riderName),E('small','',race.leader.playerName));
+    wrap.append(leader);
+  }
   const svg=SVGEl('svg',{viewBox:`0 0 ${width} ${height}`,preserveAspectRatio:'none',class:'cc-profile-svg'});
 
   const baseline=marginTop+plotHeight;
@@ -770,6 +776,22 @@ function segmentProgressLegend(){
   return legend;
 }
 
+function raceGroupLegend(){
+  const legend=E('div','cc-group-legend');
+  legend.append(E('strong','cc-group-legend-title','Positie in koers'));
+  [
+    ['breakaway','Kopgroep','0–5 sec'],
+    ['chasers','Volgers','6–20 sec'],
+    ['peloton','Peloton','21–60 sec'],
+    ['tail','Staart','meer dan 60 sec']
+  ].forEach(([group,label,range]) => {
+    const item=E('span','cc-group-legend-item');
+    item.append(E('i',`cc-group-color cc-group-${group}`),E('b','',label),document.createTextNode(range));
+    legend.append(item);
+  });
+  return legend;
+}
+
 function renderRacing(room,game,me){
   const race=game.race;
   if(!race){els.gameStage.append(E('p','muted','Geen actieve rit.'));return}
@@ -832,6 +854,9 @@ function renderRacing(room,game,me){
       card.append(head);
       card.append(fatigueMeter(riderState.fatigue));
       card.append(segmentDots(riderState.segments,SEGMENTS_PER_RACE));
+      const groupLabel=riderState.dnf?'Uitgevallen':RACE_GROUP_LABELS[riderState.raceGroup]||'Startveld';
+      const gapLabel=riderState.gapToLeader===0?'op kop':riderState.gapToLeader==null?'nog geen tijd':`+${riderState.gapToLeader}s`;
+      card.append(E('span',`cc-race-position cc-group-${riderState.raceGroup||'pending'}`,`${groupLabel} · ${gapLabel}`));
 
       const preview=E('span','cc-tactic-preview','');
       card.append(preview);
@@ -894,12 +919,17 @@ function renderRacing(room,game,me){
       head.append(E('strong','',riderState.name),E('span','muted',riderState.dnf?'Uitgevallen':`${riderState.pr} pt`));
       card.append(head);
       card.append(segmentDots(riderState.segments,SEGMENTS_PER_RACE));
+      if(!riderState.dnf){
+        const groupLabel=RACE_GROUP_LABELS[riderState.raceGroup]||'Startveld';
+        const gapLabel=riderState.gapToLeader===0?'op kop':riderState.gapToLeader==null?'nog geen tijd':`+${riderState.gapToLeader}s`;
+        card.append(E('span',`cc-race-position cc-group-${riderState.raceGroup||'pending'}`,`${groupLabel} · ${gapLabel}`));
+      }
       historyGrid.append(card);
     });
     panel.append(historyGrid);
   }
 
-  panel.append(segmentProgressLegend(),roleImpactLegend());
+  panel.append(segmentProgressLegend(),raceGroupLegend(),roleImpactLegend());
 
   const readyList=E('div','cc-ready-list');
   (race.allProgress||[]).forEach((entry) => {

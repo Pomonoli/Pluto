@@ -108,6 +108,36 @@ function calculateSegmentStep(riders,tacticsByRiderId,gelsByRiderId,segment,base
 function scoreFromMultiplier(personalMultiplier){return Math.round((personalMultiplier-1)*20)}
 function timeDeltaFromMultiplier(personalMultiplier,fieldAverage){return Math.round((fieldAverage-personalMultiplier)*30)}
 
+function raceGroupForGap(gapSeconds){
+  if(gapSeconds<=5)return 'breakaway';
+  if(gapSeconds<=20)return 'chasers';
+  if(gapSeconds<=60)return 'peloton';
+  return 'tail';
+}
+
+function buildRaceSituation(game){
+  if(!game.race?.progress)return {leader:null,byEntry:{}};
+  const entries=[];
+  for(const player of game.players){
+    const prog=game.race.progress[player.id];
+    if(!prog)continue;
+    for(const [riderId,state] of Object.entries(prog.riders)){
+      if(state.dnf)continue;
+      const rider=player.team.riders.find((candidate) => candidate.id===riderId);
+      entries.push({playerId:player.id,playerName:player.name,riderId,riderName:rider?.name||'Renner',timeAccumulated:state.timeAccumulated});
+    }
+  }
+  entries.sort((a,b) => a.timeAccumulated-b.timeAccumulated||a.riderName.localeCompare(b.riderName));
+  if(!entries.length)return {leader:null,byEntry:{}};
+  const leaderTime=entries[0].timeAccumulated;
+  const byEntry={};
+  for(const entry of entries){
+    const gapToLeader=Math.max(0,entry.timeAccumulated-leaderTime);
+    byEntry[`${entry.playerId}:${entry.riderId}`]={gapToLeader,raceGroup:raceGroupForGap(gapToLeader)};
+  }
+  return {leader:{...entries[0],gapToLeader:0,raceGroup:'breakaway'},byEntry};
+}
+
 const TERRAIN_TYPE_LABELS = {flat:'Vlak',hills:'Heuvels',mountain:'Berg',cobbles:'Kasseien',timeTrial:'Tijdrit'};
 const MOUNTAIN_POINTS = {1:15,2:10,3:6,4:3};
 const SPRINT_POINTS = [15,10,5];
@@ -1134,16 +1164,20 @@ function serializeRace(game,requesterId,catalogRace){
   base.segmentIndex=game.race.segmentIndex;
   base.segment=game.race.segments[game.race.segmentIndex];
   base.tacticLabels=TACTIC_LABELS;
+  const situation=buildRaceSituation(game);
+  if(game.race.segmentIndex>0)base.leader=situation.leader;
   const myProg=game.race.progress[requesterId];
   const requester=game.players.find((candidate) => candidate.id===requesterId);
   base.myProgress=myProg?{
     awaitingConfirmation:playerAwaitsConfirmation(myProg),
     riders:Object.fromEntries(Object.entries(myProg.riders).map(([riderId,state]) => {
       const rider=requester?.team.riders.find((candidate) => candidate.id===riderId);
+      const position=situation.byEntry[`${requesterId}:${riderId}`]||{};
       return [riderId,{
         name:rider?.name||'Renner', role:rider?riderRole(rider):'allrounder',
         fatigue:rider?.fatigue??0, gelsRemaining:rider?.gelsRemaining??0,
-        pr:Math.round(state.pr*10)/10, segments:state.segments, dnf:state.dnf
+        pr:Math.round(state.pr*10)/10, segments:state.segments, dnf:state.dnf,
+        gapToLeader:position.gapToLeader??null, raceGroup:position.raceGroup||null
       }];
     }))
   }:null;
@@ -1200,5 +1234,5 @@ module.exports={
   meta, createGame, handleAction, serialize, tick, preparePlayers, afterStateChange,
   RACE_CATALOG, GRAND_TOUR_CATALOG, SHOP_COSTS, STAT_KEYS, SQUAD_SIZE, MAX_RIDERS, TEAMS, REAL_RIDERS,
   STAGES_PER_GRAND_TOUR, SEGMENTS_PER_RACE, RIDER_TACTICS, TACTIC_LABELS, TACTIC_EFFECTS, GELS_PER_RACE,
-  calculateSegmentStep, buildSegmentPlan
+  calculateSegmentStep, buildSegmentPlan, raceGroupForGap, buildRaceSituation
 };

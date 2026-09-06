@@ -45,6 +45,16 @@ test('calculateSegmentStep: tactic bonuses are added directly to the dice roll',
   assert.equal(attack.d1.personalMultiplier, 1);
 });
 
+test('race groups are determined by the time gap to the leader', () => {
+  assert.equal(cc.raceGroupForGap(0), 'breakaway');
+  assert.equal(cc.raceGroupForGap(5), 'breakaway');
+  assert.equal(cc.raceGroupForGap(6), 'chasers');
+  assert.equal(cc.raceGroupForGap(20), 'chasers');
+  assert.equal(cc.raceGroupForGap(21), 'peloton');
+  assert.equal(cc.raceGroupForGap(60), 'peloton');
+  assert.equal(cc.raceGroupForGap(61), 'tail');
+});
+
 test('calculateSegmentStep: tactics change fatigue as documented', () => {
   const attacker = makeRider({id: 'a1', fatigue: 20});
   const recoverer = makeRider({id: 'r2', fatigue: 20});
