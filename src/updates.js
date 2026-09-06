@@ -494,6 +494,12 @@ const RELEASES = [
     improvements:[
       "The Big Blue C: knoppenbalk toont enkel losse knoppen zonder kaderpaneel, kaart licht uitgezoomd voor meer overzicht."
     ]
+  },
+  {
+    version:"1.24.2",
+    improvements:[
+      "Splits games"
+    ]
   }
 ];
 

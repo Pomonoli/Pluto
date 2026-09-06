@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.24.1
+## Nieuw in versie 1.24.2
 
-The Big Blue C: knoppenbalk toont enkel losse knoppen zonder kaderpaneel, kaart licht uitgezoomd voor meer overzicht.
+Splits games
 
 ## Nieuw in versie 1.24.0
 

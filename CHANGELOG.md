@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.24.2 — Splits games
+
+- Splits games
+
 ## v1.24.1 — The Big Blue C: knoppenbalk toont enkel losse knoppen zonder kaderpaneel, kaart licht uitgezoomd voor meer overzicht.
 
 - The Big Blue C: knoppenbalk toont enkel losse knoppen zonder kaderpaneel, kaart licht uitgezoomd voor meer overzicht.
