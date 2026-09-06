@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.26.0 — Elements Arena
+
+- Nieuwe Pluto Original voor 2–4 spelers en NPC's: kies per end exact één Fire-, Water-, Earth- en Air-steen, mik met drag-back en speel twee ends.
+- De server-authoritatieve arena-physics ondersteunen voorspelbare rebounds, gewone botsingen voor gelijke en neutrale elementen, de exacte counter-ring en stenen die buiten de arena verdwijnen.
+- De schermvullende mobile-first arena toont alle vier scorezones, publieke resterende elementen, compacte scores, trajectory en powerfeedback.
+- Gerichte regressietests bewaken counters, scorezones, beurt- en endverloop, actievalidatie en NPC-spel.
+
 ## v1.25.1 — CycClub: hoogteprofiel in wielerstijl
 
 - Het ritprofiel tijdens het rijden is herwerkt in de stijl van een echt wielerprofiel: de vulling kleurt per stuk van geel/oranje naar dieprood naarmate het stijgingspercentage toeneemt.

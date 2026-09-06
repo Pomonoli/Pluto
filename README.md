@@ -2,13 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.25.1
+## Nieuw in versie 1.26.0
 
-Het CycClub-ritprofiel tijdens het rijden is herwerkt in de stijl van een echt wielerprofiel: de vulling kleurt van geel/oranje naar dieprood naarmate het stijgingspercentage toeneemt, met een hoogte-as, kilometermarkeringen, een start- en finishvlag en gecategoriseerde beklimmingen.
-
-## Nieuw in versie 1.25.0
-
-CycClub heeft een nieuw tabblad "Tactieken" waar je permanente tactiekkaarten koopt (zoals Treintje rijden, Kasseienspecialist, Hinderlaag in de klim of Aero-opstelling). Voor elke rit krijg je een keuze uit maximaal drie kaarten uit je bezit die je eenmalig kan inzetten: sluit de tactiek aan bij het terrein van de rit, dan krijgen je renners een multiplier op hun segmentbonus voor de hele rit.
+Elements Arena is een nieuwe Pluto Original voor 2–4 spelers en NPC's. Kies Fire, Water, Earth en Air elk één keer per end, mik met drag-back, counter rivaliserende stenen en claim de waardevolle Nexus in twee snelle ends.
 
 ## Nieuw in versie 1.0.0
 
@@ -27,6 +23,7 @@ Alle games zijn ondergebracht in zelfstandige modules onder `games/`. Iedere gam
 | Cascadia | 2-4 | Ja |
 | Cluedo | 2-6 | Ja |
 | CycClub | 1-6 | Ja |
+| Elements Arena | 2-4 | Ja |
 | Hartenjagen | 4 | Ja |
 | Hofslag | 2-4 | Ja |
 | Isle of Skye | 2-4 | Ja |

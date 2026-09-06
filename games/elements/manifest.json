@@ -1,0 +1,16 @@
+{
+  "key": "elements",
+  "name": "Elements Arena",
+  "category": "original",
+  "visible": false,
+  "description": "Mik vier elementstenen de arena in, counter rivalen en claim de Nexus.",
+  "version": "1",
+  "icon": "◉",
+  "badge": "2-4",
+  "actionLabel": "Nieuw spel",
+  "minPlayers": 2,
+  "maxPlayers": 4,
+  "supportsNpc": true,
+  "realtime": false,
+  "solo": false
+}

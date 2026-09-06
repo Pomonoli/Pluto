@@ -1,5 +1,5 @@
-import { createGameUi } from './js/game-ui.js?v=1.25.1';
-import { createScreenWakeLock } from './js/screen-wake-lock.js?v=1.25.1';
+import { createGameUi } from './js/game-ui.js?v=1.26.0';
+import { createScreenWakeLock } from './js/screen-wake-lock.js?v=1.26.0';
 const socket = window.io();
 const screenWakeLock = createScreenWakeLock({ navigator, document, window });
   const $ = (id) => document.getElementById(id);
@@ -357,7 +357,7 @@ const screenWakeLock = createScreenWakeLock({ navigator, document, window });
         if(game.styleUrl&&!document.querySelector(`link[data-game-plugin="${game.key}"]`)){const link=document.createElement('link');link.rel='stylesheet';link.href=game.styleUrl;link.dataset.gamePlugin=game.key;document.head.append(link)}
         if(game.viewUrl){try{const viewResponse=await fetch(game.viewUrl);if(!viewResponse.ok)throw new Error(`HTTP ${viewResponse.status}`);const template=document.createElement('template');template.innerHTML=await viewResponse.text();document.querySelector('main').insertBefore(template.content,els.lobbyBrowserView)}catch(error){console.error(`Extra view van ${game.key} kon niet laden:`,error)}}
         if(game.clientUrl){try{const plugin=await import(game.clientUrl);gameUi.registerPlugin(game.key,plugin);state.gamePlugins[game.key]=plugin;plugin.mount?.({state,els,E,toast,openAccount,hideMainViews})}catch(error){loadError=error;console.error(`Game-plugin ${game.key} kon niet laden:`,error)}}
-        if(!els.gameGrid.querySelector(`[data-game="${game.key}"]`)){
+        if(game.visible!==false&&!els.gameGrid.querySelector(`[data-game="${game.key}"]`)){
           const card=E('article','game-card'),icon=E('div','game-icon',game.icon),body=E('div','game-card-body'),titleRow=E('div','game-title-row');card.dataset.category=game.category;titleRow.append(E('h3','',game.name),E('span','badge',game.badge));
           const info=E('button','game-info','i');info.type='button';info.dataset.rulesGame=game.key;info.setAttribute('aria-label',`Spelregels van ${game.name}`);
           const launch=E('button','primary game-launch',game.actionLabel);launch.type='button';launch.dataset.game=game.key;
@@ -662,7 +662,7 @@ const screenWakeLock = createScreenWakeLock({ navigator, document, window });
   if('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.25.1', {
+        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.26.0', {
           updateViaCache:'none'
         });
         await registration.update();

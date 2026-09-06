@@ -512,6 +512,15 @@ const RELEASES = [
     improvements:[
       'CycClub: het ritprofiel tijdens het rijden is herwerkt in de stijl van een echt wielerprofiel, met een gekleurde vulling naar stijgingspercentage, een hoogte-as, kilometermarkeringen, een start- en finishvlag en gecategoriseerde beklimmingen.'
     ]
+  },
+  {
+    version:'1.26.0',
+    games:[
+      'Elements Arena'
+    ],
+    features:[
+      'Elements Arena: mik Fire, Water, Earth en Air de ronde arena in, counter vijandige stenen en scoor in twee ends door de waardevolste ringen en de Nexus te claimen.'
+    ]
   }
 ];
 
