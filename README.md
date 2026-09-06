@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.27.0
+## Nieuw in versie 1.28.0
 
-Add Elements and hide it
+CycClub heeft een nieuw diepgaand tactieksysteem: elke renner kiest elk segment zelf een tactiek (Herstel, Volg, Kop, Val aan of Bidons) met een eigen effect op multiplier en vermoeidheid, renners hebben een individuele vermoeidheidsmeter en energiegels, en Grote Rondes bouwen nu vijf volwaardige klassementen op (Algemeen, Punten, Bergen, Jongeren en Ploegen).
 
 ## Nieuw in versie 1.0.0
 

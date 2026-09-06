@@ -527,6 +527,16 @@ const RELEASES = [
     improvements:[
       "Add Elements and hide it"
     ]
+  },
+  {
+    version:'1.28.0',
+    features:[
+      'CycClub: elke renner in je opstelling kiest nu elk segment zelf een tactiek — Herstel, Volg, Kop, Val aan of Bidons — die een eigen effect heeft op zijn multiplier en vermoeidheid, plus een individuele vermoeidheidsmeter en twee energiegels per rit.',
+      'CycClub: Grote Rondes bouwen nu vijf volwaardige klassementen op — Algemeen (tijd), Punten/Groen, Bergen/Bolletjes, Jongeren/Wit en Ploegen — elk met een eigen tabblad tijdens de rit en in de ritresultaten.'
+    ],
+    improvements:[
+      'CycClub: elk segment heeft nu een eigen terrein (vlak, heuvels, berg, kasseien of tijdrit) dat een rol-gebonden bonus of malus geeft aan klimmers, sprinters en allrounders; de permanente tactiekkaarten en het aparte tabblad Tactieken zijn hiermee vervangen.'
+    ]
   }
 ];
 

@@ -28,31 +28,125 @@ const SPECIALISMS = {
   puncheur:['mountain','sprint']
 };
 
-const TACTIC_HAND_SIZE = 3;
-const TACTIC_CARDS = [
-  {id:'leadout-train', name:'Treintje rijden', description:'Een gesloten kopgroep beschermt je sprinter op vlakke wegen.', terrainKey:'flat', multiplier:1.5, cost:15000},
-  {id:'sprint-leadout', name:'Bewaakte sprint', description:'De laatste man lanceert de sprinter op het perfecte moment.', terrainKey:'sprint', multiplier:1.5, cost:15000},
-  {id:'cobble-specialist', name:'Kasseienspecialist', description:'Je ploeg kent elke kasseistrook uit het hoofd.', terrainKey:'cobbles', multiplier:1.5, cost:15000},
-  {id:'mountain-ambush', name:'Hinderlaag in de klim', description:'Een vroege aanval verrast de klassementsrenners.', terrainKey:'mountain', multiplier:1.5, cost:18000},
-  {id:'aero-setup', name:'Aero-opstelling', description:'Tijdritmateriaal en houding zijn tot in de puntjes afgesteld.', terrainKey:'timeTrial', multiplier:1.6, cost:20000},
-  {id:'all-in', name:'Alles-of-niets', description:'Je ploeg gooit het roer om, wat het terrein ook is.', terrainKey:null, multiplier:1.2, cost:25000}
-];
-const TACTIC_CARD_BY_ID = new Map(TACTIC_CARDS.map((card) => [card.id, card]));
+// Individuele renner-tactieken per segment: elke renner in de opstelling kiest elk
+// segment een houding, die samen met terrein en vermoeidheid zijn personalMultiplier bepaalt.
+const RIDER_TACTICS = ['recover','follow','leadout','attack','fetch_bidons'];
+const TACTIC_LABELS = {recover:'Herstel', follow:'Volg', leadout:'Kop', attack:'Val aan', fetch_bidons:'Bidons'};
+// multiplier hier is de multiplicatieve intentie uit het ontwerp; in de somformule van
+// calculateSegmentStep wordt dit gebruikt als (multiplier-1), dus als een optelbare bonus/malus.
+const TACTIC_EFFECTS = {
+  recover:{multiplier:0.85, fatigueDelta:-10},
+  follow:{multiplier:1.00, fatigueDelta:5},
+  leadout:{multiplier:1.25, fatigueDelta:20},
+  attack:{multiplier:1.50, fatigueDelta:35},
+  fetch_bidons:{multiplier:0.80, fatigueDelta:15}
+};
+const LEADOUT_DRAFT_BONUS = 0.15;
+const FETCH_BIDONS_RELIEF = 15;
+const GEL_FATIGUE_RELIEF = 25;
+const GELS_PER_RACE = 2;
+const BONK_THRESHOLD = 91;
 
-function dominantTerrainKey(terrain){
-  return Object.entries(terrain).sort((a,b) => b[1]-a[1])[0]?.[0]||null;
+const ROLE_BY_SPECIALISM = {sprinter:'sprinter', climber:'climber', allrounder:'allrounder', classics:'allrounder', puncheur:'allrounder'};
+function riderRole(rider){return ROLE_BY_SPECIALISM[rider.specialism]||'allrounder'}
+
+function terrainFactorFor(role,terrainType){
+  if(role==='climber')return terrainType==='mountain'?0.25:(terrainType==='flat'?-0.05:0);
+  if(role==='sprinter')return terrainType==='flat'?0.20:(terrainType==='mountain'?-0.25:0);
+  if(role==='allrounder')return (terrainType==='hills'||terrainType==='cobbles')?0.10:0;
+  return 0; // domestique: geen terreinbonus
 }
 
-function tacticMatches(card,catalogRace){
-  if(!card)return false;
-  if(card.terrainKey===null)return true;
-  return dominantTerrainKey(catalogRace.terrain)===card.terrainKey;
+function fatiguePenaltyFor(fatigue){
+  if(fatigue<=40)return 0;
+  if(fatigue<=70)return 0.10;
+  if(fatigue<=90)return 0.25;
+  return 0.5; // Hongerklop: apart afgekapt op ×0.5 in calculateSegmentStep
 }
 
-function offerTacticCards(team){
-  const owned=team.tacticCards||[];
-  if(!owned.length)return [];
-  return [...owned].sort(() => Math.random()-0.5).slice(0,TACTIC_HAND_SIZE);
+// Zuivere rekenfunctie: past gel- en bidon-effecten toe (muteert fatigue/gelsRemaining op de
+// meegegeven renners) en berekent daarna elke renner z'n personalMultiplier voor dit segment.
+function calculateSegmentStep(riders,tacticsByRiderId,gelsByRiderId,segment,baseDiceRoll,team){
+  const bikeBonus=(team?.shop?.bikes||0)*0.02;
+  for(const rider of riders){
+    if(gelsByRiderId[rider.id]&&rider.gelsRemaining>0){
+      rider.fatigue=clamp(rider.fatigue-GEL_FATIGUE_RELIEF,0,100);
+      rider.gelsRemaining-=1;
+    }
+  }
+  const fetchingBidons=riders.some((rider) => tacticsByRiderId[rider.id]==='fetch_bidons');
+  if(fetchingBidons){
+    for(const rider of riders){
+      if(tacticsByRiderId[rider.id]==='fetch_bidons')continue;
+      rider.fatigue=clamp(rider.fatigue-FETCH_BIDONS_RELIEF,0,100);
+    }
+  }
+  const hasLeadout=riders.some((rider) => tacticsByRiderId[rider.id]==='leadout');
+
+  const results={};
+  for(const rider of riders){
+    let tactic=RIDER_TACTICS.includes(tacticsByRiderId[rider.id])?tacticsByRiderId[rider.id]:'follow';
+    const bonked=rider.fatigue>=BONK_THRESHOLD;
+    if(bonked&&(tactic==='attack'||tactic==='leadout'))tactic='follow';
+    const effects=TACTIC_EFFECTS[tactic];
+    const role=riderRole(rider);
+    const terrain=terrainFactorFor(role,segment.terrainType);
+    const tacticBonus=(effects.multiplier-1)+((tactic==='follow'&&hasLeadout)?LEADOUT_DRAFT_BONUS:0);
+    const effectiveFatigue=rider.fatigue*(1-(team?.shop?.nutrition||0)*0.08);
+    const fatiguePenalty=bonked?0.5:fatiguePenaltyFor(effectiveFatigue);
+    const statFactor=team?statFactorFor(rider,team,segment):0;
+    let personalMultiplier=(1+terrain+tacticBonus+bikeBonus+statFactor-fatiguePenalty)*(baseDiceRoll/10);
+    if(bonked)personalMultiplier=Math.min(personalMultiplier,0.5);
+    personalMultiplier=Math.round(personalMultiplier*1000)/1000;
+    rider.fatigue=clamp(rider.fatigue+effects.fatigueDelta,0,100);
+    results[rider.id]={personalMultiplier, tactic, role, bonked};
+  }
+  return results;
+}
+
+function scoreFromMultiplier(personalMultiplier){return Math.round((personalMultiplier-1)*20)}
+function timeDeltaFromMultiplier(personalMultiplier,fieldAverage){return Math.round((fieldAverage-personalMultiplier)*30)}
+
+const TERRAIN_TYPE_LABELS = {flat:'Vlak',hills:'Heuvels',mountain:'Berg',cobbles:'Kasseien',timeTrial:'Tijdrit'};
+const MOUNTAIN_POINTS = {1:15,2:10,3:6,4:3};
+const SPRINT_POINTS = [15,10,5];
+
+function terrainTypeForStatKey(key){
+  if(key==='mountain')return Math.random()<0.45?'mountain':'hills';
+  if(key==='cobbles')return 'cobbles';
+  if(key==='timeTrial')return 'timeTrial';
+  return 'flat';
+}
+
+function elevationGainFor(terrainType){
+  if(terrainType==='mountain')return randInt(600,1200);
+  if(terrainType==='hills')return randInt(200,500);
+  if(terrainType==='cobbles')return randInt(20,80);
+  if(terrainType==='timeTrial')return randInt(10,60);
+  return randInt(10,100);
+}
+
+// Bouwt eenmalig, bij de start van een rit, een lijst van SEGMENTS_PER_RACE segmentconfigs
+// (terrein, hoogtemeters, tussensprint, bergcategorie) op basis van het terreinprofiel van de rit.
+function buildSegmentPlan(catalogRace){
+  const weighted=Object.entries(catalogRace.terrain||{});
+  const total=weighted.reduce((sum,[,weight]) => sum+weight,0)||1;
+  const segments=[];
+  for(let i=0;i<SEGMENTS_PER_RACE;i+=1){
+    let roll=Math.random()*total;
+    let chosenKey=weighted[0]?.[0]||'flat';
+    for(const [key,weight] of weighted){
+      if(roll<weight){chosenKey=key;break}
+      roll-=weight;
+    }
+    const terrainType=terrainTypeForStatKey(chosenKey);
+    segments.push({segmentIndex:i, totalSegments:SEGMENTS_PER_RACE, terrainType, elevationGain:elevationGainFor(terrainType), hasIntermediateSprint:false, mountainCategory:0});
+  }
+  const sprintCandidates=segments.filter((segment,index) => index<SEGMENTS_PER_RACE-1&&(segment.terrainType==='flat'||segment.terrainType==='hills'));
+  if(sprintCandidates.length)pick(sprintCandidates).hasIntermediateSprint=true;
+  const mountainSegments=segments.filter((segment) => segment.terrainType==='mountain').sort((a,b) => b.elevationGain-a.elevationGain);
+  mountainSegments.forEach((segment,index) => {segment.mountainCategory=Math.min(4,index+1)});
+  return segments;
 }
 
 // 2026-seizoen: de 10 grootste WorldTour-ploegen met hun actuele kernrenners.
@@ -270,7 +364,7 @@ function makeRealRider(entry){
   return {
     id:makeId('r'), name:entry.name, age:entry.age, teamId:entry.teamId,
     marketValue:marketValueFor(stats,entry.age), stats,
-    status:'active', statusUntil:0, fatigue:0, specialism:entry.specialism
+    status:'active', statusUntil:0, fatigue:0, gelsRemaining:GELS_PER_RACE, specialism:entry.specialism
   };
 }
 
@@ -301,12 +395,11 @@ function scoutCandidates(excludeNames){
 function defaultShop(){return {bikes:0,nutrition:0,trainers:0,medical:0}}
 
 function describeShopEffects(shop){
-  const pechThreshold=Math.max(2,8-shop.bikes);
   const injuryReduction=Math.min(5,Math.floor(shop.medical*0.6));
   const crashChancePct=Math.round(clamp(0.30-shop.medical*0.06,0.04,0.30)*100);
   const illnessChancePct=Math.round(clamp(0.06-shop.medical*0.01,0.01,0.06)*100);
   return {
-    bikes:shop.bikes?`+${Math.round(shop.bikes*1.4*10)/10} snelheid · pech pas onder ${pechThreshold} i.p.v. 8`:'Geen bonus',
+    bikes:shop.bikes?`+${Math.round(shop.bikes*0.02*1000)/10}% op de personalMultiplier van elke renner`:'Geen bonus',
     nutrition:shop.nutrition?`-${shop.nutrition*8}% impact vermoeidheid · +${shop.nutrition*3} sneller herstel`:'Geen bonus',
     trainers:shop.trainers?`+${shop.trainers*3} op de 3 beste statistieken per renner`:'Geen bonus',
     medical:shop.medical?`-${injuryReduction} races uitvaltijd · ${crashChancePct}% valkans · ${illnessChancePct}% ziektekans`:'Geen bonus'
@@ -323,17 +416,9 @@ function sanitizeRider(rider){
     marketValue:Math.max(0,Number(rider?.marketValue)||marketValueFor(stats,Number(rider?.age)||24)),
     stats, status:['active','injured','sick'].includes(rider?.status)?rider.status:'active',
     statusUntil:Number(rider?.statusUntil)||0, fatigue:clamp(Number(rider?.fatigue)||0,0,100),
+    gelsRemaining:clamp(Number(rider?.gelsRemaining)??GELS_PER_RACE,0,GELS_PER_RACE),
     specialism:SPECIALISMS[rider?.specialism]?rider.specialism:'allrounder'
   };
-}
-
-function sanitizeTacticCards(saved){
-  if(!Array.isArray(saved))return [];
-  return [...new Set(saved.filter((id) => TACTIC_CARD_BY_ID.has(id)))];
-}
-
-function randomTacticCards(count){
-  return [...TACTIC_CARDS].sort(() => Math.random()-0.5).slice(0,count).map((card) => card.id);
 }
 
 function hydrateTeam(saved){
@@ -342,7 +427,6 @@ function hydrateTeam(saved){
     wallet:Math.max(0,Number(saved?.wallet??STARTING_WALLET)),
     riders,
     shop:{...defaultShop(),...(saved?.shop||{})},
-    tacticCards:sanitizeTacticCards(saved?.tacticCards),
     career:{...defaultCareer(),...(saved?.career||{})},
     raceCount:Math.max(0,Number(saved?.raceCount)||0)
   };
@@ -351,7 +435,7 @@ function hydrateTeam(saved){
 function defaultTeam(isNpc){
   return {
     wallet:STARTING_WALLET, riders:starterRiders(isNpc?NPC_STARTER_RIDERS:STARTER_RIDERS), shop:defaultShop(),
-    tacticCards:isNpc?randomTacticCards(2):[], career:defaultCareer(), raceCount:0
+    career:defaultCareer(), raceCount:0
   };
 }
 
@@ -400,8 +484,9 @@ function availableRiders(team){
 
 function startStageLineup(game,raceId){
   game.phase='lineup';
-  game.race={raceId, lineups:{}, npcTimers:{}, startedAt:Date.now(), tacticOffers:{}, tacticChoice:{}};
-  for(const player of game.players) game.race.tacticOffers[player.id]=offerTacticCards(player.team);
+  const catalogRace=currentCatalogRace(raceId);
+  game.race={raceId, lineups:{}, npcTimers:{}, startedAt:Date.now(), segments:buildSegmentPlan(catalogRace)};
+  for(const player of game.players) for(const rider of player.team.riders) rider.gelsRemaining=GELS_PER_RACE;
   for(const candidate of game.players) if(candidate.isNpc) autoLineup(game,candidate);
 }
 
@@ -409,20 +494,28 @@ function autoLineup(game,player){
   const catalogRace=currentCatalogRace(game.race.raceId);
   const ranked=availableRiders(player.team).sort((a,b) => scoreRiderForRace(b,catalogRace,player.team)-scoreRiderForRace(a,catalogRace,player.team));
   game.race.lineups[player.id]=ranked.slice(0,SQUAD_SIZE).map((rider) => rider.id);
-  const offered=game.race.tacticOffers[player.id]||[];
-  const matching=offered
-    .map((cardId) => TACTIC_CARD_BY_ID.get(cardId))
-    .filter((card) => tacticMatches(card,catalogRace))
-    .sort((a,b) => b.multiplier-a.multiplier)[0];
-  game.race.tacticChoice[player.id]=matching?.id||null;
+}
+
+// Eenvoudige NPC-tactiekkeuze: herstel bij hoge vermoeidheid, val anders aan op terrein
+// dat bij de renner past, gebruik af en toe een gel als de vermoeidheid oploopt.
+function autoTacticsFor(player,prog,segment){
+  const tactics={},gels={};
+  for(const riderId of activeRiderIds(prog)){
+    const rider=player.team.riders.find((candidate) => candidate.id===riderId);
+    if(!rider)continue;
+    if(rider.fatigue>=BONK_THRESHOLD)tactics[riderId]='recover';
+    else if(rider.fatigue>70)tactics[riderId]=Math.random()<0.5?'recover':'follow';
+    else if(terrainFactorFor(riderRole(rider),segment.terrainType)>0&&Math.random()<0.5)tactics[riderId]='attack';
+    else tactics[riderId]='follow';
+    if(rider.fatigue>60&&rider.gelsRemaining>0&&Math.random()<0.6)gels[riderId]=true;
+  }
+  return {tactics,gels};
 }
 
 function applyUnavailable(rider,team,races,status){
   rider.status=status;
   rider.statusUntil=team.raceCount+races;
 }
-
-function pechThresholdFor(team){return Math.max(2,8-team.shop.bikes)}
 
 function trainerBoostedStats(stats,trainers){
   if(!trainers)return stats;
@@ -432,37 +525,20 @@ function trainerBoostedStats(stats,trainers){
   return boosted;
 }
 
-function baseMultiplierFor(team){
-  const totalLevels=team.shop.bikes+team.shop.nutrition+team.shop.trainers+team.shop.medical;
-  return Math.round((1+totalLevels*0.03)*1000)/1000;
-}
+const SEGMENT_STAT_WEIGHTS = {
+  flat:{flat:0.5,sprint:0.35,stamina:0.15},
+  hills:{mountain:0.35,flat:0.35,stamina:0.3},
+  mountain:{mountain:0.65,stamina:0.35},
+  cobbles:{cobbles:0.6,flat:0.15,stamina:0.25},
+  timeTrial:{timeTrial:0.8,stamina:0.2}
+};
 
-function riderSegmentModifier(rider,catalogRace,team){
-  const trainedStats=trainerBoostedStats(rider.stats,team.shop.trainers);
-  const baseStat=weightedStat(trainedStats,catalogRace.terrain);
-  const statMod=Math.round((baseStat-50)/8);
-  const fatiguePenalty=clamp((rider.fatigue/100)*(1-team.shop.nutrition*0.08),0,0.6);
-  const fatigueMod=-Math.round(fatiguePenalty*10);
-  return statMod+fatigueMod;
-}
-
-function resolveRiderSegment(rider,catalogRace,team,roll,multiplier,tacticFactor=1){
-  const riderModifier=riderSegmentModifier(rider,catalogRace,team);
-  const bonus=Math.round(riderModifier*multiplier*tacticFactor);
-  if(roll===1){
-    const crashChance=clamp(0.30-team.shop.medical*0.06,0.04,0.30);
-    if(Math.random()<crashChance){
-      const duration=Math.max(1,randInt(3,6)-Math.floor(team.shop.medical*0.6));
-      applyUnavailable(rider,team,duration,'injured');
-      return {roll,total:roll+bonus,outcome:'valt',score:0,dnf:true};
-    }
-  }
-  const total=roll+bonus;
-  const pechThreshold=pechThresholdFor(team);
-  if(total>=24)return {roll,total,outcome:'topdag',score:total+6,dnf:false};
-  if(total>=18)return {roll,total,outcome:'opportuniteit',score:total+3,dnf:false};
-  if(total<=pechThreshold)return {roll,total,outcome:'pech',score:total-4,dnf:false};
-  return {roll,total,outcome:'normaal',score:total,dnf:false};
+// Extra bijdrage van renner-statistieken en de Trainers-upgrade, bovenop de rol-gebaseerde
+// terreinbonus uit de spec — houdt scouting/training relevant zonder de kernformule te breken.
+function statFactorFor(rider,team,segment){
+  const trained=trainerBoostedStats(rider.stats,team.shop.trainers);
+  const weighted=weightedStat(trained,SEGMENT_STAT_WEIGHTS[segment.terrainType]||SEGMENT_STAT_WEIGHTS.flat);
+  return clamp((weighted-50)/250,-0.2,0.3);
 }
 
 function startRacing(game){
@@ -473,11 +549,8 @@ function startRacing(game){
   for(const player of game.players){
     const riderIds=game.race.lineups[player.id]||[];
     const riders={};
-    for(const riderId of riderIds) riders[riderId]={pr:0,segments:[],dnf:false};
-    game.race.progress[player.id]={
-      multiplier:baseMultiplierFor(player.team), bankStreak:0,
-      pendingRoll:null, confirmed:false, riders
-    };
+    for(const riderId of riderIds) riders[riderId]={pr:0,timeAccumulated:0,pointsGreen:0,pointsPolka:0,segments:[],dnf:false};
+    game.race.progress[player.id]={pendingRoll:null, confirmed:false, riders};
   }
 }
 
@@ -494,28 +567,74 @@ function playerAwaitsConfirmation(prog){
   return activeRiderIds(prog).length>0&&!prog.confirmed;
 }
 
-function resolveSegmentFor(game,player,apply){
+// Kanshalvering op een val bij de slechtst mogelijke worp (1 op een 1-10 dobbelsteen),
+// net als voorheen verminderd door de Medische Staf-upgrade.
+function maybeCrash(rider,team,roll){
+  if(roll!==1)return false;
+  const crashChance=clamp(0.30-team.shop.medical*0.06,0.04,0.30);
+  if(Math.random()>=crashChance)return false;
+  const duration=Math.max(1,randInt(3,6)-Math.floor(team.shop.medical*0.6));
+  applyUnavailable(rider,team,duration,'injured');
+  return true;
+}
+
+function resolveSegmentFor(game,player){
   const race=game.race;
   const prog=race.progress[player.id];
   if(!prog||prog.confirmed||!prog.pendingRoll)return;
-  const catalogRace=currentCatalogRace(race.raceId);
-  const roll=prog.pendingRoll.roll;
-  const multiplierUsed=apply?prog.multiplier:1;
-  const tacticCard=TACTIC_CARD_BY_ID.get(race.tacticChoice?.[player.id]);
-  const tacticFactor=tacticMatches(tacticCard,catalogRace)?tacticCard.multiplier:1;
-  for(const riderId of activeRiderIds(prog)){
-    const rider=player.team.riders.find((candidate) => candidate.id===riderId);
-    const state=prog.riders[riderId];
-    if(!rider||!state)continue;
-    const segment=resolveRiderSegment(rider,catalogRace,player.team,roll,multiplierUsed,tacticFactor);
-    state.segments.push({n:race.segmentIndex+1, roll:segment.roll, total:segment.total, outcome:segment.outcome});
-    if(segment.dnf)state.dnf=true;
-    else state.pr+=segment.score;
+  const {roll,tactics,gels}=prog.pendingRoll;
+  const activeIds=activeRiderIds(prog);
+  const riders=activeIds.map((riderId) => player.team.riders.find((candidate) => candidate.id===riderId)).filter(Boolean);
+  const segment=race.segments[race.segmentIndex];
+  const steps=calculateSegmentStep(riders,tactics,gels,segment,roll,player.team);
+  for(const rider of riders){
+    const state=prog.riders[rider.id];
+    const step=steps[rider.id];
+    if(!state||!step)continue;
+    if(maybeCrash(rider,player.team,roll)){
+      state.dnf=true;
+      state.segments.push({n:race.segmentIndex+1, roll, tactic:step.tactic, multiplier:step.personalMultiplier, outcome:'valt'});
+      continue;
+    }
+    const score=scoreFromMultiplier(step.personalMultiplier);
+    state.pr+=score;
+    state.segments.push({n:race.segmentIndex+1, roll, tactic:step.tactic, multiplier:step.personalMultiplier, outcome:score>=6?'topdag':score<=-4?'pech':'normaal'});
   }
-  prog.multiplier=apply?baseMultiplierFor(player.team):Math.round(prog.multiplier*1.125*1000)/1000;
-  prog.bankStreak=apply?0:prog.bankStreak+1;
   prog.pendingRoll=null;
   prog.confirmed=true;
+}
+
+// Sluit een segment af zodra iedereen bevestigd heeft: berekent het veldgemiddelde
+// (voor het tijdsverschil in het algemeen klassement) en kent tussensprint-/bergpunten toe.
+function closeSegment(game){
+  const race=game.race;
+  const segment=race.segments[race.segmentIndex];
+  const fieldMultipliers=[];
+  const segmentResults=[];
+  for(const player of game.players){
+    const prog=race.progress[player.id];
+    if(!prog)continue;
+    for(const riderId of Object.keys(prog.riders)){
+      const state=prog.riders[riderId];
+      const entrySegment=state.segments.find((candidate) => candidate.n===race.segmentIndex+1);
+      if(!entrySegment||entrySegment.outcome==='valt')continue;
+      fieldMultipliers.push(entrySegment.multiplier);
+      segmentResults.push({playerId:player.id, riderId, state, multiplier:entrySegment.multiplier});
+    }
+  }
+  if(!segmentResults.length)return;
+  const fieldAverage=fieldMultipliers.reduce((sum,value) => sum+value,0)/fieldMultipliers.length;
+  for(const result of segmentResults) result.state.timeAccumulated+=timeDeltaFromMultiplier(result.multiplier,fieldAverage);
+
+  if(game.grandTour&&segment.hasIntermediateSprint){
+    segmentResults.slice().sort((a,b) => b.multiplier-a.multiplier).slice(0,SPRINT_POINTS.length)
+      .forEach((result,index) => {result.state.pointsGreen+=SPRINT_POINTS[index]});
+  }
+  if(game.grandTour&&segment.mountainCategory>0){
+    const points=MOUNTAIN_POINTS[segment.mountainCategory]||0;
+    if(points)segmentResults.slice().sort((a,b) => b.multiplier-a.multiplier).slice(0,3)
+      .forEach((result,index) => {result.state.pointsPolka+=Math.round(points/(index+1))});
+  }
 }
 
 function maybeAdvanceSegment(game){
@@ -523,6 +642,7 @@ function maybeAdvanceSegment(game){
   const race=game.race;
   const stillWaiting=game.players.some((player) => playerAwaitsConfirmation(race.progress[player.id]||{riders:{},confirmed:true}));
   if(stillWaiting)return false;
+  closeSegment(game);
   race.segmentIndex+=1;
   const finished=race.segmentIndex>=SEGMENTS_PER_RACE||game.players.every((player) => activeRiderIds(race.progress[player.id]).length===0);
   if(finished){
@@ -560,12 +680,12 @@ function finalizeRace(game){
       if(!rider||!state)continue;
       const event=state.dnf?'valt'
         :state.segments.some((segment) => segment.outcome==='topdag')?'topdag'
-        :state.segments.some((segment) => segment.outcome==='opportuniteit')?'opportuniteit'
         :state.segments.some((segment) => segment.outcome==='pech')?'pech'
         :'normaal';
       entries.push({
         playerId:player.id, playerName:player.name, riderId, riderName:rider.name, rider,
-        pr:Math.round(state.pr*10)/10, event, dnf:state.dnf, segments:state.segments
+        pr:Math.round(state.pr*10)/10, timeAccumulated:state.timeAccumulated, pointsGreen:state.pointsGreen, pointsPolka:state.pointsPolka,
+        event, dnf:state.dnf, segments:state.segments
       });
     }
   }
@@ -633,6 +753,30 @@ function finalizeStandaloneRace(game,race,catalogRace,finishers,dnfs){
   game.race=null;
 }
 
+// Berekent alle vijf klassementen (geel/groen/bolletjes/wit/ploegen) uit de gc-boekhouding
+// van een Grote Ronde. GC/wit/ploegen sorteren oplopend op tijd (lager = sneller/beter).
+function classificationStandings(gc){
+  const entries=Object.values(gc);
+  const rank=(list,key,ascending) => list.slice().sort((a,b) => ascending?a[key]-b[key]:b[key]-a[key])
+    .map((entry,index) => ({place:index+1, playerId:entry.playerId, playerName:entry.playerName, riderName:entry.riderName, value:entry[key], stageWins:entry.stageWins}));
+  const byPlayer=new Map();
+  for(const entry of entries){
+    if(!byPlayer.has(entry.playerId))byPlayer.set(entry.playerId,{playerId:entry.playerId, playerName:entry.playerName, riders:[]});
+    byPlayer.get(entry.playerId).riders.push(entry);
+  }
+  const team=[...byPlayer.values()].map((squad) => {
+    const top=squad.riders.slice().sort((a,b) => a.timeAccumulated-b.timeAccumulated).slice(0,3);
+    return {playerId:squad.playerId, playerName:squad.playerName, value:top.reduce((sum,entry) => sum+entry.timeAccumulated,0)};
+  }).sort((a,b) => a.value-b.value).map((entry,index) => ({...entry,place:index+1}));
+  return {
+    gc:rank(entries,'timeAccumulated',true),
+    green:rank(entries,'pointsGreen',false),
+    polka:rank(entries,'pointsPolka',false),
+    youth:rank(entries.filter((entry) => entry.age<=25),'timeAccumulated',true),
+    team
+  };
+}
+
 function finalizeGrandTourStage(game,race,catalogRace,finishers,dnfs){
   const tour=GRAND_TOUR_BY_ID.get(catalogRace.tourId);
   const stageNumber=catalogRace.stageNumber;
@@ -658,10 +802,17 @@ function finalizeGrandTourStage(game,race,catalogRace,finishers,dnfs){
   for(const entry of finishers){
     const key=`${entry.playerId}:${entry.riderId}`;
     if(!game.grandTour.gc[key]){
-      game.grandTour.gc[key]={playerId:entry.playerId, playerName:entry.playerName, riderId:entry.riderId, riderName:entry.riderName, rider:entry.rider, totalPr:0, stageWins:0};
+      game.grandTour.gc[key]={
+        playerId:entry.playerId, playerName:entry.playerName, riderId:entry.riderId, riderName:entry.riderName,
+        rider:entry.rider, age:entry.rider.age, totalPr:0, stageWins:0, timeAccumulated:0, pointsGreen:0, pointsPolka:0
+      };
     }
-    game.grandTour.gc[key].totalPr+=entry.pr;
-    if(entry.place===1)game.grandTour.gc[key].stageWins+=1;
+    const gc=game.grandTour.gc[key];
+    gc.totalPr+=entry.pr;
+    gc.timeAccumulated+=entry.timeAccumulated;
+    gc.pointsGreen+=entry.pointsGreen;
+    gc.pointsPolka+=entry.pointsPolka;
+    if(entry.place===1)gc.stageWins+=1;
   }
 
   game.grandTour.stageLog.push({
@@ -680,14 +831,15 @@ function finalizeGrandTourStage(game,race,catalogRace,finishers,dnfs){
   game.lastResult={
     type:'grand_tour_stage', tourId:tour.id, raceName:catalogRace.name, stageNumber, totalStages:tour.stages,
     classification:finishers.map((entry) => ({place:entry.place, playerId:entry.playerId, playerName:entry.playerName, riderName:entry.riderName, event:entry.event, segments:entry.segments, prize:entry.prize||0})),
-    dnfs:dnfs.map((entry) => ({playerId:entry.playerId, playerName:entry.playerName, riderName:entry.riderName, event:entry.event, segments:entry.segments}))
+    dnfs:dnfs.map((entry) => ({playerId:entry.playerId, playerName:entry.playerName, riderName:entry.riderName, event:entry.event, segments:entry.segments})),
+    classifications:classificationStandings(game.grandTour.gc)
   };
   game.phase='stageResult';
   game.race=null;
 }
 
 function finalizeGrandTourOverall(game,tour){
-  const gcEntries=Object.values(game.grandTour.gc).sort((a,b) => b.totalPr-a.totalPr);
+  const gcEntries=Object.values(game.grandTour.gc).sort((a,b) => a.timeAccumulated-b.timeAccumulated);
   gcEntries.forEach((entry,index) => {entry.gcPlace=index+1});
 
   const payouts=[];
@@ -715,6 +867,7 @@ function finalizeGrandTourOverall(game,tour){
     type:'grand_tour_final', tourId:tour.id, raceName:tour.name, totalStages:tour.stages,
     stages:game.grandTour.stageLog,
     gc:gcEntries.slice(0,10).map((entry) => ({place:entry.gcPlace, playerId:entry.playerId, playerName:entry.playerName, riderName:entry.riderName, stageWins:entry.stageWins})),
+    classifications:classificationStandings(game.grandTour.gc),
     payouts
   };
 
@@ -814,17 +967,6 @@ function handleAction(game,playerId,action,payload={}){
     return;
   }
 
-  if(action==='buyTacticCard'){
-    if(game.phase!=='club')throw new Error('Dit kan alleen in de club.');
-    const card=TACTIC_CARD_BY_ID.get(payload.cardId);
-    if(!card)throw new Error('Onbekende tactiek.');
-    if(player.team.tacticCards.includes(card.id))throw new Error('Je bezit deze tactiek al.');
-    if(player.team.wallet<card.cost)throw new Error('Onvoldoende budget.');
-    player.team.wallet-=card.cost;
-    player.team.tacticCards.push(card.id);
-    return;
-  }
-
   if(action==='restRider'){
     if(game.phase!=='club')throw new Error('Dit kan alleen in de club.');
     const rider=player.team.riders.find((candidate) => candidate.id===payload.riderId);
@@ -874,14 +1016,7 @@ function handleAction(game,playerId,action,payload={}){
       const rider=player.team.riders.find((candidate) => candidate.id===riderId);
       if(!rider||rider.status!=='active')throw new Error('Selecteer alleen beschikbare renners.');
     }
-    const offered=game.race.tacticOffers[playerId]||[];
-    let tacticCardId=null;
-    if(payload.tacticCardId){
-      if(!offered.includes(payload.tacticCardId))throw new Error('Deze tactiek is niet aangeboden voor deze rit.');
-      tacticCardId=payload.tacticCardId;
-    }
     game.race.lineups[playerId]=riderIds;
-    game.race.tacticChoice[playerId]=tacticCardId;
     maybeStartRacing(game);
     return;
   }
@@ -891,16 +1026,14 @@ function handleAction(game,playerId,action,payload={}){
     const prog=game.race.progress[playerId];
     if(!prog||!playerAwaitsConfirmation(prog))throw new Error('Er valt voor jou niets te rollen in dit segment.');
     if(prog.pendingRoll)throw new Error('Verwerk eerst je vorige worp.');
-    prog.pendingRoll={roll:randInt(1,20)};
-    return;
-  }
-
-  if(action==='resolveSegment'){
-    if(game.phase!=='racing'||!game.race)throw new Error('Er is geen actieve rit.');
-    const prog=game.race.progress[playerId];
-    if(!prog||!playerAwaitsConfirmation(prog))throw new Error('Er valt voor jou niets te bevestigen in dit segment.');
-    if(!prog.pendingRoll)throw new Error('Rol eerst een dobbelsteen.');
-    resolveSegmentFor(game,player,Boolean(payload.apply));
+    const activeIds=activeRiderIds(prog);
+    const tactics=payload.tactics&&typeof payload.tactics==='object'?payload.tactics:{};
+    const gels=payload.gels&&typeof payload.gels==='object'?payload.gels:{};
+    for(const riderId of activeIds){
+      if(!RIDER_TACTICS.includes(tactics[riderId]))throw new Error('Ken elke renner een tactiek toe voor je rolt.');
+    }
+    prog.pendingRoll={roll:randInt(1,10), tactics, gels};
+    resolveSegmentFor(game,player);
     maybeAdvanceSegment(game);
     return;
   }
@@ -940,14 +1073,16 @@ function tick(game,now=Date.now()){
   }
 
   if(game.phase==='racing'){
+    const segment=game.race.segments[game.race.segmentIndex];
     for(const player of game.players){
       if(!player.isNpc)continue;
       const prog=game.race.progress[player.id];
       if(!prog||!playerAwaitsConfirmation(prog))continue;
       if(!game.race.npcTimers[player.id])game.race.npcTimers[player.id]=now+NPC_DELAY;
       if(now<game.race.npcTimers[player.id])continue;
-      if(!prog.pendingRoll)prog.pendingRoll={roll:randInt(1,20)};
-      else resolveSegmentFor(game,player,true);
+      const {tactics,gels}=autoTacticsFor(player,prog,segment);
+      prog.pendingRoll={roll:randInt(1,10), tactics, gels};
+      resolveSegmentFor(game,player);
       game.race.npcTimers[player.id]=now+NPC_DELAY;
       changed=true;
     }
@@ -966,7 +1101,6 @@ function serialize(game,requesterId,connected){
       ...RACE_CATALOG.map((race) => ({id:race.id, name:race.name, category:race.category, difficulty:race.difficulty, basePrize:race.basePrize, terrain:race.terrain})),
       ...GRAND_TOUR_CATALOG.map((tour) => ({id:tour.id, name:tour.name, category:tour.category, stages:tour.stages, overallPrize:tour.overallPrize, terrain:tour.terrain}))
     ],
-    tacticCatalog:TACTIC_CARDS,
     race:game.race?serializeRace(game,requesterId,catalogRace):null,
     grandTour:game.grandTour?serializeGrandTour(game):null,
     lastResult:game.lastResult,
@@ -975,7 +1109,6 @@ function serialize(game,requesterId,connected){
     players:game.players.map((player) => ({
       id:player.id, name:player.name, isNpc:player.isNpc, connected:player.isNpc||connected.get(player.id),
       wallet:player.team.wallet, shop:player.team.shop, shopEffects:describeShopEffects(player.team.shop), career:player.team.career,
-      tacticCards:player.team.tacticCards,
       riders:player.team.riders.map(serializeRider)
     }))
   };
@@ -983,40 +1116,34 @@ function serialize(game,requesterId,connected){
 
 function serializeGrandTour(game){
   const tour=GRAND_TOUR_BY_ID.get(game.grandTour.tourId);
-  const standings=Object.values(game.grandTour.gc).sort((a,b) => b.totalPr-a.totalPr).slice(0,5)
-    .map((entry,index) => ({place:index+1, playerName:entry.playerName, riderName:entry.riderName, totalPr:Math.round(entry.totalPr*10)/10, stageWins:entry.stageWins}));
   return {
     tourId:tour?.id, tourName:tour?.name||'', stageNumber:game.grandTour.stageNumber,
-    totalStages:tour?.stages||STAGES_PER_GRAND_TOUR, standings
+    totalStages:tour?.stages||STAGES_PER_GRAND_TOUR,
+    classifications:classificationStandings(game.grandTour.gc)
   };
-}
-
-function serializeTacticOption(cardId,catalogRace){
-  const card=TACTIC_CARD_BY_ID.get(cardId);
-  return card?{...card, matches:tacticMatches(card,catalogRace)}:null;
 }
 
 function serializeRace(game,requesterId,catalogRace){
-  const offeredIds=game.race.tacticOffers?.[requesterId]||[];
-  const chosenId=game.race.tacticChoice?.[requesterId]??null;
   const base={
     raceId:game.race.raceId, raceName:catalogRace?.name||'', category:catalogRace?.category||'',
     terrain:catalogRace?.terrain||{}, squadSize:SQUAD_SIZE,
-    readyIds:Object.keys(game.race.lineups), myLineup:game.race.lineups[requesterId]??null,
-    myTacticOffers:offeredIds.map((cardId) => serializeTacticOption(cardId,catalogRace)).filter(Boolean),
-    myTacticChoice:chosenId?serializeTacticOption(chosenId,catalogRace):null
+    readyIds:Object.keys(game.race.lineups), myLineup:game.race.lineups[requesterId]??null
   };
   if(game.phase!=='racing'||!game.race.progress)return base;
   base.segmentIndex=game.race.segmentIndex;
+  base.segment=game.race.segments[game.race.segmentIndex];
+  base.tacticLabels=TACTIC_LABELS;
   const myProg=game.race.progress[requesterId];
   const requester=game.players.find((candidate) => candidate.id===requesterId);
   base.myProgress=myProg?{
-    multiplier:myProg.multiplier, bankStreak:myProg.bankStreak,
     awaitingConfirmation:playerAwaitsConfirmation(myProg),
-    pendingRoll:myProg.pendingRoll?{roll:myProg.pendingRoll.roll}:null,
     riders:Object.fromEntries(Object.entries(myProg.riders).map(([riderId,state]) => {
       const rider=requester?.team.riders.find((candidate) => candidate.id===riderId);
-      return [riderId,{name:rider?.name||'Renner', pr:Math.round(state.pr*10)/10, segments:state.segments, dnf:state.dnf}];
+      return [riderId,{
+        name:rider?.name||'Renner', role:rider?riderRole(rider):'allrounder',
+        fatigue:rider?.fatigue??0, gelsRemaining:rider?.gelsRemaining??0,
+        pr:Math.round(state.pr*10)/10, segments:state.segments, dnf:state.dnf
+      }];
     }))
   }:null;
   base.allProgress=game.players.map((player) => {
@@ -1033,8 +1160,8 @@ function serializeRider(rider){
   return {
     id:rider.id, name:rider.name, age:rider.age, team:TEAM_BY_ID.get(rider.teamId)?.name||null,
     marketValue:rider.marketValue, sellValue:Math.round(rider.marketValue*SELL_RATE/50)*50, stats:rider.stats,
-    status:rider.status, statusUntil:rider.statusUntil, fatigue:rider.fatigue, specialism:rider.specialism,
-    available:rider.status==='active'
+    status:rider.status, statusUntil:rider.statusUntil, fatigue:rider.fatigue, gelsRemaining:rider.gelsRemaining,
+    specialism:rider.specialism, role:riderRole(rider), available:rider.status==='active'
   };
 }
 
@@ -1071,5 +1198,6 @@ function afterStateChange(room,{db}){
 module.exports={
   meta, createGame, handleAction, serialize, tick, preparePlayers, afterStateChange,
   RACE_CATALOG, GRAND_TOUR_CATALOG, SHOP_COSTS, STAT_KEYS, SQUAD_SIZE, MAX_RIDERS, TEAMS, REAL_RIDERS,
-  STAGES_PER_GRAND_TOUR, SEGMENTS_PER_RACE, TACTIC_CARDS, TACTIC_HAND_SIZE
+  STAGES_PER_GRAND_TOUR, SEGMENTS_PER_RACE, RIDER_TACTICS, TACTIC_LABELS, TACTIC_EFFECTS, GELS_PER_RACE,
+  calculateSegmentStep, buildSegmentPlan
 };

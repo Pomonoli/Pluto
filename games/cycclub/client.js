@@ -20,8 +20,18 @@ const CATEGORY_ORDER=['monument','classic','grand_tour'];
 const CATEGORY_LABELS={monument:'Monumenten',classic:'Vlaamse Klassiekers',grand_tour:'Grote Rondes'};
 const STATUS_LABELS={active:'Fit',injured:'Geblesseerd',sick:'Ziek'};
 const SPECIALISM_LABELS={sprinter:'Sprinter',climber:'Klimmer',classics:'Klassieker',allrounder:'Allrounder',puncheur:'Puncheur'};
-const EVENT_LABELS={topdag:'Topdag',opportuniteit:'Voorsprong genomen',normaal:'Normale rit',pech:'Pech',valt:'Val'};
-const SEGMENT_OUTCOME_LABELS={topdag:'Topdag',opportuniteit:'Voorsprong genomen',normaal:'Normaal segment',pech:'Pech',valt:'Val'};
+const ROLE_LABELS={climber:'Klimmer',sprinter:'Sprinter',allrounder:'Allrounder',domestique:'Meesterknecht'};
+const TACTIC_LABELS={recover:'Herstel',follow:'Volg',leadout:'Kop',attack:'Val aan',fetch_bidons:'Bidons'};
+const EVENT_LABELS={topdag:'Topdag',normaal:'Normale rit',pech:'Pech',valt:'Val'};
+const SEGMENT_OUTCOME_LABELS={topdag:'Topdag',normaal:'Normaal segment',pech:'Pech',valt:'Val'};
+const TERRAIN_TYPE_LABELS={flat:'Vlak',hills:'Heuvels',mountain:'Berg',cobbles:'Kasseien',timeTrial:'Tijdrit'};
+const CLASSIFICATION_TABS=[
+  {key:'gc', label:'Algemeen (Geel)', valueLabel:'Tijd', formatValue:(v) => `${v>0?'+':''}${v}s`},
+  {key:'green', label:'Punten (Groen)', valueLabel:'Punten', formatValue:(v) => String(v)},
+  {key:'polka', label:'Bergen (Bolletjes)', valueLabel:'Punten', formatValue:(v) => String(v)},
+  {key:'youth', label:'Jongeren (Wit)', valueLabel:'Tijd', formatValue:(v) => `${v>0?'+':''}${v}s`},
+  {key:'team', label:'Ploegen', valueLabel:'Tijd', formatValue:(v) => `${v>0?'+':''}${v}s`}
+];
 
 function euro(n){return `€${Math.round(n||0).toLocaleString('nl-BE')}`}
 
@@ -58,8 +68,10 @@ function sellPrice(rider){return rider.sellValue??Math.round(rider.marketValue*0
 function cancelButtonLabel(game){return game.grandTour?'✕ Stop de ronde':'✕ Annuleer koers'}
 
 let selectedLineup=new Set();
-let selectedTactic=null;
 let lastRaceKey=null;
+let riderTactics=new Map();
+let riderGels=new Set();
+let lastSegmentKey=null;
 let clubTab='roster';
 let scoutFilterStat='';
 let scoutFilterMinStat='';
@@ -317,34 +329,6 @@ function renderRaceCatalogPanel(room,game,me){
   return panel;
 }
 
-function terrainKeyLabel(terrainKey){return terrainKey===null?'Universeel':STAT_LABELS[terrainKey]||terrainKey}
-
-function renderTacticsPanel(room,game,me){
-  const panel=E('div','panel cc-panel');
-  panel.append(panelHeading(`Tactieken (${me.tacticCards.length}/${(game.tacticCatalog||[]).length})`));
-  panel.append(E('p','muted','Koop tactiekkaarten om ze permanent in bezit te hebben. Voor elke rit krijg je een keuze uit maximaal drie kaarten uit je bezit om eenmalig in te zetten.'));
-  const grid=E('div','cc-tactic-grid');
-  (game.tacticCatalog||[]).forEach((card) => {
-    const owned=me.tacticCards.includes(card.id);
-    const box=E('div',`cc-tactic-card${owned?' cc-tactic-owned':''}`);
-    box.append(E('strong','',card.name));
-    box.append(E('p','cc-tactic-desc',card.description));
-    box.append(E('span','cc-tactic-terrain',terrainKeyLabel(card.terrainKey)));
-    box.append(E('span','cc-tactic-mult',`×${card.multiplier}`));
-    if(owned){
-      box.append(E('span','cc-tactic-owned-badge','✔ In bezit'));
-    } else {
-      const buy=E('button','primary',`🛒 ${euro(card.cost)}`);
-      buy.disabled=me.wallet<card.cost;
-      buy.onclick=() => action('buyTacticCard',{cardId:card.id});
-      box.append(buy);
-    }
-    grid.append(box);
-  });
-  panel.append(grid);
-  return panel;
-}
-
 function renderShopStatusBar(me,onOpen){
   const bar=E('div','cc-shop-status-bar');
   for(const category of Object.keys(SHOP_LABELS)){
@@ -393,11 +377,7 @@ function renderClub(room,game,me){
   const racesBack=tabBackButton();
   racesSection.append(racesBack,renderRaceCatalogPanel(room,game,me));
 
-  const tacticsSection=E('div','cc-tab-section');
-  const tacticsBack=tabBackButton();
-  tacticsSection.append(tacticsBack,renderTacticsPanel(room,game,me));
-
-  const sections={roster:rosterSection,scout:scoutSection,shop:shopSection,races:racesSection,tactics:tacticsSection};
+  const sections={roster:rosterSection,scout:scoutSection,shop:shopSection,races:racesSection};
   const applyTab=(tab) => {
     clubTab=tab;
     for(const key of Object.keys(sections))sections[key].classList.toggle('hidden',key!==tab);
@@ -405,7 +385,6 @@ function renderClub(room,game,me){
   scoutBack.onclick=() => applyTab('roster');
   shopBack.onclick=() => applyTab('roster');
   racesBack.onclick=() => applyTab('roster');
-  tacticsBack.onclick=() => applyTab('roster');
 
   const topBar=E('div','cc-top-tabs');
   topBar.append(renderShopStatusBar(me,() => applyTab('shop')));
@@ -413,10 +392,6 @@ function renderClub(room,game,me){
   scoutOpenBtn.type='button';
   scoutOpenBtn.onclick=() => applyTab('scout');
   topBar.append(scoutOpenBtn);
-  const tacticsOpenBtn=E('button','cc-tab-open-btn',`🎯 Tactieken (${me.tacticCards.length})`);
-  tacticsOpenBtn.type='button';
-  tacticsOpenBtn.onclick=() => applyTab('tactics');
-  topBar.append(tacticsOpenBtn);
   const racesOpenBtn=E('button','cc-tab-open-btn',`📅 Koerskalender (${game.raceCatalog.length})`);
   racesOpenBtn.type='button';
   racesOpenBtn.onclick=() => applyTab('races');
@@ -433,7 +408,7 @@ function renderClub(room,game,me){
   topBar.append(resetBtn);
   els.gameStage.append(topBar);
 
-  els.gameStage.append(rosterSection,scoutSection,shopSection,racesSection,tacticsSection);
+  els.gameStage.append(rosterSection,scoutSection,shopSection,racesSection);
   applyTab(clubTab);
 }
 
@@ -441,7 +416,6 @@ function renderLineup(room,game,me){
   const race=game.race;
   if(lastRaceKey!==race.raceId){
     selectedLineup=new Set(race.myLineup||[]);
-    selectedTactic=race.myTacticChoice?.id||null;
     lastRaceKey=race.raceId;
   }
   const catalogRace=game.raceCatalog.find((candidate) => candidate.id===race.raceId);
@@ -481,44 +455,10 @@ function renderLineup(room,game,me){
     panel.append(grid);
   }
 
-  const offeredTactics=race.myTacticOffers||[];
-  if(offeredTactics.length||race.myTacticChoice){
-    panel.append(E('h4','cc-category-title','Tactiek voor deze rit'));
-    if(submitted){
-      const chosen=race.myTacticChoice;
-      panel.append(E('p','muted',chosen?`Ingezet: ${chosen.name} (×${chosen.multiplier}, ${chosen.matches?'actief':'geen effect deze rit'})`:'Geen tactiek ingezet.'));
-    } else {
-      const tacticGrid=E('div','cc-tactic-grid');
-      const noneCard=E('label','cc-tactic-card cc-tactic-selectable');
-      const noneRadio=document.createElement('input');
-      noneRadio.type='radio';
-      noneRadio.name='cc-tactic-choice';
-      noneRadio.checked=!selectedTactic;
-      noneRadio.onchange=() => {selectedTactic=null};
-      noneCard.append(noneRadio,E('strong','','Geen tactiek'));
-      tacticGrid.append(noneCard);
-      offeredTactics.forEach((card) => {
-        const box=E('label',`cc-tactic-card cc-tactic-selectable${card.matches?' cc-tactic-matches':''}`);
-        const radio=document.createElement('input');
-        radio.type='radio';
-        radio.name='cc-tactic-choice';
-        radio.checked=selectedTactic===card.id;
-        radio.onchange=() => {selectedTactic=card.id};
-        box.append(radio,E('strong','',card.name));
-        box.append(E('p','cc-tactic-desc',card.description));
-        box.append(E('span','cc-tactic-terrain',terrainKeyLabel(card.terrainKey)));
-        box.append(E('span','cc-tactic-mult',`×${card.multiplier}`));
-        box.append(E('span','cc-tactic-match-tag',card.matches?'Past bij deze rit':'Geen effect hier'));
-        tacticGrid.append(box);
-      });
-      panel.append(tacticGrid);
-    }
-  }
-
   const actionsRow=E('div','cc-rider-actions');
   if(!submitted){
     const submit=E('button','primary',`✅ Opstelling bevestigen (max ${game.squadSize})`);
-    submit.onclick=() => {action('submitLineup',{riderIds:[...selectedLineup],tacticCardId:selectedTactic||undefined});};
+    submit.onclick=() => {action('submitLineup',{riderIds:[...selectedLineup]});};
     actionsRow.append(submit);
   } else actionsRow.append(E('span','muted','Wachten op de rest van het peloton…'));
   if(room.isHost){
@@ -726,9 +666,52 @@ function buildProfileChart(race){
   return wrap;
 }
 
+// Mirrort (bewust vereenvoudigd, exclusief dobbelsteenworp) de serverformule uit
+// calculateSegmentStep, puur om de speler een live voorbeeld van de personalMultiplier te tonen.
+const TACTIC_PREVIEW_MULTIPLIER={recover:0.85,follow:1.00,leadout:1.25,attack:1.50,fetch_bidons:0.80};
+function previewTerrainFactor(role,terrainType){
+  if(role==='climber')return terrainType==='mountain'?0.25:(terrainType==='flat'?-0.05:0);
+  if(role==='sprinter')return terrainType==='flat'?0.20:(terrainType==='mountain'?-0.25:0);
+  if(role==='allrounder')return (terrainType==='hills'||terrainType==='cobbles')?0.10:0;
+  return 0;
+}
+function previewFatiguePenalty(fatigue){
+  if(fatigue<=40)return 0;
+  if(fatigue<=70)return 0.10;
+  if(fatigue<=90)return 0.25;
+  return 0.5;
+}
+function previewMultiplierFactor(riderState,tactic,segment,hasLeadout){
+  const bonked=riderState.fatigue>=91;
+  const effectiveTactic=bonked&&(tactic==='attack'||tactic==='leadout')?'follow':tactic;
+  const terrain=previewTerrainFactor(riderState.role,segment.terrainType);
+  const tacticBonus=(TACTIC_PREVIEW_MULTIPLIER[effectiveTactic]-1)+((effectiveTactic==='follow'&&hasLeadout)?0.15:0);
+  const fatiguePenalty=bonked?0.5:previewFatiguePenalty(riderState.fatigue);
+  return Math.round((1+terrain+tacticBonus-fatiguePenalty)*100)/100;
+}
+
+function fatigueMeter(fatigue){
+  const wrap=E('div','cc-fatigue-meter');
+  const bar=E('div','cc-fatigue-bar');
+  const fill=E('div',`cc-fatigue-fill${fatigue>=91?' cc-fatigue-bonk':fatigue>70?' cc-fatigue-high':fatigue>40?' cc-fatigue-mid':''}`);
+  fill.style.width=`${fatigue}%`;
+  bar.append(fill);
+  wrap.append(bar,E('span','cc-fatigue-label',`${fatigue}%`));
+  return wrap;
+}
+
 function renderRacing(room,game,me){
   const race=game.race;
   if(!race){els.gameStage.append(E('p','muted','Geen actieve rit.'));return}
+  const segment=race.segment;
+  const tacticLabels=race.tacticLabels||{};
+  const segmentKey=`${race.raceId}:${race.segmentIndex}`;
+  if(lastSegmentKey!==segmentKey){
+    riderTactics=new Map();
+    riderGels=new Set();
+    lastSegmentKey=segmentKey;
+  }
+
   const panel=E('div','panel cc-panel');
   panel.append(panelHeading(race.raceName));
 
@@ -737,12 +720,10 @@ function renderRacing(room,game,me){
   const myProgress=race.myProgress;
   const statusRow=E('div','cc-lv-row');
   statusRow.append(labelValue('Segment',`${Math.min((race.segmentIndex||0)+1,SEGMENTS_PER_RACE)} / ${SEGMENTS_PER_RACE}`));
-  if(myProgress){
-    statusRow.append(labelValue('Multiplier',`×${myProgress.multiplier.toFixed(3)}`));
-    if(myProgress.bankStreak>0)statusRow.append(labelValue('Opgespaard',`${myProgress.bankStreak}×`));
-  }
-  if(race.myTacticChoice){
-    statusRow.append(labelValue('Tactiek',`${race.myTacticChoice.name}${race.myTacticChoice.matches?` (×${race.myTacticChoice.multiplier})`:' (geen effect)'}`));
+  if(segment){
+    statusRow.append(labelValue('Terrein',TERRAIN_TYPE_LABELS[segment.terrainType]||segment.terrainType));
+    if(segment.mountainCategory>0)statusRow.append(labelValue('Beklimming',`Cat. ${segment.mountainCategory}`));
+    if(segment.hasIntermediateSprint)statusRow.append(labelValue('Tussensprint','Ja'));
   }
   panel.append(statusRow);
 
@@ -751,33 +732,83 @@ function renderRacing(room,game,me){
   } else if(!myProgress.awaitingConfirmation){
     panel.append(E('p','muted','Bevestigd. Wachten tot de rest van het peloton dit segment heeft gereden…'));
   } else {
+    const activeEntries=Object.entries(myProgress.riders).filter(([,riderState]) => !riderState.dnf);
+    const grid=E('div','cc-rider-grid');
+    const cardRefs=[];
+    const rollBtn=E('button','primary','🎲 Rol de dobbelsteen');
+
+    const refreshTacticUI=() => {
+      const hasLeadout=activeEntries.some(([riderId]) => riderTactics.get(riderId)==='leadout');
+      for(const ref of cardRefs){
+        const tactic=riderTactics.get(ref.riderId);
+        ref.gelBtn.classList.toggle('active',riderGels.has(ref.riderId));
+        if(tactic&&segment){
+          const factor=previewMultiplierFactor(ref.riderState,tactic,segment,hasLeadout);
+          ref.preview.textContent=`Basisfactor ×${factor.toFixed(2)} (excl. worp)`;
+        } else ref.preview.textContent='';
+      }
+      rollBtn.disabled=activeEntries.some(([riderId]) => !riderTactics.has(riderId));
+    };
+
+    activeEntries.forEach(([riderId,riderState]) => {
+      const card=E('div','cc-rider-card cc-rider-tactic-card');
+      const head=E('div','cc-rider-head');
+      head.append(E('strong','',riderState.name),E('span','muted',ROLE_LABELS[riderState.role]||riderState.role));
+      card.append(head);
+      card.append(fatigueMeter(riderState.fatigue));
+
+      const select=document.createElement('select');
+      select.className='cc-tactic-select';
+      select.append(new Option('Kies tactiek…',''));
+      for(const key of Object.keys(tacticLabels))select.append(new Option(tacticLabels[key],key));
+      select.value=riderTactics.get(riderId)||'';
+      select.onchange=() => {
+        if(select.value)riderTactics.set(riderId,select.value);
+        else riderTactics.delete(riderId);
+        refreshTacticUI();
+      };
+      card.append(select);
+
+      const gelBtn=E('button','secondary cc-gel-btn',`💧 Gels: ${riderState.gelsRemaining}`);
+      gelBtn.type='button';
+      gelBtn.disabled=riderState.gelsRemaining<=0;
+      gelBtn.onclick=() => {
+        if(riderGels.has(riderId))riderGels.delete(riderId);
+        else riderGels.add(riderId);
+        refreshTacticUI();
+      };
+      card.append(gelBtn);
+
+      const preview=E('span','cc-tactic-preview','');
+      card.append(preview);
+      cardRefs.push({riderId,riderState,gelBtn,preview});
+      grid.append(card);
+    });
+    panel.append(grid);
+    refreshTacticUI();
+
     const actionsRow=E('div','cc-rider-actions');
-    if(!myProgress.pendingRoll){
-      const rollBtn=E('button','primary','🎲 Rol de dobbelsteen');
-      rollBtn.onclick=() => action('rollSegment');
-      actionsRow.append(rollBtn);
-    } else {
-      actionsRow.append(E('span','cc-roll-result',`Worp: ${myProgress.pendingRoll.roll}`));
-      const applyBtn=E('button','primary',`✅ Toepassen (×${myProgress.multiplier.toFixed(3)})`);
-      applyBtn.onclick=() => action('resolveSegment',{apply:true});
-      const bankBtn=E('button','secondary','🏦 Opsparen (+12,5%)');
-      bankBtn.onclick=() => action('resolveSegment',{apply:false});
-      actionsRow.append(applyBtn,bankBtn);
-    }
+    rollBtn.onclick=() => {
+      const tactics=Object.fromEntries(riderTactics);
+      const gels=Object.fromEntries([...riderGels].map((riderId) => [riderId,true]));
+      action('rollSegment',{tactics,gels});
+    };
+    actionsRow.append(rollBtn);
+    if(rollBtn.disabled)actionsRow.append(E('span','muted','Ken elke renner een tactiek toe.'));
     panel.append(actionsRow);
   }
 
   if(myProgress?.riders){
-    const grid=E('div','cc-rider-grid');
+    const historyGrid=E('div','cc-rider-grid');
     Object.values(myProgress.riders).forEach((riderState) => {
       const card=E('div','cc-rider-card');
       const head=E('div','cc-rider-head');
       head.append(E('strong','',riderState.name),E('span','muted',riderState.dnf?'Uitgevallen':`${riderState.pr} pt`));
       card.append(head);
       card.append(segmentDots(riderState.segments));
-      grid.append(card);
+      historyGrid.append(card);
     });
-    panel.append(grid);
+    panel.append(historyGrid);
   }
 
   const readyList=E('div','cc-ready-list');
@@ -785,6 +816,8 @@ function renderRacing(room,game,me){
     readyList.append(E('span',`cc-ready-chip ${entry.awaitingConfirmation?'':'ready'}`,`${entry.playerName}${entry.isNpc?' · NPC':''} · ${entry.awaitingConfirmation?'aan het rollen':'bevestigd'}`));
   });
   panel.append(readyList);
+
+  if(game.grandTour?.classifications)panel.append(renderClassificationTabs(game.grandTour.classifications));
 
   if(room.isHost){
     const actionsRow2=E('div','cc-rider-actions');
@@ -801,7 +834,8 @@ function segmentDots(segments){
   const row=E('div','cc-segment-dots');
   (segments||[]).forEach((segment) => {
     const dot=E('span',`cc-segment-dot cc-segment-${segment.outcome}`);
-    dot.title=`Segment ${segment.n}: worp ${segment.roll} (totaal ${segment.total}) — ${SEGMENT_OUTCOME_LABELS[segment.outcome]||segment.outcome}`;
+    const tacticLabel=TACTIC_LABELS[segment.tactic]||segment.tactic||'';
+    dot.title=`Segment ${segment.n}: worp ${segment.roll} · ${tacticLabel} (×${segment.multiplier?.toFixed?.(2)??segment.multiplier}) — ${SEGMENT_OUTCOME_LABELS[segment.outcome]||segment.outcome}`;
     row.append(dot);
   });
   return row;
@@ -838,6 +872,49 @@ function renderClassificationPanel(panel,result){
   }
 }
 
+let classificationTab='gc';
+
+function renderClassificationTabs(classifications){
+  if(!classifications)return E('div');
+  const wrap=E('div','cc-classification-wrap');
+  const tabBar=E('div','cc-classification-tabs');
+  const body=E('div','cc-classification-body');
+  const renderTab=(tabKey) => {
+    body.replaceChildren();
+    const tab=CLASSIFICATION_TABS.find((candidate) => candidate.key===tabKey)||CLASSIFICATION_TABS[0];
+    const rows=classifications[tab.key]||[];
+    if(!rows.length){body.append(E('p','muted','Nog geen klassement.'));return}
+    const table=E('table','stats-table');
+    const head=E('tr');
+    const isTeam=tab.key==='team';
+    (isTeam?['#','Speler',tab.valueLabel]:['#','Renner','Speler',tab.valueLabel,'Ritzeges']).forEach((label) => head.append(E('th','',label)));
+    table.append(head);
+    rows.slice(0,10).forEach((entry) => {
+      const tr=E('tr');
+      if(isTeam)tr.append(E('td','',String(entry.place)),E('td','',entry.playerName),E('td','',tab.formatValue(entry.value)));
+      else tr.append(E('td','',String(entry.place)),E('td','',entry.riderName),E('td','',entry.playerName),E('td','',tab.formatValue(entry.value)),E('td','',String(entry.stageWins||0)));
+      table.append(tr);
+    });
+    const tableWrap=E('div','stats-table-wrap');
+    tableWrap.append(table);
+    body.append(tableWrap);
+  };
+  CLASSIFICATION_TABS.forEach((tab) => {
+    const btn=E('button',`cc-classification-tab${classificationTab===tab.key?' active':''}`,tab.label);
+    btn.type='button';
+    btn.onclick=() => {
+      classificationTab=tab.key;
+      tabBar.querySelectorAll('.cc-classification-tab').forEach((el) => el.classList.remove('active'));
+      btn.classList.add('active');
+      renderTab(tab.key);
+    };
+    tabBar.append(btn);
+  });
+  wrap.append(tabBar,body);
+  renderTab(classificationTab);
+  return wrap;
+}
+
 function backToClubButton(){
   const actionsRow=E('div','cc-rider-actions');
   const back=E('button','primary','← Terug naar club');
@@ -868,21 +945,9 @@ function renderStageResult(room,game,me){
   panel.append(panelHeading(`${result.raceName} · Rit ${result.stageNumber}/${result.totalStages}`));
   renderClassificationPanel(panel,result);
 
-  const standings=game.grandTour?.standings||[];
-  if(standings.length){
-    panel.append(E('h4','cc-category-title','Tussenstand eindklassement'));
-    const gcTable=E('table','stats-table');
-    const gcHead=E('tr');
-    ['#','Renner','Speler','Ritzeges'].forEach((label) => gcHead.append(E('th','',label)));
-    gcTable.append(gcHead);
-    standings.forEach((entry) => {
-      const tr=E('tr');
-      tr.append(E('td','',String(entry.place)),E('td','',entry.riderName),E('td','',entry.playerName),E('td','',String(entry.stageWins)));
-      gcTable.append(tr);
-    });
-    const gcWrap=E('div','stats-table-wrap');
-    gcWrap.append(gcTable);
-    panel.append(gcWrap);
+  if(result.classifications){
+    panel.append(E('h4','cc-category-title','Tussenstand klassementen'));
+    panel.append(renderClassificationTabs(result.classifications));
   }
 
   const actionsRow=E('div','cc-rider-actions');
@@ -903,18 +968,7 @@ function renderGrandTourFinalResult(room,game,result){
   const panel=E('div','panel cc-panel');
   panel.append(panelHeading(`${result.raceName} · Eindklassement`));
 
-  const gcTable=E('table','stats-table');
-  const gcHead=E('tr');
-  ['#','Renner','Speler','Ritzeges'].forEach((label) => gcHead.append(E('th','',label)));
-  gcTable.append(gcHead);
-  result.gc.forEach((entry) => {
-    const tr=E('tr');
-    tr.append(E('td','',String(entry.place)),E('td','',entry.riderName),E('td','',entry.playerName),E('td','',String(entry.stageWins)));
-    gcTable.append(tr);
-  });
-  const gcWrap=E('div','stats-table-wrap');
-  gcWrap.append(gcTable);
-  panel.append(gcWrap);
+  panel.append(renderClassificationTabs(result.classifications));
 
   if(result.payouts?.some((entry) => entry.gcPrize>0)){
     panel.append(E('h4','cc-category-title','Eindklassementsprijzengeld'));

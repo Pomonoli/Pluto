@@ -35,8 +35,8 @@ test('first guest visit establishes a silent baseline', () => {
 test('guest with an older seen version gets only relevant grouped changes', () => {
   const payload=updates.payloadFor({since:'1.11.0'});
   assert.deepEqual(payload.changes.games,['Isle of Skye','The Deep Bleu C','CycClub','Ragnarok','Bakkermans Jones','Elements Arena']);
-  assert.ok(payload.changes.features.length>=43);
-  assert.ok(payload.changes.improvements.length>=89);
+  assert.ok(payload.changes.features.length>=46);
+  assert.ok(payload.changes.improvements.length>=91);
   assert.ok(payload.changes.features.some((item)=>item.includes('Light theme')));
   assert.ok(payload.changes.features.some((item)=>item.includes('gameheader')));
   assert.ok(payload.changes.features.some((item)=>item.includes('72, 36 of 18 tegels')));
