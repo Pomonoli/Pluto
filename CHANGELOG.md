@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.27.0 — Add Elements and hide it
+
+- Add Elements and hide it
+
 ## v1.26.0 — Elements Arena
 
 - Nieuwe Pluto Original voor 2–4 spelers en NPC's: kies per end exact één Fire-, Water-, Earth- en Air-steen, mik met drag-back en speel twee ends.

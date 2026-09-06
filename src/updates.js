@@ -521,6 +521,12 @@ const RELEASES = [
     features:[
       'Elements Arena: mik Fire, Water, Earth en Air de ronde arena in, counter vijandige stenen en scoor in twee ends door de waardevolste ringen en de Nexus te claimen.'
     ]
+  },
+  {
+    version:"1.27.0",
+    improvements:[
+      "Add Elements and hide it"
+    ]
   }
 ];
 

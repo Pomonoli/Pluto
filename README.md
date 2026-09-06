@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.26.0
+## Nieuw in versie 1.27.0
 
-Elements Arena is een nieuwe Pluto Original voor 2–4 spelers en NPC's. Kies Fire, Water, Earth en Air elk één keer per end, mik met drag-back, counter rivaliserende stenen en claim de waardevolle Nexus in twee snelle ends.
+Add Elements and hide it
 
 ## Nieuw in versie 1.0.0
 
