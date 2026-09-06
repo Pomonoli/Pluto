@@ -1,6 +1,7 @@
 {
   "key": "carcassonne",
   "name": "Carcassonne",
+  "category": "classic",
   "description": "Bouw een landschap en scoor met steden, wegen, kloosters en weilanden.",
   "version": "15",
   "icon": "🏰",

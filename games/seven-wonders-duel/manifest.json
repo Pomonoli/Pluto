@@ -1,6 +1,7 @@
 {
   "key": "seven-wonders-duel",
   "name": "7 Wonders Duel",
+  "category": "classic",
   "description": "Bouw je beschaving door drie leeftijden en win via punten, militaire druk of wetenschap.",
   "version": "1",
   "icon": "🏛️",

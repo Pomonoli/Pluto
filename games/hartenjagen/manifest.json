@@ -1,6 +1,7 @@
 {
   "key": "hartenjagen",
   "name": "Hartenjagen",
+  "category": "classic",
   "description": "Vermijd harten en vooral de Schoppenvrouw.",
   "version": "2",
   "icon": "❤️",

@@ -1,6 +1,7 @@
 {
   "key": "hofslag",
   "name": "Hofslag",
+  "category": "original",
   "description": "Tactisch kaartspel rond 12 beeldkaarten.",
   "version": "2",
   "icon": "👸",

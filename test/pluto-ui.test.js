@@ -55,6 +55,18 @@ test('actieve spellen gebruiken een viewporthoge layout met gedeelde navigatie-o
   assert.match(html,/class="panel game-panel">[\s\S]*id="mobileGameHeader"[\s\S]*id="gameStage"/);
 });
 
+test('Play scherm heeft toegankelijke Originals en Classics tabs',()=>{
+  const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
+  const filter=fs.readFileSync(path.join(root,'public/js/home-game-filter.js'),'utf8');
+  assert.match(html,/role="tablist" aria-label="Gamecategorie"/);
+  assert.match(html,/id="originalGamesTab"[^>]*role="tab"[^>]*aria-selected="true"/);
+  assert.match(html,/id="classicGamesTab"[^>]*role="tab"[^>]*aria-selected="false"/);
+  assert.match(html,/id="gameGrid" role="tabpanel" aria-labelledby="originalGamesTab"/);
+  assert.match(filter,/meta\?\.category === currentCategory/);
+  assert.match(filter,/event\.key === 'ArrowRight'/);
+  assert.match(filter,/grid\.setAttribute\('aria-labelledby', tab\.id\)/);
+});
+
 test('browser, tablet en mobile gebruiken de volledige gamesurface',()=>{
   const css=fs.readFileSync(path.join(root,'public/styles.css'),'utf8');
   assert.match(css,/@media\(min-width:761px\)\{[\s\S]*?body\.game-active #gameStage\{[\s\S]*?align-self:stretch;[\s\S]*?width:100%;[\s\S]*?max-width:none/);

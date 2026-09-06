@@ -1,6 +1,7 @@
 {
   "key": "civilization",
   "name": "Age of Civilization",
+  "category": "original",
   "description": "Kies een leider, bouw door zeven tijdperken je stad en versla je buren in de kring.",
   "version": "5",
   "icon": "🏛️",

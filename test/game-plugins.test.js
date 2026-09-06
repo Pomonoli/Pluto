@@ -9,15 +9,30 @@ test('game-plugin loader ontdekt een zelfstandige gamemap',()=>{
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'pluto-game-plugin-'));
   try{
     const dir=path.join(root,'voorbeeld');fs.mkdirSync(dir);
-    fs.writeFileSync(path.join(dir,'manifest.json'),JSON.stringify({key:'voorbeeld',name:'Voorbeeld',minPlayers:2,maxPlayers:4,supportsNpc:true,version:'3'}));
+    fs.writeFileSync(path.join(dir,'manifest.json'),JSON.stringify({key:'voorbeeld',name:'Voorbeeld',category:'original',minPlayers:2,maxPlayers:4,supportsNpc:true,version:'3'}));
     fs.writeFileSync(path.join(dir,'server.js'),"module.exports={createGame(){return{}},handleAction(){},serialize(){return{}}}");
     const [plugin]=loadPluginGames(root);
     assert.equal(plugin.meta.key,'voorbeeld');
     assert.equal(plugin.meta.maxPlayers,4);
+    assert.equal(plugin.meta.category,'original');
     assert.equal(plugin.createGame([]).gameKey,'voorbeeld');
   } finally {
     fs.rmSync(root,{recursive:true,force:true});
   }
+});
+
+test('gamecategorie is verplicht en wordt via pluginmetadata aangeboden',()=>{
+  const expected={
+    original:['Age of Civilization','Bakkermans Jones','CycClub','Hofslag','Minigolf','Ragnarok','The Big Blue C'],
+    classic:['7 Wonders Duel','Blackjack','Carcassonne','Cascadia','Cluedo','Hartenjagen','Isle of Skye','Kingdomino','Pesten','Presidenten','Quoridor','Santorini','Solitaire','Stratego','Ticket to Ride']
+  };
+  const grouped={original:[],classic:[]};
+  for(const plugin of listGamePlugins()){
+    assert.ok(plugin.category==='original'||plugin.category==='classic',`${plugin.key}: ongeldige categorie`);
+    grouped[plugin.category].push(plugin.name);
+  }
+  for(const names of Object.values(grouped))names.sort((a,b)=>a.localeCompare(b,'nl-BE',{sensitivity:'base'}));
+  assert.deepEqual(grouped,expected);
 });
 
 test('alle bestaande games zijn plugins en de template wordt overgeslagen',()=>{

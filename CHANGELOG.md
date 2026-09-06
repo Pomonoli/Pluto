@@ -13,6 +13,14 @@
 - De lineup-opstelling toont per aangeboden kaart of ze past bij de huidige rit, en de rit zelf toont welke tactiek actief is.
 - NPC-ploegen kopen geen kaarten maar starten met een kleine willekeurige verzameling en kiezen automatisch de best passende kaart.
 
+## v1.24.2 — Splits games
+
+- Splits games
+
+## v1.24.1 — The Big Blue C: knoppenbalk toont enkel losse knoppen zonder kaderpaneel, kaart licht uitgezoomd voor meer overzicht.
+
+- The Big Blue C: knoppenbalk toont enkel losse knoppen zonder kaderpaneel, kaart licht uitgezoomd voor meer overzicht.
+
 ## v1.24.0 — The Blue is een nieuwe game: spoel aan op een eigen eiland, vis met hengel en geluk, hak hout en delf erts, vecht in een dobbelgevecht tegen wild zwijn en wolf, kook je vangst voor energie en tijdelijke buffs, bouw en repareer gereedschap met slijtage, en vul een codex terwijl dag overgaat in nacht.
 
 - The Blue is een nieuwe game: spoel aan op een eigen eiland, vis met hengel en geluk, hak hout en delf erts, vecht in een dobbelgevecht tegen wild zwijn en wolf, kook je vangst voor energie en tijdelijke buffs, bouw en repareer gereedschap met slijtage, en vul een codex terwijl dag overgaat in nacht.
