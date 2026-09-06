@@ -25,7 +25,8 @@ function loadPluginGames(root = pluginRoot) {
     engine.meta = {
       key, name:String(manifest.name || key), description:String(manifest.description || ''), category,
       minPlayers:Number(manifest.minPlayers || 1), maxPlayers:Number(manifest.maxPlayers || 1),
-      supportsNpc:Boolean(manifest.supportsNpc), realtime:Boolean(manifest.realtime), solo:Boolean(manifest.solo)
+      supportsNpc:Boolean(manifest.supportsNpc), realtime:Boolean(manifest.realtime), solo:Boolean(manifest.solo),
+      visible:manifest.visible !== false
     };
     engine.plugin = { directory, manifest:{...manifest,key}, version:String(manifest.version || '1') };
     plugins.push(engine);
@@ -52,7 +53,7 @@ function listGamePlugins() {
     const clientAvailable=m.client!==false&&fs.existsSync(path.join(game.plugin.directory,'client.js'));
     return {
       key:m.key,name:game.meta.name,description:game.meta.description,category:game.meta.category,minPlayers:game.meta.minPlayers,maxPlayers:game.meta.maxPlayers,
-      supportsNpc:game.meta.supportsNpc,realtime:game.meta.realtime,solo:game.meta.solo,
+      supportsNpc:game.meta.supportsNpc,realtime:game.meta.realtime,solo:game.meta.solo,visible:game.meta.visible,
       icon:String(m.icon||'🎮'),badge:String(m.badge||`${game.meta.minPlayers}-${game.meta.maxPlayers}`),actionLabel:String(m.actionLabel||'Nieuw spel'),
       toolLabel:m.toolLabel?String(m.toolLabel):null,rules:String(m.rules||''),version:game.plugin.version,
       loadError:clientAvailable?null:'Frontendmodule ontbreekt.',

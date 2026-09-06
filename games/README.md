@@ -21,6 +21,10 @@ games/mijnspel/
   assets/        # optionele game-specifieke afbeeldingen
 ```
 
+Een game is standaard zichtbaar op het Play-scherm. Zet `"visible": false` in
+`manifest.json` om alleen de selectiekaart te verbergen. De plugin blijft dan
+geladen en bestaande of rechtstreeks geopende rooms blijven speelbaar.
+
 ## Servercontract
 
 `server.js` exporteert minimaal:

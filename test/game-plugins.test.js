@@ -15,6 +15,7 @@ test('game-plugin loader ontdekt een zelfstandige gamemap',()=>{
     assert.equal(plugin.meta.key,'voorbeeld');
     assert.equal(plugin.meta.maxPlayers,4);
     assert.equal(plugin.meta.category,'original');
+    assert.equal(plugin.meta.visible,true);
     assert.equal(plugin.createGame([]).gameKey,'voorbeeld');
   } finally {
     fs.rmSync(root,{recursive:true,force:true});
@@ -23,7 +24,7 @@ test('game-plugin loader ontdekt een zelfstandige gamemap',()=>{
 
 test('gamecategorie is verplicht en wordt via pluginmetadata aangeboden',()=>{
   const expected={
-    original:['Age of Civilization','Bakkermans Jones','CycClub','Hofslag','Lutro','Minigolf','Ragnarok','The Big Blue C'],
+    original:['Age of Civilization','Bakkermans Jones','CycClub','Elements Arena','Hofslag','Lutro','Minigolf','Ragnarok','The Big Blue C'],
     classic:['7 Wonders Duel','Blackjack','Carcassonne','Cascadia','Cluedo','Hartenjagen','Isle of Skye','Kingdomino','Pesten','Presidenten','Quoridor','Santorini','Solitaire','Stratego','Ticket to Ride']
   };
   const grouped={original:[],classic:[]};
@@ -39,6 +40,15 @@ test('alle bestaande games zijn plugins en de template wordt overgeslagen',()=>{
   const plugins=listGamePlugins();
   assert.equal(plugins.length,listGames().length);
   assert.ok(plugins.every((plugin)=>plugin.key!=='_template'&&plugin.clientUrl));
+});
+
+test('manifest visibility verbergt alleen de Play-kaart en houdt de plugin beschikbaar',()=>{
+  const elements=listGamePlugins().find(plugin=>plugin.key==='elements');
+  assert.ok(elements);
+  assert.equal(elements.visible,false);
+  assert.equal(typeof require('../src/games').getGame('elements').createGame,'function');
+  const app=fs.readFileSync(path.join(__dirname,'../public/app.js'),'utf8');
+  assert.match(app,/game\.visible!==false&&!els\.gameGrid\.querySelector/);
 });
 
 test('frontend heeft een dynamische pluginloader en rendererregistratie',()=>{

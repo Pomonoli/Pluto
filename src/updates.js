@@ -515,6 +515,21 @@ const RELEASES = [
   },
   {
     version:'1.26.0',
+    games:[
+      'Elements Arena'
+    ],
+    features:[
+      'Elements Arena: mik Fire, Water, Earth en Air de ronde arena in, counter vijandige stenen en scoor in twee ends door de waardevolste ringen en de Nexus te claimen.'
+    ]
+  },
+  {
+    version:"1.27.0",
+    improvements:[
+      "Add Elements and hide it"
+    ]
+  },
+  {
+    version:'1.28.0',
     games:['Lutro'],
     features:[
       'Lutro: leid Rivendell, Erebor, Barad-dûr of Minas Tirith over een isometrische Midden-aarde-kaart in deze realtime mix van Mens-erger-je-niet, lane battler en tower defense — rol de dobbelsteen om troepen in te zetten en te verplaatsen, en beleger de kastelen van je rivalen tot de Belegeringsplaats.'

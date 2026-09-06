@@ -1,12 +1,23 @@
 # Changelog
 
-## v1.26.0 — Nieuwe game: Lutro
+## v1.28.0 — Nieuwe game: Lutro
 
 - Nieuwe game "Lutro: Siege of the Four Realms" — een realtime hybride van Mens-erger-je-niet, een lane battler en tower defense op een isometrische Midden-aarde-kaart.
 - Kies Rivendell, Erebor, Barad-dûr of Minas Tirith; elk rijk heeft eigen troepen (Verkenner, Infanterie, Belegeringseenheid), een eigen verdedigingstoren en gevechtstraits.
 - Rol de dobbelsteen om troepen in te zetten en te verplaatsen over een 48-tegel pad; een volledige omloop leidt via je eigen kleurbaan naar de centrale Belegeringsplaats om een rivaliserend kasteel te raken.
 - Speciale tegels geven een tijdelijke schilddome of een directe aanval op je doelwitkasteel; verdien goud, herstel je kasteel en verbeter je toren.
 - Drie AI-persoonlijkheden (agressief, defensief, goud sparend) besturen onbezette rijken zodat je ook solo kan spelen.
+
+## v1.27.0 — Add Elements and hide it
+
+- Add Elements and hide it
+
+## v1.26.0 — Elements Arena
+
+- Nieuwe Pluto Original voor 2–4 spelers en NPC's: kies per end exact één Fire-, Water-, Earth- en Air-steen, mik met drag-back en speel twee ends.
+- De server-authoritatieve arena-physics ondersteunen voorspelbare rebounds, gewone botsingen voor gelijke en neutrale elementen, de exacte counter-ring en stenen die buiten de arena verdwijnen.
+- De schermvullende mobile-first arena toont alle vier scorezones, publieke resterende elementen, compacte scores, trajectory en powerfeedback.
+- Gerichte regressietests bewaken counters, scorezones, beurt- en endverloop, actievalidatie en NPC-spel.
 
 ## v1.25.1 — CycClub: hoogteprofiel in wielerstijl
 
