@@ -2,6 +2,7 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const {createRealtime}=require('../src/server/realtime');
 const {getGame}=require('../src/games');
+const {NPC_FIRST_NAMES}=require('../src/npc-names');
 
 function invoke(client,event,payload={}){
   let result;client.handlers.get(event)(payload,value=>{result=value});return result;
@@ -98,6 +99,33 @@ test('Carcassonne-host kiest tegelset en burgers in de lobby en start met die op
   assert.equal(room.gameState.meepleCount,10);
   assert.deepEqual(room.gameState.players.map(player=>player.meeples),[10,10]);
   assert.equal(room.gameState.board.size+room.gameState.deck.length+Number(Boolean(room.gameState.currentTile)),36);
+});
+
+test('niet-host verlaat een afgewerkt spel definitief zonder de overige spelers te storen',()=>{
+  const {runtime,makeSocket}=harness(),room=playingRoom();
+  room.status='finished';room.matchRecorded=true;runtime.rooms.set(room.id,room);
+  const host=makeSocket('socket-a',room.id,room.players[0].token),other=makeSocket('socket-b',room.id,room.players[1].token);
+  assert.equal(invoke(host,'room:leaveFinished').ok,false);
+  assert.equal(invoke(other,'room:leaveFinished').ok,true);
+  assert.deepEqual(room.players.map(player=>player.id),['a']);
+  assert.equal(other.socket.data.roomId,null);
+  assert.equal(other.socket.data.token,null);
+  assert.equal(runtime.rooms.has(room.id),true);
+  assert.equal(host.socket.data.roomId,room.id);
+});
+
+test('NPCs krijgen unieke echte voornamen die bij de start behouden blijven',()=>{
+  const {runtime,makeSocket}=harness(),host=makeSocket('host',null,null);
+  const created=invoke(host,'room:create',{gameKey:'cascadia',name:'Ada',token:'aaaaaaaaaaaaaaaa'});
+  const room=runtime.rooms.get(created.roomId);
+  invoke(host,'room:addNpc');invoke(host,'room:addNpc');invoke(host,'room:addNpc');
+  const npcNames=room.players.filter(player=>player.isNpc).map(player=>player.name);
+  assert.equal(npcNames.length,3);
+  assert.ok(npcNames.every(name=>NPC_FIRST_NAMES.includes(name)));
+  assert.equal(new Set(npcNames).size,npcNames.length);
+  assert.ok(npcNames.every(name=>!/^NPC(?:\s|\d|$)/i.test(name)));
+  assert.equal(invoke(host,'room:start').ok,true);
+  assert.deepEqual(room.gameState.players.filter(player=>player.isNpc).map(player=>player.name),npcNames);
 });
 
 test('andere human offline: geldige beurt gaat door, offline beurt blijft wachten en kan hervatten',t=>{

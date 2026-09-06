@@ -2,18 +2,17 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.17.1
+## Nieuw in versie 1.25.1
 
 Het CycClub-ritprofiel tijdens het rijden is herwerkt in de stijl van een echt wielerprofiel: de vulling kleurt van geel/oranje naar dieprood naarmate het stijgingspercentage toeneemt, met een hoogte-as, kilometermarkeringen, een start- en finishvlag en gecategoriseerde beklimmingen.
 
-## Nieuw in versie 1.17.0
+## Nieuw in versie 1.25.0
 
 CycClub heeft een nieuw tabblad "Tactieken" waar je permanente tactiekkaarten koopt (zoals Treintje rijden, Kasseienspecialist, Hinderlaag in de klim of Aero-opstelling). Voor elke rit krijg je een keuze uit maximaal drie kaarten uit je bezit die je eenmalig kan inzetten: sluit de tactiek aan bij het terrein van de rit, dan krijgen je renners een multiplier op hun segmentbonus voor de hele rit.
 
 ## Nieuw in versie 1.0.0
 
 Alle games zijn ondergebracht in zelfstandige modules onder `games/`. Iedere game beheert daar zijn eigen serverlogica, client-entrypoint, metadata, spelregels en resultaten, en de server ontdekt deze mappen automatisch zonder een hardcoded gamelijst in de centrale registry.
-Actieve spellen gebruiken zoveel mogelijk de volledige schermhoogte zonder paginascroll. De ongebruikte chat en aparte vertrekknoppen zijn verwijderd; het Pluto-logo brengt je rechtstreeks terug naar Home.
 
 ## Games
 
@@ -21,12 +20,13 @@ Actieve spellen gebruiken zoveel mogelijk de volledige schermhoogte zonder pagin
 | --- | ---: | :---: |
 | 7 Wonders Duel | 2 | Ja |
 | Age of Civilization | 2-7 | Ja |
+| Bakkermans Jones | 1 | Niet van toepassing |
+| The Big Blue C | 1-4 | Niet van toepassing |
 | Blackjack | 1-4 | Ja |
 | Carcassonne | 2-5 | Ja |
 | Cascadia | 2-4 | Ja |
 | Cluedo | 2-6 | Ja |
 | CycClub | 1-6 | Ja |
-| The Deep Bleu C | 1-4 | Niet van toepassing |
 | Hartenjagen | 4 | Ja |
 | Hofslag | 2-4 | Ja |
 | Isle of Skye | 2-4 | Ja |
@@ -38,6 +38,7 @@ Actieve spellen gebruiken zoveel mogelijk de volledige schermhoogte zonder pagin
 | Santorini | 2-4 | Ja |
 | Solitaire | 1 | Niet van toepassing |
 | Stratego | 2 | Ja |
+| The Blue | 1-4 | Niet van toepassing |
 | Ticket to Ride | 2-5 | Ja |
 
 Minigolf bevat daarnaast een Map Editor voor eigen banen.

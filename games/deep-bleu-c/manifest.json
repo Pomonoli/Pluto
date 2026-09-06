@@ -1,8 +1,8 @@
 {
   "key": "deep-bleu-c",
-  "name": "The Deep Bleu C",
-  "version": "9",
-  "description": "Verken samen een hexagonale kaart van Europa, vang vis, ruil met je medespelers en bouw je fortuin op bij De Vishandel, het Aquarium-Museum, de Handelsmarkt en de Hall of Fame.",
+  "name": "The Big Blue C",
+  "version": "14",
+  "description": "Catch · cook · create. Verken samen een eiland vol meren, omringd door zee tot aan de rand van de platte wereld. Vis, hak hout, delf steen en jaag op wild in een dobbelgevecht. Kook je vangst voor buffs, beheer je uitrusting en slijtage in de Inventaris, bouw een aanlegsteiger, verkoop en ruil op de Marktplaats en bouw je fortuin op in de Hall of Fame.",
   "icon": "🎣",
   "badge": "1-4",
   "actionLabel": "Uitvaren",

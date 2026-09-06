@@ -147,7 +147,7 @@ function main(args) {
   }
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pluto-tests-'));
   try {
-    const result = spawnSync(process.execPath, ['--test', ...plan.tests], {
+    const result = spawnSync(process.execPath, ['--test', '--test-concurrency=1', ...plan.tests], {
       cwd: ROOT, stdio: 'inherit', env: { ...process.env, DATA_DIR: dataDir }
     });
     if (result.error) throw result.error;

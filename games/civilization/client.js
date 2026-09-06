@@ -1,49 +1,91 @@
 import { ERA_THEMES } from './themes.js';
 
-const LEADER_ATTRIBUTES = {
-  cleopatra: '👑', alexander: '🪖', einstein: '🌀', gandhi: '👓',
-  bismarck: '⛑️', lincoln: '🎩', achilles: '⚔️', harald: '🛡️'
-};
+const HERO_PORTRAIT_PATH = '/game-plugins/civilization/assets/heroes';
+const BUILDING_ASSET_PATH = '/game-plugins/civilization/assets';
 
 // Hint shown on the tile before it's designated: the exact bonus for the
 // current Age (10% per Age), applied the instant the building is picked.
 function civicPreviewText(civic) { return `+${civic.eventBonusPct}% ${civic.statLabel} bij aanduiden`; }
 
-function theme(age) { return ERA_THEMES[(age - 1) % ERA_THEMES.length]; }
-function buildingTheme(age, type) { return theme(age).buildings[type] || { color: '#B8895A', icon: '' }; }
+function theme(age) { return ERA_THEMES[Math.min(age, ERA_THEMES.length) - 1]; }
+export function renderLobbyOptions({room,container,E,socket,handleAck}){
+  const selected=room.gameOptions?.mode||'classic',wrap=E('section','civ-lobby-options'),head=E('div','civ-lobby-options-head');
+  head.append(E('strong','','Gamemode'),E('small','',room.isHost?'Kies de spelmodus':'De host kiest de spelmodus'));
+  const choices=E('div','civ-mode-choices');
+  [['classic','Classic','7 tijdperken · hoogste torenleven wint.'],['deathmatch','Deathmatch','Na tijdperk 7 vecht je door tot er maximaal één toren overblijft.']].forEach(([mode,label,copy])=>{
+    const button=E('button',`civ-mode-choice${selected===mode?' active':''}`);button.type='button';button.disabled=!room.isHost;button.setAttribute('aria-pressed',selected===mode?'true':'false');button.append(E('strong','',label),E('small','',copy));button.onclick=()=>socket.emit('room:setOptions',{mode},handleAck);choices.append(button);
+  });
+  wrap.append(head,choices);container.append(wrap);
+}
+function buildingTheme(age, type) { return theme(age).buildings[type] || { color: '#B8895A' }; }
+function assetSlug(name){
+  return name.toLowerCase().replace(/['’]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+}
+function iconNode(E,{age,name,fixed=false},className='civ-tile-icon'){
+  const badge=E('span',`${className} civ-icon-badge`);
+  badge.setAttribute('aria-hidden','true');
+  const image=E('img','civ-building-icon');
+  image.src=fixed
+    ?`${BUILDING_ASSET_PATH}/buildings/${assetSlug(name)}.webp`
+    :`${BUILDING_ASSET_PATH}/cards/age-${Math.min(age,7)}/${assetSlug(name)}.webp`;
+  image.alt='';
+  image.loading='lazy';
+  image.decoding='async';
+  badge.append(image);
+  return badge;
+}
+function heroPortrait(E,key,name,className=''){
+  const portrait=E('img',`civ-hero-portrait${className?` ${className}`:''}`);
+  portrait.src=`${HERO_PORTRAIT_PATH}/${key}.webp`;
+  portrait.alt=name||'';
+  portrait.loading='lazy';
+  portrait.decoding='async';
+  return portrait;
+}
 
 export function render(api){renderCivilization(api)}
-function renderCivilization({game,state,els,E,action,titlebar,logBox,sound}) {
+function renderCivilization({game,state,els,E,action,logBox,sound}) {
   if (game.phase === 'picking') {
-    renderPicking(E, action, sound, game, els, titlebar, logBox);
+    renderPicking(E, action, sound, game, els, logBox);
     return;
   }
 
   const you=game.players.find((player)=>player.isYou);
   if(!you)return;
 
+  const ageLabel=game.mode==='deathmatch'?`Tijdperk ${game.age} · Deathmatch`:`Tijdperk ${game.age}/${game.totalAges}`;
   const status=game.gameOver?'Spel afgelopen.':game.phase==='wave'
-    ?`Tijdperk ${game.age}/${game.totalAges} · aanval`
-    :you.acted?`Tijdperk ${game.age}/${game.totalAges} · beurt ${game.turnInAge}/${game.turnsPerAge} · wachten`:`Tijdperk ${game.age}/${game.totalAges} · beurt ${game.turnInAge}/${game.turnsPerAge} · kies een actie`;
+    ?`${ageLabel} · aanval`
+    :you.acted?`${ageLabel} · beurt ${game.turnInAge}/${game.turnsPerAge} · wachten`:`${ageLabel} · beurt ${game.turnInAge}/${game.turnsPerAge} · kies een actie`;
   const root=E('div','civ-root');
   root.style.setProperty('--civ-accent',theme(game.age).palette.gold||'#B8895A');
-  const openModal=(options)=>showCivModal(E,root,options);
-  root.append(renderTopStrip(E,game),renderEraBanner(E,game),renderStats(E,you),renderCivicRow(E,action,sound,game,you,openModal),renderYourGrid(E,action,sound,game,you,openModal));
+  const openModal=(options)=>{
+    state.civModalOptions=options;
+    showCivModal(E,root,options,()=>{if(state.civModalOptions===options)state.civModalOptions=null});
+  };
+  root.append(E('div','civ-turn-status',status),renderTopStrip(E,game,openModal),renderEraBanner(E,game),renderStats(E,you),renderCivicRow(E,action,sound,game,you,openModal),renderYourGrid(E,action,sound,game,you,openModal));
 
   if(game.phase==='draft'){
     if(!you.acted&&game.yourHand.length)root.append(renderDraft(E,action,sound,game,you,openModal));
     else if(!you.acted)root.append(E('div','civ-waiting','Geen kaarten of upgrades meer beschikbaar.'));
     else root.append(E('div','civ-waiting','Wachten op andere spelers…'));
-  } else if(game.phase==='wave') root.append(renderWave(E,game));
-  else root.append(renderGameOver(E,game,you));
+  } else if(game.phase==='wave') {
+    state.civModalOptions=null;
+    root.append(renderWave(E,game));
+    if(!game.hasAcknowledgedWave)showCombatModal(E,root,game,you,action,sound);
+  }
+  else {state.civModalOptions=null;root.append(renderGameOver(E,game,you))}
 
-  els.gameStage.append(titlebar('Age of Civilization',status),root,logBox(game.log||[]));
+  if(game.phase==='draft'&&state.civModalOptions)showCivModal(E,root,state.civModalOptions,()=>{state.civModalOptions=null});
+
+  els.gameStage.append(root,logBox(game.log||[]));
 }
 
-function renderPicking(E, action, sound, game, els, titlebar, logBox) {
+function renderPicking(E, action, sound, game, els, logBox) {
   const root=E('div','civ-root civ-picking');
   const you=game.players.find((p)=>p.isYou);
   const picker=game.players.find((p)=>p.id===game.pickerId);
+  root.append(renderTopStrip(E,game));
   root.append(E('div','civ-pick-title','Kies je leider'));
   root.append(E('div','civ-pick-sub', game.isYourPick ? 'Jij bent aan de beurt.' : `Wachten op ${picker?picker.name:'…'}…`));
 
@@ -52,7 +94,7 @@ function renderPicking(E, action, sound, game, els, titlebar, logBox) {
     const card=E('button',`civ-leader-card${leader.taken?' taken':''}`);
     card.type='button';
     const medallion=E('div','civ-medallion');
-    medallion.append(E('div','civ-medallion-base','👤'),E('div','civ-medallion-attr',LEADER_ATTRIBUTES[leader.key]||''));
+    medallion.append(heroPortrait(E,leader.key,leader.name,'civ-leader-portrait'));
     card.append(medallion,E('div','civ-leader-name',leader.name),E('div','civ-leader-attribute',leader.attribute),E('div','civ-leader-bonus',leader.bonus));
     if(leader.taken){
       const owner=game.players.find((p)=>p.leaderKey===leader.key);
@@ -67,17 +109,29 @@ function renderPicking(E, action, sound, game, els, titlebar, logBox) {
   });
   root.append(list);
 
-  const strip=renderTopStrip(E,game);
-  els.gameStage.append(titlebar('Age of Civilization','Leiderskeuze'),strip,root,logBox(game.log||[]));
+  els.gameStage.append(root,logBox(game.log||[]));
 }
 
-function renderTopStrip(E,game){
+function renderTopStrip(E,game,openModal=null){
   const strip=E('div','civ-top-strip');
   game.players.forEach((player)=>{
-    const chip=E('div',`civ-player-chip${player.isYou?' you':''}${player.alive===false?' dead':''}${player.id===game.pickerId?' picking':''}`);
+    const chip=E('button',`civ-player-chip${player.isYou?' you':''}${player.alive===false?' dead':''}${player.id===game.pickerId?' picking':''}`);
+    chip.type='button';
+    chip.title=player.isYou?'Jouw spelerdetails':`${player.name} bekijken`;
+    chip.onclick=()=>{
+      const options={eyebrow:'Speler',title:player.isYou?'Jij':player.name,content:playerDetails(E,player),health:player.hp,confirmLabel:'Sluiten'};
+      if(openModal)openModal(options);else showCivModal(E,strip.parentElement||strip,options);
+    };
     const head=E('div','civ-chip-head');
-    head.append(E('span','civ-chip-name',`${player.isYou?'Jij':player.name}`));
-    if(player.leaderName)head.append(E('span','civ-chip-leader',`${LEADER_ATTRIBUTES[player.leaderKey]||''} ${player.leaderName}`));
+    if(player.leaderKey){
+      head.classList.add('with-portrait');
+      head.append(heroPortrait(E,player.leaderKey,player.leaderName,'civ-chip-portrait'));
+    }
+    const labels=E('div','civ-chip-labels');
+    const name=E('span','civ-chip-name',`${player.isYou?'Jij':player.name}`);
+    labels.append(name);
+    if(player.leaderName)labels.append(E('span','civ-chip-leader',player.leaderName));
+    head.append(labels);
     chip.append(head);
     if(player.hp!==undefined){
       const track=E('div','civ-chip-hp-track'),fill=E('div','civ-chip-hp-fill');
@@ -96,7 +150,7 @@ function renderTopStrip(E,game){
   return strip;
 }
 
-function renderEraBanner(E,game){const wrap=E('div','civ-era-banner');wrap.append(E('div','civ-era-num',`TIJDPERK ${game.age} / ${game.totalAges} · BEURT ${game.turnNumber}/${game.totalTurns}`),E('div','civ-era-name',game.eraName));return wrap;}
+function renderEraBanner(E,game){const wrap=E('div','civ-era-banner'),total=game.mode==='deathmatch'?'∞':game.totalAges,turn=game.mode==='deathmatch'?`BEURT ${game.turnInAge}/${game.turnsPerAge}`:`BEURT ${game.turnNumber}/${game.totalTurns}`;wrap.append(E('div','civ-era-num',`TIJDPERK ${game.age} / ${total} · ${turn}`),E('div','civ-era-name',game.eraName));return wrap;}
 
 function renderStats(E,player){
   const wrap=E('div','civ-stats-row civ-you');
@@ -115,21 +169,22 @@ function renderCivicRow(E,action,sound,game,you,openModal){
     const bt=buildingTheme(game.age,key);
     const node=E('button','civ-tile civ-civic filled');node.type='button';
     node.style.setProperty('--tile-accent',bt.color);
-    node.append(E('div','civ-tile-icon',bt.icon),E('div','civ-tile-name',civic.name));
+    node.append(iconNode(E,{age:game.age,name:civic.name,fixed:true}),E('div','civ-tile-name',civic.name));
     node.append(E('div','civ-tile-perk',civic.used?'Gebeurtenis actief':civicPreviewText(civic)));
     if(canAct&&!civic.used){
       const afford=you.gold>=civic.upgradeCost;
       node.append(E('div','civ-tile-upgrade event',`Ontketen (${civic.upgradeCost}g)`));
-      node.disabled=!afford;
+      if(!afford)node.classList.add('unaffordable');
       node.onclick=()=>{
-        const current=you[civic.statKey];
-        const delta=Math.round(current*civic.eventBonusPct/100);
         openModal({
           eyebrow:'Vast gebouw',
-          title:`${bt.icon} ${civic.name}`,
-          body:`Aanduiden geeft meteen een eenmalige, permanente bonus: +${civic.eventBonusPct}% van je huidige ${civic.statLabel} (${current} → ${current+delta}). Dit kan maar 1x per spel.`,
+          title:civic.name,
+          art:iconNode(E,{age:game.age,name:civic.name,fixed:true},'civ-modal-icon'),
+          body:'Aanduiden ontketent meteen een eenmalige, permanente gebeurtenis. Dit kan maar 1x per spel.',
+          badges:[`+${civic.eventBonusPct}% ${civic.statLabel}`,'Eenmalig permanent'],
           cost:civic.upgradeCost,
           confirmLabel:'Ontketen',
+          confirmDisabled:!afford,
           onConfirm:()=>{sound('score');action('upgrade',{civic:key})}
         });
       };
@@ -149,18 +204,21 @@ function renderYourGrid(E,action,sound,game,you,openModal){
     const bt=buildingTheme(game.age,tile.type);
     const node=E('button','civ-tile filled');node.type='button';
     node.style.setProperty('--tile-accent',bt.color);
-    node.append(E('div','civ-tile-icon',bt.icon),E('div','civ-tile-name',tile.name),E('div','civ-tile-level',`Niv. ${tile.level}`));
-    node.append(E('div','civ-tile-perk',tilePerkText(tile)));
-    if(canAct&&!tile.maxed){
+    node.append(iconNode(E,{age:tile.assetAge||game.age,name:tile.name}),E('div','civ-tile-name',tile.name),E('div','civ-tile-level',`Niv. ${tile.level}`));
+    node.append(E('div','civ-tile-perk',statGainText(tile)));
+    if(!tile.maxed){
       const afford=you.gold>=tile.upgradeCost;
       node.append(E('div','civ-tile-upgrade',`Upgrade (${tile.upgradeCost}g)`));
-      node.disabled=!afford;
+      if(!afford)node.classList.add('unaffordable');
       node.onclick=()=>openModal({
         eyebrow:'Jouw stad',
-        title:`${bt.icon} ${tile.name}`,
-        body:upgradeDeltaText(tile),
+        title:tile.name,
+        art:iconNode(E,{age:tile.assetAge||game.age,name:tile.name},'civ-modal-icon'),
+        body:`Niveau ${tile.level} → ${tile.level+1}`,
+        badges:statBadges(tile,{next:true}),
         cost:tile.upgradeCost,
         confirmLabel:'Upgrade',
+        confirmDisabled:!canAct||!afford,
         onConfirm:()=>{sound('score');action('upgrade',{slot})}
       });
     } else node.disabled=true;
@@ -170,32 +228,48 @@ function renderYourGrid(E,action,sound,game,you,openModal){
   return wrap;
 }
 
-function tilePerkText(t){
-  const parts=[];
-  if(t.attack)parts.push(`+${t.attack} ATK`);
-  if(t.defence)parts.push(`+${t.defence} DEF`);
-  if(t.income)parts.push(`+${t.income}g`);
-  return parts.join(' · ');
+function statGainText({attack=0,defence=0,income=0}){
+  return [
+    attack&&`+${attack} Attack`,
+    defence&&`+${defence} Defence`,
+    income&&`+${income} Inkomen`
+  ].filter(Boolean).join(' · ');
 }
 
-function upgradeDeltaText(tile){
-  const parts=[];
-  if(tile.nextAttack!==tile.attack)parts.push(`ATK +${tile.nextAttack-tile.attack}`);
-  if(tile.nextDefence!==tile.defence)parts.push(`DEF +${tile.nextDefence-tile.defence}`);
-  if(tile.nextIncome!==tile.income)parts.push(`Inkomen +${tile.nextIncome-tile.income}`);
-  return parts.length?parts.join(' · '):'Geen zichtbare statverhoging door afronding.';
+function statBadges({attack=0,defence=0,income=0,nextAttack,nextDefence,nextIncome},{next=false}={}){
+  if(next)return [nextAttack!==undefined&&nextAttack-attack&&`+${nextAttack-attack} Attack`,nextDefence!==undefined&&nextDefence-defence&&`+${nextDefence-defence} Defence`,nextIncome!==undefined&&nextIncome-income&&`+${nextIncome-income} Inkomen`].filter(Boolean);
+  return [attack&&`+${attack} Attack`,defence&&`+${defence} Defence`,income&&`+${income} Inkomen`].filter(Boolean);
+}
+function playerDetails(E,player){
+  const details=E('div','civ-player-details');
+  const leader=E('div','civ-player-leader');
+  if(player.leaderKey)leader.append(heroPortrait(E,player.leaderKey,player.leaderName,'civ-player-portrait'));
+  leader.append(E('span','',player.leaderName||'Nog niet gekozen'));
+  details.append(leader,E('div','civ-player-power',player.leaderKey?heroPower(player.leaderKey):'Deze speler kiest nog een held.'));
+  return details;
 }
 
-function showCivModal(E,root,{eyebrow,title,body,cost=null,confirmLabel='',onConfirm=null,secondaryLabel='',onSecondary=null}){
+function showCivModal(E,root,{eyebrow,title,body='',art=null,content=null,badges=[],health=null,cost=null,confirmLabel='',confirmDisabled=false,onConfirm=null,secondaryLabel='',onSecondary=null,required=false},onDismiss=()=>{}){
   root.querySelector('.civ-modal-backdrop')?.remove();
   const backdrop=E('div','civ-modal-backdrop'),modal=E('div','civ-modal'),actions=E('div','civ-detail-actions civ-modal-actions');
-  const close=()=>backdrop.remove();
-  backdrop.onclick=(event)=>{if(event.target===backdrop)close()};
-  modal.append(E('div','civ-modal-eyebrow',eyebrow),E('div','civ-detail-name',title),E('div','civ-detail-desc',body));
+  const close=()=>{backdrop.remove();onDismiss()};
+  if(!required)backdrop.onclick=(event)=>{if(event.target===backdrop)close()};
+  if(art){
+    const header=E('div','civ-modal-header'),copy=E('div','civ-modal-copy');
+    copy.append(E('div','civ-modal-eyebrow',eyebrow),E('div','civ-detail-name',title));
+    if(body)copy.append(E('div','civ-detail-desc',body));
+    header.append(copy,art);modal.append(header);
+  } else {
+    modal.append(E('div','civ-modal-eyebrow',eyebrow),E('div','civ-detail-name',title));
+    if(body)modal.append(E('div','civ-detail-desc',body));
+  }
+  if(content)modal.append(content);
+  if(badges.length){const badgeRow=E('div','civ-modal-badges');badges.forEach((badge)=>badgeRow.append(E('span','civ-modal-badge',badge)));modal.append(badgeRow)}
+  if(health!==null){const tower=E('div','civ-modal-tower',`Toren ${health}/100`),track=E('div','civ-hp-track'),fill=E('div','civ-hp-fill');fill.style.width=`${Math.max(0,health)}%`;track.append(fill);tower.append(track);modal.append(tower)}
   if(cost!==null)modal.append(E('div','civ-modal-cost',`Kost ${cost} goud`));
   if(onSecondary){const secondary=E('button','civ-btn civ-btn-ghost civ-modal-secondary',secondaryLabel);secondary.onclick=()=>{close();onSecondary()};actions.append(secondary)}
-  if(onConfirm){const confirm=E('button','civ-btn civ-btn-primary civ-modal-confirm',confirmLabel);confirm.onclick=()=>{close();onConfirm()};actions.append(confirm)}
-  const back=E('button','civ-btn civ-btn-ghost civ-modal-back','Terug');back.onclick=close;actions.append(back);
+  if(onConfirm||confirmDisabled){const confirm=E('button','civ-btn civ-btn-primary civ-modal-confirm',confirmLabel);confirm.disabled=confirmDisabled;confirm.onclick=()=>{close();onConfirm()};actions.append(confirm)}
+  if(!required){const back=E('button','civ-btn civ-btn-ghost civ-modal-back','Terug');back.onclick=close;actions.append(back)}
   modal.append(actions);backdrop.append(modal);root.append(backdrop);
 }
 
@@ -204,9 +278,11 @@ function renderDraft(E,action,sound,game,you,openModal){
   wrap.append(E('div','civ-draft-label','Kies één kaart'));
   const showDetail=(card)=>{
     const bt=buildingTheme(game.age,card.type);
+    const canBuild=you.gold>=card.cost&&you.grid.some((slot)=>slot===null);
     openModal({
-      eyebrow:'Kaart',title:`${bt.icon} ${card.name}`,body:card.desc,cost:card.cost,
-      confirmLabel:'Bouw',onConfirm:you.gold>=card.cost&&you.grid.some((slot)=>slot===null)?()=>{sound('score');action('build',{handIndex:card.idx})}:null,
+      eyebrow:'Kaart',title:card.name,body:card.desc,cost:card.cost,
+      art:iconNode(E,{age:game.age,name:card.name},'civ-modal-icon'),
+      badges:statBadges(card),confirmLabel:'Bouw',confirmDisabled:!canBuild,onConfirm:()=>{sound('score');action('build',{handIndex:card.idx})},
       secondaryLabel:'Gooi weg voor goud',onSecondary:()=>{sound('card');action('discard',{handIndex:card.idx})}
     });
   };
@@ -214,7 +290,8 @@ function renderDraft(E,action,sound,game,you,openModal){
     const bt=buildingTheme(game.age,card.type);
     const node=E('button',`civ-card${card.type==='wonder'?' wonder':''}`);node.type='button';node.dataset.index=String(card.idx);
     node.style.setProperty('--tile-accent',bt.color);
-    node.append(E('div','civ-card-icon',bt.icon),E('div','civ-card-name',card.name),E('div','civ-card-perk',tilePerkText(card)),E('div','civ-card-cost',`Kost ${card.cost}g`));
+    if(card.cost>you.gold)node.classList.add('unaffordable');
+    node.append(iconNode(E,{age:game.age,name:card.name},'civ-card-icon'),E('div','civ-card-name',card.name),E('div','civ-card-perk',statGainText(card)),E('div','civ-card-cost',`Kost ${card.cost}g`));
     node.onclick=()=>showDetail(card);hand.append(node)
   }
   wrap.append(hand);
@@ -223,19 +300,7 @@ function renderDraft(E,action,sound,game,you,openModal){
 
 function renderWave(E,game){
   const wrap=E('div','civ-wave');
-  wrap.append(E('div','civ-wave-title',`Tijdperk ${game.waveResult.age} — Aanvalsgolf`));
-  const list=E('div','civ-wave-list');
-  game.players.forEach((player)=>{
-    const result=game.waveResult.results[player.id];
-    if(!result)return;
-    const attacker=game.players.find((p)=>p.id===result.attackerId);
-    const row=E('div',`civ-wave-row${player.isYou?' you':''}`);
-    row.append(E('div','civ-wave-name',`${player.isYou?'Jij':player.name}`));
-    row.append(E('div','civ-wave-numbers',`Attack ${result.attack} · Defence ${result.defence} ← ${attacker?attacker.name:'?'} (${result.incoming})`));
-    row.append(E('div',`civ-wave-result ${result.damage?'hit':'ok'}`,result.damage?`-${result.damage} HP`:'Afgeslagen'));
-    list.append(row);
-  });
-  wrap.append(list);
+  wrap.append(E('div','civ-wave-title',`Tijdperk ${game.waveResult.age} — Aanvalsgolf`),E('div','civ-waiting','Bekijk de schadeberekening en kies Doorgaan.'));
   return wrap;
 }
 
@@ -245,12 +310,44 @@ function renderGameOver(E,game,you){
   const ranked=[...game.players].sort((a,b)=>(b.hp-a.hp)||(b.gold-a.gold));
   for(const player of ranked){
     const row=E('div',`civ-final-row${game.winnerId===player.id?' winner':''}`),info=E('div');
-    info.append(E('div','civ-fname',`${player.isYou?'Jij · ':''}${player.name}${player.leaderName?` · ${player.leaderName}`:''}`),E('div','civ-breakdown',`Goud ${player.gold} · Attack ${player.attack} · Defence ${player.defence}`));
+    info.append(E('div','civ-fname',`${player.isYou?'Jij · ':''}${player.name}${player.leaderName?` · ${player.leaderName}`:''}`),E('div','civ-breakdown',`Goud ${player.gold} · ATK ${player.attack} · DEF ${player.defence} · Inkomen +${player.income}`));
     row.append(info,E('div','civ-fscore',`${player.hp}/100`));
     table.append(row);
   }
   wrap.append(table);
   return wrap;
+}
+
+function heroPower(key){
+  return {
+    cleopatra:'Gouden start en gratis aanduidingen.',
+    alexander:'Versterkt strijdgebouwen.',
+    einstein:'Versterkt het Observatorium.',
+    gandhi:'Beperkt inkomende schade.',
+    bismarck:'Maakt upgrades goedkoper.',
+    lincoln:'Herstelt een zwaar beschadigde toren.',
+    achilles:'Sterker offensief, maar kwetsbaarder.',
+    harald:'Plundert goud bij een aanval.'
+  }[key]||'';
+}
+
+function showCombatModal(E,root,game,you,action,sound){
+  const table=E('div','civ-combat-table');
+  const header=E('div','civ-combat-row civ-combat-head');
+  ['Speler','ATK','DEF','Valt aan','Schade'].forEach((label)=>header.append(E('span','',label)));
+  table.append(header);
+  game.players.filter((player)=>game.waveResult.results[player.id]).forEach((player)=>{
+    const result=game.waveResult.results[player.id];
+    const target=game.players.find((opponent)=>opponent.id===result.targetId);
+    const targetResult=game.waveResult.results[result.targetId];
+    const row=E('div',`civ-combat-row${player.isYou?' you':''}`);
+    row.append(E('span','civ-combat-name',player.isYou?'Jij':player.name),E('span','',String(result.attack)),E('span','',String(result.defence)),E('span','civ-combat-target',target?.isYou?'Jij':target?.name||'—'),E('span','civ-combat-damage',String(targetResult?.damage??0)));
+    table.append(row);
+  });
+  showCivModal(E,root,{
+    eyebrow:'Schadeberekening',title:`Tijdperk ${game.waveResult.age} · aanvalsgolf`,content:table,
+    confirmLabel:'Doorgaan',required:true,onConfirm:()=>{sound('score');action('continueWave',{})}
+  });
 }
 
 export function metric({game,player}){const score=Number(game.finalScores?.[player.id]??player.gold??0);return{text:`${score}g`,score};}

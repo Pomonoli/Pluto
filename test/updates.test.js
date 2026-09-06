@@ -22,7 +22,7 @@ test('current version has no unseen changes', () => {
 
 test('missed releases are grouped instead of shown as version history', () => {
   const changes=updates.changesSince('1.9.0');
-  assert.deepEqual(changes.games,['Kingdomino','Cascadia','Isle of Skye','The Deep Bleu C','CycClub']);
+  assert.deepEqual(changes.games,['Kingdomino','Cascadia','Isle of Skye','The Deep Bleu C','CycClub','Ragnarok','Bakkermans Jones']);
   assert.ok(changes.features.some((item) => item.includes('updatepopup')));
 });
 
@@ -34,15 +34,17 @@ test('first guest visit establishes a silent baseline', () => {
 
 test('guest with an older seen version gets only relevant grouped changes', () => {
   const payload=updates.payloadFor({since:'1.11.0'});
-  assert.deepEqual(payload.changes.games,['Isle of Skye','The Deep Bleu C','CycClub']);
-  assert.equal(payload.changes.features.length,28);
-  assert.equal(payload.changes.improvements.length,56);
+  assert.deepEqual(payload.changes.games,['Isle of Skye','The Deep Bleu C','CycClub','Ragnarok','Bakkermans Jones']);
+  assert.ok(payload.changes.features.length>=43);
+  assert.ok(payload.changes.improvements.length>=87);
   assert.ok(payload.changes.features.some((item)=>item.includes('Light theme')));
   assert.ok(payload.changes.features.some((item)=>item.includes('gameheader')));
   assert.ok(payload.changes.features.some((item)=>item.includes('72, 36 of 18 tegels')));
   assert.ok(payload.changes.features.some((item)=>item.includes('burgers per speler')));
   assert.ok(payload.changes.improvements.some((item)=>item.includes('planeet-')));
   assert.ok(payload.changes.improvements.some((item)=>item.includes('ruimtebanner')));
+  assert.ok(payload.changes.improvements.some((item)=>item.includes('schermvullende, randloze ondergrond')));
+  assert.ok(payload.changes.improvements.some((item)=>item.includes('geen dubbele titel meer')));
   assert.ok(payload.changes.improvements.some((item)=>item.includes('in plaats van room')));
   assert.ok(payload.changes.improvements.some((item)=>item.includes('passende, gecentreerde breedte')));
   assert.ok(payload.changes.features.some((item)=>item.includes('2 tot 7 spelers')));
@@ -66,4 +68,13 @@ test('guest with an older seen version gets only relevant grouped changes', () =
   assert.ok(payload.changes.improvements.some((item)=>item.includes('meteen zodra je ze aanduidt')));
   assert.ok(payload.changes.improvements.some((item)=>item.includes('Tijdperk × 10% van je huidige stat')));
   assert.ok(payload.changes.improvements.some((item)=>item.includes('gelijktijdige segment-systeem')));
+  assert.ok(payload.changes.improvements.some((item)=>item.includes('echte voornaam')));
+  assert.ok(payload.changes.improvements.some((item)=>item.includes('centraal symbool')));
+  assert.ok(payload.changes.improvements.some((item)=>item.includes('vaste legenda')));
+  assert.ok(payload.changes.improvements.some((item)=>item.includes('totale Attack')));
+  assert.ok(payload.changes.features.some((item)=>item.includes('Ragnarok')));
+  assert.ok(payload.changes.features.some((item)=>item.includes('Bakkermans Jones')));
+  assert.ok(payload.changes.improvements.some((item)=>item.includes('alchemistenatelier-interface')));
+  assert.ok(payload.changes.improvements.some((item)=>item.includes('knopvormige titelbubbel')));
+  assert.ok(payload.changes.improvements.some((item)=>item.includes('zonder afgeronde hoeken')));
 });

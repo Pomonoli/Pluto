@@ -18,6 +18,9 @@ test('productieserver levert alle pluginclients, CSS, views en assets',async(t)=
   if(plugin.viewUrl)assert.equal((await fetch(base+plugin.viewUrl)).status,200,plugin.viewUrl);
  }
  assert.equal((await fetch(`${base}/game-plugins/minigolf/assets/tree.svg`)).status,200);
+ assert.equal((await fetch(`${base}/game-plugins/civilization/assets/heroes/cleopatra.webp`)).status,200);
+ assert.equal((await fetch(`${base}/game-plugins/civilization/assets/cards/age-7/railgun-platform.webp`)).status,200);
+ assert.equal((await fetch(`${base}/game-plugins/civilization/assets/buildings/observatory.webp`)).status,200);
  assert.equal((await fetch(`${base}/game-plugins/onbekend/client.js`)).status,404);
 });
 

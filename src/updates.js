@@ -305,13 +305,198 @@ const RELEASES = [
     ]
   },
   {
-    version:'1.17.0',
+    version:'1.18.0',
+    features:[
+      'The Deep Bleu C: nieuwe Haven met bootjes in de Middellandse Zee — koop een boot om het water op te varen, en hak hout of delf steen naast bomen en bergpieken met bijl en houweel, net als vissen. Nieuwe Houthakkerij en Steengroeve naast het Aquarium-Museum, elk met vijf sets van 10 soorten.',
+      'The Deep Bleu C: nieuwe vaardigheden-skilltree — Vissen, Houthakken, Delven, Verzamelen en Handelen gaan van niveau 1 tot 99. Je verdient xp bij elke vangst, kap, delving, nieuwe ontdekking en voltooide ruil.'
+    ],
+    improvements:[
+      'The Deep Bleu C: de hex-tegels zijn twee keer zo groot, met kleur en reliëf (bomen, rotsen, heuvels, water) in Pokémon-achtige stijl.',
+      'The Deep Bleu C: je speler is nu een 2D-chibi visser die alleen een hengel, bijl of houweel in de hand heeft tijdens de bijhorende actie.'
+    ]
+  },
+  {
+    version:'1.18.1',
+    improvements:[
+      'NPC\'s krijgen voortaan een willekeurige echte voornaam die gedurende de lobby en het spel behouden blijft.'
+    ]
+  },
+  {
+    version:'1.18.2',
+    improvements:[
+      'Niet-hosts kunnen na een multiplayerresultaat kiezen om in de game te blijven voor een rematch, of die meteen te verlaten.',
+      'Leaderboards tonen voortaan ook het aantal gelijkspelen, zonder extra breedte op mobiel.'
+    ]
+  },
+  {
+    version:'1.18.3',
+    improvements:[
+      'Bestaande gelijkspelgeschiedenis wordt automatisch meegenomen in de draw-statistieken.'
+    ]
+  },
+  {
+    version:'1.18.4',
+    improvements:[
+      'Isle of Skye-tegels zijn veel groter en tonen weide, berg en water als duidelijke gekleurde vakken met een centraal symbool voor wegen, whisky, schapen, vee en schepen.',
+      'Isle of Skye toont een vaste legenda van alle terrein- en tegelsymbolen, en je kasteel is meteen herkenbaar op elk eiland.'
+    ]
+  },
+  {
+    version:'1.18.5',
+    improvements:[
+      'Age of Civilization toont totale Attack en Defence weer permanent bij je andere statistieken.'
+    ]
+  },
+  {
+    version:'1.19.0',
+    features:[
+      'Age of Civilization heeft nu een Deathmatch-modus: speel na tijdperk 7 door met late-game content tot er maximaal één toren overblijft.',
+      'Age of Civilization toont een volledig aanvalsoverzicht en duidelijkere statinformatie in kaart-, upgrade- en spelerpopups.'
+    ]
+  },
+  {
+    version:'1.18.6',
+    games:['Ragnarok'],
+    features:[
+      'Ragnarok: verover in realtime een gedeelde hexkaart met je vikingclan, bouw je gebied uit en overleef het oordeel der goden.'
+    ]
+  },
+  {
+    version:'1.20.0',
+    features:[
+      'The Deep Bleu C heeft een nieuwe art direction: een "deep water, warm land"-kleurenpalet, een RPG-avonturier met kap en cape als speelfiguur, en een schermvullende kaart met zwevende actieknoppen in plaats van een vaste zijbalk.'
+    ],
+    improvements:[
+      'The Deep Bleu C: een geopend paneel (Vishandel, Aquarium, Vaardigheden, ...) schuift nu als een sheet over de kaart heen in plaats van het scherm te vervangen.'
+    ]
+  },
+  {
+    version:'1.21.0',
+    games:['Bakkermans Jones'],
+    features:[
+      'Bakkermans Jones: draai een vroege bakkersdienst — bak van 03:00 tot 07:00, bedien klanten en lever bestellingen en een dagelijks evenement tot de winkel om 12:00 sluit, en overleef willekeurige tegenslagen zoals een kapotte koeling of stroomstoring.'
+    ]
+  },
+  {
+    version:'1.21.1',
+    features:[
+      'Solitaire heeft nu een zichtbare knop om meteen met een vers spel opnieuw te beginnen.',
+      'Het Solitaire-leaderboard toont voortaan de beste zetten en snelste voltooiing zonder overbodige gelijkspelkolom.'
+    ],
+    improvements:[
+      'Hartenjagen spreidt resterende handkaarten steeds ruimer en houdt alle vier spelers zichtbaar.',
+      'Age of Civilization houdt het actieve spel vast, maakt het eindscherm bereikbaar en toont daar goud, aanval, verdediging en inkomen.',
+      'Ragnarok-rivieren worden correct als gelaagde lijnen getekend en de lichte UI is rustiger en consistenter.',
+      'CycClub is leesbaar in het lichte thema; 7 Wonders Duel toont kaarteffecten mobiel en noemt ieder tijdperk consequent Tijdperk.'
+    ]
+  },
+  {
+    version:'1.21.2',
+    improvements:[
+      'Age of Civilization heeft een nieuwe alchemistenatelier-interface met walnoothout, perkament, messing accenten en consistente gegraveerde iconen, compact en schermvullend op ieder formaat.'
+    ]
+  },
+  {
+    version:'1.22.0',
+    features:[
+      'The Deep Bleu C: gezondheid, energie en pantser — jaag op wilde dieren en eet de buit op voor energie; een mislukte jacht kost gezondheid (verminderd door pantser).',
+      'The Deep Bleu C: de Inventaris heeft een gear-screen en de Marktplaats verkoopt nu ook kleding, wapens en schilden.'
+    ],
+    improvements:[
+      'The Deep Bleu C: de kaart is nu één eiland vol meren, volledig omringd door zee en oceaan, met een wereldrand-waterval die in het niets stort.'
+    ]
+  },
+  {
+    version:'1.22.1',
+    improvements:[
+      'De gamecontainer is op mobiel, tablet en desktop zelf de schermvullende, randloze ondergrond; terugknop, gametitel en spelmenu liggen voortaan in deze game-oppervlakte.',
+      'Age of Civilization toont geen dubbele titel meer, houdt de tijdperk- en beurtstatus op één regel en maakt de spelerskaarten tijdens de leiderskeuze weer duidelijk leesbaar.'
+    ]
+  },
+  {
+    version:'1.22.2',
+    improvements:[
+      'The Deep Bleu C toont het hexraster niet langer zichtbaar op de kaart: elk tegeltype heeft één platte kleur zonder tegelrand, zodat aangrenzende tegels van hetzelfde type naadloos in elkaar overlopen tot doorlopend terrein.'
+    ]
+  },
+  {
+    version:'1.22.3',
+    improvements:[
+      'Alle games gebruiken nu een schermvullende gameshell met een transparante gedeelde header, een knopvormige titelbubbel, veilige ruimte voor spelinhoud en zonder dubbele interne gametitels.'
+    ]
+  },
+  {
+    version:'1.22.4',
+    improvements:[
+      'De buitenste fullscreen-gamesurface loopt nu zonder afgeronde hoeken door tot aan de schermranden.'
+    ]
+  },
+  {
+    version:"1.22.5",
+    improvements:[
+      "Age of Civilization toont heldenportretten en aanklikbare spelerskaarten; Pluto-releases kunnen voortaan lokaal veilig worden gepubliceerd."
+    ]
+  },
+  {
+    version:"1.22.6",
+    improvements:[
+      "Releases kunnen starten met niet-gecommitteerd werk"
+    ]
+  },
+  {
+    version:"1.22.7",
+    improvements:[
+      "Grotere gebouwiconen in Age of Civilization-pop-ups"
+    ]
+  },
+  {
+    version:"1.23.0",
+    features:[
+      "The Big Blue C (voorheen The Deep Bleu C): de jacht op wild gebruikt nu een dobbelsteen-gevecht (aanvallen, verdedigen, eten, vluchten) in plaats van een tijdvenster.",
+      "The Big Blue C: nieuw kooksysteem — een Kampvuur roostert vlees gratis, een Kookvuur bereidt gerechten met een tijdelijke buff.",
+      "The Big Blue C: combat-gear heeft nu slijtage en kan gerepareerd worden; je kunt een aanlegsteiger bouwen vanuit de Inventaris."
+    ],
+    improvements:[
+      "The Big Blue C: volledig nieuwe visuele stijl met een licht, zongebleekt Noords palet — het water wordt donkerder naarmate de zone zwaarder is (Ondiep, Kelpwouden, Wadzee, Rifzee).",
+      "The Big Blue C: een versnelde dag/nacht-cyclus ontgrendelt nachtsoorten bij het vissen en jagen."
+    ]
+  },
+  {
+    version:"1.23.1",
+    improvements:[
+      "Age of Civ icons gefixt"
+    ]
+  },
+  {
+    version:"1.23.2",
+    improvements:[
+      "The Big Blue C gebruikt nu een schermvullende kaart met de gamebanner als overlay en zonder dubbele statusregel."
+    ]
+  },
+  {
+    version:"1.23.3",
+    features:[
+      "The Big Blue C: de Winkel verkoopt nu een Energiedrank en een Gezondheidsdrank die je energie of gezondheid meteen aanvullen."
+    ],
+    improvements:[
+      "The Big Blue C: gebouwen zijn nu echte kleine illustraties (muur, dak, deur, uithangbord) in plaats van een icoon in een kader; Hall of Fame is een obelisk, havens en aanlegsteigers zijn een dokplateau op palen.",
+      "The Big Blue C: alle actieknoppen staan nu samen in één rail aan de rechterkant."
+    ]
+  },
+  {
+    version:"1.24.0",
+    improvements:[
+      "The Blue is een nieuwe game: spoel aan op een eigen eiland, vis met hengel en geluk, hak hout en delf erts, vecht in een dobbelgevecht tegen wild zwijn en wolf, kook je vangst voor energie en tijdelijke buffs, bouw en repareer gereedschap met slijtage, en vul een codex terwijl dag overgaat in nacht."
+    ]
+  },
+  {
+    version:'1.25.0',
     features:[
       'CycClub: een nieuw tabblad Tactieken laat je permanente tactiekkaarten kopen (Treintje rijden, Kasseienspecialist, Hinderlaag in de klim, Aero-opstelling, Bewaakte sprint, Alles-of-niets). Voor elke rit kies je uit maximaal drie kaarten uit je bezit om eenmalig in te zetten — past de tactiek bij het terrein van de rit, dan krijgen je renners een multiplier op hun segmentbonus.'
     ]
   },
   {
-    version:'1.17.1',
+    version:'1.25.1',
     improvements:[
       'CycClub: het ritprofiel tijdens het rijden is herwerkt in de stijl van een echt wielerprofiel, met een gekleurde vulling naar stijgingspercentage, een hoogte-as, kilometermarkeringen, een start- en finishvlag en gecategoriseerde beklimmingen.'
     ]

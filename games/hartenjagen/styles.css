@@ -6,9 +6,12 @@
 .hearts-hand{min-width:0;min-height:0;overflow:hidden}
 .hearts-hand.compact{padding-bottom:8px}
 .hearts-hand.compact .hearts-fan{padding-bottom:4px}
-.hearts-fan{padding:14px 18px 18px 4px}
+.hearts-fan{display:flex;width:100%;min-width:0;justify-content:space-between;padding:14px 18px 18px 4px}
 .hearts-fan .playing-card{margin-right:-49px}
 .hearts-fan .playing-card:last-child{margin-right:0}
+.hearts-fan:not(:has(.playing-card:nth-child(9))) .playing-card{margin-right:0}
+.hearts-fan:has(.playing-card:nth-child(9)):not(:has(.playing-card:nth-child(11))) .playing-card{margin-right:-18px}
+.hearts-fan:has(.playing-card:nth-child(11)):not(:has(.playing-card:nth-child(13))) .playing-card{margin-right:-34px}
 .hearts-fan .playing-card[aria-disabled="true"]{cursor:default;filter:saturate(.38) brightness(.84);opacity:1}
 .hearts-fan .playing-card[aria-disabled="true"]:hover{transform:none}
 .hearts-fan .playing-card .rank{position:absolute;top:8px;left:8px;font-size:19px}
@@ -26,6 +29,10 @@
 @media(max-width:480px){
 .hearts-fan .playing-card{margin-right:-34px}
 .hearts-fan{padding-right:8px}
+.hearts-fan:not(:has(.playing-card:nth-child(6))) .playing-card{margin-right:0}
+.hearts-fan:has(.playing-card:nth-child(6)):not(:has(.playing-card:nth-child(9))) .playing-card{margin-right:-22px}
+.hearts-fan:has(.playing-card:nth-child(9)):not(:has(.playing-card:nth-child(11))) .playing-card{margin-right:-34px}
+.hearts-fan:has(.playing-card:nth-child(11)) .playing-card{margin-right:-43px}
 }
 .hearts-trick .playing-card{
   animation:cardArrive .18s ease-out

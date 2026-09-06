@@ -73,6 +73,82 @@ test('Age of Civilization start met twee geheime handen, 21 beurten en drie vast
   assert.ok(view.yourHand.every((card)=>['attack','defence','economy','wonder'].includes(card.type)));
 });
 
+test('gebouwde kaarten behouden de juiste afbeeldings-age bij een volgende beurt',()=>{
+  const game=civilization.createGame(players());
+  pickLeaders(game);
+  buildFirstAffordable(game,'a');
+  const built=game.players.a.grid.find(Boolean);
+  assert.equal(built.assetAge,1);
+  game.age=2;
+  const view=civilization.serialize(game,'a');
+  assert.equal(view.players.find((player)=>player.isYou).grid.find(Boolean).assetAge,1);
+});
+
+test('Deathmatch gebruikt de late-game content na tijdperk 7 en eindigt niet zolang meerdere torens leven',()=>{
+  const game=civilization.createGame(players(),{mode:'deathmatch'});
+  pickLeaders(game);
+  game.age=7;
+  game.turnInAge=3;
+  civilization.handleAction(game,'a','discard',{handIndex:0});
+  civilization.handleAction(game,'b','discard',{handIndex:0});
+  civilization.handleAction(game,'a','continueWave',{});
+  civilization.handleAction(game,'b','continueWave',{});
+  assert.equal(game.gameOver,false);
+  assert.equal(game.age,8);
+  assert.equal(game.phase,'draft');
+  const view=civilization.serialize(game,'a');
+  assert.equal(view.mode,'deathmatch');
+  assert.equal(view.totalAges,null);
+  assert.equal(view.eraName,'Future to Futuristic');
+  assert.ok(view.yourHand.every((card)=>['Drone Swarm Offensive','Railgun Platform','Orbital Defense Platform','Shield Generator Array','Quantum Bank','Asteroid Mining Rig','Dyson Sphere','Death Star Array'].includes(card.name)));
+});
+
+test('Deathmatch eindigt zodra één toren overblijft',()=>{
+  const game=civilization.createGame(players(),{mode:'deathmatch'});
+  pickLeaders(game);
+  game.age=7;
+  game.turnInAge=3;
+  game.players.a.hp=1;
+  game.players.b.hand[0]={type:'attack',name:'Test',variantIndex:0,cost:0,attack:200,defence:0,income:0};
+  civilization.handleAction(game,'b','build',{handIndex:0});
+  civilization.handleAction(game,'a','discard',{handIndex:0});
+  civilization.handleAction(game,'a','continueWave',{});
+  civilization.handleAction(game,'b','continueWave',{});
+  assert.equal(game.gameOver,true);
+  assert.equal(game.winnerId,'b');
+});
+
+test('Deathmatch eindigt in een gelijkspel bij gelijktijdige eliminatie',()=>{
+  const game=civilization.createGame(players(),{mode:'deathmatch'});
+  pickLeaders(game);
+  game.turnInAge=3;
+  game.players.a.hp=1;
+  game.players.b.hp=1;
+  game.players.a.hand[0]={type:'attack',name:'Test A',variantIndex:0,cost:0,attack:200,defence:0,income:0};
+  game.players.b.hand[0]={type:'attack',name:'Test B',variantIndex:0,cost:0,attack:200,defence:0,income:0};
+  civilization.handleAction(game,'a','build',{handIndex:0});
+  civilization.handleAction(game,'b','build',{handIndex:0});
+  civilization.handleAction(game,'a','continueWave',{});
+  civilization.handleAction(game,'b','continueWave',{});
+  assert.equal(game.gameOver,true);
+  assert.equal(game.winnerId,null);
+});
+
+test('NPCs spelen Deathmatch na tijdperk 7 zonder een vaste eindgrens',()=>{
+  const bots=[{id:'a',name:'Ada',isNpc:true},{id:'b',name:'Bot',isNpc:true}];
+  const game=civilization.createGame(bots,{mode:'deathmatch'});
+  while(game.phase==='picking') civilization.tick(game,Date.now());
+  game.age=7;
+  game.turnInAge=3;
+  civilization.tick(game,Date.now());
+  civilization.tick(game,Date.now());
+  assert.equal(game.phase,'wave');
+  civilization.tick(game,Date.now());
+  assert.equal(game.phase,'draft');
+  assert.equal(game.age,8);
+  assert.equal(game.gameOver,false);
+});
+
 test('bouwen en weggooien blijven in draft totdat de derde beurt de aanval verwerkt',()=>{
   const game=civilization.createGame(players());
   pickLeaders(game);
@@ -109,9 +185,11 @@ test('vrije gebouwen kunnen pas het volgende tijdperk upgraden, en krijgen dan x
   const game=civilization.createGame(players());
   pickLeaders(game);
   const p=game.players.a;
-  const attackIdx=p.hand.findIndex((card)=>card.type==='attack');
-  const baseAttack=p.hand[attackIdx].attack;
-  civilization.handleAction(game,'a','build',{handIndex:attackIdx});
+  // Injected directly (rather than drawn) so the test doesn't depend on
+  // which of the two Attack variants a random hand happens to deal.
+  const baseAttack=4;
+  p.hand[0]={type:'attack',name:'Test Spear',variantIndex:0,cost:2,attack:baseAttack,defence:0,income:0};
+  civilization.handleAction(game,'a','build',{handIndex:0});
   const slot=p.grid.findIndex(Boolean);
 
   civilization.handleAction(game,'b','discard',{handIndex:0});
@@ -123,7 +201,8 @@ test('vrije gebouwen kunnen pas het volgende tijdperk upgraden, en krijgen dan x
   civilization.handleAction(game,'a','discard',{handIndex:0});
   civilization.handleAction(game,'b','discard',{handIndex:0});
   assert.equal(game.phase,'wave');
-  civilization.tick(game,game.waveShownUntil+1);
+  civilization.handleAction(game,'a','continueWave',{});
+  civilization.handleAction(game,'b','continueWave',{});
   assert.equal(game.age,2);
   assert.equal(game.phase,'draft');
 
@@ -192,11 +271,40 @@ test('gebouwen zijn uniek: dezelfde kaart wordt niet opnieuw aangeboden in hetze
   const game=civilization.createGame(players());
   pickLeaders(game);
   const p=game.players.a;
-  p.hand[0]={type:'attack',name:'Sharpened Spear',cost:2,attack:4,defence:0,income:0};
+  p.hand[0]={type:'attack',name:'Sharpened Spear',variantIndex:0,cost:2,attack:4,defence:0,income:0};
   civilization.handleAction(game,'a','build',{handIndex:0});
   civilization.handleAction(game,'b','discard',{handIndex:0});
   assert.equal(game.turnInAge,2);
-  assert.equal(p.hand.some((card)=>card.type==='attack'),false);
+  // The sibling Attack variant ("Bone-tipped Arrow") can still legitimately
+  // appear — only this exact, already-built card is barred from the pool.
+  assert.equal(p.hand.some((card)=>card.name==='Sharpened Spear'),false);
+});
+
+test('elke categorie heeft twee varianten, en een gebouwde tegel blijft zijn eigen variant volgen bij upgraden',()=>{
+  const game=civilization.createGame(players());
+  pickLeaders(game);
+  const p=game.players.a;
+  p.hand[0]={type:'attack',name:'Bone-tipped Arrow',variantIndex:1,cost:2,attack:4,defence:0,income:0};
+  civilization.handleAction(game,'a','build',{handIndex:0});
+  const slot=p.grid.findIndex(Boolean);
+  assert.equal(p.grid[slot].variantIndex,1);
+  civilization.handleAction(game,'b','discard',{handIndex:0});
+
+  for(let round=0;round<2;round++){
+    civilization.handleAction(game,'a','discard',{handIndex:0});
+    civilization.handleAction(game,'b','discard',{handIndex:0});
+  }
+  assert.equal(game.phase,'wave');
+  civilization.handleAction(game,'a','continueWave',{});
+  civilization.handleAction(game,'b','continueWave',{});
+  assert.equal(game.age,2);
+
+  p.gold=999;
+  civilization.handleAction(game,'a','upgrade',{slot});
+  assert.equal(p.grid[slot].level,2);
+  // Age-2 name of variant 1 ("Ballista Corps"), never variant 0's
+  // ("Phalanx Legion") even though the tile is now built in a fresh Age.
+  assert.equal(p.grid[slot].name,'Ballista Corps');
 });
 
 test('Age of Civilization NPC kiest zelfstandig een actie',()=>{
@@ -283,25 +391,26 @@ test('laatste NPC-actie voltooit de beurt, maar neemt de volgende human-beurt ni
   assert.deepEqual(game,afterNpc);
 });
 
-test('wave-weergave gaat automatisch verder en wacht daarna opnieuw op human input',()=>{
+test('aanvalsgolf wacht op menselijke bevestiging en tick kan die niet overslaan',()=>{
   const game=civilization.createGame(players());
   pickLeaders(game);
   for(let turn=0;turn<3;turn++){
     for(const id of game.order) civilization.handleAction(game,id,'discard',{handIndex:0});
   }
   assert.equal(game.phase,'wave');
-  const until=game.waveShownUntil;
-  assert.equal(civilization.serialize(game,'a').deadline,until);
   const before=structuredClone(game);
-  assert.equal(civilization.tick(game,until-1),false);
+  assert.equal(civilization.tick(game,Date.now()+86400000),false);
   assert.deepEqual(game,before);
-  assert.equal(civilization.tick(game,until),true);
+  assert.equal(civilization.serialize(game,'a').deadline,null);
+  civilization.handleAction(game,'a','continueWave',{});
+  assert.equal(game.phase,'wave');
+  civilization.handleAction(game,'b','continueWave',{});
   assert.equal(game.phase,'draft');
   assert.equal(game.age,2);
   assert.equal(game.turnInAge,1);
   assert.equal(civilization.serialize(game,'a').deadline,null);
   const nextDraft=structuredClone(game);
-  assert.equal(civilization.tick(game,until+86400000),false);
+  assert.equal(civilization.tick(game,Date.now()+86400000),false);
   assert.deepEqual(game,nextDraft);
 });
 
@@ -316,6 +425,9 @@ test('een ingestorte toren bepaalt ook het opgeslagen wedstrijdresultaat',()=>{
   civilization.handleAction(game,'b','discard',{handIndex:0});
   civilization.handleAction(game,'a','discard',{handIndex:0});
   civilization.handleAction(game,'b','discard',{handIndex:0});
+  assert.equal(game.gameOver,false);
+  civilization.handleAction(game,'a','continueWave',{});
+  civilization.handleAction(game,'b','continueWave',{});
   assert.equal(game.gameOver,true);
   assert.equal(game.winnerId,'b');
   const result=civilization.results(game,1000);
@@ -335,7 +447,8 @@ test('overleven beide torens alle tijdperken, dan wint de meeste levenspunten (g
   civilization.handleAction(game,'b','discard',{handIndex:0});
   assert.equal(game.phase,'wave');
   assert.equal(game.gameOver,false);
-  civilization.tick(game,game.waveShownUntil+1);
+  civilization.handleAction(game,'a','continueWave',{});
+  civilization.handleAction(game,'b','continueWave',{});
   assert.equal(game.gameOver,true);
   assert.equal(game.endedSuddenDeath,false);
   assert.equal(game.winnerId,'a');
@@ -355,7 +468,8 @@ test('bij gelijke levenspunten na alle tijdperken beslist het goud',()=>{
   game.players.b.gold=10;
   civilization.handleAction(game,'a','discard',{handIndex:0});
   civilization.handleAction(game,'b','discard',{handIndex:0});
-  civilization.tick(game,game.waveShownUntil+1);
+  civilization.handleAction(game,'a','continueWave',{});
+  civilization.handleAction(game,'b','continueWave',{});
   assert.equal(game.gameOver,true);
   assert.equal(game.winnerId,'a');
   assert.equal(game.finalScores.a,game.players.a.gold);

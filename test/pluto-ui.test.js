@@ -37,27 +37,36 @@ test('spelruimte bevat geen chat of deelkaart en gebruikt alleen de compacte mob
   assert.doesNotMatch(app,/function copyLink|Roomlink gekopieerd|els\.shareLink|renderChat|els\.chatForm|els\.roomLeaveButton/);
 });
 
-test('actieve spellen gebruiken een viewporthoge layout met interne fallback',()=>{
+test('actieve spellen gebruiken een viewporthoge layout met gedeelde navigatie-overlay',()=>{
+  const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
   const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
   const css=fs.readFileSync(path.join(root,'public/styles.css'),'utf8');
   assert.match(app,/classList\.toggle\('game-active',room\.status!=='lobby'\)/);
-  assert.match(css,/body\.game-active\{height:100dvh;min-height:100dvh;overflow:hidden\}/);
+  assert.match(css,/body\.game-active\{height:100dvh;min-height:100dvh;overflow:hidden;padding:0\}/);
   assert.match(css,/body\.game-active \.game-panel\{[^}]*overflow:hidden/);
   assert.match(css,/body\.game-active #gameStage\{[^}]*overflow:auto/);
   assert.match(css,/body\.game-active \.log-box\{display:none!important\}/);
-  assert.match(css,/body\.game-active \.app-shell\{width:100%;max-width:none;padding-left:0;padding-right:0\}/);
-  assert.match(css,/body\.game-active \.game-panel\{[\s\S]*?border-radius:0;/);
+  assert.match(css,/body\.game-active \.app-shell\{width:100%;max-width:none;height:100dvh;[^}]*margin:0;padding:0/);
+  assert.match(css,/body\.game-active \.game-panel\{[^}]*position:relative;[^}]*width:100%;height:100%;[^}]*margin:0;padding:0;[^}]*border-radius:0/);
+  assert.match(css,/body\.game-active>\.app-shell>\.topbar\{display:none!important\}/);
+  assert.match(css,/body\.game-active \.mobile-game-header\{[\s\S]*?position:absolute;[\s\S]*?env\(safe-area-inset-top\)[\s\S]*?display:grid/);
+  assert.match(css,/body\.game-active #gameStage\{padding:calc\(58px \+ env\(safe-area-inset-top\)\)/);
+  assert.match(css,/body\.game-active #gameStage\{width:100%;max-width:none;border-radius:0\}/);
+  assert.match(html,/class="panel game-panel">[\s\S]*id="mobileGameHeader"[\s\S]*id="gameStage"/);
 });
 
-test('browser en tablet begrenzen gamebreedte zonder mobile te wijzigen',()=>{
+test('browser, tablet en mobile gebruiken de volledige gamesurface',()=>{
   const css=fs.readFileSync(path.join(root,'public/styles.css'),'utf8');
-  assert.match(css,/@media\(min-width:761px\)\{[\s\S]*?body\.game-active #gameStage\{[\s\S]*?width:min\(100%,1180px\);[\s\S]*?max-width:1180px/);
+  assert.match(css,/@media\(min-width:761px\)\{[\s\S]*?body\.game-active #gameStage\{[\s\S]*?align-self:stretch;[\s\S]*?width:100%;[\s\S]*?max-width:none/);
   assert.match(css,/@media\(max-width:760px\)\{[\s\S]*?body\.game-active #gameStage\{overflow:auto/);
   assert.ok(css.lastIndexOf('@media(min-width:761px)')>css.lastIndexOf('@media(max-width:760px)'));
-  for(const game of ['civilization','blackjack','cluedo','hartenjagen','hofslag','pesten','presidenten','quoridor','santorini','solitaire','stratego']){
-    const gameCss=fs.readFileSync(path.join(root,'games',game,'styles.css'),'utf8');
-    assert.match(gameCss,/@media\(min-width:761px\)\{#gameStage:has\(/,`${game} mist een desktop/tablet-breedtelimiet`);
-  }
+});
+
+test('gedeelde gameheader is de enige game-titel maar interne status en acties blijven bestaan',()=>{
+  const gameUi=fs.readFileSync(path.join(root,'public/js/game-ui.js'),'utf8');
+  assert.match(gameUi,/function titlebar\(_name,status\)/);
+  assert.doesNotMatch(gameUi,/name\.toUpperCase\(\)/);
+  assert.match(gameUi,/wrap\.append\(E\('div','game-status',status\)\)/);
 });
 
 test('homescreen bevat geen kaart meer om via een code te joinen',()=>{
@@ -128,9 +137,9 @@ test('sound button is icon-only en app knop heet App',()=>{
   assert.match(app,/Geluid aanzetten/);
 });
 
-test('leaderboard toont wins voor games',()=>{
+test('leaderboard toont wins en draws voor games',()=>{
   const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
-  assert.match(app,/\['#','Speler','Wins','Games','Winrate'\]/);
+  assert.match(app,/\['#','Speler','Wins','Draw','Games','Winrate'\]/);
   assert.match(app,/String\(row\.wins\).*String\(row\.games\).*row\.winRate/s);
 });
 
@@ -142,7 +151,7 @@ test('profiel toont eerst maximaal vijf recente matches met toon meer',()=>{
   assert.match(app,/recent\.slice\(5\)\.forEach\(appendMatch\)/);
 });
 
-test('mobile UX heeft een uniforme gameheader, bevestiging, hervatten en compacte dataweergaves',()=>{
+test('UX heeft een uniforme game-overlay, bevestiging, hervatten en compacte dataweergaves',()=>{
   const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
   const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
   const css=fs.readFileSync(path.join(root,'public/styles.css'),'utf8');
@@ -167,7 +176,7 @@ test('settings en mobiele gameheader tonen compacte consistente metadata',()=>{
   const light=fs.readFileSync(path.join(root,'public/themes/pluto-1.8.0.css'),'utf8');
   assert.ok(html.includes(`>Pluto v${require('../package.json').version}</p>`));
   assert.match(css,/\.connection-pill,\.badge\{[^}]*white-space:nowrap;[^}]*flex-shrink:0/);
-  assert.match(css,/\.mobile-game-leave,\.mobile-game-menu-button\{[^}]*border:0;[^}]*background:transparent/);
-  assert.match(css,/\.mobile-game-name\{[^}]*height:44px;[^}]*place-items:center;[^}]*line-height:1/);
-  assert.match(light,/body\.game-active :is\(\.mobile-game-leave,\.mobile-game-menu-button\)\{[^}]*background:transparent;[^}]*border-color:transparent/);
+  assert.match(css,/\.mobile-game-leave,\.mobile-game-menu-button\{[^}]*border-radius:50%;[^}]*backdrop-filter:blur\(12px\)/);
+  assert.match(css,/\.mobile-game-name\{[^}]*height:44px;[^}]*border-radius:999px;[^}]*backdrop-filter:blur\(12px\)/);
+  assert.match(light,/body\.game-active :is\(\.mobile-game-leave,\.mobile-game-name,\.mobile-game-menu-button\)\{[^}]*background:rgba\(255,250,246,\.82\);[^}]*border-color:rgba\(86,59,42,\.14\)/);
 });

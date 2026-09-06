@@ -40,6 +40,36 @@ test('beschikbare kaarten kunnen server-side gebouwd of afgelegd worden', () => 
   }
 });
 
+test('bouwkosten tonen grondstoftekorten en berekenen directe handel volgens de bestaande regels', () => {
+  const game = duel.createGame([player('A'), player('B')]);
+  const [buyer, opponent] = game.players;
+  buyer.coins = 7;
+  buyer.built = [{ produces:{wood:1} }, { produces:{wildRaw:1} }];
+  opponent.built = [{ produces:{clay:2} }];
+  const item = { color:'blue', cost:{coins:2,resources:{wood:2,clay:1,glass:1}} };
+
+  const cost = duel.costInfo(game, buyer, item);
+  assert.deepEqual(cost.purchases, {clay:{count:1,unitPrice:4},glass:{count:1,unitPrice:2}});
+  assert.equal(cost.baseCoins, 2);
+  assert.equal(cost.tradeCoins, 6);
+  assert.equal(cost.coins, 8);
+  assert.equal(cost.affordable, false);
+
+  game.turnIndex = buyer.seat;
+  const available = duel.availableCards(game)[0];
+  available.color = item.color;
+  available.cost = item.cost;
+  const publicCard = duel.serialize(game, buyer.id, new Map([[buyer.id, true]])).cards.find((card) => card.id === available.id);
+  assert.deepEqual(publicCard.cost, item.cost);
+  assert.deepEqual(publicCard.trade.purchases, cost.purchases);
+
+  buyer.effects.push('rawTrade');
+  const discounted = duel.costInfo(game, buyer, item);
+  assert.equal(discounted.tradeCoins, 3);
+  assert.equal(discounted.coins, 5);
+  assert.equal(discounted.affordable, true);
+});
+
 test('NPCs kunnen zelfstandig een volledige partij uitspelen', () => {
   const game = duel.createGame([player('NPC 1', true), player('NPC 2', true)]);
   let now = Date.now() + 10_000;

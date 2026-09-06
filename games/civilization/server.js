@@ -26,12 +26,19 @@
  *     instant you designate them — no multi-step upgrade path. Each civic
  *     building can be designated exactly once per game; once used, it is
  *     maxed and can never be designated again.
+ *
+ * Later addition: each flexible category (Attack/Defence/Economy) has TWO
+ * named variants per Age instead of one, doubling the draft pool for more
+ * variety. Wonders similarly come in two flavors from Age 2: the original
+ * balanced one, and an aggressive one (more Attack, less Defence and
+ * Income). A tile remembers which variant it was built from (`variantIndex`)
+ * so upgrading it always re-skins along that same track — its identity
+ * never changes once bought, only its level.
  */
 
 const TOTAL_AGES = 7;
 const TURNS_PER_AGE = 3;
 const TOTAL_TURNS = TOTAL_AGES * TURNS_PER_AGE;
-const WAVE_DISPLAY_MS = 4000; // how long the wave-result screen stays up before auto-advancing
 const START_GOLD = 4;
 const START_HP = 100;
 const GRID_SIZE = 6;
@@ -40,6 +47,12 @@ const CIVIC_BASE_COST_MULTIPLIER = 2.5;
 const EVENT_STEP_COST_MULTIPLIER = 2;
 const GANDHI_DAMAGE_CAP = 25;
 const HARALD_RAID_GOLD = 3;
+
+function normalizeRoomOptions(options = {}) {
+  return { mode: options.mode === 'deathmatch' ? 'deathmatch' : 'classic' };
+}
+
+function contentAge(age) { return Math.min(age, TOTAL_AGES); }
 
 const CATEGORIES = ['attack', 'defence', 'economy'];
 const CIVIC_CATEGORIES = ['science', 'religion', 'culture'];
@@ -54,14 +67,45 @@ const ERAS = [
   { name: 'Future to Futuristic', wonder: 'Dyson Sphere' }
 ];
 
-// One canonical name per category per Age. Building fresh and re-skinning on
-// upgrade both use this same track, so "Sharpened Spear" built in Age 1
-// becomes "Drone Swarm Offensive" by Age 7 purely through upgrades.
+// Two named variants per category per Age (more choice in the draft pool,
+// less predictable than a single option). Building fresh and re-skinning on
+// upgrade both use the SAME variant's track, so a tile keeps its identity
+// for life — "Sharpened Spear" built in Age 1 always becomes "Drone Swarm
+// Offensive" by Age 7, never drifts onto the other variant's name.
 const NAMES = {
-  attack: ['Sharpened Spear', 'Phalanx Legion', 'Musketeer Vanguard', 'Grand Army Corps', 'Armored Blitz Division', 'Stealth Strike Wing', 'Drone Swarm Offensive'],
-  defence: ['Stone Palisade', 'City Rampart', 'Castle Bastion', 'Great Wall Garrison', 'Trench Fortress', 'Cyber Defense Shield', 'Orbital Defense Platform'],
-  economy: ['Grain Store', 'Trade Galley', 'Banking House', 'Continental Bank', 'Factory Assembly Line', 'Stock Exchange Floor', 'Quantum Bank']
+  attack: [
+    ['Sharpened Spear', 'Bone-tipped Arrow'],
+    ['Phalanx Legion', 'Ballista Corps'],
+    ['Musketeer Vanguard', 'Cannon Battery'],
+    ['Grand Army Corps', 'Cavalry Brigade'],
+    ['Armored Blitz Division', 'Artillery Regiment'],
+    ['Stealth Strike Wing', 'Cruise Missile Battery'],
+    ['Drone Swarm Offensive', 'Railgun Platform']
+  ],
+  defence: [
+    ['Stone Palisade', 'Thorn Barricade'],
+    ['City Rampart', 'Hoplite Shield Wall'],
+    ['Castle Bastion', 'Moated Keep'],
+    ['Great Wall Garrison', 'Watchtower Network'],
+    ['Trench Fortress', 'Bunker Complex'],
+    ['Cyber Defense Shield', 'Anti-Air Battery'],
+    ['Orbital Defense Platform', 'Shield Generator Array']
+  ],
+  economy: [
+    ['Grain Store', 'Fishing Weir'],
+    ['Trade Galley', 'Silver Mine'],
+    ['Banking House', 'Silk Road Caravan'],
+    ['Continental Bank', 'Tea Trade Fleet'],
+    ['Factory Assembly Line', 'Oil Refinery'],
+    ['Stock Exchange Floor', 'Tech Startup Hub'],
+    ['Quantum Bank', 'Asteroid Mining Rig']
+  ]
 };
+
+// Second Wonder variant per Age, alongside ERAS[].wonder (variant 0, the
+// original balanced Wonder). Variant 1 is the aggressive option: more
+// Attack, less Defence and Income.
+const WONDER_NAMES_ALT = ['Colossus of War', 'Trojan Horse', "Excalibur's Forge", 'Forbidden Arsenal', 'Manhattan Project', 'Stealth Bomber Program', 'Death Star Array'];
 
 // Fixed civic buildings: one each, present from the start, never rebuilt.
 const CIVIC_NAMES = { science: 'Observatory', religion: 'Grand Temple', culture: 'Academy' };
@@ -89,22 +133,34 @@ const LEADERS = [
   { key: 'harald', name: 'King Harald Hardrada', attribute: 'Gehoornde helm', bonus: `Bij elke aanvalsgolf plunder je tot ${HARALD_RAID_GOLD} Goud van de speler die jij aanvalt.` }
 ];
 
-function makeCard(type, age, name) {
+// variantIndex distinguishes the two named options within a category/Age
+// (0 or 1) so a tile's re-skin-on-upgrade always pulls from the same track
+// it was originally built from. For Wonders, variantIndex also picks the
+// stat split: 0 = the original balanced Wonder, 1 = the aggressive one.
+function makeCard(type, age, name, variantIndex) {
+  variantIndex = variantIndex || 0;
   switch (type) {
-    case 'attack': return { type, name, cost: age + 1, attack: age + 3, defence: 0, income: 0 };
-    case 'defence': return { type, name, cost: age + 1, attack: 0, defence: age + 2, income: 0 };
-    case 'economy': return { type, name, cost: age, attack: 0, defence: 0, income: age + 1 };
-    case 'wonder': return { type, name, cost: age * 2, attack: age * 2, defence: age * 2 - 1, income: age };
+    case 'attack': return { type, name, variantIndex, cost: age + 1, attack: age + 3, defence: 0, income: 0 };
+    case 'defence': return { type, name, variantIndex, cost: age + 1, attack: 0, defence: age + 2, income: 0 };
+    case 'economy': return { type, name, variantIndex, cost: age, attack: 0, defence: 0, income: age + 1 };
+    case 'wonder': return variantIndex === 1
+      ? { type, name, variantIndex, cost: age * 2, attack: age * 2 + 3, defence: Math.max(1, age - 1), income: Math.max(1, age - 2) }
+      : { type, name, variantIndex, cost: age * 2, attack: age * 2, defence: age * 2 - 1, income: age };
     default: throw new Error('unknown card type: ' + type);
   }
 }
 
+// The re-skin name for a tile at its current level/Age, following whichever
+// variant track it was originally built from.
+function reskinName(type, age, variantIndex) {
+  const index = contentAge(age) - 1;
+  if (type === 'wonder') return variantIndex === 1 ? WONDER_NAMES_ALT[index] : ERAS[index].wonder;
+  return NAMES[type][index][variantIndex];
+}
+
 function cardDesc(c) {
-  if (c.type === 'attack') return `+${c.attack} Attack.`;
-  if (c.type === 'defence') return `+${c.defence} Defence.`;
-  if (c.type === 'economy') return `+${c.income} Goud per beurt.`;
-  if (c.type === 'wonder') return `Wonder: +${c.attack} Attack, +${c.defence} Defence, +${c.income} Goud per beurt. Eenmalig.`;
-  return '';
+  if (c.type === 'wonder') return 'Eenmalige wonderbonus voor je stad.';
+  return 'Een bouwbonus voor je stad.';
 }
 
 // Effective stat for a flexible tile: each upgrade level multiplies the
@@ -148,14 +204,19 @@ function shuffle(arr) {
 
 function buildPool(age, player) {
   const pool = [];
+  const assetAge = contentAge(age);
   CATEGORIES.forEach((type) => {
-    const name = NAMES[type][age - 1];
-    if (player.built.has(name)) return;
-    const card = makeCard(type, age, name);
-    if (type === 'attack' && player.leaderKey === 'alexander') card.attack += 2;
-    pool.push(card);
+    NAMES[type][assetAge - 1].forEach((name, variantIndex) => {
+      if (player.built.has(name)) return;
+      const card = makeCard(type, age, name, variantIndex);
+      if (type === 'attack' && player.leaderKey === 'alexander') card.attack += 2;
+      pool.push(card);
+    });
   });
-  if (age >= 2 && !player.wonderBuilt) pool.push(makeCard('wonder', age, ERAS[age - 1].wonder));
+  if (age >= 2 && !player.wonderBuilt) {
+    pool.push(makeCard('wonder', age, ERAS[assetAge - 1].wonder, 0));
+    pool.push(makeCard('wonder', age, WONDER_NAMES_ALT[assetAge - 1], 1));
+  }
   return pool;
 }
 
@@ -201,7 +262,8 @@ function aliveIds(game) { return game.order.filter((id) => game.players[id].hp >
 
 /* ---------------- lifecycle ---------------- */
 
-function createGame(roomPlayers) {
+function createGame(roomPlayers, options = {}) {
+  const { mode } = normalizeRoomOptions(options);
   const players = {};
   roomPlayers.forEach((rp) => {
     players[rp.id] = {
@@ -227,6 +289,7 @@ function createGame(roomPlayers) {
 
   const game = {
     gameKey: 'civilization',
+    mode,
     gameOver: false,
     resultText: '',
     age: 1,
@@ -236,7 +299,7 @@ function createGame(roomPlayers) {
     players,
     order: roomPlayers.map((rp) => rp.id),
     log: [],
-    waveShownUntil: null,
+    waveAcknowledged: new Set(),
     waveResult: null,
     winnerId: null,       // null = draw (only meaningful once phase === 'ended')
     endedSuddenDeath: false,
@@ -261,6 +324,14 @@ function beginAges(game) {
 /* ---------------- actions ---------------- */
 
 function handleAction(game, playerId, action, payload) {
+  if (game.phase === 'wave') {
+    const p = game.players[playerId];
+    if (action !== 'continueWave' || !p || p.isNpc) throw new Error('Wacht op de aanvalsgolf.');
+    game.waveAcknowledged.add(playerId);
+    if (humanWavePlayers(game).every((id) => game.waveAcknowledged.has(id))) advanceAfterWave(game);
+    return;
+  }
+
   if (game.phase === 'picking') {
     if (action !== 'pickLeader') throw new Error('Kies eerst een leider.');
     const expectedId = game.order[game.pickIndex];
@@ -292,7 +363,7 @@ function handleAction(game, playerId, action, payload) {
     if (p.gold < card.cost) throw new Error('Je hebt niet genoeg goud.');
 
     p.gold -= card.cost;
-    p.grid[slot] = { type: card.type, name: card.name, level: 1, base: { attack: card.attack, defence: card.defence, income: card.income } };
+    p.grid[slot] = { type: card.type, name: card.name, assetAge: contentAge(game.age), level: 1, variantIndex: card.variantIndex, base: { attack: card.attack, defence: card.defence, income: card.income } };
     p.built.add(card.name);
     if (card.type === 'wonder') p.wonderBuilt = true;
     p.acted = true;
@@ -323,7 +394,8 @@ function handleAction(game, playerId, action, payload) {
 
       p.gold -= cost;
       tile.level += 1;
-      tile.name = tile.type === 'wonder' ? ERAS[game.age - 1].wonder : NAMES[tile.type][game.age - 1];
+      tile.name = reskinName(tile.type, game.age, tile.variantIndex);
+      tile.assetAge = contentAge(game.age);
       game.log.push(`${p.name} upgrade ${tile.name} (niveau ${tile.level}).`);
       p.acted = true;
     }
@@ -394,7 +466,15 @@ function resolveWave(game) {
   game.phase = 'wave';
   game.log.push(`Age ${game.age} aanval verwerkt.`);
 
-  const stillAlive = ids.filter((id) => game.players[id].hp > 0);
+  game.waveAcknowledged = new Set();
+}
+
+function humanWavePlayers(game) {
+  return game.order.filter((id) => !game.players[id].isNpc);
+}
+
+function advanceAfterWave(game) {
+  const stillAlive = aliveIds(game);
   if (stillAlive.length <= 1) {
     game.phase = 'ended';
     game.gameOver = true;
@@ -402,13 +482,9 @@ function resolveWave(game) {
     game.winnerId = stillAlive.length === 1 ? stillAlive[0] : null;
     finalizeScores(game);
     setResultText(game);
-  } else {
-    game.waveShownUntil = Date.now() + WAVE_DISPLAY_MS;
+    return;
   }
-}
-
-function advanceAfterWave(game) {
-  if (game.age >= TOTAL_AGES) {
+  if (game.mode === 'classic' && game.age >= TOTAL_AGES) {
     game.phase = 'ended';
     game.gameOver = true;
     game.endedSuddenDeath = false;
@@ -432,7 +508,8 @@ function advanceAfterWave(game) {
   dealHands(game);
   game.phase = 'draft';
   game.waveResult = null;
-  game.log.push(`Age ${game.age} begins: ${ERAS[game.age - 1].name}.`);
+  game.waveAcknowledged = new Set();
+  game.log.push(`Age ${game.age} begins: ${ERAS[contentAge(game.age) - 1].name}.`);
 }
 
 function finalizeScores(game) {
@@ -456,7 +533,7 @@ function playNpc(game, player) {
     const { card } = affordable[0];
     const slot = player.grid.findIndex((v) => v === null);
     player.gold -= card.cost;
-    player.grid[slot] = { type: card.type, name: card.name, level: 1, base: { attack: card.attack, defence: card.defence, income: card.income } };
+    player.grid[slot] = { type: card.type, name: card.name, assetAge: contentAge(game.age), level: 1, variantIndex: card.variantIndex, base: { attack: card.attack, defence: card.defence, income: card.income } };
     player.built.add(card.name);
     if (card.type === 'wonder') player.wonderBuilt = true;
     game.log.push(`${player.name} bouwt ${card.name}.`);
@@ -475,7 +552,7 @@ function playNpc(game, player) {
         const tile = choice.tile;
         player.gold -= flexibleUpgradeCost(game.age, tile.type, player);
         tile.level += 1;
-        tile.name = tile.type === 'wonder' ? ERAS[game.age - 1].wonder : NAMES[tile.type][game.age - 1];
+        tile.name = reskinName(tile.type, game.age, tile.variantIndex);
         game.log.push(`${player.name} upgrade ${tile.name}.`);
       } else {
         const civic = player.civic[choice.key];
@@ -520,7 +597,9 @@ function tick(game, now) {
     if (npc) { playNpc(game, npc); if (aliveIds(game).every((id) => game.players[id].acted)) completeTurn(game); return true; }
   }
 
-  if (game.phase === 'wave' && game.waveShownUntil && now >= game.waveShownUntil) {
+  // A wave with only NPCs needs no human confirmation.  Never let tick()
+  // skip a combat result that a human still has to acknowledge.
+  if (game.phase === 'wave' && humanWavePlayers(game).length === 0) {
     advanceAfterWave(game);
     return true;
   }
@@ -568,6 +647,7 @@ function serialize(game, requesterId, connected) {
       grid: p.grid.map((tile) => tile ? {
         type: tile.type,
         name: tile.name,
+        assetAge: tile.assetAge || contentAge(game.age),
         level: tile.level,
         attack: tileStat(tile.base.attack, tile.level),
         defence: tileStat(tile.base.defence, tile.level),
@@ -594,14 +674,15 @@ function serialize(game, requesterId, connected) {
     gameOver: game.gameOver,
     resultText: game.resultText,
     age: game.age,
-    totalAges: TOTAL_AGES,
+    mode: game.mode,
+    totalAges: game.mode === 'deathmatch' ? null : TOTAL_AGES,
     turnInAge: game.turnInAge,
     turnsPerAge: TURNS_PER_AGE,
     turnNumber: (game.age - 1) * TURNS_PER_AGE + game.turnInAge,
     totalTurns: TOTAL_TURNS,
-    eraName: ERAS[game.age - 1] ? ERAS[game.age - 1].name : '',
+    eraName: ERAS[contentAge(game.age) - 1].name,
     phase: game.phase,
-    deadline: game.phase === 'wave' ? game.waveShownUntil : null,
+    deadline: null,
     order: game.order,
     players,
     leaders: LEADERS.map((l) => ({ key: l.key, name: l.name, attribute: l.attribute, bonus: l.bonus, taken: takenKeys.has(l.key) })),
@@ -612,6 +693,7 @@ function serialize(game, requesterId, connected) {
       : [],
     waveResult: game.waveResult,
     phaseIsWave: game.phase === 'wave',
+    hasAcknowledgedWave: game.waveAcknowledged.has(requesterId),
     winnerId: game.winnerId,
     endedSuddenDeath: game.endedSuddenDeath,
     finalScores: game.finalScores,
@@ -633,4 +715,4 @@ function results(game, durationMs) {
   }));
 }
 
-module.exports = { createGame, handleAction, serialize, tick, results };
+module.exports = { createGame, handleAction, serialize, tick, results, normalizeRoomOptions };

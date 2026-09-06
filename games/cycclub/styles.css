@@ -15,6 +15,10 @@ body.cycclub-active .primary{background:var(--accent);border-color:var(--accent)
 body.cycclub-active .secondary{background:var(--bg);border-color:var(--border);color:var(--text)}
 body.cycclub-active .cc-danger-btn{background:transparent;color:#b3453a;border-color:#c99691}
 body.cycclub-active input,body.cycclub-active select{background:var(--bg);color:var(--text);border-color:var(--border)}
+body.cycclub-active .panel,body.cycclub-active .cc-panel{background:var(--panel);color:var(--text);border-color:var(--border)}
+body.cycclub-active .cc-panel .muted,body.cycclub-active .cc-panel .cc-cell-label{color:var(--muted)}
+body.cycclub-active .cc-profile-chart,body.cycclub-active .cc-rider-card,body.cycclub-active .cc-ready-chip{background:var(--panel2);color:var(--text);border-color:var(--border)}
+body.cycclub-active .cc-rider-actions{margin-top:10px}
 
 .cc-panel{margin-top:14px}
 .cc-summary{display:flex;flex-wrap:wrap;align-items:center;border:1px solid var(--border);border-radius:10px;background:var(--panel2);margin-top:12px;padding:0 4px}

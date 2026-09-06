@@ -5,9 +5,9 @@ export function render(api){bind(api);renderCycClub(api.room,api.game)}
 export const showResult=false;
 export const roomOptions={allowRematch:false,bodyClass:'cycclub-active'};
 export const playerStrip=true;
-export const leaderboardColumns=['#','Speler','Netto waarde','Zeges','Prijzengeld'];
+export const leaderboardColumns=['#','Speler','Draw','Netto waarde','Zeges','Prijzengeld'];
 export function renderLeaderboardCells({row,E:e}){
-  return [e('td','',euro(row.netWorth)),e('td','',String(row.victories)),e('td','',euro(row.prizeMoney))];
+  return [e('td','',String(row.draws||0)),e('td','',euro(row.netWorth)),e('td','',String(row.victories)),e('td','',euro(row.prizeMoney))];
 }
 export function profileExtra({stat}){return stat.games?`${stat.wins} zeges`:'—'}
 export function metric({player}){return {text:euro(player.wallet), score:player.career.victories}}

@@ -1,7 +1,23 @@
 const ROTATIONS = [0, 90, 180, 270];
 const TERRAIN_META = { pasture: { label: 'Weide', icon: '🌾' }, mountain: { label: 'Berg', icon: '🏔️' }, water: { label: 'Water', icon: '🌊' } };
-const FEATURE_META = { whisky: '🥃', sheep: '🐑', cattle: '🐄', ship: '⛵' };
+const FEATURE_META = {
+  whisky: { icon: '🥃', label: 'Whisky' },
+  sheep: { icon: '🐑', label: 'Schapen' },
+  cattle: { icon: '🐄', label: 'Vee' },
+  ship: { icon: '⛵', label: 'Schip' }
+};
 const CATEGORY_LABELS = { SCORING_WHISKY: 'Whisky', SCORING_SHEEP: 'Schapen', SCORING_CATTLE: 'Vee', SCORING_SHIPS: 'Schepen' };
+const LEGEND_ITEMS = [
+  { icon: '🌾', label: 'Weide' },
+  { icon: '🏔️', label: 'Berg' },
+  { icon: '🌊', label: 'Water' },
+  { icon: '🛣️', label: 'Weg' },
+  { icon: '🏰', label: 'Kasteel' },
+  { icon: '🥃', label: 'Whisky' },
+  { icon: '🐑', label: 'Schapen' },
+  { icon: '🐄', label: 'Vee' },
+  { icon: '⛵', label: 'Schip' }
+];
 
 let selectedIndex = null;
 let rotationIndex = 0;
@@ -17,20 +33,39 @@ function rotatedEdges(edges, rotation) {
   return current;
 }
 
-function tileNode(E, tile, { interactive = false } = {}) {
-  const node = E('div', `isle-tile${interactive ? ' interactive' : ''}`);
+function tileNode(E, tile, { mini = false } = {}) {
+  const isCastle = tile.id === 'castle';
+  const node = E('div', `isle-tile${mini ? ' mini' : ''}${isCastle ? ' castle' : ''}${tile.hasRoad ? ' has-road' : ''}`);
   const edges = rotatedEdges(tile.edges, tile.rotation || 0);
   for (const side of ['top', 'right', 'bottom', 'left']) {
     const meta = TERRAIN_META[edges[side]] || {};
-    node.append(E('span', `isle-edge isle-edge-${side} terrain-${edges[side]}`, meta.icon || ''));
+    const wedge = E('span', `isle-wedge isle-wedge-${side} terrain-${edges[side]}`, mini ? '' : meta.icon || '');
+    wedge.title = meta.label || edges[side];
+    node.append(wedge);
   }
-  const center = E('span', 'isle-center');
-  if (tile.hasRoad) center.append(E('span', 'isle-road', '🛣️'));
-  for (const feature of tile.features || []) {
-    center.append(E('span', 'isle-feature', `${FEATURE_META[feature.type] || '?'}${feature.count > 1 ? `×${feature.count}` : ''}`));
+  const medallion = E('span', 'isle-medallion');
+  if (isCastle) {
+    medallion.append(E('span', 'isle-medallion-icon', '🏰'));
+    medallion.title = 'Kasteel';
+  } else {
+    const feature = (tile.features || [])[0];
+    if (feature) {
+      const meta = FEATURE_META[feature.type] || {};
+      medallion.append(E('span', 'isle-medallion-icon', meta.icon || '?'));
+      if (feature.count > 1) medallion.append(E('span', 'isle-medallion-badge', String(feature.count)));
+      medallion.title = `${meta.label || feature.type}${feature.count > 1 ? ` ×${feature.count}` : ''}`;
+    } else if (tile.hasRoad) {
+      medallion.title = 'Wegverbinding';
+    }
   }
-  node.append(center);
+  node.append(medallion);
   return node;
+}
+
+function renderLegend(E) {
+  const legend = E('div', 'isle-legend');
+  for (const item of LEGEND_ITEMS) legend.append(E('span', 'isle-legend-item', `${item.icon} ${item.label}`));
+  return legend;
 }
 
 function boundsFor(board) {
@@ -51,10 +86,12 @@ function renderMiniBoard(E, player) {
   for (let y = bounds.minY; y <= bounds.maxY; y++) {
     for (let x = bounds.minX; x <= bounds.maxX; x++) {
       const cell = map.get(key(x, y));
-      grid.append(cell ? tileNode(E, cell.tile) : E('span', 'isle-mini-empty'));
+      grid.append(cell ? tileNode(E, cell.tile, { mini: true }) : E('span', 'isle-mini-empty'));
     }
   }
-  card.append(grid);
+  const scroller = E('div', 'isle-mini-scroll');
+  scroller.append(grid);
+  card.append(scroller);
   return card;
 }
 
@@ -108,7 +145,9 @@ function renderMainBoard(E, game, me, action, rerender) {
       board.append(button);
     }
   }
-  section.append(board);
+  const scroller = E('div', 'isle-board-scroll');
+  scroller.append(board);
+  section.append(scroller);
   return section;
 }
 
@@ -206,6 +245,7 @@ export function render(api) {
     strip.append(item);
   });
   els.gameStage.append(strip);
+  els.gameStage.append(renderLegend(E));
 
   const layout = E('div', 'isle-layout');
   const main = E('div', 'isle-main');

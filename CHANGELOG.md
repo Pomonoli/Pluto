@@ -1,17 +1,164 @@
 # Changelog
 
-## v1.17.1 — CycClub: hoogteprofiel in wielerstijl
+## v1.25.1 — CycClub: hoogteprofiel in wielerstijl
 
 - Het ritprofiel tijdens het rijden is herwerkt in de stijl van een echt wielerprofiel: de vulling kleurt per stuk van geel/oranje naar dieprood naarmate het stijgingspercentage toeneemt.
 - Het profiel toont nu een hoogte-as in meter, afstandsmarkeringen in kilometer, een start- en finishvlag, en gecategoriseerde beklimmingen met hun hoogte.
 
-## v1.17.0 — CycClub: tactiekkaarten
+## v1.25.0 — CycClub: tactiekkaarten
 
 - CycClub heeft een nieuw tabblad "Tactieken" waar je permanente tactiekkaarten kan kopen (bv. Treintje rijden, Kasseienspecialist, Hinderlaag in de klim, Aero-opstelling, Bewaakte sprint, Alles-of-niets).
 - Voor elke rit krijg je een keuze uit maximaal drie kaarten uit je bezit, die je eenmalig voor die rit kan inzetten.
 - Sluit de tactiek aan bij het dominante terrein van de rit (bijvoorbeeld een treintje op vlakke wegen), dan krijgen je renners een multiplier op hun segmentbonus voor de hele rit; sluit het terrein niet aan, dan heeft de kaart geen effect.
 - De lineup-opstelling toont per aangeboden kaart of ze past bij de huidige rit, en de rit zelf toont welke tactiek actief is.
 - NPC-ploegen kopen geen kaarten maar starten met een kleine willekeurige verzameling en kiezen automatisch de best passende kaart.
+
+## v1.24.0 — The Blue is een nieuwe game: spoel aan op een eigen eiland, vis met hengel en geluk, hak hout en delf erts, vecht in een dobbelgevecht tegen wild zwijn en wolf, kook je vangst voor energie en tijdelijke buffs, bouw en repareer gereedschap met slijtage, en vul een codex terwijl dag overgaat in nacht.
+
+- The Blue is een nieuwe game: spoel aan op een eigen eiland, vis met hengel en geluk, hak hout en delf erts, vecht in een dobbelgevecht tegen wild zwijn en wolf, kook je vangst voor energie en tijdelijke buffs, bouw en repareer gereedschap met slijtage, en vul een codex terwijl dag overgaat in nacht.
+
+## v1.23.3 — The Big Blue C: echte gebouwen, alle knoppen rechts, drankjes in de winkel
+
+- Gebouwen (Vishandel, Aquarium-Museum, Handelsmarkt, Houthakkerij, Steengroeve, Haven, aanlegsteigers) zijn nu echte kleine illustraties — muur, dak, deur, venster en een hangend uithangbord — in plaats van een icoon in een kader. Hall of Fame is nu een obelisk, havens en aanlegsteigers zijn een dokplateau op palen.
+- Alle actieknoppen (Inventaris, Marktplaats, Hall of Fame, Vaardigheden, Map) staan nu samen in één rail aan de rechterkant.
+- De Winkel in de Marktplaats verkoopt nu ook een Energiedrank en een Gezondheidsdrank die je gezondheid of energie meteen aanvullen.
+
+## v1.23.2 — The Big Blue C gebruikt nu een schermvullende kaart met de gamebanner als overlay en zonder dubbele statusregel.
+
+- The Big Blue C gebruikt nu een schermvullende kaart met de gamebanner als overlay en zonder dubbele statusregel.
+
+## v1.23.1 — Age of Civ icons gefixt
+
+- Age of Civ icons gefixt
+
+## v1.23.0 — The Big Blue C: catch · cook · create
+
+- The Deep Bleu C heet nu The Big Blue C, met een volledig nieuwe visuele stijl: een licht, zongebleekt Noords palet (Grenze/Barlow-typografie, bleke berkenpanelen) waarbij het water donkerder wordt naarmate de zone zwaarder is — Ondiep, Kelpwouden, Wadzee, Rifzee.
+- De jacht op wild gebruikt nu een dobbelsteen-gevecht (aanvallen, verdedigen, eten, vluchten) in plaats van een tijdvenster-QTE; vissen, hakken en delven blijven ongewijzigd.
+- Nieuw kooksysteem: een Kampvuur roostert vlees gratis voor meer energie, een Kookvuur bereidt gerechten met een tijdelijke buff (lijnsterkte, energieherstel, een extra dobbelsteen bij een aanval, of nachtzicht).
+- Combat-gear (kleding, wapens, schilden) heeft nu slijtage en kan gerepareerd worden — reparatie herstelt de sterkte maar verlaagt het maximum een beetje.
+- Je kunt nu een aanlegsteiger bouwen vanuit de Inventaris.
+- Een versnelde dag/nacht-cyclus ontgrendelt nachtsoorten bij het vissen en jagen en geeft de kaart 's nachts een koelere tint.
+
+## v1.22.7 — Grotere gebouwiconen in Age of Civilization-pop-ups
+
+- Grotere gebouwiconen in Age of Civilization-pop-ups
+
+## v1.22.6 — Releases kunnen starten met niet-gecommitteerd werk
+
+- Releases kunnen starten met niet-gecommitteerd werk
+
+## v1.22.5 — Age of Civilization toont heldenportretten en aanklikbare spelerskaarten; Pluto-releases kunnen voortaan lokaal veilig worden gepubliceerd.
+
+- Age of Civilization toont heldenportretten en aanklikbare spelerskaarten; Pluto-releases kunnen voortaan lokaal veilig worden gepubliceerd.
+
+## v1.22.4 — Gamesurface zonder afgeronde hoeken
+
+- De buitenste fullscreen-gamesurface heeft geen afgeronde hoeken meer en vult het scherm tot aan de randen; interne kaarten en panelen behouden hun eigen vormgeving.
+
+## v1.22.3 — Uniforme schermvullende gameshell
+
+- Alle games vullen voortaan de volledige beschikbare viewport met behoud van hun eigen indeling, styling en logica.
+- De gedeelde in-game header ligt transparant over het spel; de gamenaam staat in een afgeronde bubbel die aansluit op de terug- en optieknop.
+- Spelinhoud houdt veilige afstand van de overlay en dubbele interne gametitels zijn centraal verwijderd zonder statussen of acties te verbergen.
+
+## v1.22.2 — The Deep Bleu C: hexraster visueel verwijderd
+
+- Elk tegeltype toont nu één platte kleur zonder tegelrand in plaats van een per-tegel gradient, zodat aangrenzende tegels van hetzelfde type naadloos in elkaar overlopen tot doorlopend terrein — het hexraster is niet langer zichtbaar op de kaart.
+- Eén kaartbrede lichtval (los van de tegelgrenzen) geeft nog een vleugje diepte; bomen, heuvels, bergen, golven, gras en zandvlekken blijven als losse decoratieve objecten op dat terrein staan.
+
+## v1.22.1 — Schermvullende gameshell
+
+- De bestaande gamecontainer is op mobiel, tablet en desktop zelf de schermvullende, randloze ondergrond; buitenmarges, afgeronde omlijsting en de afzonderlijke oranje Pluto-header zijn verwijderd.
+- Terugknop, gametitel en bestaand driepuntenmenu liggen in de gamecontainer boven het spel, met veilige afstand tot toestelranden en spelinhoud.
+- Age of Civilization toont zijn titel alleen nog in de bovenbanner, houdt de tijdperk- en beurtstatus op één regel en maakt de spelerskaarten tijdens de leiderskeuze weer duidelijk leesbaar.
+
+## v1.22.0 — The Deep Bleu C: overleven op een eiland
+
+- De kaart is nu één eiland vol meren, volledig omringd door zee en oceaan; aan de rand van de wereld stort een waterval in het niets (klassiek platte-aarde-thema).
+- Nieuwe gezondheid-, energie- en pantserbalken. Energie is nodig om te vissen, hakken, houwen of jagen en herstelt door vlees te eten; gezondheid daalt alleen bij een mislukte jachtpoging (verminderd door pantser) en een speler die flauwvalt, wordt teruggebracht naar het dorp.
+- Wilde dieren verschijnen verspreid over het eiland — jaag erop met hetzelfde tijdig-toeslaan-ritme als hakken/delven, en eet de buit op voor energie of verkoop het.
+- De Inventaris krijgt een gear-screen: uitrusting (kleding, wapens, schilden) kopen op de Marktplaats en aan-/uitdoen vanuit je Inventaris.
+- De Marktplaats verkoopt nu ook basiskleding, wapens en schilden naast vis, hout, steen en vlees.
+## v1.21.2 — Age of Civilization: alchemistenatelier
+
+- Age of Civilization gebruikt een volledig vernieuwde visuele stijl met donker walnoothout, warm perkament, messing en amber.
+- Kaart- en leideremoji's zijn vervangen door één coherent systeem van gegraveerde iconen met herkenbare categorieën.
+- Het hoofdscherm blijft compact en schermvullend op mobiel, tablet en desktop, met behoud van alle bestaande informatie, acties en spelregels.
+
+## v1.21.1 — UI- en spelverbeteringen
+
+- Hartenjagen spreidt een kleiner wordende hand over de beschikbare breedte en houdt alle vier spelers compact zichtbaar.
+- Solitaire heeft een directe herstartknop; het leaderboard toont geen gelijkspelkolom meer, gebruikt een compact beste-zettengetal en toont de snelste voltooiing.
+- Age of Civilization houdt het actieve spel vast op één scherm, maakt alleen het eindscherm scrollbaar en toont alle kernstatistieken in de eindrangschikking.
+- Ragnarok-rivieren zijn expliciet ongevuld en gelaagd gestileerd; de lichte interface gebruikt lichtere, consistentere panelen en acties.
+- CycClub heeft leesbare lichte racepanelen en 7 Wonders Duel toont kaarteffecten ook mobiel en gebruikt overal “Tijdperk”.
+
+## v1.21.0 — Bakkermans Jones
+
+- Nieuwe solo game Bakkermans Jones: draai een vroege bakkersdienst — bak van 03:00 tot 07:00, bedien klanten en lever bestellingen tot de winkel om 12:00 sluit.
+- De klok loopt automatisch door (instelbaar op 1×/2×/4× snelheid, of pauzeerbaar); ovens, klanten en een dagelijks evenement met deadline lopen intussen door.
+- Willekeurige tegenslagen (kapotte koeling, stroomstoring, late levering, wegenwerken) en meevallers (foodblogger, schoolreis) houden elke dienst anders. Geld onder nul aan het einde van de dag betekent faillissement.
+
+## v1.20.0 — The Deep Bleu C: nieuwe art direction
+
+- Nieuw "deep water, warm land"-kleurenpalet (lagoon/ocean/deep, sand/kelp/rock, koraal/goud-accenten) op alle hex-tegels, gebouwen en UI.
+- De speler is nu een RPG-avonturier met kap en cape i.p.v. de vorige visser-look; het werktuig (hengel/bijl/houweel) verschijnt nog steeds enkel tijdens de bijhorende actie.
+- De kaart is nu schermvullend en blijft altijd zichtbaar. De 10 actieknoppen zweven voortaan in drie vaste zones rond de rand (systeem linksboven, contextueel rechts, productie onderaan met de Haven als goud uitgelichte ankerknop) in plaats van in een vaste zijbalk.
+- Een geopend paneel (Vishandel, Aquarium, Vaardigheden, ...) schuift nu als een sheet over de kaart heen in plaats van het scherm te vervangen.
+
+## v1.19.0 — Age of Civilization: Deathmatch
+
+- Nieuwe Deathmatch-modus: na tijdperk 7 gaat het spel door met late-game content tot er maximaal één toren overblijft.
+- De lobby laat de host de spelmodus kiezen; de aanvalsgolf toont voortaan een overzicht van alle spelers, doelwitten en schade.
+- Gebouwkaarten, upgrades en spelerdetails tonen duidelijkere statbadges en informatie.
+
+## v1.18.6 — Ragnarok
+
+- Nieuwe realtime game Ragnarok: verover een gedeelde hexkaart met je vikingclan, breid uit, upgrade pionnen, val rivalen aan en overleef het oordeel der goden.
+- Speel met 2 tot 6 spelers of NPC's; iedereen handelt gelijktijdig zonder beurten.
+
+## v1.18.5 — Age of Civilization: totale Attack en Defence terug zichtbaar
+
+- Je totale Attack en Defence staan weer permanent bij je andere statistieken (Goud, Inkomen, Toren), in plaats van alleen zichtbaar tijdens de schadeberekening van een aanvalsgolf — belangrijk om te zien voor je een bouw- of upgradekeuze maakt.
+
+## v1.18.4 — Isle of Skye leesbaarder en speelbaarder
+
+- Tegels zijn veel groter en tonen weide, berg en water als vier duidelijke gekleurde vakken rond een centraal symbool.
+- Wegen, whisky, schapen, vee en schepen krijgen een eigen medaillon-icoon (met aantal-badge bij meerdere) in plaats van kleine tekst.
+- Je kasteel-starttegel is nu overal meteen herkenbaar met een gouden rand en kasteelicoon.
+- Een vaste legenda boven het bord verklaart alle terrein- en tegelsymbolen.
+- Het eigen eiland en de eilanden van medespelers scrollen binnen hun eigen kader zodra ze groter worden dan het scherm.
+- Spelregels en scoring zijn ongewijzigd.
+
+## v1.18.3 — Drawhistorie migratie
+
+- Bestaande gelijkspelresultaten worden bij de database-upgrade teruggelezen in de nieuwe draw-statistieken.
+
+## v1.18.2 — Multiplayer-resultaten en gelijke spelen
+
+- Niet-hosts krijgen na elk multiplayerresultaat de acties Rematch (in de game blijven) en Verlaten (de game direct verlaten). De bestaande hostacties blijven ongewijzigd, ook op resultaten met een eigen scoreweergave.
+- Leaderboards tonen nu gelijkspelen. Bestaande opgeslagen resultaten krijgen automatisch 0 gelijkspelen.
+
+## v1.18.1 — NPC-voornamen
+
+- NPC's krijgen bij het toevoegen aan een lobby een willekeurige echte voornaam uit een gedeelde Belgische, Nederlandse en internationale namenpool. Die naam blijft behouden gedurende de lobby en het spel.
+
+## v1.18.0 — The Deep Bleu C: haven, hakken/delven en een vaardigheden-skilltree
+
+- De hex-tegels zijn twee keer zo groot, met kleur, reliëf en Pokémon-achtige natuurdecoraties (bomen, rotsen, heuvels, water).
+- De speler is nu een 2D-chibi visser in plaats van een abstracte vismarker, met horizontale spiegeling bij het lopen.
+- Nieuwe Haven aan de Middellandse Zee met decoratieve bootjes — een bootupgrade laat je verder het water op varen.
+- Naast vissen kun je nu ook hout hakken (bijl) en steen delven (houweel), met exact hetzelfde werp/aanslaan/binnenhalen-ritme als vissen.
+- Nieuwe Houthakkerij en Steengroeve naast het Aquarium-Museum, elk met vijf sets van 10 hout- en steensoorten om te verzamelen en te verkopen.
+- Het werktuig (hengel/bijl/houweel) verschijnt voortaan alleen in de hand van de speler tijdens de bijhorende actie; in rust zijn beide handen leeg.
+- Nieuwe vaardigheden-skilltree: Vissen, Houthakken, Delven, Verzamelen en Handelen gaan van niveau 1 tot 99. Je verdient xp bij elke vangst, kap, delving, nieuwe ontdekking en voltooide ruil (voor beide spelers).
+
+## v1.17.0 — Age of Civilization: meer gebouwvarianten en tweede Wonder
+
+- Attack-, Defence- en Economy-gebouwen hebben nu elk twee verschillende namen per tijdperk, voor meer variatie in de aangeboden kaarten. Welke variant je krijgt aangeboden is willekeurig, maar eenmaal gebouwd blijft een tegel altijd zijn eigen variant volgen bij elke latere upgrade — de identiteit van een gebouw verandert nooit.
+- Vanaf tijdperk 2 is er keuze uit twee Wonders: het originele gebalanceerde Wonder, en een nieuw agressief Wonder met meer Attack maar minder Defence en Inkomen. Ook een Wonder houdt zijn gekozen variant vast bij upgrades.
+- Nieuwe regressietest bewaakt dat een gebouwde tegel zijn eigen variant blijft volgen doorheen upgrades, ook als de andere variant van dezelfde categorie intussen wordt aangeboden.
 
 ## v1.16.0 — CycClub: volwaardige Grote Rondes van 21 ritten
 

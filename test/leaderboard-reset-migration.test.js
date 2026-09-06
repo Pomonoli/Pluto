@@ -31,7 +31,7 @@ test('leaderboard reset wist alleen match history en gebeurt maar één keer',()
   r=spawnSync(process.execPath,['-e',load],{encoding:'utf8'});
   assert.equal(r.status,0,r.stderr);
   const first=JSON.parse(r.stdout.trim().split('\n').at(-1));
-  assert.deepEqual(first,{matches:0,players:0,users:1,maps:1,migrations:1});
+  assert.deepEqual(first,{matches:0,players:0,users:1,maps:1,migrations:2});
 
   // Add a new post-migration match. Reloading db.js must NOT erase it.
   const add=`process.env.DATA_DIR=${JSON.stringify(dir)};const d=require(${JSON.stringify(path.join(__dirname,'../src/db.js'))});d.db.prepare("insert into matches(game_key,ended_at) values('hofslag',3)").run();`;
@@ -43,7 +43,7 @@ test('leaderboard reset wist alleen match history en gebeurt maar één keer',()
   assert.equal(second.matches,1);
   assert.equal(second.users,1);
   assert.equal(second.maps,1);
-  assert.equal(second.migrations,1);
+  assert.equal(second.migrations,2);
 
   fs.rmSync(dir,{recursive:true,force:true});
 });
