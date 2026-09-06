@@ -539,6 +539,12 @@ const RELEASES = [
     improvements:[
       'CycClub: elk segment heeft nu een eigen terrein (vlak, heuvels, berg, kasseien of tijdrit) dat een rol-gebonden bonus of malus geeft aan klimmers, sprinters en allrounders; de permanente tactiekkaarten en het aparte tabblad Tactieken zijn hiermee vervangen.'
     ]
+  },
+  {
+    version:"1.28.1",
+    improvements:[
+      "Cycclub dropdown fix"
+    ]
   }
 ];
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.28.1 — Cycclub dropdown fix
+
+- Cycclub dropdown fix
+
 ## v1.28.0 — Lutro en vernieuwde CycClub-tactieken
 
 - De permanente tactiekkaarten zijn vervangen door een dieper systeem: elke renner in je opstelling kiest elk segment zelf een tactiek — Herstel, Volg, Kop, Val aan of Bidons — met een eigen effect op zijn multiplier en vermoeidheid.
