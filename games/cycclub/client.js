@@ -32,6 +32,20 @@ const CLASSIFICATION_TABS=[
   {key:'youth', label:'Jongeren (Wit)', valueLabel:'Tijd', formatValue:(v) => `${v>0?'+':''}${v}s`},
   {key:'team', label:'Ploegen', valueLabel:'Tijd', formatValue:(v) => `${v>0?'+':''}${v}s`}
 ];
+const TACTIC_STORAGE_KEY='pluto.cycclub.riderTactics';
+
+function loadRememberedTactics(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(TACTIC_STORAGE_KEY)||'{}');
+    return new Map(Object.entries(saved).filter(([,tactic]) => Object.hasOwn(TACTIC_LABELS,tactic)));
+  }catch{
+    return new Map();
+  }
+}
+
+function rememberTactics(tactics){
+  try{localStorage.setItem(TACTIC_STORAGE_KEY,JSON.stringify(Object.fromEntries(tactics)))}catch{}
+}
 
 function euro(n){return `€${Math.round(n||0).toLocaleString('nl-BE')}`}
 
@@ -707,7 +721,7 @@ function renderRacing(room,game,me){
   const tacticLabels=race.tacticLabels||{};
   const segmentKey=`${race.raceId}:${race.segmentIndex}`;
   if(lastSegmentKey!==segmentKey){
-    riderTactics=new Map();
+    riderTactics=loadRememberedTactics();
     riderGels=new Set();
     lastSegmentKey=segmentKey;
   }
@@ -757,17 +771,28 @@ function renderRacing(room,game,me){
       card.append(head);
       card.append(fatigueMeter(riderState.fatigue));
 
-      const select=document.createElement('select');
-      select.className='cc-tactic-select';
-      select.append(new Option('Kies tactiek…',''));
-      for(const key of Object.keys(tacticLabels))select.append(new Option(tacticLabels[key],key));
-      select.value=riderTactics.get(riderId)||'';
-      select.onchange=() => {
-        if(select.value)riderTactics.set(riderId,select.value);
-        else riderTactics.delete(riderId);
-        refreshTacticUI();
-      };
-      card.append(select);
+      const tacticButtons=E('div','cc-tactic-buttons');
+      tacticButtons.setAttribute('role','group');
+      tacticButtons.setAttribute('aria-label',`Tactiek voor ${riderState.name}`);
+      for(const key of Object.keys(tacticLabels)){
+        const tacticBtn=E('button','cc-tactic-btn',tacticLabels[key]);
+        tacticBtn.type='button';
+        const selected=riderTactics.get(riderId)===key;
+        tacticBtn.classList.toggle('active',selected);
+        tacticBtn.setAttribute('aria-pressed',selected?'true':'false');
+        tacticBtn.onclick=() => {
+          riderTactics.set(riderId,key);
+          rememberTactics(riderTactics);
+          for(const button of tacticButtons.children){
+            const active=button===tacticBtn;
+            button.classList.toggle('active',active);
+            button.setAttribute('aria-pressed',active?'true':'false');
+          }
+          refreshTacticUI();
+        };
+        tacticButtons.append(tacticBtn);
+      }
+      card.append(tacticButtons);
 
       const gelBtn=E('button','secondary cc-gel-btn',`💧 Gels: ${riderState.gelsRemaining}`);
       gelBtn.type='button';
