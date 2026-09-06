@@ -512,6 +512,13 @@ const RELEASES = [
     improvements:[
       'CycClub: het ritprofiel tijdens het rijden is herwerkt in de stijl van een echt wielerprofiel, met een gekleurde vulling naar stijgingspercentage, een hoogte-as, kilometermarkeringen, een start- en finishvlag en gecategoriseerde beklimmingen.'
     ]
+  },
+  {
+    version:'1.26.0',
+    games:['Ludo of Middle-earth'],
+    features:[
+      'Ludo of Middle-earth: leid Rivendell, Erebor, Barad-dûr of Minas Tirith over een isometrische Midden-aarde-kaart in deze realtime mix van Mens-erger-je-niet, lane battler en tower defense — rol de dobbelsteen om troepen in te zetten en te verplaatsen, en beleger de kastelen van je rivalen tot de Belegeringsplaats.'
+    ]
   }
 ];
 

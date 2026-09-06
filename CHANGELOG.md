@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.26.0 — Nieuwe game: Ludo of Middle-earth
+
+- Nieuwe game "Ludo of Middle-earth: Siege of the Four Realms" — een realtime hybride van Mens-erger-je-niet, een lane battler en tower defense op een isometrische Midden-aarde-kaart.
+- Kies Rivendell, Erebor, Barad-dûr of Minas Tirith; elk rijk heeft eigen troepen (Verkenner, Infanterie, Belegeringseenheid), een eigen verdedigingstoren en gevechtstraits.
+- Rol de dobbelsteen om troepen in te zetten en te verplaatsen over een 48-tegel pad; een volledige omloop leidt via je eigen kleurbaan naar de centrale Belegeringsplaats om een rivaliserend kasteel te raken.
+- Speciale tegels geven een tijdelijke schilddome of een directe aanval op je doelwitkasteel; verdien goud, herstel je kasteel en verbeter je toren.
+- Drie AI-persoonlijkheden (agressief, defensief, goud sparend) besturen onbezette rijken zodat je ook solo kan spelen.
+
 ## v1.25.1 — CycClub: hoogteprofiel in wielerstijl
 
 - Het ritprofiel tijdens het rijden is herwerkt in de stijl van een echt wielerprofiel: de vulling kleurt per stuk van geel/oranje naar dieprood naarmate het stijgingspercentage toeneemt.

@@ -22,7 +22,7 @@ test('current version has no unseen changes', () => {
 
 test('missed releases are grouped instead of shown as version history', () => {
   const changes=updates.changesSince('1.9.0');
-  assert.deepEqual(changes.games,['Kingdomino','Cascadia','Isle of Skye','The Deep Bleu C','CycClub','Ragnarok','Bakkermans Jones']);
+  assert.deepEqual(changes.games,['Kingdomino','Cascadia','Isle of Skye','The Deep Bleu C','CycClub','Ragnarok','Bakkermans Jones','Ludo of Middle-earth']);
   assert.ok(changes.features.some((item) => item.includes('updatepopup')));
 });
 
@@ -34,8 +34,8 @@ test('first guest visit establishes a silent baseline', () => {
 
 test('guest with an older seen version gets only relevant grouped changes', () => {
   const payload=updates.payloadFor({since:'1.11.0'});
-  assert.deepEqual(payload.changes.games,['Isle of Skye','The Deep Bleu C','CycClub','Ragnarok','Bakkermans Jones']);
-  assert.ok(payload.changes.features.length>=43);
+  assert.deepEqual(payload.changes.games,['Isle of Skye','The Deep Bleu C','CycClub','Ragnarok','Bakkermans Jones','Ludo of Middle-earth']);
+  assert.ok(payload.changes.features.length>=44);
   assert.ok(payload.changes.improvements.length>=89);
   assert.ok(payload.changes.features.some((item)=>item.includes('Light theme')));
   assert.ok(payload.changes.features.some((item)=>item.includes('gameheader')));
@@ -74,6 +74,7 @@ test('guest with an older seen version gets only relevant grouped changes', () =
   assert.ok(payload.changes.improvements.some((item)=>item.includes('totale Attack')));
   assert.ok(payload.changes.features.some((item)=>item.includes('Ragnarok')));
   assert.ok(payload.changes.features.some((item)=>item.includes('Bakkermans Jones')));
+  assert.ok(payload.changes.features.some((item)=>item.includes('Ludo of Middle-earth')));
   assert.ok(payload.changes.improvements.some((item)=>item.includes('alchemistenatelier-interface')));
   assert.ok(payload.changes.improvements.some((item)=>item.includes('knopvormige titelbubbel')));
   assert.ok(payload.changes.improvements.some((item)=>item.includes('zonder afgeronde hoeken')));
