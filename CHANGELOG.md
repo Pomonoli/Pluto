@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.28.2 — Cycclub fix
+
+- Cycclub fix
+
 ## v1.28.1 — Cycclub dropdown fix
 
 - Cycclub dropdown fix

@@ -545,6 +545,12 @@ const RELEASES = [
     improvements:[
       "Cycclub dropdown fix"
     ]
+  },
+  {
+    version:"1.28.2",
+    improvements:[
+      "Cycclub fix"
+    ]
   }
 ];
 
