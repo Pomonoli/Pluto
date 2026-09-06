@@ -6,6 +6,8 @@ Private, self-hosted minigameplatform voor vrienden, met realtime rooms, account
 
 CycClub heeft een nieuw diepgaand tactieksysteem: elke renner kiest elk segment zelf een tactiek (Herstel, Volg, Kop, Val aan of Bidons) met een eigen effect op multiplier en vermoeidheid, renners hebben een individuele vermoeidheidsmeter en energiegels, en Grote Rondes bouwen nu vijf volwaardige klassementen op (Algemeen, Punten, Bergen, Jongeren en Ploegen).
 
+Nieuwe game: "Lutro: Siege of the Four Realms" — een realtime hybride van Mens-erger-je-niet, een lane battler en tower defense op een isometrische Midden-aarde-kaart. Kies Rivendell, Erebor, Barad-dûr of Minas Tirith, rol de dobbelsteen om troepen in te zetten en te verplaatsen over het buitenpad, en beleger na een volledige omloop via je eigen kleurbaan de kastelen van je rivalen op de centrale Belegeringsplaats. Elk rijk heeft eigen troepen, een verdedigingstoren en gevechtstraits; drie AI-persoonlijkheden besturen onbezette rijken zodat je ook solo kan spelen.
+
 ## Nieuw in versie 1.0.0
 
 Alle games zijn ondergebracht in zelfstandige modules onder `games/`. Iedere game beheert daar zijn eigen serverlogica, client-entrypoint, metadata, spelregels en resultaten, en de server ontdekt deze mappen automatisch zonder een hardcoded gamelijst in de centrale registry.
@@ -28,6 +30,7 @@ Alle games zijn ondergebracht in zelfstandige modules onder `games/`. Iedere gam
 | Hofslag | 2-4 | Ja |
 | Isle of Skye | 2-4 | Ja |
 | Kingdomino | 2-4 | Ja |
+| Lutro | 1-4 | Ja |
 | Minigolf | 1-4 | Ja |
 | Pesten | 2-4 | Ja |
 | Presidenten | 3-4 | Ja |

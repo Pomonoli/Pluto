@@ -1,0 +1,73 @@
+.lutro-root{display:flex;flex-direction:column;gap:10px;font-family:inherit;color:#e8dfc8}
+
+/* Top bar */
+.lutro-topbar{display:flex;align-items:center;gap:10px;padding:8px 10px;background:#181310;border:1px solid #3a2f22;border-radius:12px}
+.lutro-clock{font-size:12px;color:#c8b98f;font-variant-numeric:tabular-nums}
+.lutro-gold{margin-left:auto;font-weight:700;color:#e8c86a}
+.lutro-target{border:1px solid var(--faction-color,#8a7a52);background:#20190f;color:#f1e6c8;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;min-height:32px}
+.lutro-target:disabled{opacity:.5;cursor:default}
+
+/* Board */
+.lutro-board-wrap{background:radial-gradient(ellipse at 50% 30%,#e9d7ae 0%,#dcc596 55%,#c8ac79 100%);border:1px solid #3a2f22;border-radius:14px;padding:6px;box-shadow:inset 0 0 40px rgba(70,50,20,0.35)}
+.lutro-svg{display:block;width:100%;height:auto;max-height:52vh}
+
+.lutro-tile{fill:#d9c298;stroke:#8a744e;stroke-width:.6;stroke-opacity:.5}
+.lutro-tile-corner{fill:var(--faction-color,#d9c298);fill-opacity:.55}
+.lutro-tile-start{fill:var(--faction-color,#d9c298);fill-opacity:.8;stroke-width:1.1;stroke-dasharray:2 1.5}
+.lutro-tile-defence{fill:#7fb0c9}
+.lutro-tile-attack{fill:#c98a4a}
+.lutro-tile-entrance{fill:var(--faction-color,#d9c298);fill-opacity:.35}
+.lutro-tile-glyph{font-size:11px;pointer-events:none}
+
+.lutro-home-tile{fill:var(--faction-color,#d9c298);fill-opacity:.3;stroke:var(--faction-color,#8a744e);stroke-width:.5;stroke-opacity:.6}
+.lutro-siege-tile{fill:#3a2f1a;stroke:#e8c86a;stroke-width:1.2}
+.lutro-siege-label{font-size:16px;pointer-events:none}
+
+.lutro-castle{cursor:default}
+.lutro-castle-base{fill:var(--faction-dark,#2c2418);stroke:var(--faction-color,#8a744e);stroke-width:.8}
+.lutro-castle-tower{fill:var(--faction-color,#8a744e);stroke:var(--faction-dark,#2c2418);stroke-width:.8}
+.lutro-castle-flag{font-size:15px;text-anchor:middle}
+.lutro-castle.fallen .lutro-castle-tower,.lutro-castle.fallen .lutro-castle-base{fill:#3a3a3a;opacity:.45}
+.lutro-castle.fallen .lutro-castle-flag{opacity:.35}
+.lutro-hp-back{fill:#241a10;stroke:#000;stroke-width:.3}
+.lutro-hp-fill{fill:#7fbf6a}
+.lutro-tier-label{font-size:6px;fill:#e8c86a;text-anchor:middle}
+.lutro-castle-name{font-size:7px;fill:#2c2013;text-anchor:middle;font-weight:700}
+
+.lutro-unit{transition:opacity .15s}
+.lutro-unit-body{fill:var(--faction-color,#8a744e);stroke:#241a10;stroke-width:1.2}
+.lutro-unit-hp{fill:none;stroke:#7fbf6a;stroke-width:1.6;transform-origin:center;transform:rotate(-90deg)}
+.lutro-unit-glyph{font-size:9px;text-anchor:middle}
+.lutro-unit-shield{fill:none;stroke:#7fd0e8;stroke-width:1.4;stroke-dasharray:3 2;opacity:.9}
+.lutro-unit.selected .lutro-unit-body{stroke:#fff;stroke-width:2}
+.lutro-unit.mine{filter:drop-shadow(0 0 2px rgba(255,255,255,.35))}
+
+/* Status bar */
+.lutro-statusbar{display:flex;align-items:center;gap:8px;padding:6px 10px;background:#181310;border:1px solid #3a2f22;border-radius:10px;font-size:12px}
+.lutro-status-icon{font-size:16px}
+.lutro-status-name{color:#c8b98f;flex:0 0 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lutro-status-hp{flex:1;height:8px;background:#241a10;border-radius:999px;overflow:hidden;border:1px solid #000}
+.lutro-status-hp-fill{height:100%;background:linear-gradient(90deg,#7fbf6a,#a8d67f);transition:width .3s}
+.lutro-status-hp-text{color:#e8dfc8;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* Bottom action tray */
+.lutro-tray{display:flex;flex-direction:column;gap:8px;padding:8px;background:#181310;border:1px solid #3a2f22;border-radius:14px}
+.lutro-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.lutro-actbtn{min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#241a10;border:1px solid #4a3c26;border-radius:10px;color:#f1e6c8;font-size:11px;font-weight:600;cursor:pointer}
+.lutro-actbtn:disabled{opacity:.4;cursor:default}
+.lutro-actbtn:not(:disabled):active{background:#3a2c18}
+.lutro-actbtn-icon{font-size:18px}
+.lutro-tray-hint{font-size:12px;color:#c8b98f;text-align:center;padding:2px 0}
+.lutro-panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:6px}
+.lutro-panel-btn{min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:#2c2013;border:1px solid #5a4a2c;border-radius:10px;color:#f1e6c8;font-size:11px;cursor:pointer}
+.lutro-panel-btn:disabled{opacity:.4;cursor:default}
+.lutro-panel-icon{font-size:16px}
+.lutro-panel-cost{color:#e8c86a;font-weight:700}
+
+/* Ticker */
+.lutro-ticker{font-size:11px;color:#a89670;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:2px 4px;border-top:1px dashed #3a2f22}
+
+@media(max-width:380px){
+.lutro-actbtn-label{display:none}
+.lutro-actbtn{min-height:44px}
+}

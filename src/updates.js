@@ -530,9 +530,11 @@ const RELEASES = [
   },
   {
     version:'1.28.0',
+    games:['Lutro'],
     features:[
       'CycClub: elke renner in je opstelling kiest nu elk segment zelf een tactiek — Herstel, Volg, Kop, Val aan of Bidons — die een eigen effect heeft op zijn multiplier en vermoeidheid, plus een individuele vermoeidheidsmeter en twee energiegels per rit.',
-      'CycClub: Grote Rondes bouwen nu vijf volwaardige klassementen op — Algemeen (tijd), Punten/Groen, Bergen/Bolletjes, Jongeren/Wit en Ploegen — elk met een eigen tabblad tijdens de rit en in de ritresultaten.'
+      'CycClub: Grote Rondes bouwen nu vijf volwaardige klassementen op — Algemeen (tijd), Punten/Groen, Bergen/Bolletjes, Jongeren/Wit en Ploegen — elk met een eigen tabblad tijdens de rit en in de ritresultaten.',
+      'Lutro: leid Rivendell, Erebor, Barad-dûr of Minas Tirith over een isometrische Midden-aarde-kaart in deze realtime mix van Mens-erger-je-niet, lane battler en tower defense — rol de dobbelsteen om troepen in te zetten en te verplaatsen, en beleger de kastelen van je rivalen tot de Belegeringsplaats.'
     ],
     improvements:[
       'CycClub: elk segment heeft nu een eigen terrein (vlak, heuvels, berg, kasseien of tijdrit) dat een rol-gebonden bonus of malus geeft aan klimmers, sprinters en allrounders; de permanente tactiekkaarten en het aparte tabblad Tactieken zijn hiermee vervangen.'
