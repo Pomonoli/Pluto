@@ -1,4 +1,4 @@
-# Ludo of Middle-earth — visuele stijl
+# Lutro — visuele stijl
 
 - Isometrische parchment-kaart: het bord is een inline SVG met ruitvormige ("diamond") tegels op een klassieke iso-projectie (`isoX=(gx-gy)*w/2`, `isoY=(gx+gy)*h/2`), 48 padtegels rond een vierkante lus van 12 tegels per zijde.
 - Kleurcode per rijk (`FACTIONS` in `client.js`/`server.js`, moet gesynchroniseerd blijven): Rivendell blauw/zilver `#7fb7e0`, Erebor goud `#e0b23c`, Barad-dûr rood/zwart `#c14a4a`, Minas Tirith wit/groen `#5fa06f`. Elk rijk heeft een vast hoekpunt (NW/NE/SE/SW) — nooit wijzigen zonder de geometrie-functies in beide bestanden gelijk te houden.

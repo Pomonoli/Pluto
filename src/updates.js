@@ -515,9 +515,9 @@ const RELEASES = [
   },
   {
     version:'1.26.0',
-    games:['Ludo of Middle-earth'],
+    games:['Lutro'],
     features:[
-      'Ludo of Middle-earth: leid Rivendell, Erebor, Barad-dûr of Minas Tirith over een isometrische Midden-aarde-kaart in deze realtime mix van Mens-erger-je-niet, lane battler en tower defense — rol de dobbelsteen om troepen in te zetten en te verplaatsen, en beleger de kastelen van je rivalen tot de Belegeringsplaats.'
+      'Lutro: leid Rivendell, Erebor, Barad-dûr of Minas Tirith over een isometrische Midden-aarde-kaart in deze realtime mix van Mens-erger-je-niet, lane battler en tower defense — rol de dobbelsteen om troepen in te zetten en te verplaatsen, en beleger de kastelen van je rivalen tot de Belegeringsplaats.'
     ]
   }
 ];

@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Ludo of Middle-earth: Siege of the Four Realms — server-authoritative logic.
+ * Lutro: Siege of the Four Realms — server-authoritative logic.
  *
  * Follows the Pluto plugin server contract (see games/README.md). Like
  * Ragnarok, this is a continuous realtime board: there is no shared turn
@@ -118,7 +118,7 @@ function createGame(roomPlayers) {
   });
 
   const game = {
-    gameKey: 'ludo-middle-earth',
+    gameKey: 'lutro',
     gameOver: false,
     resultText: '',
     winnerId: null,
@@ -547,7 +547,7 @@ function serialize(game, requesterId, connected) {
   });
 
   return {
-    kind: 'ludo-middle-earth',
+    kind: 'lutro',
     gameOver: game.gameOver,
     resultText: game.resultText,
     winnerId: game.winnerId,

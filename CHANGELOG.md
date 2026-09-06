@@ -1,8 +1,8 @@
 # Changelog
 
-## v1.26.0 — Nieuwe game: Ludo of Middle-earth
+## v1.26.0 — Nieuwe game: Lutro
 
-- Nieuwe game "Ludo of Middle-earth: Siege of the Four Realms" — een realtime hybride van Mens-erger-je-niet, een lane battler en tower defense op een isometrische Midden-aarde-kaart.
+- Nieuwe game "Lutro: Siege of the Four Realms" — een realtime hybride van Mens-erger-je-niet, een lane battler en tower defense op een isometrische Midden-aarde-kaart.
 - Kies Rivendell, Erebor, Barad-dûr of Minas Tirith; elk rijk heeft eigen troepen (Verkenner, Infanterie, Belegeringseenheid), een eigen verdedigingstoren en gevechtstraits.
 - Rol de dobbelsteen om troepen in te zetten en te verplaatsen over een 48-tegel pad; een volledige omloop leidt via je eigen kleurbaan naar de centrale Belegeringsplaats om een rivaliserend kasteel te raken.
 - Speciale tegels geven een tijdelijke schilddome of een directe aanval op je doelwitkasteel; verdien goud, herstel je kasteel en verbeter je toren.
