@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.28.3
+## Nieuw in versie 1.28.4
 
-cycclub fix full
+cycclub seconden
 
 ## Nieuw in versie 1.28.0
 
