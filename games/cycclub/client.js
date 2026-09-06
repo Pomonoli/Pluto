@@ -74,7 +74,10 @@ function summaryItem(label,value){
 
 function labelValue(label,value){
   const item=E('div','cc-lv-item');
-  item.append(E('span','',label),E('strong','',value));
+  const strong=E('strong','');
+  if(value instanceof Node)strong.append(value);
+  else strong.textContent=value;
+  item.append(E('span','',label),strong);
   return item;
 }
 
@@ -714,6 +717,22 @@ function fatigueMeter(fatigue){
   return wrap;
 }
 
+function roleImpactLegend(){
+  const legend=E('div','cc-role-legend');
+  legend.append(E('strong','cc-role-legend-title','Rollen & terreinimpact'));
+  [
+    ['climber','Klimmer','+25% berg · −5% vlak'],
+    ['sprinter','Sprinter','+20% vlak · −25% berg'],
+    ['allrounder','Allrounder','+10% heuvels en kasseien'],
+    ['domestique','Meesterknecht','Geen terreinbonus']
+  ].forEach(([role,label,impact]) => {
+    const item=E('span','cc-role-legend-item');
+    item.append(E('i',`cc-role-color cc-role-${role}`),E('b','',label),document.createTextNode(impact));
+    legend.append(item);
+  });
+  return legend;
+}
+
 function renderRacing(room,game,me){
   const race=game.race;
   if(!race){els.gameStage.append(E('p','muted','Geen actieve rit.'));return}
@@ -738,6 +757,11 @@ function renderRacing(room,game,me){
     statusRow.append(labelValue('Terrein',TERRAIN_TYPE_LABELS[segment.terrainType]||segment.terrainType));
     if(segment.mountainCategory>0)statusRow.append(labelValue('Beklimming',`Cat. ${segment.mountainCategory}`));
     if(segment.hasIntermediateSprint)statusRow.append(labelValue('Tussensprint','Ja'));
+  }
+  const latestSegment=myProgress&&Object.values(myProgress.riders||{}).flatMap((rider) => rider.segments||[]).sort((a,b) => b.n-a.n)[0];
+  if(latestSegment){
+    const rollValue=E('span','cc-roll-result',`🎲 ${latestSegment.roll}`);
+    statusRow.append(labelValue('Laatste worp',rollValue));
   }
   panel.append(statusRow);
 
@@ -767,9 +791,12 @@ function renderRacing(room,game,me){
     activeEntries.forEach(([riderId,riderState]) => {
       const card=E('div','cc-rider-card cc-rider-tactic-card');
       const head=E('div','cc-rider-head');
-      head.append(E('strong','',riderState.name),E('span','muted',ROLE_LABELS[riderState.role]||riderState.role));
+      head.append(E('strong','',riderState.name),E('span',`cc-rider-role cc-role-${riderState.role}`,ROLE_LABELS[riderState.role]||riderState.role));
       card.append(head);
       card.append(fatigueMeter(riderState.fatigue));
+
+      const preview=E('span','cc-tactic-preview','');
+      card.append(preview);
 
       const tacticButtons=E('div','cc-tactic-buttons');
       tacticButtons.setAttribute('role','group');
@@ -804,8 +831,6 @@ function renderRacing(room,game,me){
       };
       card.append(gelBtn);
 
-      const preview=E('span','cc-tactic-preview','');
-      card.append(preview);
       cardRefs.push({riderId,riderState,gelBtn,preview});
       grid.append(card);
     });
@@ -835,6 +860,8 @@ function renderRacing(room,game,me){
     });
     panel.append(historyGrid);
   }
+
+  panel.append(roleImpactLegend());
 
   const readyList=E('div','cc-ready-list');
   (race.allProgress||[]).forEach((entry) => {
