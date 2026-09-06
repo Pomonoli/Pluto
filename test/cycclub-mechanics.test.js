@@ -36,6 +36,15 @@ test('calculateSegmentStep: climbers are boosted on mountains, sprinters on flat
   assert.ok(results.c1.personalMultiplier > results.s1.personalMultiplier);
 });
 
+test('calculateSegmentStep: tactic bonuses are added directly to the dice roll', () => {
+  const rider = makeRider({id: 'd1'});
+  const follow = cc.calculateSegmentStep([rider], {d1: 'follow'}, {}, FLAT_SEGMENT, 5, makeTeam());
+  assert.equal(follow.d1.personalMultiplier, 0.7);
+  rider.fatigue=0;
+  const attack = cc.calculateSegmentStep([rider], {d1: 'attack'}, {}, FLAT_SEGMENT, 5, makeTeam());
+  assert.equal(attack.d1.personalMultiplier, 1);
+});
+
 test('calculateSegmentStep: tactics change fatigue as documented', () => {
   const attacker = makeRider({id: 'a1', fatigue: 20});
   const recoverer = makeRider({id: 'r2', fatigue: 20});

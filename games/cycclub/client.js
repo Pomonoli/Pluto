@@ -383,36 +383,53 @@ function renderClub(room,game,me){
   rosterSection.append(renderRosterPanel(me,game.maxRiders||10));
 
   const scoutSection=E('div','cc-tab-section');
-  const scoutBack=tabBackButton();
-  scoutSection.append(scoutBack,renderScoutPanel(room,game,me));
+  scoutSection.append(renderScoutPanel(room,game,me));
 
   const shopSection=E('div','cc-tab-section');
-  const shopBack=tabBackButton();
-  shopSection.append(shopBack,renderShopPanel(me));
+  shopSection.append(renderShopPanel(me));
 
   const racesSection=E('div','cc-tab-section');
-  const racesBack=tabBackButton();
-  racesSection.append(racesBack,renderRaceCatalogPanel(room,game,me));
+  racesSection.append(renderRaceCatalogPanel(room,game,me));
 
   const sections={roster:rosterSection,scout:scoutSection,shop:shopSection,races:racesSection};
+  const tabButtons={};
   const applyTab=(tab) => {
     clubTab=tab;
     for(const key of Object.keys(sections))sections[key].classList.toggle('hidden',key!==tab);
+    for(const key of Object.keys(tabButtons)){
+      const active=key===tab;
+      tabButtons[key].classList.toggle('active',active);
+      tabButtons[key].setAttribute('aria-selected',active?'true':'false');
+    }
   };
-  scoutBack.onclick=() => applyTab('roster');
-  shopBack.onclick=() => applyTab('roster');
-  racesBack.onclick=() => applyTab('roster');
 
-  const topBar=E('div','cc-top-tabs');
-  topBar.append(renderShopStatusBar(me,() => applyTab('shop')));
+  const topBar=E('div','cc-top-tabs cc-club-tabs');
+  topBar.setAttribute('role','tablist');
+  const rosterTab=E('button','cc-club-tab','Mijn ploeg');
+  rosterTab.type='button';
+  rosterTab.onclick=() => applyTab('roster');
+  tabButtons.roster=rosterTab;
+  const shopTab=E('button','cc-club-tab','Teambeheer');
+  shopTab.type='button';
+  shopTab.onclick=() => applyTab('shop');
+  tabButtons.shop=shopTab;
+  topBar.append(shopTab);
   const scoutOpenBtn=E('button','cc-tab-open-btn',`🔍 Scoutingmarkt (${(game.myScoutMarket||[]).length})`);
+  scoutOpenBtn.textContent=`Scoutingmarkt (${(game.myScoutMarket||[]).length})`;
+  scoutOpenBtn.className='cc-club-tab';
   scoutOpenBtn.type='button';
   scoutOpenBtn.onclick=() => applyTab('scout');
+  tabButtons.scout=scoutOpenBtn;
   topBar.append(scoutOpenBtn);
   const racesOpenBtn=E('button','cc-tab-open-btn',`📅 Koerskalender (${game.raceCatalog.length})`);
+  racesOpenBtn.textContent=`Koerskalender (${game.raceCatalog.length})`;
+  racesOpenBtn.className='cc-club-tab';
   racesOpenBtn.type='button';
   racesOpenBtn.onclick=() => applyTab('races');
+  tabButtons.races=racesOpenBtn;
   topBar.append(racesOpenBtn);
+  topBar.append(rosterTab);
+  for(const button of Object.values(tabButtons))button.setAttribute('role','tab');
 
   const resetBtn=E('button','cc-danger-btn','♻️ Opnieuw beginnen');
   resetBtn.type='button';
@@ -422,7 +439,7 @@ function renderClub(room,game,me){
       action('resetTeam');
     }
   };
-  topBar.append(resetBtn);
+  rosterSection.append(resetBtn);
   els.gameStage.append(topBar);
 
   els.gameStage.append(rosterSection,scoutSection,shopSection,racesSection);
@@ -436,7 +453,7 @@ function renderLineup(room,game,me){
     lastRaceKey=race.raceId;
   }
   const catalogRace=game.raceCatalog.find((candidate) => candidate.id===race.raceId);
-  const panel=E('div','panel cc-panel');
+  const panel=E('div','panel cc-panel cc-lineup-panel');
   panel.append(panelHeading(race.raceName));
   if(catalogRace){
     const terrain=Object.entries(catalogRace.terrain).sort((a,b) => b[1]-a[1]).map(([key,weight]) => `${STAT_LABELS[key]} ${Math.round(weight*100)}%`).join(' · ');
@@ -448,20 +465,25 @@ function renderLineup(room,game,me){
   if(!available.length){
     panel.append(E('p','muted','Geen beschikbare renners.'));
   } else {
-    const grid=E('div','cc-rider-grid');
+    const grid=E('div','cc-rider-grid cc-active-rider-grid');
     available.forEach((rider) => {
-      const card=E('label','cc-rider-card cc-selectable');
-      const checkbox=document.createElement('input');
-      checkbox.type='checkbox';
-      checkbox.checked=selectedLineup.has(rider.id);
-      checkbox.disabled=submitted;
-      checkbox.onchange=() => {
-        if(checkbox.checked){
-          if(selectedLineup.size>=game.squadSize){checkbox.checked=false;return}
-          selectedLineup.add(rider.id);
-        } else selectedLineup.delete(rider.id);
+      const card=E('button','cc-rider-card cc-selectable');
+      card.type='button';
+      card.disabled=submitted;
+      const updateSelectedState=() => {
+        const selected=selectedLineup.has(rider.id);
+        card.classList.toggle('selected',selected);
+        card.setAttribute('aria-pressed',selected?'true':'false');
       };
-      card.append(checkbox);
+      updateSelectedState();
+      card.onclick=() => {
+        if(selectedLineup.has(rider.id))selectedLineup.delete(rider.id);
+        else{
+          if(selectedLineup.size>=game.squadSize)return;
+          selectedLineup.add(rider.id);
+        }
+        updateSelectedState();
+      };
       const head=E('div','cc-rider-head');
       head.append(E('strong','',rider.name),E('span','muted',`${rider.age}j · ${rider.specialism}`));
       card.append(head);
@@ -683,9 +705,7 @@ function buildProfileChart(race){
   return wrap;
 }
 
-// Mirrort (bewust vereenvoudigd, exclusief dobbelsteenworp) de serverformule uit
-// calculateSegmentStep, puur om de speler een live voorbeeld van de personalMultiplier te tonen.
-const TACTIC_PREVIEW_MULTIPLIER={recover:0.85,follow:1.00,leadout:1.25,attack:1.50,fetch_bidons:0.80};
+const TACTIC_ROLL_BONUS={recover:0,follow:2,leadout:3,attack:5,fetch_bidons:0};
 function previewTerrainFactor(role,terrainType){
   if(role==='climber')return terrainType==='mountain'?0.25:(terrainType==='flat'?-0.05:0);
   if(role==='sprinter')return terrainType==='flat'?0.20:(terrainType==='mountain'?-0.25:0);
@@ -698,13 +718,13 @@ function previewFatiguePenalty(fatigue){
   if(fatigue<=90)return 0.25;
   return 0.5;
 }
-function previewMultiplierFactor(riderState,tactic,segment,hasLeadout){
+function previewRollAdjustment(riderState,tactic,segment,hasLeadout){
   const bonked=riderState.fatigue>=91;
   const effectiveTactic=bonked&&(tactic==='attack'||tactic==='leadout')?'follow':tactic;
   const terrain=previewTerrainFactor(riderState.role,segment.terrainType);
-  const tacticBonus=(TACTIC_PREVIEW_MULTIPLIER[effectiveTactic]-1)+((effectiveTactic==='follow'&&hasLeadout)?0.15:0);
+  const tacticBonus=TACTIC_ROLL_BONUS[effectiveTactic]+((effectiveTactic==='follow'&&hasLeadout)?1.5:0);
   const fatiguePenalty=bonked?0.5:previewFatiguePenalty(riderState.fatigue);
-  return Math.round((1+terrain+tacticBonus-fatiguePenalty)*100)/100;
+  return Math.round((tacticBonus+(terrain*10)-(fatiguePenalty*10))*10)/10;
 }
 
 function fatigueMeter(fatigue){
@@ -733,6 +753,23 @@ function roleImpactLegend(){
   return legend;
 }
 
+function segmentProgressLegend(){
+  const legend=E('div','cc-segment-legend');
+  legend.append(E('strong','cc-segment-legend-title','Segmentverloop'));
+  [
+    ['topdag','Topdag'],
+    ['normaal','Normaal'],
+    ['pech','Pech'],
+    ['valt','Val'],
+    ['pending','Nog te rijden']
+  ].forEach(([outcome,label]) => {
+    const item=E('span','cc-segment-legend-item');
+    item.append(E('i',`cc-segment-dot cc-segment-${outcome}`),document.createTextNode(label));
+    legend.append(item);
+  });
+  return legend;
+}
+
 function renderRacing(room,game,me){
   const race=game.race;
   if(!race){els.gameStage.append(E('p','muted','Geen actieve rit.'));return}
@@ -745,7 +782,7 @@ function renderRacing(room,game,me){
     lastSegmentKey=segmentKey;
   }
 
-  const panel=E('div','panel cc-panel');
+  const panel=E('div','panel cc-panel cc-racing-panel');
   panel.append(panelHeading(race.raceName));
 
   panel.append(buildProfileChart(race));
@@ -781,8 +818,8 @@ function renderRacing(room,game,me){
         const tactic=riderTactics.get(ref.riderId);
         ref.gelBtn.classList.toggle('active',riderGels.has(ref.riderId));
         if(tactic&&segment){
-          const factor=previewMultiplierFactor(ref.riderState,tactic,segment,hasLeadout);
-          ref.preview.textContent=`Basisfactor ×${factor.toFixed(2)} (excl. worp)`;
+          const adjustment=previewRollAdjustment(ref.riderState,tactic,segment,hasLeadout);
+          ref.preview.textContent=`Aanpassing worp ${adjustment>=0?'+':''}${adjustment}`;
         } else ref.preview.textContent='';
       }
       rollBtn.disabled=activeEntries.some(([riderId]) => !riderTactics.has(riderId));
@@ -794,6 +831,7 @@ function renderRacing(room,game,me){
       head.append(E('strong','',riderState.name),E('span',`cc-rider-role cc-role-${riderState.role}`,ROLE_LABELS[riderState.role]||riderState.role));
       card.append(head);
       card.append(fatigueMeter(riderState.fatigue));
+      card.append(segmentDots(riderState.segments,SEGMENTS_PER_RACE));
 
       const preview=E('span','cc-tactic-preview','');
       card.append(preview);
@@ -848,20 +886,20 @@ function renderRacing(room,game,me){
     panel.append(actionsRow);
   }
 
-  if(myProgress?.riders){
-    const historyGrid=E('div','cc-rider-grid');
+  if(myProgress?.riders&&!myProgress.awaitingConfirmation){
+    const historyGrid=E('div','cc-rider-grid cc-history-grid');
     Object.values(myProgress.riders).forEach((riderState) => {
       const card=E('div','cc-rider-card');
       const head=E('div','cc-rider-head');
       head.append(E('strong','',riderState.name),E('span','muted',riderState.dnf?'Uitgevallen':`${riderState.pr} pt`));
       card.append(head);
-      card.append(segmentDots(riderState.segments));
+      card.append(segmentDots(riderState.segments,SEGMENTS_PER_RACE));
       historyGrid.append(card);
     });
     panel.append(historyGrid);
   }
 
-  panel.append(roleImpactLegend());
+  panel.append(segmentProgressLegend(),roleImpactLegend());
 
   const readyList=E('div','cc-ready-list');
   (race.allProgress||[]).forEach((entry) => {
@@ -882,14 +920,20 @@ function renderRacing(room,game,me){
   els.gameStage.append(panel);
 }
 
-function segmentDots(segments){
+function segmentDots(segments,totalSegments=0){
   const row=E('div','cc-segment-dots');
+  row.setAttribute('aria-label','Segmentverloop');
   (segments||[]).forEach((segment) => {
     const dot=E('span',`cc-segment-dot cc-segment-${segment.outcome}`);
     const tacticLabel=TACTIC_LABELS[segment.tactic]||segment.tactic||'';
     dot.title=`Segment ${segment.n}: worp ${segment.roll} · ${tacticLabel} (×${segment.multiplier?.toFixed?.(2)??segment.multiplier}) — ${SEGMENT_OUTCOME_LABELS[segment.outcome]||segment.outcome}`;
     row.append(dot);
   });
+  for(let n=(segments||[]).length+1;n<=totalSegments;n++){
+    const dot=E('span','cc-segment-dot cc-segment-pending');
+    dot.title=`Segment ${n}: nog te rijden`;
+    row.append(dot);
+  }
   return row;
 }
 

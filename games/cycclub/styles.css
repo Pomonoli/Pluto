@@ -1,4 +1,5 @@
 @media(min-width:761px){#gameStage:has(.cc-dashboard){max-width:1100px}}
+@media(min-width:761px){#gameStage:has(.cc-racing-panel){max-width:1200px}}
 .cc-panel{margin-top:14px}
 .cc-summary{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-top:14px}
 .cc-summary-item{border:1px solid var(--border);border-radius:12px;background:var(--panel2);padding:10px;display:flex;flex-direction:column;gap:4px}
@@ -6,6 +7,10 @@
 .cc-summary-item strong{font-size:16px}
 body.cycclub-active{--bg:#f2eee0;--panel:#f7f4ea;--panel2:#e3f3e4;--text:#14170f;--muted:#5c6a57;--border:#cfe0cd;--accent:#248a49;--success:#248a49}
 body.cycclub-active{background:var(--bg)}
+body.game-active.cycclub-active #gameStage:has(.cc-racing-panel){display:flex;flex-direction:column;overflow:hidden!important}
+body.game-active.cycclub-active #gameStage:has(.cc-racing-panel)>.game-titlebar{flex:none;margin-bottom:6px}
+body.game-active.cycclub-active #gameStage:has(.cc-racing-panel)>.cc-racing-panel{flex:1;min-height:0;overflow:hidden;margin-bottom:0}
+body.game-active.cycclub-active #gameStage:has(.cc-racing-panel)>.log-box{display:none!important}
 body.cycclub-active .game-titlebar{position:relative;padding-bottom:16px}
 body.cycclub-active .game-titlebar::after{content:'';position:absolute;left:0;right:0;bottom:0;height:7px;border-radius:4px;background:var(--bg)}
 body.cycclub-active .panel-heading{border-bottom:2px solid var(--accent);padding-bottom:8px}
@@ -39,8 +44,11 @@ body.cycclub-active .cc-rider-actions{margin-top:10px}
 
 .cc-rider-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .cc-rider-card{position:relative;border:1px solid var(--border);border-radius:11px;background:var(--panel2);padding:10px 12px;display:flex;flex-direction:column;gap:8px}
-.cc-rider-card.cc-selectable{cursor:pointer;padding-left:34px}
-.cc-rider-card.cc-selectable input[type=checkbox]{position:absolute;left:10px;top:12px}
+.cc-rider-card.cc-selectable{width:100%;cursor:pointer;text-align:left;color:inherit;font:inherit}
+.cc-rider-card.cc-selectable:hover{border-color:var(--accent);transform:translateY(-1px)}
+.cc-rider-card.cc-selectable.selected{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,var(--panel2));box-shadow:inset 0 0 0 1px var(--accent)}
+.cc-rider-card.cc-selectable.selected::after{content:'✓';position:absolute;top:8px;right:8px;width:22px;height:22px;display:grid;place-items:center;border-radius:50%;background:var(--accent);color:#fff;font-size:14px;font-weight:900}
+.cc-rider-card.cc-selectable:disabled{cursor:default;opacity:1}
 .cc-rider-head{display:flex;flex-direction:column;gap:2px;min-width:0}
 .cc-rider-head strong{font-size:14px}
 .cc-rider-role{font-size:11px;font-weight:800}
@@ -77,6 +85,16 @@ body.cycclub-active .cc-rider-actions{margin-top:10px}
 .cc-filter-empty{margin-top:10px}
 
 .cc-top-tabs{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:14px}
+.cc-club-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:4px;border:1px solid var(--border);border-radius:12px;background:var(--panel2)}
+body.cycclub-active .cc-club-tab{min-width:0;min-height:38px;padding:6px 8px;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:11px;font-weight:800;cursor:pointer}
+body.cycclub-active .cc-club-tab:hover{color:var(--text);background:color-mix(in srgb,var(--accent) 8%,transparent)}
+body.cycclub-active .cc-club-tab.active{background:var(--accent);color:#fff;box-shadow:0 2px 7px rgba(36,138,73,.22)}
+body.game-active.cycclub-active #gameStage:has(.cc-club-tabs){display:flex;flex-direction:column;overflow:hidden!important}
+body.game-active.cycclub-active #gameStage:has(.cc-club-tabs)>.game-titlebar,
+body.game-active.cycclub-active #gameStage:has(.cc-club-tabs)>.cc-summary,
+body.game-active.cycclub-active #gameStage:has(.cc-club-tabs)>.cc-club-tabs{flex:none}
+body.game-active.cycclub-active #gameStage:has(.cc-club-tabs)>.cc-tab-section:not(.hidden){flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-right:2px}
+body.game-active.cycclub-active #gameStage:has(.cc-club-tabs)>.log-box{display:none!important}
 .cc-shop-status-bar{display:flex;flex-wrap:wrap;gap:8px}
 .cc-shop-status-btn{display:flex;flex-direction:column;align-items:flex-start;gap:4px;border:1px solid var(--border);border-radius:10px;background:var(--panel2);padding:6px 10px;cursor:pointer;color:inherit;font:inherit}
 .cc-shop-status-btn:hover{border-color:var(--accent)}
@@ -127,6 +145,12 @@ body.cycclub-active .cc-tactic-btn.active{background:var(--accent);border-color:
 .cc-segment-dot.cc-segment-valt{background:#d65a50;border-color:#d65a50}
 .cc-segment-dot.cc-segment-opportuniteit{background:#4fb3c9;border-color:#4fb3c9}
 .cc-segment-dot.cc-segment-topdag{background:var(--accent);border-color:var(--accent)}
+.cc-segment-dot.cc-segment-pending{background:transparent;border-color:var(--muted);opacity:.55}
+
+.cc-segment-legend{display:flex;flex-wrap:wrap;align-items:center;gap:5px 12px;margin-top:8px;padding:7px 10px;border:1px solid var(--border);border-radius:10px;background:var(--panel2);font-size:10px;color:var(--muted)}
+.cc-segment-legend-title{color:var(--text)}
+.cc-segment-legend-item{display:inline-flex;align-items:center;gap:4px}
+.cc-segment-legend-item .cc-segment-dot{flex:none}
 
 .cc-ready-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .cc-ready-chip{border:1px solid var(--border);border-radius:999px;padding:5px 10px;font-size:12px;color:var(--muted)}
@@ -172,6 +196,11 @@ body.cycclub-active .cc-tactic-btn.active{background:var(--accent);border-color:
 
 .cc-roll-result{display:inline-flex;align-items:center;padding:0 4px;font-size:15px;font-weight:800}
 
+.cc-racing-panel{padding:12px;display:flex;flex-direction:column}
+.cc-racing-panel>.cc-profile-chart{margin-top:8px}
+.cc-racing-panel>.cc-lv-row{margin:6px 0}
+.cc-racing-panel>.cc-history-grid{margin-top:8px}
+
 body.cycclub-active .stats-table{background:var(--panel2);border-radius:10px;overflow:hidden}
 body.cycclub-active .stats-table th,body.cycclub-active .stats-table td{border-bottom-color:var(--border)}
 
@@ -182,4 +211,97 @@ body.cycclub-active .stats-table th,body.cycclub-active .stats-table td{border-b
 @media(max-width:760px){
   .cc-summary-item{flex:1 1 auto;padding:5px 8px;font-size:11px}
   .cc-rider-grid{grid-template-columns:1fr}
+  body.cycclub-active .game-titlebar{padding-bottom:9px}
+  body.game-active.cycclub-active #gameStage:has(.cc-racing-panel){padding-bottom:max(4px,env(safe-area-inset-bottom))}
+  body.game-active.cycclub-active #gameStage:has(.cc-racing-panel)>.game-titlebar{margin-bottom:3px}
+  .cc-racing-panel{margin-top:0;padding:7px}
+  .cc-racing-panel>.panel-heading{padding-bottom:4px}
+  .cc-racing-panel>.panel-heading h3{font-size:14px;margin:0}
+  .cc-racing-panel>.cc-profile-chart{margin-top:5px;padding:5px}
+  .cc-racing-panel .cc-profile-svg{height:92px}
+  .cc-racing-panel .cc-profile-legend{gap:3px 8px;margin-top:3px;font-size:8px;line-height:1}
+  .cc-racing-panel .cc-profile-legend-item i{width:6px;height:6px}
+  .cc-racing-panel>.cc-lv-row{gap:5px 12px;margin:4px 0}
+  .cc-racing-panel .cc-lv-item{gap:0}
+  .cc-racing-panel .cc-lv-item span{font-size:7px}
+  .cc-racing-panel .cc-lv-item strong{font-size:10px}
+  .cc-racing-panel .cc-roll-result{font-size:11px;padding:0}
+  .cc-active-rider-grid{gap:4px}
+  .cc-rider-card.cc-rider-tactic-card{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(65px,.85fr) minmax(56px,.7fr);grid-template-areas:'head fatigue preview' 'progress progress progress' 'tactics tactics gel';align-items:center;gap:2px 5px;padding:4px 6px;border-radius:8px}
+  .cc-rider-tactic-card .cc-rider-head{grid-area:head;gap:0}
+  .cc-rider-tactic-card .cc-rider-head strong{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cc-rider-tactic-card .cc-rider-role{font-size:8px}
+  .cc-rider-tactic-card .cc-fatigue-meter{grid-area:fatigue;gap:3px}
+  .cc-rider-tactic-card .cc-fatigue-bar{height:5px}
+  .cc-rider-tactic-card .cc-fatigue-label{font-size:8px;min-width:20px}
+  .cc-rider-tactic-card>.cc-segment-dots{grid-area:progress;gap:3px}
+  .cc-rider-tactic-card>.cc-segment-dots .cc-segment-dot{width:6px;height:6px}
+  .cc-rider-tactic-card .cc-tactic-preview{grid-area:preview;min-height:0;font-size:8px;line-height:1.1;text-align:right}
+  .cc-rider-tactic-card .cc-tactic-buttons{grid-area:tactics;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px}
+  body.cycclub-active .cc-rider-tactic-card .cc-tactic-btn{min-height:25px;padding:2px 1px;border-radius:6px;font-size:8px;line-height:1}
+  .cc-rider-tactic-card .cc-gel-btn{grid-area:gel;min-height:25px;padding:2px 3px;border-radius:7px;font-size:9px;white-space:nowrap}
+  .cc-racing-panel>.cc-rider-actions{margin-top:4px}
+  .cc-racing-panel>.cc-rider-actions .primary{min-height:30px;padding:4px 10px;font-size:10px}
+  .cc-racing-panel>.cc-rider-actions .muted{font-size:8px}
+  .cc-racing-panel>.cc-history-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin-top:4px}
+  .cc-racing-panel>.cc-history-grid .cc-rider-card{gap:3px;padding:5px 6px}
+  .cc-racing-panel>.cc-history-grid .cc-rider-head{gap:0}
+  .cc-racing-panel>.cc-history-grid .cc-rider-head strong{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cc-racing-panel>.cc-history-grid .cc-rider-head span{font-size:8px}
+  .cc-racing-panel>.cc-ready-list{display:none}
+  .cc-racing-panel>.cc-segment-legend{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px 6px;margin-top:4px;padding:4px 7px;font-size:8px;line-height:1}
+  .cc-racing-panel .cc-segment-legend-title{grid-column:1/-1;font-size:9px}
+  .cc-racing-panel .cc-segment-legend-item{gap:2px;white-space:nowrap}
+  .cc-racing-panel .cc-segment-legend-item .cc-segment-dot{width:6px;height:6px}
+  .cc-racing-panel>.cc-role-legend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 8px;margin-top:5px;padding:5px 7px;font-size:8px;line-height:1.1}
+  .cc-racing-panel .cc-role-legend-title{grid-column:1/-1;font-size:9px}
+  .cc-racing-panel .cc-role-legend-item{gap:3px;white-space:nowrap}
+  .cc-racing-panel .cc-role-color{width:6px;height:6px}
+  body.game-active.cycclub-active #gameStage:has(.cc-lineup-panel){display:flex;flex-direction:column;overflow:hidden!important;padding-bottom:max(4px,env(safe-area-inset-bottom))}
+  body.game-active.cycclub-active #gameStage:has(.cc-lineup-panel)>.game-titlebar{flex:none;margin-bottom:3px;padding-bottom:9px}
+  body.game-active.cycclub-active #gameStage:has(.cc-lineup-panel)>.log-box{display:none!important}
+  .cc-lineup-panel{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;margin-top:0;padding:7px}
+  .cc-lineup-panel>.panel-heading{flex:none;padding-bottom:4px}
+  .cc-lineup-panel>.panel-heading h3{font-size:14px;margin:0}
+  .cc-lineup-panel>p{flex:none;margin:5px 0;font-size:10px;line-height:1.25}
+  .cc-lineup-panel>.cc-rider-grid{flex:1;min-height:0;display:grid;grid-template-columns:1fr;grid-auto-rows:max-content;gap:4px;overflow-y:auto;overscroll-behavior:contain;padding-right:2px}
+  .cc-lineup-panel .cc-rider-card.cc-selectable{display:grid;grid-template-columns:minmax(100px,1fr) auto;gap:3px 6px;padding:6px 34px 6px 7px;border-radius:8px;transform:none}
+  .cc-lineup-panel .cc-rider-card.cc-selectable .cc-rider-head{gap:0}
+  .cc-lineup-panel .cc-rider-card.cc-selectable .cc-rider-head strong{font-size:11px}
+  .cc-lineup-panel .cc-rider-card.cc-selectable .cc-rider-head span{font-size:8px}
+  .cc-lineup-panel .cc-rider-card.cc-selectable .cc-stat-row{grid-column:1/-1;gap:2px;flex-wrap:nowrap}
+  .cc-lineup-panel .cc-rider-card.cc-selectable .cc-stat-chip{min-width:0;flex:1;padding:2px 1px;border-radius:5px}
+  .cc-lineup-panel .cc-rider-card.cc-selectable .cc-stat-chip b{font-size:6px}
+  .cc-lineup-panel .cc-rider-card.cc-selectable .cc-stat-chip small{font-size:9px}
+  .cc-lineup-panel .cc-rider-card.cc-selectable .cc-lv-item{position:absolute;top:7px;right:34px;gap:0;text-align:right}
+  .cc-lineup-panel .cc-rider-card.cc-selectable .cc-lv-item span{font-size:6px}
+  .cc-lineup-panel .cc-rider-card.cc-selectable .cc-lv-item strong{font-size:9px}
+  .cc-lineup-panel .cc-rider-card.cc-selectable.selected::after{top:6px;right:6px;width:22px;height:22px}
+  .cc-lineup-panel>.cc-rider-actions{flex:none;margin-top:5px}
+  .cc-lineup-panel>.cc-rider-actions button{min-height:32px;padding:4px 9px;font-size:10px}
+  .cc-lineup-panel>.cc-ready-list{flex:none;margin-top:4px;gap:4px}
+  .cc-lineup-panel>.cc-ready-list .cc-ready-chip{padding:3px 6px;font-size:8px}
+  body.game-active.cycclub-active #gameStage:has(.cc-club-tabs){padding-bottom:max(4px,env(safe-area-inset-bottom))}
+  body.game-active.cycclub-active #gameStage:has(.cc-club-tabs)>.game-titlebar{margin-bottom:3px;padding-bottom:9px}
+  #gameStage:has(.cc-club-tabs)>.cc-summary{margin-top:3px}
+  #gameStage:has(.cc-club-tabs)>.cc-summary .cc-summary-item{padding:3px 5px}
+  #gameStage:has(.cc-club-tabs)>.cc-summary .cc-summary-item span{font-size:7px}
+  #gameStage:has(.cc-club-tabs)>.cc-summary .cc-summary-item strong{font-size:9px}
+  #gameStage:has(.cc-club-tabs)>.cc-club-tabs{margin-top:5px;gap:2px;padding:3px;border-radius:9px}
+  body.cycclub-active .cc-club-tab{min-height:32px;padding:4px 2px;font-size:9px}
+  #gameStage:has(.cc-club-tabs)>.cc-tab-section:not(.hidden){padding-top:5px}
+  #gameStage:has(.cc-club-tabs)>.cc-tab-section>.cc-panel{margin-top:0;padding:8px}
+  #gameStage:has(.cc-club-tabs)>.cc-tab-section>.cc-panel>.panel-heading{padding-bottom:5px}
+  #gameStage:has(.cc-club-tabs)>.cc-tab-section>.cc-panel>.panel-heading h3{font-size:14px;margin:0}
+  #gameStage:has(.cc-club-tabs) .cc-category-title{margin:8px 0 5px;font-size:9px}
+  #gameStage:has(.cc-club-tabs) .cc-race-grid{grid-template-columns:1fr;gap:5px;margin-bottom:7px}
+  #gameStage:has(.cc-club-tabs) .cc-race-card{padding:7px;gap:3px}
+  #gameStage:has(.cc-club-tabs) .cc-race-card strong{font-size:11px}
+  #gameStage:has(.cc-club-tabs) .cc-race-card span,#gameStage:has(.cc-club-tabs) .cc-race-card small{font-size:8px}
+  #gameStage:has(.cc-club-tabs) .cc-race-card button{min-height:30px;padding:4px 8px;font-size:10px}
+}
+
+@media(max-width:420px){
+  #gameStage:has(.cc-club-tabs)>.cc-club-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+  body.cycclub-active .cc-club-tab{min-height:30px;font-size:9px}
 }
