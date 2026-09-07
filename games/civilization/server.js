@@ -58,13 +58,13 @@ const CATEGORIES = ['attack', 'defence', 'economy'];
 const CIVIC_CATEGORIES = ['science', 'religion', 'culture'];
 
 const ERAS = [
-  { name: 'Cavemen to Egyptians', wonder: 'Great Pyramid' },
-  { name: 'Greeks to Romans', wonder: 'Colosseum' },
-  { name: 'Swords to Muskets', wonder: 'Notre Dame' },
-  { name: 'Chinese to Napoleon', wonder: 'Great Wall' },
-  { name: 'World War I & II', wonder: 'Hoover Dam' },
-  { name: '1990 to 2030', wonder: 'The Internet' },
-  { name: 'Future to Futuristic', wonder: 'Dyson Sphere' }
+  { name: 'Cavemen to Egyptians', displayName: 'Prehistorie', wonder: 'Great Pyramid' },
+  { name: 'Greeks to Romans', displayName: 'Oude Nabije Oosten / Stroomculturen', wonder: 'Colosseum' },
+  { name: 'Swords to Muskets', displayName: 'Klassieke Oudheid', wonder: 'Notre Dame' },
+  { name: 'Chinese to Napoleon', displayName: 'Middeleeuwen', wonder: 'Great Wall' },
+  { name: 'World War I & II', displayName: 'Nieuwe Tijd', wonder: 'Hoover Dam' },
+  { name: '1990 to 2030', displayName: 'Nieuwste Tijd', wonder: 'The Internet' },
+  { name: 'Future to Futuristic', displayName: 'Eigen Tijd', wonder: 'Dyson Sphere' }
 ];
 
 // Two named variants per category per Age (more choice in the draft pool,
@@ -125,7 +125,7 @@ const CIVIC_STAT_LABEL = { attack: 'Attack', income: 'Goud', defence: 'Defence' 
 const LEADERS = [
   { key: 'cleopatra', name: 'Cleopatra', attribute: 'Nemes-hoofdtooi', bonus: '+5 start Goud. Religie en Cultuur kan je gratis aanduiden (geen goudkost).' },
   { key: 'alexander', name: 'Alexander de Grote', attribute: 'Korinthische helm', bonus: 'Attack-gebouwen krijgen +2 Attack.' },
-  { key: 'einstein', name: 'Einstein', attribute: 'Wilde haardos', bonus: 'Je Observatorium geeft een blijvende +2 Defence.' },
+  { key: 'napoleon', name: 'Napoleon', attribute: 'Bicorne (steekhoed)', bonus: 'Vanaf beurt 1 geven alle vaste gebouwen +10 procentpunten extra bonus bij aanduiden.' },
   { key: 'gandhi', name: 'Gandhi', attribute: 'Ronde bril', bonus: `Je Stad kan nooit meer dan ${GANDHI_DAMAGE_CAP} schade oplopen per aanvalsgolf.` },
   { key: 'bismarck', name: 'Bismarck', attribute: 'Pickelhaube', bonus: 'Upgrades kosten 25% minder goud.' },
   { key: 'lincoln', name: 'Lincoln', attribute: 'Hoge hoed', bonus: 'Je Stad geneest automatisch +10 HP als ze na een aanvalsgolf onder 30 zakt.' },
@@ -232,12 +232,12 @@ function dealHands(game) {
 // 70%) of the stat's value at the moment it fires, added once as a flat,
 // permanent bonus — e.g. 10 income in Age 4 (40%) becomes 14 income for
 // the rest of the game, regardless of what's built afterwards.
-function civicEventBonus(age) { return 0.10 * age; }
+function civicEventBonus(age, player) { return 0.10 * age + (player.leaderKey === 'napoleon' ? 0.10 : 0); }
 
 function applyCivicEvent(player, key, age) {
   const stat = CIVIC_EVENT_STAT[key];
   const currentValue = totals(player)[stat];
-  player.civicBonus[stat] += currentValue * civicEventBonus(age);
+  player.civicBonus[stat] += currentValue * civicEventBonus(age, player);
 }
 
 function totals(player) {
@@ -249,7 +249,6 @@ function totals(player) {
     income += tileStat(tile.base.income, tile.level);
   });
   if (player.leaderKey === 'achilles') attack *= 1.5;
-  if (player.leaderKey === 'einstein') defence += 2;
   attack += player.civicBonus.attack;
   defence += player.civicBonus.defence;
   income += player.civicBonus.income;
@@ -318,7 +317,7 @@ function assignLeader(player, key) {
 function beginAges(game) {
   game.phase = 'draft';
   dealHands(game);
-  game.log.push(`Age 1 begins: ${ERAS[0].name}.`);
+  game.log.push(`Age 1 begins: ${ERAS[0].displayName}.`);
 }
 
 /* ---------------- actions ---------------- */
@@ -381,7 +380,7 @@ function handleAction(game, playerId, action, payload) {
       civic.used = true;
       applyCivicEvent(p, key, game.age);
       const stat = CIVIC_EVENT_STAT[key];
-      const pct = Math.round(civicEventBonus(game.age) * 100);
+      const pct = Math.round(civicEventBonus(game.age, p) * 100);
       game.log.push(`${p.name} duidt ${CIVIC_NAMES[key]} aan en ontketent een gebeurtenis! (+${pct}% ${CIVIC_STAT_LABEL[stat]})`);
       p.acted = true;
     } else {
@@ -509,7 +508,7 @@ function advanceAfterWave(game) {
   game.phase = 'draft';
   game.waveResult = null;
   game.waveAcknowledged = new Set();
-  game.log.push(`Age ${game.age} begins: ${ERAS[contentAge(game.age) - 1].name}.`);
+  game.log.push(`Age ${game.age} begins: ${ERAS[contentAge(game.age) - 1].displayName}.`);
 }
 
 function finalizeScores(game) {
@@ -560,7 +559,7 @@ function playNpc(game, player) {
         civic.used = true;
         applyCivicEvent(player, choice.key, game.age);
         const stat = CIVIC_EVENT_STAT[choice.key];
-        const pct = Math.round(civicEventBonus(game.age) * 100);
+        const pct = Math.round(civicEventBonus(game.age, player) * 100);
         game.log.push(`${player.name} duidt ${CIVIC_NAMES[choice.key]} aan en ontketent een gebeurtenis! (+${pct}% ${CIVIC_STAT_LABEL[stat]})`);
       }
     } else if (player.hand.length) {
@@ -621,7 +620,7 @@ function serializeCivic(civic, age, player) {
       upgradeCost: civicActivationCost(age, key, player),
       statKey: stat,
       statLabel: CIVIC_STAT_LABEL[stat],
-      eventBonusPct: Math.round(civicEventBonus(age) * 100)
+      eventBonusPct: Math.round(civicEventBonus(age, player) * 100)
     };
   });
   return out;
@@ -680,7 +679,7 @@ function serialize(game, requesterId, connected) {
     turnsPerAge: TURNS_PER_AGE,
     turnNumber: (game.age - 1) * TURNS_PER_AGE + game.turnInAge,
     totalTurns: TOTAL_TURNS,
-    eraName: ERAS[contentAge(game.age) - 1].name,
+    eraName: ERAS[contentAge(game.age) - 1].displayName,
     phase: game.phase,
     deadline: null,
     order: game.order,

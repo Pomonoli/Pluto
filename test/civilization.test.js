@@ -99,7 +99,7 @@ test('Deathmatch gebruikt de late-game content na tijdperk 7 en eindigt niet zol
   const view=civilization.serialize(game,'a');
   assert.equal(view.mode,'deathmatch');
   assert.equal(view.totalAges,null);
-  assert.equal(view.eraName,'Future to Futuristic');
+  assert.equal(view.eraName,'Eigen Tijd');
   assert.ok(view.yourHand.every((card)=>['Drone Swarm Offensive','Railgun Platform','Orbital Defense Platform','Shield Generator Array','Quantum Bank','Asteroid Mining Rig','Dyson Sphere','Death Star Array'].includes(card.name)));
 });
 
@@ -481,7 +481,7 @@ test('4 spelers vechten in een kloksgewijze ring: een tussentijdse dood eindigt 
     {id:'c',name:'C',isNpc:false},{id:'d',name:'D',isNpc:false}
   ];
   const game=civilization.createGame(four);
-  pickLeaders(game,['lincoln','gandhi','bismarck','einstein']);
+  pickLeaders(game,['lincoln','gandhi','bismarck','napoleon']);
   // b attacks c (clockwise a->b->c->d->a); give b a lethal attack vs c's 100 hp
   game.players.b.hand[0]={type:'attack',name:'Sharpened Spear',cost:2,attack:150,defence:0,income:0};
   civilization.handleAction(game,'b','build',{handIndex:0});
@@ -494,4 +494,41 @@ test('4 spelers vechten in een kloksgewijze ring: een tussentijdse dood eindigt 
   assert.equal(game.players.a.hp,100);
   assert.equal(game.players.b.hp,100);
   assert.equal(game.players.d.hp,100);
+});
+
+test('historische tijdperknamen volgen de zeven spelrondes',()=>{
+  const game=civilization.createGame(players());
+  pickLeaders(game);
+  const names=['Prehistorie','Oude Nabije Oosten / Stroomculturen','Klassieke Oudheid','Middeleeuwen','Nieuwe Tijd','Nieuwste Tijd','Eigen Tijd'];
+  names.forEach((name,i)=>{game.age=i+1;assert.equal(civilization.serialize(game,'a').eraName,name);});
+});
+
+test('Napoleon vervangt Einstein zonder vaste defensiebonus',()=>{
+  const game=civilization.createGame(players());
+  const leaders=civilization.serialize(game,'a').leaders;
+  assert.ok(leaders.some(leader=>leader.key==='napoleon'&&leader.name==='Napoleon'));
+  assert.ok(!leaders.some(leader=>leader.key==='einstein'));
+  pickLeaders(game,['napoleon','gandhi']);
+  const view=civilization.serialize(game,'a');
+  const napoleon=view.players.find(player=>player.id==='a');
+  const gandhi=view.players.find(player=>player.id==='b');
+  assert.equal(napoleon.leaderName,'Napoleon');
+  assert.equal(napoleon.defence,gandhi.defence);
+});
+
+test('Napoleon versterkt alle vaste gebouwen vanaf beurt 1 en in latere tijdperken',()=>{
+  for(const age of [1,2,7]) for(const [key,stat] of [['science','attack'],['religion','defence'],['culture','income']]){
+    const game=civilization.createGame(players());
+    pickLeaders(game,['napoleon','gandhi']);
+    game.age=age;
+    const p=game.players.a;p.gold=10000;
+    p.grid[0]={type:'economy',level:1,base:{attack:100,defence:100,income:100}};
+    const before=civilization.serialize(game,'a');
+    assert.equal(before.players.find(p=>p.id==='a').civic[key].eventBonusPct,age*10+10);
+    assert.equal(before.players.find(p=>p.id==='b').civic[key].eventBonusPct,age*10);
+    civilization.handleAction(game,'a','upgrade',{civic:key});
+    assert.ok(Math.abs(p.civicBonus[stat]-(age*10+10))<1e-9);
+    assert.equal(p.civic[key].used,true);
+    assert.ok(game.log.at(-1).includes('+'+(age*10+10)+'%'));
+  }
 });

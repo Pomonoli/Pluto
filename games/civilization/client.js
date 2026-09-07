@@ -36,7 +36,7 @@ function iconNode(E,{age,name,fixed=false},className='civ-tile-icon'){
 }
 function heroPortrait(E,key,name,className=''){
   const portrait=E('img',`civ-hero-portrait${className?` ${className}`:''}`);
-  portrait.src=`${HERO_PORTRAIT_PATH}/${key}.webp`;
+  portrait.src=`${HERO_PORTRAIT_PATH}/${key}.${key==='napoleon'?'png':'webp'}`;
   portrait.alt=name||'';
   portrait.loading='lazy';
   portrait.decoding='async';
@@ -95,10 +95,12 @@ function renderPicking(E, action, sound, game, els, logBox) {
     card.type='button';
     const medallion=E('div','civ-medallion');
     medallion.append(heroPortrait(E,leader.key,leader.name,'civ-leader-portrait'));
-    card.append(medallion,E('div','civ-leader-name',leader.name),E('div','civ-leader-attribute',leader.attribute),E('div','civ-leader-bonus',leader.bonus));
+    const copy=E('div','civ-leader-copy');
+    copy.append(E('div','civ-leader-name',leader.name),E('div','civ-leader-attribute',leader.attribute),E('div','civ-leader-bonus',leader.bonus));
+    card.append(medallion,copy);
     if(leader.taken){
       const owner=game.players.find((p)=>p.leaderKey===leader.key);
-      card.append(E('div','civ-leader-owner',owner?`Gekozen door ${owner.name}`:'Al gekozen'));
+      copy.append(E('div','civ-leader-owner',owner?`Gekozen door ${owner.name}`:'Al gekozen'));
       card.disabled=true;
     } else if(!game.isYourPick){
       card.disabled=true;
@@ -173,7 +175,7 @@ function renderCivicRow(E,action,sound,game,you,openModal){
     node.append(E('div','civ-tile-perk',civic.used?'Gebeurtenis actief':civicPreviewText(civic)));
     if(canAct&&!civic.used){
       const afford=you.gold>=civic.upgradeCost;
-      node.append(E('div','civ-tile-upgrade event',`Ontketen (${civic.upgradeCost}g)`));
+      node.append(E('div','civ-tile-upgrade event',`Ontketen (${civic.upgradeCost}G)`));
       if(!afford)node.classList.add('unaffordable');
       node.onclick=()=>{
         openModal({
@@ -208,7 +210,7 @@ function renderYourGrid(E,action,sound,game,you,openModal){
     node.append(E('div','civ-tile-perk',statGainText(tile)));
     if(!tile.maxed){
       const afford=you.gold>=tile.upgradeCost;
-      node.append(E('div','civ-tile-upgrade',`Upgrade (${tile.upgradeCost}g)`));
+      node.append(E('div','civ-tile-upgrade',`Upgrade (${tile.upgradeCost}G)`));
       if(!afford)node.classList.add('unaffordable');
       node.onclick=()=>openModal({
         eyebrow:'Jouw stad',
@@ -291,7 +293,7 @@ function renderDraft(E,action,sound,game,you,openModal){
     const node=E('button',`civ-card${card.type==='wonder'?' wonder':''}`);node.type='button';node.dataset.index=String(card.idx);
     node.style.setProperty('--tile-accent',bt.color);
     if(card.cost>you.gold)node.classList.add('unaffordable');
-    node.append(iconNode(E,{age:game.age,name:card.name},'civ-card-icon'),E('div','civ-card-name',card.name),E('div','civ-card-perk',statGainText(card)),E('div','civ-card-cost',`Kost ${card.cost}g`));
+    node.append(iconNode(E,{age:game.age,name:card.name},'civ-card-icon'),E('div','civ-card-name',card.name),E('div','civ-card-perk',statGainText(card)),E('div','civ-card-cost',`Kost ${card.cost}G`));
     node.onclick=()=>showDetail(card);hand.append(node)
   }
   wrap.append(hand);
@@ -322,7 +324,7 @@ function heroPower(key){
   return {
     cleopatra:'Gouden start en gratis aanduidingen.',
     alexander:'Versterkt strijdgebouwen.',
-    einstein:'Versterkt het Observatorium.',
+    napoleon:'Vanaf beurt 1: +10 procentpunten bonus bij het aanduiden van elk vast gebouw.',
     gandhi:'Beperkt inkomende schade.',
     bismarck:'Maakt upgrades goedkoper.',
     lincoln:'Herstelt een zwaar beschadigde toren.',
@@ -350,6 +352,6 @@ function showCombatModal(E,root,game,you,action,sound){
   });
 }
 
-export function metric({game,player}){const score=Number(game.finalScores?.[player.id]??player.gold??0);return{text:`${score}g`,score};}
+export function metric({game,player}){const score=Number(game.finalScores?.[player.id]??player.gold??0);return{text:`${score}G`,score};}
 export function isWinner({game,myId}){return game.winnerId===myId;}
 export function presentResult({game}){return game.resultText;}

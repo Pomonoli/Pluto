@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.28.7 — Age of Civilization: Napoleon en historische tijdperken
+
+- Age of Civilization: Napoleon vervangt Einstein en de zeven tijdperken krijgen historische Nederlandse namen.
+- Kaarten en gebouwvakjes benutten hun ruimte beter met grotere afbeeldingen en leesbaardere tekst.
+- Geldeenheden in Age of Civilization gebruiken hoofdletter G.
+- Leiderskeuze: grotere portretten en tekst, met volledige bonussen binnen elk vak en scrollruimte op kleine schermen.
+- Napoleon: +10 procentpunten bij het aanduiden van elk vast gebouw vanaf beurt 1; de vaste +2 Defence vervalt.
+
 ## v1.28.6 — cycclub redesign
 
 - cycclub redesign
