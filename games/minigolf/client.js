@@ -90,6 +90,13 @@ function minigolfBoostNode(boost) {
 function renderMinigolf(room,game) {
   const me=game.players.find(p=>p.id===room.meId);
   const turn=game.players.find(p=>p.id===game.turnPlayerId);
+  let status='';
+  if(game.gameOver)status='Match afgelopen.';
+  else if(game.phase==='between')status='Punten verdeeld. Volgende hole…';
+  else if(game.phase==='placing')status=game.canPlace?'Tik in het startvak om je bal te plaatsen.':'Wachten tot iedereen zijn bal geplaatst heeft…';
+  else if(game.pendingShot)status=`${game.pendingShot.playerName} slaat…`;
+  else if(game.canShoot)status='Jouw beurt · sleep om te mikken';
+  else status=`${turn?.name||'Speler'} is aan de beurt.`;
 
   const screen=E('div','golf-game-screen');
   const hud=E('div','golf-hud');
@@ -110,7 +117,8 @@ function renderMinigolf(room,game) {
   holeHud.append(
     E('strong','',`HOLE ${game.hole.number}/5`),
     E('span','',`${game.hole.name}${game.hole.gimmick ? ` · ${game.hole.gimmick}` : ''}`),
-    E('b','',`MAX SHOTS: ${game.hole.maxStrokes}`)
+    E('b','',`MAX ${game.hole.maxStrokes}`),
+    E('em','golf-status-pill',status)
   );
   hud.append(playerHud,holeHud);
   screen.append(hud);
@@ -118,13 +126,14 @@ function renderMinigolf(room,game) {
   const courseWrap=E('div','golf-full-course-wrap');
   const svg=svgEl('svg',{
     viewBox:`0 0 ${game.course.width} ${game.course.height}`,
+    preserveAspectRatio:'none',
     class:'minigolf-course golf-full-course',
     role:'img',
     'aria-label':`Minigolf hole ${game.hole.number}: ${game.hole.name}`
   });
 
   svg.append(svgEl('rect',{x:0,y:0,width:game.course.width,height:game.course.height,rx:16,class:'golf-world'}));
-  svg.append(svgEl('rect',{x:8,y:8,width:game.course.width-16,height:game.course.height-16,rx:12,class:'golf-border'}));
+  svg.append(svgEl('rect',{x:5,y:5,width:game.course.width-10,height:game.course.height-10,rx:12,class:'golf-border'}));
   (game.hole.terrain||[]).forEach(zone=>svg.append(minigolfTerrainNode(zone)));
 
   const sz=game.hole.startZone;
@@ -161,7 +170,7 @@ function renderMinigolf(room,game) {
 
   const aim=svgEl('g',{class:'golf-aim hidden'});
   const aimLine=svgEl('line',{class:'golf-aim-line'});
-  const aimHead=svgEl('circle',{r:6,class:'golf-aim-head'});
+  const aimHead=svgEl('path',{class:'golf-aim-head'});
   const pullLine=svgEl('line',{class:'golf-pull-line'});
   const powerBg=svgEl('rect',{rx:8,class:'golf-power-label-bg'});
   const powerText=svgEl('text',{class:'golf-power-label'});
@@ -171,21 +180,7 @@ function renderMinigolf(room,game) {
   courseWrap.append(svg);
   screen.append(courseWrap);
 
-  let status='';
-  if(game.gameOver)status='Match afgelopen.';
-  else if(game.phase==='between')status='Punten verdeeld. Volgende hole…';
-  else if(game.phase==='placing')status=game.canPlace?'Tik in het startvak om je bal te plaatsen.':'Wachten tot iedereen zijn bal geplaatst heeft…';
-  else if(game.pendingShot)status=`${game.pendingShot.playerName} slaat…`;
-  else if(game.canShoot)status='Jouw beurt. Sleep eender waar op de baan om te mikken.';
-  else status=`${turn?.name||'Speler'} is aan de beurt.`;
-
-  const footer=E('div','golf-game-footer');
-  const statusBox=E('div','golf-status-line',status);
-  const miniScores=E('div','golf-mini-scores');
-  game.players.forEach(p=>miniScores.append(E('span','',`${p.name}: ${p.totalPoints} pt · ${p.potted?'✓':p.failed?'DNF':`${p.holeStrokes}/${game.hole.maxStrokes}`}`)));
-  footer.append(statusBox,miniScores);
-  if(game.lastHoleSummary)footer.append(E('div','minigolf-hole-summary',game.lastHoleSummary));
-  screen.append(footer);
+  if(game.lastHoleSummary)hud.append(E('div','golf-hole-summary',game.lastHoleSummary));
   els.gameStage.append(screen);
 
   const setBallPosition=(playerId,point)=>{
@@ -247,7 +242,8 @@ function renderMinigolf(room,game) {
       aim.classList.remove('hidden');
       aimLine.setAttribute('x1',origin.x);aimLine.setAttribute('y1',origin.y);
       aimLine.setAttribute('x2',end.x);aimLine.setAttribute('y2',end.y);
-      aimHead.setAttribute('cx',end.x);aimHead.setAttribute('cy',end.y);
+      const side=13,back=21;
+      aimHead.setAttribute('d',`M ${end.x} ${end.y} L ${end.x-ux*back-uy*side} ${end.y-uy*back+ux*side} L ${end.x-ux*back+uy*side} ${end.y-uy*back-ux*side} Z`);
       pullLine.setAttribute('x1',dragStart.x);pullLine.setAttribute('y1',dragStart.y);
       pullLine.setAttribute('x2',point.x);pullLine.setAttribute('y2',point.y);
 
@@ -258,6 +254,7 @@ function renderMinigolf(room,game) {
       powerText.setAttribute('x',tx);powerText.setAttribute('y',ty+4);
       powerBg.setAttribute('x',tx-31);powerBg.setAttribute('y',ty-15);
       powerBg.setAttribute('width',62);powerBg.setAttribute('height',27);
+      powerBg.style.fill=power<.4?'#36a85d':power<.75?'#f0a83a':'#e94f4f';
       return{angle:Math.atan2(uy,ux),power}
     };
 
