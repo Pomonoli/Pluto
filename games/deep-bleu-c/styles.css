@@ -59,6 +59,9 @@
 .dbc-bldg-dock-pile{fill:var(--dbc-bark-2)}
 .dbc-bldg-dock-pole{stroke:var(--dbc-bark-2);stroke-width:1.4}
 .dbc-bldg-dock-flag{fill:var(--dbc-ember)}
+.dbc-basalt-needle{fill:#425B59;stroke:var(--dbc-ink);stroke-width:.8}
+.dbc-basalt-shade{fill:#2B4140}
+.dbc-wierlight{fill:#B7E88B;filter:drop-shadow(0 0 3px #B7E88B)}
 .dbc-bldg-sign{fill:var(--dbc-birch);stroke:var(--dbc-ink);stroke-width:1}
 .dbc-bldg-sign-icon{font-size:13px;text-anchor:middle}
 .dbc-wildlife-shadow{fill:rgba(23,65,79,.25)}
@@ -70,6 +73,18 @@
 .dbc-boat-hull{fill:var(--dbc-bark);stroke:var(--dbc-bark-2);stroke-width:.6}
 .dbc-boat-mast{stroke:var(--dbc-bark-2);stroke-width:1}
 .dbc-boat-sail{fill:var(--dbc-birch);stroke:var(--dbc-mist);stroke-width:.5}
+.dbc-boat-sail-player{fill:var(--dbc-ember)}
+.dbc-boat-wake{fill:none;stroke:var(--dbc-haze);stroke-width:1.5;stroke-linecap:round;opacity:.85;animation:dbc-wake 1.8s ease-out infinite}
+.dbc-boat-station{fill:var(--dbc-birch);stroke:var(--dbc-ink);stroke-width:.6}
+.dbc-boat-cook{fill:var(--dbc-ember-lit);stroke:var(--dbc-ink);stroke-width:.6}
+.dbc-player-boat{pointer-events:none;animation:dbc-boat-bob 2.7s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.dbc-kelp-frond{fill:none;stroke:#2A6B4B;stroke-width:2.4;stroke-linecap:round;animation:dbc-kelp-sway 3.8s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:center bottom}
+.dbc-kelp-node{stroke:#9BD27C;stroke-width:3.2}
+.dbc-fish-school{fill:rgba(23,65,79,.5);animation:dbc-school 6s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:center}
+@keyframes dbc-boat-bob{50%{translate:0 1.5px}}
+@keyframes dbc-wake{50%{opacity:.35}}
+@keyframes dbc-kelp-sway{to{transform:skewX(7deg)}}
+@keyframes dbc-school{to{transform:translateX(7px) translateY(-2px)}}
 .dbc-fish-line{fill:none;stroke:var(--dbc-ink);stroke-width:1;stroke-linecap:round}
 .dbc-fish-hook{fill:none;stroke:var(--dbc-ink);stroke-width:1.2}
 .dbc-tool-handle{stroke:var(--dbc-bark-2);stroke-width:1.4;stroke-linecap:round}
@@ -118,6 +133,17 @@
 .dbc-rail-right{
   position:absolute;top:50%;right:14px;transform:translateY(-50%);z-index:4;display:flex;flex-direction:column;gap:12px;
 }
+.dbc-boat-button{
+  position:absolute;top:14px;right:14px;z-index:5;min-width:158px;min-height:56px;
+  display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--dbc-birch);
+  border:1.5px solid var(--dbc-ember);border-radius:5px;color:var(--dbc-ink);cursor:pointer;
+  box-shadow:0 5px 14px rgba(36,51,44,.2);text-align:left;
+}
+.dbc-boat-button:hover{background:var(--dbc-paper);transform:translateY(-1px)}
+.dbc-boat-mini{font-size:27px;line-height:1}
+.dbc-boat-button-copy{display:flex;flex-direction:column;line-height:1.15}
+.dbc-boat-button-copy strong{font-family:'Grenze',serif;font-size:16px;color:var(--dbc-pine-dark)}
+.dbc-boat-button-copy small{font-size:10px;color:var(--dbc-ink-2);font-variant-numeric:tabular-nums}
 .dbc-icon-col{display:flex;flex-direction:column;align-items:center;gap:4px}
 .dbc-icon-btn{
   width:50px;height:50px;border-radius:50%;border:1.5px solid var(--dbc-ink);
@@ -147,7 +173,7 @@
 .dbc-sheet-header{position:sticky;top:0;display:flex;justify-content:center;align-items:center;padding:8px 0 2px;background:var(--dbc-birch);z-index:1}
 .dbc-sheet-handle{width:40px;height:5px;border-radius:3px;background:var(--dbc-rule)}
 .dbc-sheet-close{
-  position:absolute;right:0;top:4px;width:32px;height:32px;border-radius:50%;
+  position:absolute;right:0;top:4px;width:44px;height:44px;border-radius:50%;
   border:1.5px solid var(--dbc-ink);background:var(--dbc-paper);color:var(--dbc-ink);
   font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
 }
@@ -157,7 +183,7 @@
 .dbc-panel-copy{margin:0;color:var(--dbc-ink-2);font-size:14px}
 .dbc-world-map-panel{align-items:center}
 .dbc-world-map-panel>h4,.dbc-world-map-panel>.dbc-panel-copy{align-self:stretch}
-.dbc-world-map{display:block;width:min(100%,680px);aspect-ratio:1;image-rendering:pixelated;border:1.5px solid var(--dbc-ink);border-radius:6px;background:var(--dbc-sea)}
+.dbc-world-map{display:block;width:min(100%,680px);aspect-ratio:1;image-rendering:auto;border:1.5px solid var(--dbc-ink);border-radius:6px;background:var(--dbc-sea)}
 
 .dbc-gear-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
 .dbc-gear-card{display:flex;flex-direction:column;gap:6px;background:var(--dbc-paper);border:1px solid var(--dbc-rule);border-radius:4px;padding:10px}
@@ -171,6 +197,18 @@
 .dbc-subtab-btn.active{border-color:var(--dbc-ember);color:var(--dbc-ember)}
 
 .dbc-build-stub{background:var(--dbc-paper);border:2px dashed var(--dbc-rule);border-radius:4px;padding:16px;display:flex;flex-direction:column;gap:6px}
+.dbc-boat-base{gap:12px}
+.dbc-boat-diagram{position:relative;min-height:150px;overflow:hidden;border-radius:8px;background:linear-gradient(160deg,var(--dbc-shallow),var(--dbc-sea));padding:28px 9%}
+.dbc-boat-hull-shape{position:absolute;left:7%;right:7%;top:30px;height:88px;background:var(--dbc-bark);border:2px solid var(--dbc-bark-2);border-radius:48% 48% 38% 38% / 18% 18% 72% 72%;box-shadow:inset 0 -16px rgba(117,89,58,.25),0 8px 0 rgba(23,65,79,.16)}
+.dbc-boat-slots{position:relative;z-index:1;display:grid;grid-template-columns:repeat(2,minmax(110px,1fr));gap:12px;max-width:430px;margin:auto}
+.dbc-boat-slot{min-height:72px;display:grid;place-items:center;padding:8px;border:1.5px dashed var(--dbc-birch);border-radius:5px;color:var(--dbc-birch);font-weight:600;text-align:center}
+.dbc-boat-slot.filled{background:var(--dbc-paper);border-style:solid;border-color:var(--dbc-ink);color:var(--dbc-ink)}
+.dbc-upgrade-card{display:flex;flex-direction:column;gap:9px;background:var(--dbc-paper);border:1px solid var(--dbc-rule);border-left:4px solid var(--dbc-ember);border-radius:4px;padding:12px}
+.dbc-upgrade-card h5{margin:0;font-family:'Grenze',serif;font-size:20px;color:var(--dbc-pine-dark)}
+.dbc-requirement-list{display:flex;flex-wrap:wrap;gap:6px}
+.dbc-requirement-list span{padding:4px 8px;border-radius:999px;border:1px solid var(--dbc-rule);font-size:12px;font-weight:600}
+.dbc-requirement-list .met{color:var(--dbc-pine);border-color:var(--dbc-meadow)}
+.dbc-requirement-list .missing{color:var(--dbc-blood);border-color:var(--dbc-blood)}
 
 .dbc-equip-section{display:flex;flex-direction:column;gap:8px}
 .dbc-equip-row{display:flex;flex-wrap:wrap;gap:8px}
@@ -250,6 +288,7 @@
 .dbc-wrap .secondary{background:var(--dbc-paper);border-color:var(--dbc-rule);color:var(--dbc-ink)}
 .dbc-wrap .secondary:hover{border-color:var(--dbc-ink)}
 .dbc-wrap button:disabled{opacity:.5;cursor:not-allowed}
+.dbc-wrap button{min-height:44px}
 
 /* The map is the fixed game viewport; the controls float on top of it. */
 #gameStage:has(.dbc-wrap){display:flex;flex-direction:column;overflow:hidden!important;padding:0}
@@ -260,15 +299,21 @@
 body.game-active #gameStage:has(.dbc-wrap){padding:0}
 body.game-active #gameStage:has(.dbc-wrap) .dbc-stat-pills{top:calc(68px + env(safe-area-inset-top))}
 body.game-active #gameStage:has(.dbc-wrap) .dbc-stat-bars{top:calc(102px + env(safe-area-inset-top))}
+body.game-active #gameStage:has(.dbc-wrap) .dbc-boat-button{top:calc(68px + env(safe-area-inset-top))}
 
 @media(max-width:640px){
   .dbc-trade-columns{grid-template-columns:1fr}
   .dbc-icon-btn{width:44px;height:44px;font-size:18px}
-  .dbc-icon-btn.square{width:38px;height:38px;font-size:16px;border-radius:6px}
+  .dbc-icon-btn.square{width:44px;height:44px;font-size:16px;border-radius:6px}
   .dbc-rail-right{right:10px;gap:9px}
   .dbc-icon-label{font-size:9px}
   .dbc-stat-pill{font-size:11px;padding:4px 9px}
   .dbc-stat-bar-track{width:44px}
+  .dbc-boat-button{top:auto;right:10px;bottom:12px;min-width:0;width:52px;height:52px;padding:0;display:grid;place-items:center;border-radius:50%}
+  .dbc-boat-button-copy{display:none}
+  .dbc-boat-slots{grid-template-columns:1fr 1fr}
 }
+
+@media(prefers-reduced-motion:reduce){.dbc-player-boat,.dbc-kelp-frond,.dbc-boat-wake,.dbc-fish-school{animation:none!important}}
 
 @media(min-width:761px){#gameStage:has(.dbc-wrap){width:100%;max-width:1180px}}

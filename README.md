@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.28.10
+## Nieuw in versie 1.28.11
 
-cycclub npc riders en prijzen
+The Big Blue C heeft nu een volledige Catch → Cook → Create-speellus met een bestuurbare kano, persoonlijke grondstoffen, een uitbreidbare bootbasis, Bijl II-progressie en het nieuwe Kelp-eiland Wierlicht.
 
 ## Nieuw in versie 1.28.0
 

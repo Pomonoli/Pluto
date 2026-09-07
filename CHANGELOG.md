@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.28.11 — The Big Blue C: Wierlicht-expeditie
+
+- Volledige Catch → Cook → Create-speellus met een bestuurbare kano en autoritatieve land/zee-modus.
+- Persoonlijke bomen en kelpbronnen, Kappen-progressie en een materiaal-, munt-, skill- en werkbank-gated Bijl II.
+- Vaste bootbasis met twee zichtbare stations, conditieoverzicht en persistente voortgang.
+- Wierlicht toegevoegd als afzonderlijk Kelp-eiland met basaltlandmark, kelpvezel, visscholen en vloeiende waterdetails.
+- Multiplayerlimiet verhoogd naar twintig spelers en relevante regressietests toegevoegd.
+
 ## v1.28.10 — cycclub npc riders en prijzen
 
 - cycclub npc riders en prijzen

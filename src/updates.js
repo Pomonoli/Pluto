@@ -599,6 +599,15 @@ const RELEASES = [
     improvements:[
       "cycclub npc riders en prijzen"
     ]
+  },
+  {
+    version:"1.28.11",
+    games:[
+      "The Big Blue C heeft nu een volledige Catch → Cook → Create-speellus met een bestuurbare kano, persoonlijke grondstoffen, een uitbreidbare bootbasis, Bijl II-progressie en het nieuwe Kelp-eiland Wierlicht."
+    ],
+    improvements:[
+      "Bootstations, tooltier, vaardigheden, persoonlijke nodes, materialen en ontdekkingen blijven bewaard tussen speelsessies."
+    ]
   }
 ];
 

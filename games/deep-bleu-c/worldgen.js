@@ -25,9 +25,9 @@ const SCALE = HEIGHT / REF_SIZE;
 // 'w' = wereldrand: de waterval aan de rand van de platte wereld. Puur een
 // grens — niet beloopbaar, niet bevaarbaar, niet bevisbaar (geen biome).
 const EDGE_MARGIN = 2;
-const WALKABLE = new Set(['L', 'B', 'f', 'h']);
+const WALKABLE = new Set(['L', 'B', 'f', 'h', 'K', 'q']);
 const WATER = new Set(['r', 'k', 'a', 'm']);
-const BIOME_BY_TILE = { r: 'rivier', k: 'kust', a: 'atlantisch', m: 'middellandse-zee' };
+const BIOME_BY_TILE = { r: 'rivier', k: 'kust', a: 'atlantisch', m: 'middellandse-zee', K: 'kelp-eiland', q: 'kelp-eiland' };
 
 function mulberry32(seed) {
   let t = seed >>> 0;
@@ -272,6 +272,19 @@ function buildWorld() {
     spawn = findTownSpot(tiles) || { x: Math.floor(WIDTH / 2), y: Math.floor(HEIGHT / 2) };
   }
 
+  // VS1: een klein, handgemaakt Kelp-eiland ligt los van het veilige
+  // starteiland. De basaltnaald en groene kust maken het vanaf zee leesbaar.
+  // `q` is de persoonlijke zeldzame kelpnode in het hart van het eiland.
+  const kelpIsland = { x: WIDTH - 7, y: Math.floor(HEIGHT * 0.5), landmark: 'Wierlicht' };
+  for (let y = kelpIsland.y - 3; y <= kelpIsland.y + 3; y += 1) {
+    for (let x = kelpIsland.x - 3; x <= kelpIsland.x + 3; x += 1) {
+      const distance = Math.hypot(x - kelpIsland.x, (y - kelpIsland.y) * 1.12);
+      if (distance <= 2.65) tiles[y * WIDTH + x] = 'K';
+      else if (distance <= 3.45 && tiles[y * WIDTH + x] !== 'w') tiles[y * WIDTH + x] = 'k';
+    }
+  }
+  tiles[kelpIsland.y * WIDTH + kelpIsland.x] = 'q';
+
   const rng = mulberry32(SEED + 777);
   const used = new Set([spawn.y * WIDTH + spawn.x]);
   const aquarium = placeNear(tiles, used, spawn.x, spawn.y, 3, 6, rng);
@@ -316,7 +329,9 @@ function buildWorld() {
     }
   }
 
-  return { width: WIDTH, height: HEIGHT, tiles, buildings, boats, wildlife, spawn, tileString: tiles.join('') };
+  buildings.push({ id: 'wierlicht', type: 'landmark', name: 'Wierlicht', icon: '✦', x: kelpIsland.x, y: kelpIsland.y - 1, active: true });
+
+  return { width: WIDTH, height: HEIGHT, tiles, buildings, boats, wildlife, spawn, kelpIsland, tileString: tiles.join('') };
 }
 
 let cached = null;
@@ -345,6 +360,7 @@ function resourceAt(world, x, y) {
   const tile = tileAt(world, x, y);
   if (tile === 'f') return 'wood';
   if (tile === 'p') return 'rock';
+  if (tile === 'q') return 'kelp';
   if (tile === 'L' && wildlifeSetFor(world).has(y * world.width + x)) return 'animal';
   return null;
 }

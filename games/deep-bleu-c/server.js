@@ -5,6 +5,7 @@ const { SETS, fishForBiome, getFish, priceFor: fishPriceFor } = require('./fish'
 const resources = require('./resources');
 const gear = require('./gear');
 const recipes = require('./recipes');
+const slice = require('./slice-content');
 
 const STEP_MS = 170;
 const HOOK_WINDOW_MS = 900;
@@ -13,7 +14,10 @@ const REEL_WINDOW_MAX_MS = 1300;
 const BITE_MIN_MS = 1200;
 const BITE_MAX_MS = 3200;
 const RESULT_DISPLAY_MS = 3500;
-const STARTING_CASH = 25;
+// Genoeg startkapitaal om VS1 na het verzamelen van de vereiste materialen
+// zonder willekeurige verkoopgrind af te ronden; de volledige upgradeprijs
+// wordt nog steeds server-side afgeschreven.
+const STARTING_CASH = 120;
 const RARITY_WEIGHT = { common: 60, uncommon: 27, rare: 11, epic: 2 };
 
 const GEAR_KEYS = ['rod', 'bait', 'boat', 'axe', 'pickaxe'];
@@ -22,7 +26,9 @@ const GEAR_MAX_LEVEL = GEAR_COSTS.length;
 const ROD_HOOK_BONUS_MS = 150;
 const TOOL_STRIKE_BONUS_MS = 150;
 const BAIT_RARE_MULTIPLIER = 1.3;
-const WATER_TIERS = [[], ['r'], ['r', 'k'], ['r', 'k', 'a', 'm']];
+// De kano is vanaf de start een echt vaartuig. Hogere tiers openen later de
+// donkerdere zee; VS1 blijft binnen kust- en Atlantisch water.
+const WATER_TIERS = [['r', 'k', 'a'], ['r', 'k', 'a'], ['r', 'k', 'a', 'm'], ['r', 'k', 'a', 'm']];
 const SET_COMPLETE_BONUS = 600;
 const SET_BONUS_MULTIPLIER = 1.15;
 const GEAR_LABEL = { rod: 'hengel', bait: 'aas', boat: 'boot', axe: 'bijl', pickaxe: 'houweel' };
@@ -136,6 +142,19 @@ const GATHER_CONFIG = {
     lateMiss: 'Mis geslagen! Het houweel ketst af.',
     haulMiss: 'Het brok viel terug, je moet opnieuw beginnen.',
     resultVerb: 'Gedolven'
+  },
+  kelp: {
+    toolKey: 'axe',
+    label: 'kelp',
+    startLog: 'Je zoekt houvast tussen de wierwortels...',
+    strikeText: 'Nu! Snijd met de stroming mee!',
+    strikeVerb: 'Snijden',
+    haulText: 'Trek de vezels vrij!',
+    haulVerb: 'Binnenhalen',
+    earlyMiss: 'De kelp ligt nog strak in de stroming.',
+    lateMiss: 'De wierstreng glipt terug tussen de rotsen.',
+    haulMiss: 'De vezels schieten los en verdwijnen in zee.',
+    resultVerb: 'Geoogst'
   }
   // Jagen op wild ('animal') gebruikt geen tijdvenster-QTE meer, maar een
   // dobbelsteen-gevecht — zie doHuntStart/doHuntAction hieronder.
@@ -231,6 +250,60 @@ function defaultStats() { return { health: MAX_HEALTH, energy: MAX_ENERGY }; }
 function defaultGearOwned() { return Object.fromEntries(gear.CATEGORIES.map((category) => [category, []])); }
 function defaultEquipped() { return Object.fromEntries(gear.CATEGORIES.map((category) => [category, null])); }
 function defaultGearDurability() { return Object.fromEntries(gear.CATEGORIES.map((category) => [category, {}])); }
+function defaultBoat() {
+  return {
+    hull: slice.boat.hull,
+    name: slice.boat.name,
+    tier: slice.boat.tier,
+    hp: slice.boat.maxHp,
+    maxHp: slice.boat.maxHp,
+    baseSlots: slice.boat.baseSlots,
+    stations: []
+  };
+}
+
+function sanitizeBoat(raw) {
+  const boat = defaultBoat();
+  const validStations = new Set(Object.values(slice.stations).map((station) => station.id));
+  boat.stations = Array.isArray(raw?.stations)
+    ? [...new Set(raw.stations.filter((id) => validStations.has(id)))].slice(0, boat.baseSlots)
+    : [];
+  const hp = Number(raw?.hp);
+  if (Number.isFinite(hp)) boat.hp = Math.max(0, Math.min(boat.maxHp, Math.round(hp)));
+  if (Number.isFinite(Number(raw?.x))) boat.x = Math.round(Number(raw.x));
+  if (Number.isFinite(Number(raw?.y))) boat.y = Math.round(Number(raw.y));
+  return boat;
+}
+
+function nodeProfileAt(world, x, y) {
+  const kind = resourceAt(world, x, y);
+  if (kind === 'kelp') return slice.nodes.kelp;
+  if (kind !== 'wood') return null;
+  const roll = Math.abs((x * 31 + y * 17) % 7);
+  if (roll === 0) return slice.nodes.oak;
+  return roll % 2 ? slice.nodes.birch : slice.nodes.pine;
+}
+
+function nodeKey(kind, x, y) { return `${kind}:${x}:${y}`; }
+function hasStation(player, id) { return player.boat.stations.includes(id); }
+function softWoodKg(player) {
+  return player.woodInventory.reduce((sum, item) => (
+    slice.tools.axe.tiers[0].access.includes(item.speciesId) ? sum + item.weightKg : sum
+  ), 0);
+}
+
+function consumeSoftWood(player, amount) {
+  let remaining = amount;
+  for (let index = player.woodInventory.length - 1; index >= 0 && remaining > 0; index -= 1) {
+    const item = player.woodInventory[index];
+    if (!slice.tools.axe.tiers[0].access.includes(item.speciesId)) continue;
+    const used = Math.min(remaining, item.weightKg);
+    item.weightKg = Math.round((item.weightKg - used) * 100) / 100;
+    remaining = Math.round((remaining - used) * 100) / 100;
+    if (item.weightKg <= 0) player.woodInventory.splice(index, 1);
+  }
+  return remaining <= 0;
+}
 
 function sanitizeItems(kind, discoveredRaw, inventoryRaw) {
   const known = new Set(resources.poolFor(kind).map((item) => item.id));
@@ -253,6 +326,7 @@ function sanitizeSaved(saved) {
   const inventory = Array.isArray(saved?.inventory)
     ? saved.inventory.filter((item) => item && knownFish.has(item.speciesId) && Number.isFinite(item.weightKg))
     : [];
+  for (const item of inventory) item.quality = item.quality === 'cooked' ? 'cooked' : 'raw';
   const wood = sanitizeItems('wood', saved?.woodDiscovered, saved?.woodInventory);
   const rock = sanitizeItems('rock', saved?.rockDiscovered, saved?.rockInventory);
   const meat = sanitizeItems('meat', saved?.meatDiscovered, saved?.meatInventory);
@@ -316,7 +390,15 @@ function sanitizeSaved(saved) {
     stats,
     setBonuses,
     skills,
-    heaviestKg: Math.max(0, Number(saved?.heaviestKg) || 0)
+    heaviestKg: Math.max(0, Number(saved?.heaviestKg) || 0),
+    x: Number.isFinite(Number(saved?.x)) ? Math.round(Number(saved.x)) : null,
+    y: Number.isFinite(Number(saved?.y)) ? Math.round(Number(saved.y)) : null,
+    mode: saved?.mode === 'sea' ? 'sea' : 'land',
+    boat: sanitizeBoat(saved?.boat),
+    personalNodes: saved?.personalNodes && typeof saved.personalNodes === 'object' ? { ...saved.personalNodes } : {},
+    discoveries: Array.isArray(saved?.discoveries) ? [...new Set(saved.discoveries.map(String))] : [],
+    materials: { kelpFiber: Math.max(0, Number(saved?.materials?.kelpFiber) || 0) },
+    createdSupplies: Math.max(0, Math.round(Number(saved?.createdSupplies) || 0))
   };
 }
 
@@ -363,8 +445,8 @@ function createGame(roomPlayers) {
       id: roomPlayer.id,
       name: roomPlayer.name,
       isNpc: false,
-      x: world.spawn.x,
-      y: world.spawn.y,
+      x: saved && isWalkable(world, saved.x, saved.y, boatWaterSet(saved)) ? saved.x : world.spawn.x,
+      y: saved && isWalkable(world, saved.x, saved.y, boatWaterSet(saved)) ? saved.y : world.spawn.y,
       path: [],
       nextStepAt: 0,
       cash: saved ? saved.cash : STARTING_CASH,
@@ -384,6 +466,12 @@ function createGame(roomPlayers) {
       setBonuses: saved ? saved.setBonuses : defaultSetBonuses(),
       skills: saved ? saved.skills : defaultSkills(),
       heaviestKg: saved ? saved.heaviestKg : 0,
+      mode: saved && isWater(world, saved.x, saved.y) ? 'sea' : 'land',
+      boat: saved ? saved.boat : { ...defaultBoat(), x: world.boats[0]?.x ?? world.spawn.x, y: world.boats[0]?.y ?? world.spawn.y },
+      personalNodes: saved ? saved.personalNodes : {},
+      discoveries: saved ? saved.discoveries : [],
+      materials: saved ? saved.materials : { kelpFiber: 0 },
+      createdSupplies: saved ? saved.createdSupplies : 0,
       fishing: null,
       gathering: null,
       combat: null,
@@ -425,7 +513,15 @@ function afterStateChange(room, { db }) {
       stats: player.stats,
       setBonuses: player.setBonuses,
       skills: player.skills,
-      heaviestKg: player.heaviestKg
+      heaviestKg: player.heaviestKg,
+      x: player.x,
+      y: player.y,
+      mode: player.mode,
+      boat: player.boat,
+      personalNodes: player.personalNodes,
+      discoveries: player.discoveries,
+      materials: player.materials,
+      createdSupplies: player.createdSupplies
     });
   }
 }
@@ -500,7 +596,8 @@ function doReel(game, player) {
     uid: `${player.id}-${player.nextUid++}`,
     speciesId: fishing.speciesId,
     weightKg: fishing.weightKg,
-    caughtAt: now
+    caughtAt: now,
+    quality: 'raw'
   });
   player.stats.energy = Math.max(0, player.stats.energy - ENERGY_COST_PER_ACTION);
   player.fishing = {
@@ -559,10 +656,23 @@ function doGatherStart(game, player, payload) {
   const ty = Math.round(Number(payload.y));
   if (hexDistance(player.x, player.y, tx, ty) > 1) throw new Error('Dat is te ver weg.');
   if (resourceAt(world, tx, ty) !== kind) {
-    throw new Error(kind === 'wood' ? 'Daar staat geen boom.' : 'Daar zit geen delfbare rots.');
+    if (kind === 'wood') throw new Error('Daar staat geen boom.');
+    if (kind === 'kelp') throw new Error('Daar groeit geen oogstbare kelp.');
+    throw new Error('Daar zit geen delfbare rots.');
+  }
+  const key = nodeKey(kind, tx, ty);
+  const depletedUntil = Number(player.personalNodes[key]?.depletedUntil) || 0;
+  if (depletedUntil > Date.now()) throw new Error(`Deze persoonlijke bron herstelt over ${Math.ceil((depletedUntil - Date.now()) / 1000)} sec.`);
+  const profile = nodeProfileAt(world, tx, ty);
+  if (profile) {
+    const toolTier = (player.gear.axe || 0) + 1;
+    const skillLevel = levelForXp(player.skills.woodcutting);
+    if (toolTier < profile.toolTier || skillLevel < profile.skill) {
+      throw new Error(`Deze ${profile.name.toLowerCase()} vraagt Bijl ${profile.toolTier === 2 ? 'II' : 'I'} en Kappen ${profile.skill}.`);
+    }
   }
   const now = Date.now();
-  player.gathering = { kind, phase: 'cast', bitesAt: now + BITE_MIN_MS + Math.random() * (BITE_MAX_MS - BITE_MIN_MS) };
+  player.gathering = { kind, x: tx, y: ty, nodeKey: key, profileId: profile?.id || null, phase: 'cast', bitesAt: now + BITE_MIN_MS + Math.random() * (BITE_MAX_MS - BITE_MIN_MS) };
   game.log.unshift(config.startLog);
 }
 
@@ -575,7 +685,10 @@ function doGatherStrike(game, player) {
     const early = gathering?.phase === 'cast';
     throw new Error(early ? (config?.earlyMiss || 'Nog niet klaar.') : (config?.lateMiss || 'Te laat.'));
   }
-  const item = weightedItem(resources.poolFor(gathering.kind));
+  const profile = gathering.profileId
+    ? Object.values(slice.nodes).find((node) => node.id === gathering.profileId)
+    : null;
+  const item = profile || weightedItem(resources.poolFor(gathering.kind));
   const weightKg = rollWeight(item);
   player.gathering = {
     ...gathering,
@@ -595,7 +708,20 @@ function doGatherHaul(game, player) {
     throw new Error(config?.haulMiss || 'Het glipte weg.');
   }
   const kind = gathering.kind;
-  const item = resources.getItem(kind, gathering.speciesId);
+  const item = kind === 'kelp'
+    ? slice.nodes.kelp
+    : resources.getItem(kind, gathering.speciesId);
+  if (kind === 'kelp') {
+    const amount = Math.max(1, Math.round(gathering.weightKg));
+    player.materials.kelpFiber += amount;
+    if (!player.discoveries.includes(slice.discoveries.kelpIsland.id)) player.discoveries.push(slice.discoveries.kelpIsland.id);
+    player.personalNodes[gathering.nodeKey] = { depletedUntil: now + 45000, harvestCount: (player.personalNodes[gathering.nodeKey]?.harvestCount || 0) + 1 };
+    player.stats.energy = Math.max(0, player.stats.energy - ENERGY_COST_PER_ACTION);
+    player.gathering = { ...gathering, phase: 'result', isNew: player.materials.kelpFiber === amount, resultUntil: now + RESULT_DISPLAY_MS };
+    game.log.unshift(`Geoogst: ${amount} kelpvezel â€” Wierlicht ontdekt.`);
+    addXp(game, player, 'collecting', slice.nodes.kelp.xp);
+    return;
+  }
   const discoveredField = discoveredFieldFor(kind);
   const inventoryField = inventoryFieldFor(kind);
   const isNew = !player[discoveredField].includes(gathering.speciesId);
@@ -606,6 +732,7 @@ function doGatherHaul(game, player) {
     weightKg: gathering.weightKg,
     caughtAt: now
   });
+  player.personalNodes[gathering.nodeKey] = { depletedUntil: now + 45000, harvestCount: (player.personalNodes[gathering.nodeKey]?.harvestCount || 0) + 1 };
   player.stats.energy = Math.max(0, player.stats.energy - ENERGY_COST_PER_ACTION);
   player.gathering = {
     ...gathering,
@@ -615,7 +742,10 @@ function doGatherHaul(game, player) {
   };
   game.log.unshift(`${config.resultVerb}: ${item.name} (${gathering.weightKg.toFixed(1)} kg)${isNew ? ' — nieuw!' : ''}`);
   const skillKey = kind === 'wood' ? 'woodcutting' : 'mining';
-  addXp(game, player, skillKey, RARITY_XP[item.rarity] || 0);
+  const profile = gathering.profileId ? Object.values(slice.nodes).find((node) => node.id === gathering.profileId) : null;
+  const previousHarvests = player.personalNodes[gathering.nodeKey].harvestCount - 1;
+  const xp = profile ? Math.max(25, Math.round(profile.xp * (previousHarvests === 0 ? 1 : 0.65))) : (RARITY_XP[item.rarity] || 0);
+  addXp(game, player, skillKey, xp);
   if (isNew) { addXp(game, player, 'collecting', COLLECT_XP); applySetCompletionBonus(game, player, kind); }
 }
 
@@ -667,11 +797,60 @@ function doBuyUpgrade(game, player, payload) {
   if (!GEAR_KEYS.includes(category)) throw new Error('Onbekende upgrade.');
   const level = player.gear[category];
   if (level >= GEAR_MAX_LEVEL) throw new Error('Deze upgrade zit al op het maximum.');
+  if (category === 'axe' && level === 0) {
+    const upgrade = slice.tools.axe.tiers[1];
+    const requirements = upgrade.requires;
+    if (!hasStation(player, requirements.station)) throw new Error('Bijl II vraagt een Werkbank op je boot.');
+    const skillLevel = levelForXp(player.skills.woodcutting);
+    if (skillLevel < requirements.skill) throw new Error(`Bijl II vraagt Kappen ${requirements.skill}; je bent ${skillLevel}.`);
+    if (softWoodKg(player) < requirements.softWoodKg) throw new Error(`Bijl II vraagt ${requirements.softWoodKg} kg zacht hout.`);
+    if (player.cash < requirements.cash) throw new Error(`Bijl II vraagt â‚¬${requirements.cash}.`);
+    consumeSoftWood(player, requirements.softWoodKg);
+    player.cash -= requirements.cash;
+    player.gear.axe = 1;
+    game.log.unshift('Bijl II gemaakt. Eiken geven nu mee. Meestal.');
+    return;
+  }
   const cost = GEAR_COSTS[level];
   if (player.cash < cost) throw new Error('Onvoldoende geld.');
   player.cash -= cost;
   player.gear[category] += 1;
   game.log.unshift(`Upgrade gekocht: ${category} niveau ${player.gear[category]}.`);
+}
+
+function doPlaceBoatStation(game, player, payload) {
+  const station = Object.values(slice.stations).find((entry) => entry.id === String(payload.stationId || ''));
+  if (!station) throw new Error('Onbekend bootstation.');
+  if (hasStation(player, station.id)) throw new Error(`${station.name} staat al op je boot.`);
+  const usedSlots = player.boat.stations.reduce((sum, id) => sum + (Object.values(slice.stations).find((entry) => entry.id === id)?.slots || 0), 0);
+  if (usedSlots + station.slots > player.boat.baseSlots) throw new Error('Geen vrij basisslot op je boot.');
+  const cost = station.cost?.softWoodKg || 0;
+  if (softWoodKg(player) < cost) throw new Error(`${station.name} vraagt ${cost} kg zacht hout.`);
+  consumeSoftWood(player, cost);
+  player.boat.stations.push(station.id);
+  game.log.unshift(`${station.name} geplaatst. Je kano ziet er meteen een stuk ernstiger uit.`);
+}
+
+function doCookCatch(game, player, payload) {
+  const recipe = slice.recipes.cookedCatch;
+  if (!hasStation(player, recipe.station)) throw new Error('Dit recept vraagt de Kooktafel op je boot.');
+  const item = player.inventory.find((entry) => entry.uid === String(payload.uid || ''));
+  if (!item) throw new Error('Die vangst heb je niet.');
+  if (item.quality === 'cooked') throw new Error('Deze vangst is al bereid.');
+  item.quality = 'cooked';
+  game.log.unshift('Je gaart de vangst aan de kooktafel. De meeuwen dienen bezwaar in.');
+}
+
+function doCreateSupply(game, player) {
+  const recipe = slice.recipes.expeditionSupply;
+  if (!hasStation(player, recipe.station)) throw new Error('Deze voorraadset vraagt de Werkbank op je boot.');
+  const fishIndex = player.inventory.findIndex((entry) => entry.quality === 'cooked');
+  if (fishIndex < 0) throw new Error('Maak eerst een bereide vangst aan de Kooktafel.');
+  if (player.materials.kelpFiber < recipe.input.kelpFiber) throw new Error(`De voorraadset vraagt ${recipe.input.kelpFiber} kelpvezel van Wierlicht.`);
+  player.inventory.splice(fishIndex, 1);
+  player.materials.kelpFiber -= recipe.input.kelpFiber;
+  player.createdSupplies += 1;
+  game.log.unshift('Expeditierantsoen gemaakt: Catch, Cook en Create zitten nu in dezelfde tas.');
 }
 
 // Kwaliteit (raw/roasted/dish, zie doCook) vermenigvuldigt de energie die een
@@ -1022,6 +1201,9 @@ function handleAction(game, playerId, action, payload = {}) {
   if (action === 'gatherStrike') return doGatherStrike(game, player);
   if (action === 'gatherHaul') return doGatherHaul(game, player);
   if (action === 'buyUpgrade') return doBuyUpgrade(game, player, payload);
+  if (action === 'placeBoatStation') return doPlaceBoatStation(game, player, payload);
+  if (action === 'cookCatch') return doCookCatch(game, player, payload);
+  if (action === 'createSupply') return doCreateSupply(game, player);
   if (action === 'eat') return doEat(game, player, payload);
   if (action === 'cook') return doCook(game, player, payload);
   if (action === 'buyGear') return doBuyGear(game, player, payload);
@@ -1043,6 +1225,18 @@ function tick(game, now = Date.now()) {
       const step = player.path.shift();
       player.x = step.x;
       player.y = step.y;
+      if (isWater(getWorld(), step.x, step.y)) {
+        player.mode = 'sea';
+        player.boat.x = step.x;
+        player.boat.y = step.y;
+      } else {
+        player.mode = 'land';
+        const tile = tileAt(getWorld(), step.x, step.y);
+        if ((tile === 'K' || tile === 'q') && !player.discoveries.includes(slice.discoveries.kelpIsland.id)) {
+          player.discoveries.push(slice.discoveries.kelpIsland.id);
+          game.log.unshift('Wierlicht ontdekt. De groene krans was geen weerspiegeling.');
+        }
+      }
       player.nextStepAt = now + STEP_MS;
       changed = true;
     }
@@ -1133,7 +1327,7 @@ function serializeGathering(gathering, now) {
     return {
       kind: gathering.kind,
       phase: 'result',
-      item: resources.getItem(gathering.kind, gathering.speciesId),
+      item: gathering.kind === 'kelp' ? slice.nodes.kelp : resources.getItem(gathering.kind, gathering.speciesId),
       resultVerb: config.resultVerb,
       weightKg: gathering.weightKg,
       isNew: gathering.isNew,
@@ -1219,6 +1413,8 @@ function serialize(game, requesterId) {
       discoveredCount: p.discovered.length,
       fishingPhase: p.fishing ? p.fishing.phase : null,
       gatheringKind: p.gathering ? p.gathering.kind : null,
+      mode: p.mode,
+      boat: p.boat,
       inCombat: Boolean(p.combat),
       inventory: p.inventory.map((item) => ({ uid: item.uid, speciesId: item.speciesId, weightKg: item.weightKg, fish: getFish(item.speciesId) }))
     })),
@@ -1236,6 +1432,20 @@ function serialize(game, requesterId) {
         armor: armorValue(player)
       },
       gear: player.gear,
+      mode: player.mode,
+      boat: player.boat,
+      boatStations: Object.values(slice.stations),
+      materials: player.materials,
+      discoveries: player.discoveries,
+      createdSupplies: player.createdSupplies,
+      softWoodKg: Math.round(softWoodKg(player) * 10) / 10,
+      axeUpgrade: {
+        current: slice.tools.axe.tiers[Math.min(player.gear.axe, 1)],
+        next: player.gear.axe === 0 ? slice.tools.axe.tiers[1] : null,
+        skillLevel: levelForXp(player.skills.woodcutting),
+        hasWorkbench: hasStation(player, 'workbench')
+      },
+      personalNodes: player.personalNodes,
       gearCosts: GEAR_COSTS,
       gearMaxLevel: GEAR_MAX_LEVEL,
       gearShop: Object.fromEntries(gear.CATEGORIES.map((category) => [category, serializeGearSlot(player, category)])),
@@ -1330,7 +1540,8 @@ function configureHttp({ app }) {
       spawn: world.spawn,
       buildings: world.buildings,
       boats: world.boats,
-      wildlife: world.wildlife
+      wildlife: world.wildlife,
+      kelpIsland: world.kelpIsland
     });
   });
 }

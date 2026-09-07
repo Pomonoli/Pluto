@@ -44,19 +44,22 @@ const REEL_WINDOW_MS = 1300;
 // 'w' is de wereldrand: een platte-aarde-waterval die in het niets stort.
 const TILE_COLOR = {
   L: '#8FAE72', B: '#A8875F', f: '#3F6247', h: '#949D98', p: '#7C8480',
+  K: '#5F875D', q: '#376B55',
   r: '#8FC6CC', k: '#4E8FA0', a: '#2A5A6B', m: '#17414F', w: '#0B1D24'
 };
 const MINIMAP_RGB = {
   L: [143, 174, 114], B: [168, 135, 95], f: [63, 98, 71], h: [148, 157, 152], p: [124, 132, 128],
+  K: [95, 135, 93], q: [55, 107, 85],
   r: [143, 198, 204], k: [78, 143, 160], a: [42, 90, 107], m: [23, 65, 79], w: [11, 29, 36]
 };
 const WATER_CHARS = new Set(['r', 'k', 'a', 'm']);
 const WOOD_TILE = 'f';
 const ROCK_TILE = 'p';
+const KELP_TILE = 'q';
 const GEAR_LABELS = { rod: { icon: '🎣', label: 'Hengel', help: 'Ruimer tijdvenster om aan te slaan bij een beet.' },
   bait: { icon: '🪱', label: 'Aas', help: 'Grotere kans op zeldzame en epische vis.' },
-  boat: { icon: '🚤', label: 'Vaartuig', help: 'Vaar verder van kust tot Rifzee — koop deze upgrade in je Inventaris.' },
-  axe: { icon: '🪓', label: 'Bijl', help: 'Ruimer tijdvenster om raak te hakken bij een boom.' },
+  boat: { icon: '🚤', label: 'Vaartuig', help: 'Je kano vaart vanaf de start; latere rompen openen zwaardere zeezones.' },
+  axe: { icon: '🪓', label: 'Bijl', help: 'Een vaste tool: materiaal, Kappen en je bootwerkbank bepalen welke houtsoorten opengaan.' },
   pickaxe: { icon: '⛏️', label: 'Houweel', help: 'Ruimer tijdvenster om raak te houwen bij een rots.' } };
 const GEAR_CATEGORY_META = {
   clothes: { icon: '🧥', label: 'Kleding' },
@@ -88,6 +91,7 @@ const GATHER_UI = {
   wood: { verb: 'Hakken', icon: '🪓', bg: 'Je bijl staat klaar bij de stam...' },
   rock: { verb: 'Houwen', icon: '⛏️', bg: 'Je houweel staat klaar bij de rots...' }
 };
+GATHER_UI.kelp = { verb: 'Oogsten', icon: '🌿', bg: 'De wierwortels bewegen met de stroming...' };
 const SKILL_LABELS = {
   fishing: { icon: '🎣', label: 'Vissen', help: 'Xp per gevangen vis — hoe zeldzamer, hoe meer.' },
   woodcutting: { icon: '🪓', label: 'Houthakken', help: 'Xp per gehakte stam — hoe zeldzamer, hoe meer.' },
@@ -104,7 +108,7 @@ function bind(api) { ({ state, els, E, action, logBox, renderGame } = api); }
 // with a long-lived immutable cache header, so without a version query a
 // browser that already loaded an older map would keep serving it from cache
 // for up to a day even after the server restarts with new world-gen code.
-const WORLD_VERSION = 7;
+const WORLD_VERSION = 8;
 
 let world = null;
 let worldPromise = null;
@@ -285,6 +289,7 @@ function handleTileClick(wx, wy, tile, you) {
   if (adjacent && WATER_CHARS.has(tile)) { action('cast', { x: wx, y: wy }); return; }
   if (adjacent && tile === WOOD_TILE) { action('gatherStart', { kind: 'wood', x: wx, y: wy }); return; }
   if (adjacent && tile === ROCK_TILE) { action('gatherStart', { kind: 'rock', x: wx, y: wy }); return; }
+  if (adjacent && tile === KELP_TILE) { action('gatherStart', { kind: 'kelp', x: wx, y: wy }); return; }
   if (adjacent && isWildlifeTile(wx, wy)) { action('huntStart', { x: wx, y: wy }); return; }
   action('move', { x: wx, y: wy });
 }
@@ -493,6 +498,14 @@ function appendVoidDecor(svg, cx, cy, seed) {
   svg.append(g);
 }
 
+function appendFishSchoolDecor(svg, cx, cy) {
+  const school = svgEl('g', { class: 'dbc-fish-school' });
+  [[-7, 0], [0, -3], [7, 2]].forEach(([dx, dy]) => {
+    school.append(svgEl('ellipse', { cx: cx + dx, cy: cy + dy, rx: 3.2, ry: 1.1 }));
+  });
+  svg.append(school);
+}
+
 // Echte kleine gebouwen i.p.v. een icoon-in-kader: muur + dak + deur + venster
 // plus een hangend uithangbord met het bestaande emoji-icoon. Een lichte
 // zijmuur-sliver geeft het geheel dimensie (dezelfde 2.5D-kanteling als de
@@ -553,11 +566,20 @@ function appendDock(g) {
   g.append(svgEl('path', { d: 'M -10 -13 L 0 -9 L -10 -6 Z', class: 'dbc-bldg-dock-flag' }));
 }
 
+function appendBasaltNeedle(g) {
+  g.append(svgEl('ellipse', { cx: 0, cy: 13, rx: 12, ry: 3, class: 'dbc-bldg-shadow' }));
+  g.append(svgEl('path', { d: 'M -8 10 L -4 -24 L 2 -34 L 8 10 Z', class: 'dbc-basalt-needle' }));
+  g.append(svgEl('path', { d: 'M 2 -34 L 8 10 L 2 7 Z', class: 'dbc-basalt-shade' }));
+  g.append(svgEl('circle', { cx: -1, cy: -20, r: 2.2, class: 'dbc-wierlight' }));
+}
+
 function appendBuildingArt(svg, cx, cy, { type, icon, active }) {
   const g = svgEl('g', { class: `dbc-building ${active ? 'active' : 'locked'}`, transform: `translate(${cx},${cy})` });
   if (type === 'monument') appendObelisk(g);
   else if (type === 'haven' || type === 'harbor') appendDock(g);
+  else if (type === 'landmark') appendBasaltNeedle(g);
   else appendCottage(g, BUILDING_VARIANT[type] || BUILDING_VARIANT.vishandel);
+  if (type === 'landmark') { svg.append(g); return; }
   const sign = svgEl('g', { transform: 'translate(0,-20)' });
   sign.append(svgEl('rect', { x: -8, y: -8, width: 16, height: 14, rx: 3, class: 'dbc-bldg-sign' }));
   const label = svgEl('text', { x: 0, y: 3, class: 'dbc-bldg-sign-icon', 'text-anchor': 'middle' });
@@ -573,9 +595,35 @@ function appendTileDecor(svg, tile, cx, cy, wx, wy) {
   else if (tile === 'h') appendHillDecor(svg, cx, cy);
   else if (tile === 'p') appendPeakDecor(svg, cx, cy);
   else if (tile === 'w') appendVoidDecor(svg, cx, cy, seed);
-  else if (WATER_CHARS.has(tile)) { if (seed < 0.4) appendWaveDecor(svg, cx, cy, seed); }
+  else if (tile === 'K') {
+    appendGrassDecor(svg, cx, cy, seed);
+    const kelp = svgEl('path', { d: `M ${cx - 7} ${cy + 7} Q ${cx - 10} ${cy - 1} ${cx - 5} ${cy - 8} M ${cx + 6} ${cy + 7} Q ${cx + 10} ${cy - 2} ${cx + 5} ${cy - 9}`, class: 'dbc-kelp-frond' });
+    svg.append(kelp);
+  }
+  else if (tile === 'q') {
+    const kelp = svgEl('path', { d: `M ${cx - 8} ${cy + 8} Q ${cx - 13} ${cy - 2} ${cx - 5} ${cy - 12} M ${cx} ${cy + 8} Q ${cx - 5} ${cy - 4} ${cx + 2} ${cy - 15} M ${cx + 8} ${cy + 8} Q ${cx + 14} ${cy - 3} ${cx + 6} ${cy - 12}`, class: 'dbc-kelp-frond dbc-kelp-node' });
+    svg.append(kelp);
+  }
+  else if (WATER_CHARS.has(tile)) {
+    if (seed < 0.4) appendWaveDecor(svg, cx, cy, seed);
+    else if (seed < 0.47) appendFishSchoolDecor(svg, cx, cy);
+  }
   else if (tile === 'L') { if (seed < 0.3) appendGrassDecor(svg, cx, cy, seed); }
   else if (tile === 'B') { if (seed < 0.4) appendSandDecor(svg, cx, cy, seed); }
+}
+
+function appendBoatModel(svg, boat, cx, cy, { moving = false } = {}) {
+  const g = svgEl('g', { class: `dbc-player-boat${moving ? ' moving' : ''}`, transform: `translate(${cx},${cy})` });
+  if (moving) {
+    g.append(svgEl('path', { d: 'M -4 7 Q -10 13 -18 14 M 4 7 Q 10 13 18 14', class: 'dbc-boat-wake' }));
+  }
+  g.append(svgEl('ellipse', { cx: 0, cy: 6, rx: 12, ry: 3.5, class: 'dbc-boat-shadow' }));
+  g.append(svgEl('path', { d: 'M -13 0 Q 0 11 13 0 L 9 -5 L -9 -5 Z', class: 'dbc-boat-hull' }));
+  g.append(svgEl('line', { x1: 0, y1: -3, x2: 0, y2: -18, class: 'dbc-boat-mast' }));
+  g.append(svgEl('path', { d: 'M 1 -17 Q 11 -12 10 -5 L 1 -7 Z', class: 'dbc-boat-sail dbc-boat-sail-player' }));
+  if (boat.stations.includes('workbench')) g.append(svgEl('rect', { x: -8, y: -7, width: 6, height: 4, rx: 1, class: 'dbc-boat-station' }));
+  if (boat.stations.includes('cookingTable')) g.append(svgEl('circle', { cx: 6, cy: -5, r: 2.6, class: 'dbc-boat-cook' }));
+  svg.append(g);
 }
 
 function renderMapWrap(you, worldData, camX, camY, others = [], harbors = [], dayPhase = 'day') {
@@ -670,14 +718,24 @@ function renderMapWrap(you, worldData, camX, camY, others = [], harbors = [], da
 
   others.forEach((other, index) => renderOtherPlayerMarker(svg, other, camX, camY, index));
 
+  if (you.mode === 'land' && Number.isFinite(you.boat.x) && Number.isFinite(you.boat.y)
+    && you.boat.x >= camX - 1 && you.boat.x <= camX + COLS && you.boat.y >= camY - 1 && you.boat.y <= camY + ROWS) {
+    const docked = hexPoints(you.boat.x - camX, you.boat.y - camY);
+    appendBoatModel(svg, you.boat, docked.cx, docked.cy);
+  }
+
   const { cx: px, cy: py } = hexPoints(you.x - camX, you.y - camY);
-  const facingLeft = facingLeftFor(you.id, you);
-  const player = svgEl('g', {
-    class: 'dbc-player',
-    transform: `translate(${px},${py}) scale(${facingLeft ? -1 : 1},1)`
-  });
-  appendAnglerFigure(player, { tool: toolFor(you.fishing, you.gathering?.kind, Boolean(you.combat)) });
-  svg.append(player);
+  if (you.mode === 'sea') {
+    appendBoatModel(svg, you.boat, px, py, { moving: Boolean(you.path.length) });
+  } else {
+    const facingLeft = facingLeftFor(you.id, you);
+    const player = svgEl('g', {
+      class: 'dbc-player',
+      transform: `translate(${px},${py}) scale(${facingLeft ? -1 : 1},1)`
+    });
+    appendAnglerFigure(player, { tool: toolFor(you.fishing, you.gathering?.kind, Boolean(you.combat)) });
+    svg.append(player);
+  }
 
   // 's Nachts krijgt de hele kaart een koelere, donkerdere waas — het palet
   // is zelf de dag/nacht-indicator, net als bij de zeezones.
@@ -693,6 +751,7 @@ function renderMapWrap(you, worldData, camX, camY, others = [], harbors = [], da
 
   wrapDiv.append(renderStatPills(you, dayPhase));
   wrapDiv.append(renderStatBars(you));
+  wrapDiv.append(renderBoatButton(you));
   if (activePanel === 'map') {
     wrapDiv.append(renderButtonRail('dbc-rail-right', RIGHT_BUTTONS));
   }
@@ -815,7 +874,89 @@ function renderCombatPanel(combat) {
   return panel;
 }
 
+function renderBoatButton(you) {
+  const button = E('button', 'dbc-boat-button');
+  button.type = 'button';
+  button.setAttribute('aria-label', 'Open bootbasis');
+  const condition = Math.round((you.boat.hp / you.boat.maxHp) * 100);
+  button.append(E('span', 'dbc-boat-mini', '⛵'));
+  const copy = E('span', 'dbc-boat-button-copy');
+  copy.append(E('strong', '', `${you.boat.name} · ${you.boat.tier}`), E('small', '', `${condition}% romp · ${you.boat.stations.length}/${you.boat.baseSlots} stations`));
+  button.append(copy);
+  button.onclick = () => { activePanel = 'boat'; renderGame(state.room); };
+  return button;
+}
+
+function renderBoatBasePanel(you) {
+  const wrap = E('div', 'dbc-panel dbc-boat-base');
+  wrap.append(E('h4', '', `⛵ Bootbasis · ${you.boat.name} ${you.boat.tier}`));
+  wrap.append(E('p', 'dbc-panel-copy', `Romp ${you.boat.hp}/${you.boat.maxHp} · ${you.mode === 'sea' ? 'op zee' : 'aangemeerd'} · ${you.boat.baseSlots} basisslots`));
+
+  const diagram = E('div', 'dbc-boat-diagram');
+  diagram.append(E('div', 'dbc-boat-hull-shape', ''));
+  const slots = E('div', 'dbc-boat-slots');
+  for (let index = 0; index < you.boat.baseSlots; index += 1) {
+    const stationId = you.boat.stations[index];
+    const station = (you.boatStations || []).find((entry) => entry.id === stationId);
+    slots.append(E('div', `dbc-boat-slot${station ? ' filled' : ''}`, station ? `${station.icon} ${station.name}` : `Vrij slot ${index + 1}`));
+  }
+  diagram.append(slots);
+  wrap.append(diagram);
+
+  const stationGrid = E('div', 'dbc-gear-grid');
+  (you.boatStations || []).forEach((station) => {
+    const placed = you.boat.stations.includes(station.id);
+    const cost = station.cost?.softWoodKg || 0;
+    const card = E('div', 'dbc-gear-card');
+    card.append(E('div', 'dbc-gear-title', `${station.icon} ${station.name}`));
+    card.append(E('p', 'dbc-gear-help', `${station.help} · ${cost} kg zacht hout`));
+    const button = E('button', 'secondary', placed ? 'Geplaatst' : 'Plaats op boot');
+    button.disabled = placed || you.boat.stations.length >= you.boat.baseSlots || you.softWoodKg < cost;
+    button.onclick = () => action('placeBoatStation', { stationId: station.id });
+    card.append(button);
+    stationGrid.append(card);
+  });
+  wrap.append(stationGrid);
+
+  const upgrade = you.axeUpgrade;
+  const upgradeCard = E('div', 'dbc-upgrade-card');
+  upgradeCard.append(E('h5', '', `🪓 ${upgrade.current.name}${upgrade.next ? ` → ${upgrade.next.name}` : ' · voltooid'}`));
+  if (upgrade.next) {
+    const req = upgrade.next.requires;
+    upgradeCard.append(E('p', 'dbc-panel-copy', upgrade.next.benefit));
+    const checklist = E('div', 'dbc-requirement-list');
+    checklist.append(E('span', you.softWoodKg >= req.softWoodKg ? 'met' : 'missing', `${you.softWoodKg.toFixed(1)}/${req.softWoodKg} kg zacht hout`));
+    checklist.append(E('span', you.cash >= req.cash ? 'met' : 'missing', `€${you.cash}/€${req.cash}`));
+    checklist.append(E('span', upgrade.skillLevel >= req.skill ? 'met' : 'missing', `Kappen ${upgrade.skillLevel}/${req.skill}`));
+    checklist.append(E('span', upgrade.hasWorkbench ? 'met' : 'missing', upgrade.hasWorkbench ? 'Werkbank aanwezig' : 'Werkbank vereist'));
+    upgradeCard.append(checklist);
+    const button = E('button', 'primary', 'Maak Bijl II');
+    button.disabled = you.softWoodKg < req.softWoodKg || you.cash < req.cash || upgrade.skillLevel < req.skill || !upgrade.hasWorkbench;
+    button.onclick = () => action('buyUpgrade', { category: 'axe' });
+    upgradeCard.append(button);
+  }
+  wrap.append(upgradeCard);
+
+  const loop = E('div', 'dbc-upgrade-card');
+  loop.append(E('h5', '', 'Catch → Cook → Create'));
+  loop.append(E('p', 'dbc-panel-copy', `Kelpvezel ${you.materials.kelpFiber} · expeditierantsoenen ${you.createdSupplies}`));
+  const rawFish = you.inventory.filter((item) => item.quality !== 'cooked');
+  if (rawFish.length) {
+    const cook = E('button', 'secondary', 'Bereid eerste vangst');
+    cook.disabled = !you.boat.stations.includes('cookingTable');
+    cook.onclick = () => action('cookCatch', { uid: rawFish[0].uid });
+    loop.append(cook);
+  }
+  const create = E('button', 'primary', 'Maak expeditierantsoen');
+  create.disabled = !you.boat.stations.includes('workbench') || !you.inventory.some((item) => item.quality === 'cooked') || you.materials.kelpFiber < 1;
+  create.onclick = () => action('createSupply');
+  loop.append(create);
+  wrap.append(loop);
+  return wrap;
+}
+
 function renderActivePanel(you, others, harbors) {
+  if (activePanel === 'boat') return renderBoatBasePanel(you);
   if (activePanel === 'inventaris') return renderInventarisPanel(you, harbors);
   if (activePanel === 'markt') return renderMarktplaatsPanel(you, others);
   if (activePanel === 'vaardigheden') return renderVaardighedenPanel(you);
@@ -852,10 +993,10 @@ function renderMapPanel(you) {
 // Vaartuignaam per bootniveau (0..3), met de zone die je er vanaf kunt
 // bereiken — de dobbelsteen/het schip communiceert zelf de voortgang.
 const BOAT_TIER_TEXT = [
-  'Kano — je kunt nog niet het water op.',
-  'Vlot — je vaart over de kustwateren (Kelpwouden).',
-  'Sloep — je vaart tot in de Wadzee.',
-  'Langschip — je vaart overal, tot in de Rifzee.'
+  'Kano — vaart door Het Ondiep naar Wierlicht.',
+  'Vlot — extra ruimte voor kusttochten.',
+  'Sloep — vaart tot in de Wadzee.',
+  'Langschip — vaart overal, tot in de Rifzee.'
 ];
 
 function renderSubtabs(tabs, activeId, onSelect) {
@@ -958,12 +1099,17 @@ function renderInventarisPanel(you, harbors) {
       const level = you.gear[key];
       const maxed = level >= you.gearMaxLevel;
       const card = E('div', 'dbc-gear-card');
-      card.append(E('div', 'dbc-gear-title', `${info.icon} ${info.label} · niveau ${level}/${you.gearMaxLevel}`));
+      card.append(E('div', 'dbc-gear-title', key === 'axe'
+        ? `${info.icon} ${info.label} · ${you.axeUpgrade.current.name}`
+        : `${info.icon} ${info.label} · niveau ${level}/${you.gearMaxLevel}`));
       card.append(E('p', 'dbc-gear-help', info.help));
       if (key === 'boat') card.append(E('p', 'dbc-gear-help', BOAT_TIER_TEXT[Math.min(level, 3)]));
-      const button = E('button', 'secondary', maxed ? 'Maximum bereikt' : `Upgraden (€${you.gearCosts[level]})`);
-      button.disabled = maxed || you.cash < you.gearCosts[level];
-      button.onclick = () => action('buyUpgrade', { category: key });
+      const button = E('button', 'secondary', key === 'axe' ? 'Open Bootbasis' : (maxed ? 'Maximum bereikt' : `Upgraden (€${you.gearCosts[level]})`));
+      button.disabled = key === 'axe' ? false : maxed || you.cash < you.gearCosts[level];
+      button.onclick = () => {
+        if (key === 'axe') { activePanel = 'boat'; renderGame(state.room); }
+        else action('buyUpgrade', { category: key });
+      };
       card.append(button);
       grid.append(card);
     });

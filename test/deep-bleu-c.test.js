@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const dbc = require('../games/deep-bleu-c/server');
 const worldgen = require('../games/deep-bleu-c/worldgen');
+const sliceContent = require('../games/deep-bleu-c/slice-content');
 
 function makeGame() {
   return dbc.createGame([
@@ -156,4 +157,99 @@ test('een aanlegsteiger bouwen lukt op een strandtegel en kan maar één keer pe
 
   assert.throws(() => dbc.handleAction(game, 'a', 'buildHarbor', { x: world.spawn.x, y: world.spawn.y }));
   assert.equal(game.harbors.length, 1);
+});
+
+test('VS1-content valideert de twee bijltiers en bootstations', () => {
+  assert.equal(sliceContent.tools.axe.tiers.length, 2);
+  assert.equal(sliceContent.tools.axe.tiers[1].requires.station, 'workbench');
+  assert.doesNotThrow(() => sliceContent.validateSliceContent(sliceContent));
+});
+
+test('een eik verbruikt niets en benoemt exact de ontbrekende tool en skill', () => {
+  const game = makeGame();
+  const player = playerOf(game, 'a');
+  const world = worldgen.getWorld();
+  let oak = null;
+  for (let y = 0; y < world.height && !oak; y += 1) {
+    for (let x = 0; x < world.width; x += 1) {
+      if (worldgen.resourceAt(world, x, y) === 'wood' && Math.abs((x * 31 + y * 17) % 7) === 0) { oak = { x, y }; break; }
+    }
+  }
+  assert.ok(oak);
+  player.x = oak.x;
+  player.y = oak.y;
+  assert.throws(
+    () => dbc.handleAction(game, 'a', 'gatherStart', { kind: 'wood', ...oak }),
+    /Deze eik vraagt Bijl II en Kappen 8\./
+  );
+  assert.equal(player.gathering, null);
+  assert.deepEqual(player.personalNodes, {});
+});
+
+test('Bijl II vereist materiaal, munten, Kappen 8 en een geplaatste werkbank', () => {
+  const game = makeGame();
+  const player = playerOf(game, 'a');
+  player.cash = 120;
+  player.skills.woodcutting = 2000;
+  player.woodInventory.push({ uid: 'soft-1', speciesId: 'berk', weightKg: 40, caughtAt: Date.now() });
+
+  assert.throws(() => dbc.handleAction(game, 'a', 'buyUpgrade', { category: 'axe' }), /Werkbank/);
+  dbc.handleAction(game, 'a', 'placeBoatStation', { stationId: 'workbench' });
+  assert.equal(player.boat.stations[0], 'workbench');
+  dbc.handleAction(game, 'a', 'buyUpgrade', { category: 'axe' });
+
+  assert.equal(player.gear.axe, 1);
+  assert.equal(player.cash, 0);
+  assert.equal(Math.round(player.woodInventory.reduce((sum, item) => sum + item.weightKg, 0)), 4);
+});
+
+test('de kano vaart naar Wierlicht en de Catch Cook Create-keten maakt een rantsoen', () => {
+  const game = makeGame();
+  const player = playerOf(game, 'a');
+  const world = worldgen.getWorld();
+  player.woodInventory.push({ uid: 'soft-1', speciesId: 'grove-den', weightKg: 12, caughtAt: Date.now() });
+  dbc.handleAction(game, 'a', 'placeBoatStation', { stationId: 'workbench' });
+  dbc.handleAction(game, 'a', 'placeBoatStation', { stationId: 'cookingTable' });
+
+  dbc.handleAction(game, 'a', 'move', world.kelpIsland);
+  let now = Date.now();
+  for (let step = 0; step < 250 && player.path.length; step += 1) dbc.tick(game, now += 200);
+  assert.equal(player.mode, 'land');
+  assert.ok(player.discoveries.includes('kelp-island'));
+
+  dbc.handleAction(game, 'a', 'gatherStart', { kind: 'kelp', x: world.kelpIsland.x, y: world.kelpIsland.y });
+  player.gathering.phase = 'bite';
+  player.gathering.hookDeadline = Date.now() + 1000;
+  dbc.handleAction(game, 'a', 'gatherStrike');
+  player.gathering.reelDeadline = Date.now() + 1000;
+  dbc.handleAction(game, 'a', 'gatherHaul');
+  assert.ok(player.materials.kelpFiber >= 1);
+
+  player.inventory.push({ uid: 'fish-1', speciesId: 'baars', weightKg: 1, quality: 'raw', caughtAt: Date.now() });
+  dbc.handleAction(game, 'a', 'cookCatch', { uid: 'fish-1' });
+  dbc.handleAction(game, 'a', 'createSupply');
+  assert.equal(player.createdSupplies, 1);
+  assert.equal(player.inventory.some((item) => item.uid === 'fish-1'), false);
+});
+
+test('save en reload bewaart tooltier, skills, bootstations, nodes en ontdekkingen', () => {
+  const game = makeGame();
+  const player = playerOf(game, 'a');
+  player.gear.axe = 1;
+  player.skills.woodcutting = 1234;
+  player.boat.stations = ['workbench', 'cookingTable'];
+  player.personalNodes['wood:1:2'] = { depletedUntil: Date.now() + 1000, harvestCount: 2 };
+  player.discoveries.push('kelp-island');
+  player.materials.kelpFiber = 3;
+  let saved;
+  dbc.afterStateChange({ gameState: game, players: [{ id: 'a', userId: 'user-a' }] }, {
+    db: { saveDeepBleuCPlayer(_userId, state) { saved = state; } }
+  });
+  const restored = dbc.createGame([{ id: 'a2', name: 'Ada', dbcState: saved }]).players[0];
+  assert.equal(restored.gear.axe, 1);
+  assert.equal(restored.skills.woodcutting, 1234);
+  assert.deepEqual(restored.boat.stations, ['workbench', 'cookingTable']);
+  assert.equal(restored.personalNodes['wood:1:2'].harvestCount, 2);
+  assert.ok(restored.discoveries.includes('kelp-island'));
+  assert.equal(restored.materials.kelpFiber, 3);
 });
