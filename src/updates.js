@@ -587,6 +587,12 @@ const RELEASES = [
     improvements:[
       "cycclub banner weg"
     ]
+  },
+  {
+    version:"1.28.9",
+    improvements:[
+      "cycclub npc riders en prijzen"
+    ]
   }
 ];
 
