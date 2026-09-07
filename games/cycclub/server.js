@@ -12,7 +12,11 @@ const STARTING_WALLET = 100000;
 const STARTER_RIDERS = 0;
 const NPC_STARTER_RIDERS = 6;
 const SCOUT_MARKET_SIZE = 10;
-const MARKET_PRICE_MULTIPLIER = 3.5;
+const MIN_RIDER_PRICE = 10000;
+const MAX_RIDER_PRICE = 250000;
+const RESET_STARTER_COUNT = 5;
+const RESET_STARTER_MIN_SPECIALISMS = 4;
+const RESET_STARTER_POOL_FRACTION = 0.10;
 const MAX_RIDERS = 10;
 const SQUAD_SIZE = 3;
 const SEGMENTS_PER_RACE = 8;
@@ -302,11 +306,19 @@ function pick(list){return list[Math.floor(Math.random()*list.length)]}
 function clamp(value,min,max){return Math.max(min,Math.min(max,value))}
 function makeId(prefix){return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2,8)}`}
 
-function marketValueFor(stats,age){
+function baseMarketValueFor(stats){
   const avg=STAT_KEYS.reduce((sum,key)=>sum+stats[key],0)/STAT_KEYS.length;
-  const primeFactor=age>=24&&age<=30?1.15:(age<22||age>33?0.85:1);
-  const baseValue=Math.round((avg*avg*4*primeFactor)/50)*50;
-  return Math.round((baseValue*MARKET_PRICE_MULTIPLIER)/50)*50;
+  return avg*avg;
+}
+const ACTIVE_CATALOG_BASE_VALUES=RIDER_CATALOG.filter((rider) => !rider.retired)
+  .map((rider) => baseMarketValueFor(rider.stats));
+const MIN_CATALOG_BASE_VALUE=Math.min(...ACTIVE_CATALOG_BASE_VALUES);
+const MAX_CATALOG_BASE_VALUE=Math.max(...ACTIVE_CATALOG_BASE_VALUES);
+
+function marketValueFor(stats,age){
+  const baseValue=baseMarketValueFor(stats);
+  const position=(baseValue-MIN_CATALOG_BASE_VALUE)/(MAX_CATALOG_BASE_VALUE-MIN_CATALOG_BASE_VALUE);
+  return Math.round((MIN_RIDER_PRICE+position*(MAX_RIDER_PRICE-MIN_RIDER_PRICE))/50)*50;
 }
 
 function makeRealRider(entry){
@@ -331,6 +343,45 @@ function racePoolFor(raceId){
 function starterRiders(count,excludeIds){
   const pool=[...ridersExcluding(excludeIds)].sort(() => Math.random()-0.5);
   return pool.slice(0,count).map(makeRealRider);
+}
+
+function shuffled(list){
+  const result=[...list];
+  for(let index=result.length-1;index>0;index-=1){
+    const other=randInt(0,index);
+    [result[index],result[other]]=[result[other],result[index]];
+  }
+  return result;
+}
+
+function resetStarterRiders(game,playerId){
+  const activeCatalog=RIDER_CATALOG.filter((rider) => !rider.retired)
+    .sort((a,b) => marketValueFor(a.stats,a.age)-marketValueFor(b.stats,b.age)||a.id.localeCompare(b.id));
+  const cheapest=activeCatalog.slice(0,Math.ceil(activeCatalog.length*RESET_STARTER_POOL_FRACTION));
+  const ownedByOthers=ownedRiderIds(game,playerId);
+  const availableCatalog=activeCatalog.filter((rider) => !ownedByOthers.has(rider.id));
+  const available=cheapest.filter((rider) => !ownedByOthers.has(rider.id));
+  const resetPool=[...available];
+  const poolSpecialisms=new Set(resetPool.map((rider) => rider.specialism));
+  for(const rider of availableCatalog){
+    if(poolSpecialisms.size>=RESET_STARTER_MIN_SPECIALISMS)break;
+    if(poolSpecialisms.has(rider.specialism))continue;
+    resetPool.push(rider);
+    poolSpecialisms.add(rider.specialism);
+  }
+  const bySpecialism=new Map();
+  for(const rider of resetPool){
+    if(!bySpecialism.has(rider.specialism))bySpecialism.set(rider.specialism,[]);
+    bySpecialism.get(rider.specialism).push(rider);
+  }
+  if(resetPool.length<RESET_STARTER_COUNT||bySpecialism.size<RESET_STARTER_MIN_SPECIALISMS){
+    throw new Error('Er zijn onvoldoende goedkope, beschikbare renners om opnieuw te beginnen.');
+  }
+  const selected=shuffled([...bySpecialism.keys()]).slice(0,RESET_STARTER_MIN_SPECIALISMS)
+    .map((specialism) => pick(bySpecialism.get(specialism)));
+  const selectedIds=new Set(selected.map((rider) => rider.id));
+  selected.push(...shuffled(resetPool.filter((rider) => !selectedIds.has(rider.id))).slice(0,RESET_STARTER_COUNT-selected.length));
+  return shuffled(selected).map(makeRealRider);
 }
 
 function scoutCandidates(excludeIds){
@@ -974,7 +1025,9 @@ function handleAction(game,playerId,action,payload={}){
 
   if(action==='resetTeam'){
     if(game.phase!=='club')throw new Error('Dit kan alleen in de club.');
+    const riders=resetStarterRiders(game,playerId);
     player.team=defaultTeam(player.isNpc);
+    player.team.riders=riders;
     reconcileHumanOwnership(game);
     refreshScoutMarkets(game);
     return;
@@ -1197,7 +1250,7 @@ function afterStateChange(room,{db}){
 
 module.exports={
   meta, createGame, handleAction, serialize, tick, preparePlayers, afterStateChange,
-  RACE_CATALOG, GRAND_TOUR_CATALOG, RACE_POOLS, RIDER_CATALOG, RIDER_BY_ID, SHOP_COSTS, STAT_KEYS, SQUAD_SIZE, MAX_RIDERS, RACE_FIELD_SIZE, MARKET_PRICE_MULTIPLIER, TEAMS, REAL_RIDERS:RIDER_CATALOG,
+  RACE_CATALOG, GRAND_TOUR_CATALOG, RACE_POOLS, RIDER_CATALOG, RIDER_BY_ID, SHOP_COSTS, STAT_KEYS, SQUAD_SIZE, MAX_RIDERS, RACE_FIELD_SIZE, MIN_RIDER_PRICE, MAX_RIDER_PRICE, RESET_STARTER_COUNT, RESET_STARTER_MIN_SPECIALISMS, RESET_STARTER_POOL_FRACTION, marketValueFor, TEAMS, REAL_RIDERS:RIDER_CATALOG,
   STAGES_PER_GRAND_TOUR, SEGMENTS_PER_RACE, RIDER_TACTICS, TACTIC_LABELS, TACTIC_EFFECTS, GELS_PER_RACE,
   calculateSegmentStep, buildSegmentPlan, raceGroupForGap, buildRaceSituation
 };

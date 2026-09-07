@@ -163,15 +163,44 @@ test('rider ownership is unique across human rosters and scout markets', () => {
   assert.throws(() => cc.handleAction(game, 'p2', 'buyRider', {candidateId: shared.id}), /andere ploeg/);
 });
 
-test('scout market prices are 3.5 times the former value and rounded to 50 euros', () => {
-  const game = cc.createGame([{id: 'p1', name: 'Alice', isNpc: false}]);
-  for (const rider of game.scoutMarkets.p1) {
-    const avg = cc.STAT_KEYS.reduce((sum, key) => sum + rider.stats[key], 0) / cc.STAT_KEYS.length;
-    const primeFactor = rider.age >= 24 && rider.age <= 30 ? 1.15 : (rider.age < 22 || rider.age > 33 ? 0.85 : 1);
-    const formerValue = Math.round((avg * avg * 4 * primeFactor) / 50) * 50;
-    assert.equal(rider.marketValue, Math.round((formerValue * cc.MARKET_PRICE_MULTIPLIER) / 50) * 50);
-    assert.equal(rider.marketValue % 50, 0);
+test('catalog rider prices preserve their order and span 10,000 to 250,000 euros', () => {
+  const priced = cc.RIDER_CATALOG.filter((rider) => !rider.retired).map((rider) => ({
+    rider,
+    price: cc.marketValueFor(rider.stats, rider.age)
+  }));
+  assert.equal(Math.min(...priced.map(({price}) => price)), cc.MIN_RIDER_PRICE);
+  assert.equal(Math.max(...priced.map(({price}) => price)), cc.MAX_RIDER_PRICE);
+  assert.ok(priced.every(({price}) => price % 50 === 0));
+
+  const averageStats = ({rider}) => cc.STAT_KEYS.reduce((sum, key) => sum + rider.stats[key], 0) / cc.STAT_KEYS.length;
+  const ordered = priced.slice().sort((a, b) => averageStats(a) - averageStats(b));
+  for (let index = 1; index < ordered.length; index += 1) {
+    assert.ok(ordered[index].price >= ordered[index - 1].price);
   }
+});
+
+test('resetting progress grants five cheap random riders with four specialisms', () => {
+  const active = cc.RIDER_CATALOG.filter((rider) => !rider.retired)
+    .sort((a, b) => cc.marketValueFor(a.stats, a.age) - cc.marketValueFor(b.stats, b.age) || a.id.localeCompare(b.id));
+  const cheapestIds = new Set(active.slice(0, Math.ceil(active.length * cc.RESET_STARTER_POOL_FRACTION)).map((rider) => rider.id));
+  const claimedByBob = active[0];
+  const game = cc.createGame([
+    {id: 'p1', name: 'Alice', isNpc: false},
+    {id: 'p2', name: 'Bob', isNpc: false, cycclubTeam: savedTeam([claimedByBob])}
+  ]);
+
+  cc.handleAction(game, 'p1', 'resetTeam');
+  const starters = game.players.find((player) => player.id === 'p1').team.riders;
+  const available = active.filter((rider) => rider.id !== claimedByBob.id);
+  const allowedIds = new Set(cheapestIds);
+  for (const specialism of new Set(available.map((rider) => rider.specialism))) {
+    allowedIds.add(available.find((rider) => rider.specialism === specialism).id);
+  }
+  assert.equal(starters.length, cc.RESET_STARTER_COUNT);
+  assert.equal(new Set(starters.map((rider) => rider.id)).size, cc.RESET_STARTER_COUNT);
+  assert.ok(starters.every((rider) => allowedIds.has(rider.id)));
+  assert.ok(new Set(starters.map((rider) => rider.specialism)).size >= cc.RESET_STARTER_MIN_SPECIALISMS);
+  assert.equal(starters.some((rider) => rider.id === claimedByBob.id), false);
 });
 
 test('a race contains 30 unique riders and NPC fill respects its pool and all human ownership', () => {
