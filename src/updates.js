@@ -608,6 +608,12 @@ const RELEASES = [
     improvements:[
       "Bootstations, tooltier, vaardigheden, persoonlijke nodes, materialen en ontdekkingen blijven bewaard tussen speelsessies."
     ]
+  },
+  {
+    version:"1.28.12",
+    improvements:[
+      "golf fullscreen"
+    ]
   }
 ];
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.28.12 — golf fullscreen
+
+- golf fullscreen
+
 ## v1.28.11 — The Big Blue C: Wierlicht-expeditie
 
 - Volledige Catch → Cook → Create-speellus met een bestuurbare kano en autoritatieve land/zee-modus.
