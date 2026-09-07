@@ -593,6 +593,12 @@ const RELEASES = [
     improvements:[
       "cycclub npc riders en prijzen"
     ]
+  },
+  {
+    version:"1.28.10",
+    improvements:[
+      "cycclub npc riders en prijzen"
+    ]
   }
 ];
 
