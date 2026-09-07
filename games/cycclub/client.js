@@ -4,7 +4,7 @@ function bind(api){({els,E,action,titlebar,logBox}=api)}
 export function render(api){bind(api);renderCycClub(api.room,api.game)}
 export const showResult=false;
 export const roomOptions={allowRematch:false,bodyClass:'cycclub-active'};
-export const playerStrip=true;
+export const playerStrip=false;
 export const leaderboardConfig={columns:[
   {key:'rank',label:'#',short:'#',width:'rank'},
   {key:'username',label:'Speler',short:'Speler',width:'player'},
@@ -88,6 +88,42 @@ function labelValue(label,value){
 function sellPrice(rider){return rider.sellValue??Math.round(rider.marketValue*0.55/50)*50}
 function cancelButtonLabel(game){return game.grandTour?'✕ Stop de ronde':'✕ Annuleer koers'}
 
+function renderGameBanner(me){
+  const banner=E('header','cc-game-banner');
+  const leave=E('button','cc-banner-icon','←');
+  leave.type='button';leave.setAttribute('aria-label','Spel verlaten');
+  leave.onclick=() => document.getElementById('mobileGameLeaveButton')?.click();
+  const copy=E('div','cc-banner-copy');
+  copy.append(E('strong','','CycClub'));
+  const budget=E('div','cc-banner-budget');
+  budget.append(E('small','','Budget'),E('strong','',euro(me.wallet)));
+  const menuButton=E('button','cc-banner-icon','•••');
+  menuButton.type='button';menuButton.setAttribute('aria-label','Spelmenu');menuButton.setAttribute('aria-expanded','false');
+  const menu=E('div','cc-banner-menu hidden');
+  const rules=E('button','','Spelregels');rules.type='button';rules.onclick=() => document.getElementById('mobileGameRulesButton')?.click();
+  const sound=E('button','','Geluid');sound.type='button';sound.onclick=() => document.getElementById('mobileGameSoundButton')?.click();
+  const leaveMenu=E('button','danger','Spel verlaten');leaveMenu.type='button';leaveMenu.onclick=() => document.getElementById('mobileGameLeaveMenuButton')?.click();
+  menu.append(rules,sound,leaveMenu);
+  menuButton.onclick=() => {const open=menu.classList.toggle('hidden')===false;menuButton.setAttribute('aria-expanded',open?'true':'false');};
+  const actions=E('div','cc-banner-actions');actions.append(budget,menuButton,menu);
+  banner.append(leave,copy,actions);
+  return banner;
+}
+
+function navIcon(type){
+  const icon=E('span','cc-nav-icon');
+  const paths={
+    roster:'<circle cx="12" cy="8" r="3"/><path d="M5.5 19c.5-4 2.7-6 6.5-6s6 2 6.5 6"/>',
+    races:'<path d="M5 18 10 6l4 7 2-4 3 9Z"/><path d="M4 18h16"/>',
+    scout:'<circle cx="10.5" cy="10.5" r="5.5"/><path d="m15 15 4.5 4.5"/>',
+    shop:'<path d="M12 3v18M7 8l5-5 5 5M7 16l5 5 5-5"/>'
+  };
+  icon.innerHTML=`<svg viewBox="0 0 24 24" aria-hidden="true">${paths[type]}</svg>`;
+  return icon;
+}
+
+function addNavIcon(button,type){button.prepend(navIcon(type));return button}
+
 let selectedLineup=new Set();
 let lastRaceKey=null;
 let riderTactics=new Map();
@@ -100,14 +136,8 @@ let scoutFilterMaxPrice='';
 
 function renderCycClub(room,game){
   const me=game.players.find((player) => player.id===room.meId);
-  const status=game.phase==='club'?'In de ploegleiding.'
-    :game.phase==='lineup'?`Opstelling voor ${game.race?.raceName||'koers'}.`
-    :game.phase==='racing'?`Onderweg in ${game.race?.raceName||'de koers'}.`
-    :game.phase==='stageResult'?`Ritresultaat — ${game.grandTour?.tourName||''}.`
-    :'Koersresultaat.';
-  els.gameStage.append(titlebar('CycClub',status));
-
   if(!me){els.gameStage.append(E('p','muted','Je bent geen actieve speler in deze club.'));return}
+  els.gameStage.append(renderGameBanner(me));
 
   if(game.phase==='club')renderClub(room,game,me);
   else if(game.phase==='lineup')renderLineup(room,game,me);
@@ -351,8 +381,6 @@ function tabBackButton(){
 
 function renderClub(room,game,me){
   const manager=E('div','cc-manager-shell');
-  const header=E('header','cc-manager-header');
-  header.append(E('div','cc-manager-title','CycClub'),E('div','cc-manager-budget',`Budget ${euro(me.wallet)}`));
   const content=E('main','cc-manager-content');
   const summary=E('div','cc-summary');
   summary.append(summaryItem('Budget',euro(me.wallet)));
@@ -391,21 +419,25 @@ function renderClub(room,game,me){
   const topBar=E('nav','cc-club-tabs');
   topBar.setAttribute('role','tablist');
   const rosterTab=E('button','cc-club-tab','Ploeg');
+  addNavIcon(rosterTab,'roster');
   rosterTab.type='button';
   rosterTab.onclick=() => applyTab('roster');
   tabButtons.roster=rosterTab;
   const shopTab=E('button','cc-club-tab','Upgrades');
+  addNavIcon(shopTab,'shop');
   shopTab.type='button';
   shopTab.onclick=() => applyTab('shop');
   tabButtons.shop=shopTab;
   const scoutOpenBtn=E('button','cc-tab-open-btn',`🔍 Scoutingmarkt (${(game.myScoutMarket||[]).length})`);
   scoutOpenBtn.textContent='Markt';
+  addNavIcon(scoutOpenBtn,'scout');
   scoutOpenBtn.className='cc-club-tab';
   scoutOpenBtn.type='button';
   scoutOpenBtn.onclick=() => applyTab('scout');
   tabButtons.scout=scoutOpenBtn;
   const racesOpenBtn=E('button','cc-tab-open-btn',`📅 Koerskalender (${game.raceCatalog.length})`);
   racesOpenBtn.textContent='Koersen';
+  addNavIcon(racesOpenBtn,'races');
   racesOpenBtn.className='cc-club-tab';
   racesOpenBtn.type='button';
   racesOpenBtn.onclick=() => applyTab('races');
@@ -423,7 +455,7 @@ function renderClub(room,game,me){
   };
   rosterSection.append(resetBtn);
   content.append(rosterSection,scoutSection,shopSection,racesSection);
-  manager.append(header,content,topBar);
+  manager.append(content,topBar);
   els.gameStage.append(manager);
   applyTab(clubTab);
 }

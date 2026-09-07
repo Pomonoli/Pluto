@@ -388,12 +388,21 @@ body.cycclub-active button.primary{background:var(--cc-green)!important;border-c
 }
 
 /* Final cascade guarantees for the redesigned phase shells. */
+body.game-active.cycclub-active .mobile-game-header{display:none!important}
+body.game-active.cycclub-active #gameStage{height:100%;padding:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;background:var(--cc-surface)}
+.cc-game-banner{position:relative;z-index:20;flex:none;min-height:68px;padding:max(10px,env(safe-area-inset-top)) 12px 10px;display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:10px;background:linear-gradient(135deg,var(--cc-header),var(--cc-header2));color:#fff}
+.cc-banner-icon{width:40px;min-width:40px;height:40px;min-height:40px;padding:0;border:1px solid rgba(255,255,255,.14);border-radius:13px;background:rgba(255,255,255,.08);color:#fff;display:grid;place-items:center;font-size:18px;font-weight:850;box-shadow:none}
+.cc-banner-copy{display:flex;flex-direction:column-reverse;gap:1px;overflow:hidden}.cc-banner-copy strong{font-size:17px;font-weight:900;letter-spacing:-.02em}.cc-banner-copy small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#aac3b5;font-size:8px;font-weight:850;text-transform:uppercase;letter-spacing:.08em}
+.cc-banner-actions{position:relative;display:flex;align-items:center;gap:7px}.cc-banner-budget{display:flex;flex-direction:column;text-align:right}.cc-banner-budget small{color:#aac3b5;font-size:7px;font-weight:850;text-transform:uppercase;letter-spacing:.08em}.cc-banner-budget strong{font-size:12px}
+.cc-banner-menu{position:absolute;z-index:30;top:calc(100% + 8px);right:0;width:min(210px,calc(100vw - 24px));padding:7px;display:grid;gap:5px;border:1px solid var(--cc-line);border-radius:14px;background:var(--cc-card);box-shadow:0 18px 40px rgba(0,0,0,.28)}.cc-banner-menu.hidden{display:none}.cc-banner-menu button{min-height:42px;text-align:left;border:0;border-radius:9px;background:var(--cc-soft);color:var(--cc-ink)}.cc-banner-menu button.danger{background:var(--cc-risk);color:#fff}
+.cc-club-tab::before{display:none!important}.cc-nav-icon{display:block;width:22px;height:22px;margin:0 auto 3px}.cc-nav-icon svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .cc-category-select,.cc-classification-select{width:100%;min-height:44px;margin:0 0 10px;padding:9px 12px;border:1px solid var(--cc-line);border-radius:12px;background:var(--cc-card);color:var(--cc-ink);font-family:inherit;font-size:12px;font-weight:700}
 .cc-market-price{font-size:13px;color:var(--cc-green)}.cc-market-card>button{width:100%;min-height:40px}.cc-race-category.hidden,.cc-market-card.hidden{display:none!important}
 body.cycclub-active #gameStage>.cc-manager-shell{display:flex!important;overflow:hidden!important}
 body.cycclub-active #gameStage>.cc-manager-shell>.cc-manager-content{display:block!important;flex:1!important;min-height:0!important;overflow-y:auto!important;overflow-x:hidden!important}
 body.cycclub-active #gameStage>.cc-manager-shell>.cc-club-tabs{position:static!important;display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;width:100%!important;margin:0!important}
 body.cycclub-active #gameStage:has(.cc-racing-panel){overflow:hidden!important}
-body.cycclub-active #gameStage>.cc-racing-panel{height:100%!important;max-height:100dvh!important;overflow:hidden!important}
-body.cycclub-active #gameStage>.cc-lineup-panel{height:100%!important;max-height:100dvh!important;overflow:hidden!important}
+body.cycclub-active #gameStage>.cc-racing-panel{flex:1!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:hidden!important}
+body.cycclub-active #gameStage>.cc-lineup-panel{flex:1!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:hidden!important}
+body.cycclub-active #gameStage>.cc-manager-shell{flex:1!important;height:auto!important;min-height:0!important}
 @media(max-width:420px){body.cycclub-active #gameStage>.cc-manager-shell>.cc-club-tabs{grid-template-columns:repeat(4,minmax(0,1fr))!important}.cc-manager-shell,.cc-racing-panel,.cc-lineup-panel{width:100%!important;max-width:100vw!important}}
