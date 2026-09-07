@@ -24,6 +24,23 @@ function makeTeam(shopOverrides = {}) {
   return {shop: {bikes: 0, nutrition: 0, trainers: 0, medical: 0, ...shopOverrides}};
 }
 
+function savedCatalogRider(entry) {
+  return {
+    ...entry,
+    marketValue: 10000,
+    status: 'active', statusUntil: 0, fatigue: 0, gelsRemaining: cc.GELS_PER_RACE
+  };
+}
+
+function savedTeam(riders) {
+  return {
+    wallet: 100000, riders: riders.map(savedCatalogRider),
+    shop: {bikes: 0, nutrition: 0, trainers: 0, medical: 0},
+    career: {victories: 0, podiums: 0, monumentsWon: 0, grandToursWon: 0, gtStagesWon: 0, prizeMoney: 0, racesEntered: 0},
+    raceCount: 0
+  };
+}
+
 const FLAT_SEGMENT = {segmentIndex: 0, totalSegments: 8, terrainType: 'flat', elevationGain: 20, hasIntermediateSprint: false, mountainCategory: 0};
 const MOUNTAIN_SEGMENT = {segmentIndex: 0, totalSegments: 8, terrainType: 'mountain', elevationGain: 900, hasIntermediateSprint: false, mountainCategory: 0};
 
@@ -129,6 +146,58 @@ test('hydrating a team saved before gelsRemaining existed defaults it to a full 
   const rider = game.players.find((player) => player.id === 'p1').team.riders[0];
   assert.equal(rider.gelsRemaining, cc.GELS_PER_RACE);
   assert.equal(rider.fatigue, 15);
+});
+
+test('rider ownership is unique across human rosters and scout markets', () => {
+  const shared = cc.RIDER_CATALOG[0];
+  const game = cc.createGame([
+    {id: 'p1', name: 'Alice', isNpc: false, cycclubTeam: savedTeam([shared])},
+    {id: 'p2', name: 'Bob', isNpc: false, cycclubTeam: savedTeam([shared])}
+  ]);
+  assert.deepEqual(game.players[0].team.riders.map((rider) => rider.id), [shared.id]);
+  assert.deepEqual(game.players[1].team.riders, []);
+  for (const market of Object.values(game.scoutMarkets)) {
+    assert.equal(market.some((rider) => rider.id === shared.id), false);
+  }
+  game.scoutMarkets.p2=[savedCatalogRider(shared)];
+  assert.throws(() => cc.handleAction(game, 'p2', 'buyRider', {candidateId: shared.id}), /andere ploeg/);
+});
+
+test('scout market prices are 3.5 times the former value and rounded to 50 euros', () => {
+  const game = cc.createGame([{id: 'p1', name: 'Alice', isNpc: false}]);
+  for (const rider of game.scoutMarkets.p1) {
+    const avg = cc.STAT_KEYS.reduce((sum, key) => sum + rider.stats[key], 0) / cc.STAT_KEYS.length;
+    const primeFactor = rider.age >= 24 && rider.age <= 30 ? 1.15 : (rider.age < 22 || rider.age > 33 ? 0.85 : 1);
+    const formerValue = Math.round((avg * avg * 4 * primeFactor) / 50) * 50;
+    assert.equal(rider.marketValue, Math.round((formerValue * cc.MARKET_PRICE_MULTIPLIER) / 50) * 50);
+    assert.equal(rider.marketValue % 50, 0);
+  }
+});
+
+test('a race contains 30 unique riders and NPC fill respects its pool and all human ownership', () => {
+  const race = cc.RACE_CATALOG[0];
+  const pool = cc.RACE_POOLS.get(race.id);
+  const owned = pool.slice(0, 4).map((id) => cc.RIDER_BY_ID.get(id));
+  const game = cc.createGame([{id: 'p1', name: 'Alice', isNpc: false, cycclubTeam: savedTeam(owned)}]);
+  cc.handleAction(game, 'p1', 'selectRace', {raceId: race.id});
+  cc.handleAction(game, 'p1', 'submitLineup', {riderIds: owned.slice(0, 3).map((rider) => rider.id)});
+
+  const humanIds = game.race.lineups.p1;
+  const npcIds = game.race.lineups.__race_npcs__;
+  const allIds = [...humanIds, ...npcIds];
+  assert.equal(allIds.length, cc.RACE_FIELD_SIZE);
+  assert.equal(new Set(allIds).size, cc.RACE_FIELD_SIZE);
+  assert.equal(npcIds.includes(owned[3].id), false, 'ook een niet-ingeschreven human-owned renner is uitgesloten');
+  assert.ok(npcIds.every((id) => pool.includes(id)));
+  for (const id of npcIds) assert.deepEqual(game.race.npcPlayer.team.riders.find((rider) => rider.id === id).stats, cc.RIDER_BY_ID.get(id).stats);
+});
+
+test('every configured race pool has exactly 50 unique catalog rider IDs', () => {
+  for (const [raceId, pool] of cc.RACE_POOLS) {
+    assert.equal(pool.length, 50, raceId);
+    assert.equal(new Set(pool).size, 50, raceId);
+    assert.ok(pool.every((id) => cc.RIDER_BY_ID.has(id)), raceId);
+  }
 });
 
 function buildGame() {

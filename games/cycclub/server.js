@@ -12,6 +12,7 @@ const STARTING_WALLET = 100000;
 const STARTER_RIDERS = 0;
 const NPC_STARTER_RIDERS = 6;
 const SCOUT_MARKET_SIZE = 10;
+const MARKET_PRICE_MULTIPLIER = 3.5;
 const MAX_RIDERS = 10;
 const SQUAD_SIZE = 3;
 const SEGMENTS_PER_RACE = 8;
@@ -19,6 +20,18 @@ const REST_COST = 600;
 const REST_RECOVERY = 25;
 const SELL_RATE = 0.55;
 const NPC_DELAY = 900;
+const RACE_FIELD_SIZE = 30;
+const RACE_NPC_ID = '__race_npcs__';
+
+const RIDER_DATA = require('./data/riders.json');
+const SPECIALISM_BY_CODE = RIDER_DATA.specialisms;
+const CATALOG_TEAMS = RIDER_DATA.teams.map((name,index) => ({id:`catalog-${index}`,name}));
+const RIDER_CATALOG = RIDER_DATA.shards.flatMap(({file}) => require(`./data/${file}`).riders).map((row) => ({
+  id:row[0], name:row[1], teamId:`catalog-${row[2]}`, age:row[3], specialism:SPECIALISM_BY_CODE[row[4]],
+  stats:{flat:row[5],mountain:row[6],cobbles:row[7],timeTrial:row[8],sprint:row[9],stamina:row[10]},
+  retired:Boolean(row[12])
+}));
+const RIDER_BY_ID = new Map(RIDER_CATALOG.map((rider) => [rider.id,rider]));
 
 const SPECIALISMS = {
   sprinter:['sprint','flat'],
@@ -118,7 +131,7 @@ function raceGroupForGap(gapSeconds){
 function buildRaceSituation(game){
   if(!game.race?.progress)return {leader:null,byEntry:{}};
   const entries=[];
-  for(const player of game.players){
+  for(const player of raceActors(game)){
     const prog=game.race.progress[player.id];
     if(!prog)continue;
     for(const [riderId,state] of Object.entries(prog.riders)){
@@ -181,7 +194,7 @@ function buildSegmentPlan(catalogRace){
 }
 
 // 2026-seizoen: de 10 grootste WorldTour-ploegen met hun actuele kernrenners.
-const TEAMS = [
+const LEGACY_TEAMS = [
   {id:'uae', name:'UAE Team Emirates XRG'},
   {id:'visma', name:'Visma-Lease a Bike'},
   {id:'bora', name:'Red Bull-BORA-hansgrohe'},
@@ -193,106 +206,9 @@ const TEAMS = [
   {id:'movistar', name:'Movistar Team'},
   {id:'fdj', name:'Groupama-FDJ United'}
 ];
-const TEAM_BY_ID = new Map(TEAMS.map((team) => [team.id, team]));
+const TEAMS = CATALOG_TEAMS;
+const TEAM_BY_ID = new Map([...LEGACY_TEAMS,...TEAMS].map((team) => [team.id, team]));
 
-// Stats zijn handmatig ingeschat op basis van elke renner se werkelijke specialiteiten
-// (in lijn met de PCS-specialiteitsprofielen: one-day/GC/klim/tijdrit/sprint/heuvel).
-// Volgorde per renner: flat, mountain, cobbles, timeTrial, sprint, stamina.
-const REAL_RIDERS = [
-  {name:'Tadej Pogačar', teamId:'uae', age:28, specialism:'climber', stats:{flat:78,mountain:98,cobbles:62,timeTrial:90,sprint:80,stamina:97}},
-  {name:'João Almeida', teamId:'uae', age:28, specialism:'climber', stats:{flat:68,mountain:92,cobbles:40,timeTrial:88,sprint:55,stamina:90}},
-  {name:'Isaac del Toro', teamId:'uae', age:23, specialism:'climber', stats:{flat:65,mountain:90,cobbles:42,timeTrial:72,sprint:68,stamina:85}},
-  {name:'Adam Yates', teamId:'uae', age:34, specialism:'climber', stats:{flat:58,mountain:88,cobbles:35,timeTrial:65,sprint:50,stamina:84}},
-  {name:'Juan Sebastián Molano', teamId:'uae', age:32, specialism:'sprinter', stats:{flat:78,mountain:30,cobbles:45,timeTrial:50,sprint:82,stamina:55}},
-  {name:'Brandon McNulty', teamId:'uae', age:28, specialism:'allrounder', stats:{flat:72,mountain:78,cobbles:45,timeTrial:90,sprint:55,stamina:80}},
-  {name:'Nils Politt', teamId:'uae', age:32, specialism:'classics', stats:{flat:75,mountain:40,cobbles:90,timeTrial:70,sprint:45,stamina:78}},
-  {name:'Jay Vine', teamId:'uae', age:31, specialism:'climber', stats:{flat:55,mountain:85,cobbles:30,timeTrial:68,sprint:45,stamina:80}},
-  {name:'Marc Soler', teamId:'uae', age:33, specialism:'climber', stats:{flat:60,mountain:82,cobbles:38,timeTrial:65,sprint:48,stamina:78}},
-  {name:'Tim Wellens', teamId:'uae', age:35, specialism:'puncheur', stats:{flat:62,mountain:78,cobbles:55,timeTrial:60,sprint:65,stamina:75}},
-
-  {name:'Jonas Vingegaard', teamId:'visma', age:30, specialism:'climber', stats:{flat:70,mountain:97,cobbles:35,timeTrial:85,sprint:55,stamina:96}},
-  {name:'Wout van Aert', teamId:'visma', age:32, specialism:'classics', stats:{flat:88,mountain:70,cobbles:92,timeTrial:82,sprint:88,stamina:88}},
-  {name:'Matteo Jorgenson', teamId:'visma', age:27, specialism:'allrounder', stats:{flat:78,mountain:80,cobbles:60,timeTrial:85,sprint:55,stamina:82}},
-  {name:'Sepp Kuss', teamId:'visma', age:32, specialism:'climber', stats:{flat:55,mountain:90,cobbles:30,timeTrial:68,sprint:35,stamina:92}},
-  {name:'Christophe Laporte', teamId:'visma', age:34, specialism:'classics', stats:{flat:80,mountain:45,cobbles:78,timeTrial:65,sprint:82,stamina:65}},
-  {name:'Edoardo Affini', teamId:'visma', age:30, specialism:'allrounder', stats:{flat:75,mountain:35,cobbles:60,timeTrial:92,sprint:50,stamina:65}},
-  {name:'Wilco Kelderman', teamId:'visma', age:35, specialism:'climber', stats:{flat:58,mountain:80,cobbles:35,timeTrial:72,sprint:40,stamina:78}},
-  {name:'Bruno Armirail', teamId:'visma', age:32, specialism:'allrounder', stats:{flat:72,mountain:60,cobbles:55,timeTrial:82,sprint:40,stamina:70}},
-  {name:'Ben Tulett', teamId:'visma', age:25, specialism:'climber', stats:{flat:55,mountain:78,cobbles:40,timeTrial:62,sprint:42,stamina:72}},
-
-  {name:'Remco Evenepoel', teamId:'bora', age:26, specialism:'allrounder', stats:{flat:80,mountain:88,cobbles:50,timeTrial:97,sprint:70,stamina:90}},
-  {name:'Primož Roglič', teamId:'bora', age:37, specialism:'climber', stats:{flat:68,mountain:92,cobbles:40,timeTrial:88,sprint:58,stamina:90}},
-  {name:'Florian Lipowitz', teamId:'bora', age:26, specialism:'climber', stats:{flat:62,mountain:87,cobbles:35,timeTrial:78,sprint:45,stamina:82}},
-  {name:'Aleksandr Vlasov', teamId:'bora', age:30, specialism:'climber', stats:{flat:58,mountain:80,cobbles:32,timeTrial:70,sprint:40,stamina:76}},
-  {name:'Jai Hindley', teamId:'bora', age:30, specialism:'climber', stats:{flat:58,mountain:82,cobbles:35,timeTrial:68,sprint:42,stamina:78}},
-  {name:'Daniel Martínez', teamId:'bora', age:30, specialism:'climber', stats:{flat:60,mountain:83,cobbles:35,timeTrial:66,sprint:48,stamina:78}},
-  {name:'Danny van Poppel', teamId:'bora', age:32, specialism:'sprinter', stats:{flat:75,mountain:25,cobbles:55,timeTrial:45,sprint:85,stamina:50}},
-  {name:'Jordi Meeus', teamId:'bora', age:28, specialism:'sprinter', stats:{flat:72,mountain:22,cobbles:50,timeTrial:42,sprint:88,stamina:48}},
-  {name:'Gianni Vermeersch', teamId:'bora', age:33, specialism:'classics', stats:{flat:68,mountain:40,cobbles:82,timeTrial:55,sprint:60,stamina:65}},
-
-  {name:'Tim Merlier', teamId:'soudal-qs', age:34, specialism:'sprinter', stats:{flat:82,mountain:20,cobbles:55,timeTrial:42,sprint:96,stamina:48}},
-  {name:'Mikel Landa', teamId:'soudal-qs', age:37, specialism:'climber', stats:{flat:55,mountain:88,cobbles:30,timeTrial:65,sprint:40,stamina:82}},
-  {name:'Paul Magnier', teamId:'soudal-qs', age:22, specialism:'sprinter', stats:{flat:75,mountain:22,cobbles:48,timeTrial:40,sprint:90,stamina:45}},
-  {name:'Jasper Stuyven', teamId:'soudal-qs', age:34, specialism:'classics', stats:{flat:78,mountain:42,cobbles:85,timeTrial:62,sprint:72,stamina:72}},
-  {name:'Yves Lampaert', teamId:'soudal-qs', age:35, specialism:'classics', stats:{flat:75,mountain:30,cobbles:88,timeTrial:78,sprint:55,stamina:68}},
-  {name:'Dylan van Baarle', teamId:'soudal-qs', age:34, specialism:'classics', stats:{flat:76,mountain:38,cobbles:90,timeTrial:70,sprint:50,stamina:74}},
-  {name:'Ilan Van Wilder', teamId:'soudal-qs', age:26, specialism:'allrounder', stats:{flat:68,mountain:70,cobbles:55,timeTrial:78,sprint:48,stamina:72}},
-  {name:'Mauri Vansevenant', teamId:'soudal-qs', age:27, specialism:'climber', stats:{flat:58,mountain:76,cobbles:45,timeTrial:62,sprint:42,stamina:74}},
-  {name:'Louis Vervaeke', teamId:'soudal-qs', age:33, specialism:'allrounder', stats:{flat:62,mountain:68,cobbles:55,timeTrial:68,sprint:45,stamina:72}},
-
-  {name:'Filippo Ganna', teamId:'ineos', age:30, specialism:'allrounder', stats:{flat:82,mountain:35,cobbles:60,timeTrial:98,sprint:60,stamina:70}},
-  {name:'Egan Bernal', teamId:'ineos', age:29, specialism:'climber', stats:{flat:60,mountain:86,cobbles:38,timeTrial:75,sprint:45,stamina:80}},
-  {name:'Thymen Arensman', teamId:'ineos', age:26, specialism:'climber', stats:{flat:62,mountain:85,cobbles:40,timeTrial:80,sprint:45,stamina:80}},
-  {name:'Carlos Rodríguez', teamId:'ineos', age:25, specialism:'climber', stats:{flat:60,mountain:84,cobbles:38,timeTrial:72,sprint:48,stamina:78}},
-  {name:'Joshua Tarling', teamId:'ineos', age:22, specialism:'allrounder', stats:{flat:78,mountain:55,cobbles:50,timeTrial:95,sprint:45,stamina:68}},
-  {name:'Michał Kwiatkowski', teamId:'ineos', age:36, specialism:'puncheur', stats:{flat:68,mountain:70,cobbles:60,timeTrial:72,sprint:58,stamina:75}},
-  {name:'Ben Turner', teamId:'ineos', age:27, specialism:'classics', stats:{flat:72,mountain:40,cobbles:78,timeTrial:60,sprint:55,stamina:65}},
-  {name:'Magnus Sheffield', teamId:'ineos', age:24, specialism:'puncheur', stats:{flat:65,mountain:68,cobbles:62,timeTrial:68,sprint:55,stamina:70}},
-  {name:'Kévin Vauquelin', teamId:'ineos', age:25, specialism:'puncheur', stats:{flat:65,mountain:72,cobbles:55,timeTrial:68,sprint:58,stamina:72}},
-  {name:'Oscar Onley', teamId:'ineos', age:24, specialism:'climber', stats:{flat:58,mountain:80,cobbles:35,timeTrial:65,sprint:42,stamina:76}},
-
-  {name:'Mathieu van der Poel', teamId:'alpecin', age:31, specialism:'classics', stats:{flat:90,mountain:55,cobbles:98,timeTrial:68,sprint:85,stamina:82}},
-  {name:'Jasper Philipsen', teamId:'alpecin', age:28, specialism:'sprinter', stats:{flat:85,mountain:25,cobbles:65,timeTrial:45,sprint:96,stamina:55}},
-  {name:'Kaden Groves', teamId:'alpecin', age:28, specialism:'sprinter', stats:{flat:78,mountain:28,cobbles:55,timeTrial:45,sprint:90,stamina:52}},
-  {name:'Jonas Rickaert', teamId:'alpecin', age:32, specialism:'classics', stats:{flat:70,mountain:35,cobbles:78,timeTrial:55,sprint:65,stamina:62}},
-  {name:'Silvan Dillier', teamId:'alpecin', age:36, specialism:'classics', stats:{flat:68,mountain:32,cobbles:80,timeTrial:50,sprint:48,stamina:65}},
-  {name:'Gerben Thijssen', teamId:'alpecin', age:28, specialism:'sprinter', stats:{flat:72,mountain:22,cobbles:50,timeTrial:40,sprint:84,stamina:45}},
-  {name:'Edward Planckaert', teamId:'alpecin', age:31, specialism:'classics', stats:{flat:68,mountain:30,cobbles:75,timeTrial:48,sprint:62,stamina:60}},
-  {name:'Hugo Houle', teamId:'alpecin', age:36, specialism:'allrounder', stats:{flat:62,mountain:65,cobbles:45,timeTrial:68,sprint:42,stamina:68}},
-
-  {name:'Juan Ayuso', teamId:'lidl-trek', age:23, specialism:'climber', stats:{flat:62,mountain:92,cobbles:35,timeTrial:82,sprint:48,stamina:86}},
-  {name:'Mads Pedersen', teamId:'lidl-trek', age:31, specialism:'classics', stats:{flat:85,mountain:45,cobbles:88,timeTrial:65,sprint:88,stamina:75}},
-  {name:'Jonathan Milan', teamId:'lidl-trek', age:26, specialism:'sprinter', stats:{flat:82,mountain:22,cobbles:55,timeTrial:48,sprint:96,stamina:55}},
-  {name:'Mattias Skjelmose', teamId:'lidl-trek', age:25, specialism:'climber', stats:{flat:65,mountain:85,cobbles:45,timeTrial:75,sprint:55,stamina:78}},
-  {name:'Tao Geoghegan Hart', teamId:'lidl-trek', age:31, specialism:'climber', stats:{flat:55,mountain:80,cobbles:32,timeTrial:68,sprint:40,stamina:74}},
-  {name:'Giulio Ciccone', teamId:'lidl-trek', age:32, specialism:'climber', stats:{flat:55,mountain:84,cobbles:30,timeTrial:60,sprint:42,stamina:76}},
-  {name:'Thibau Nys', teamId:'lidl-trek', age:23, specialism:'puncheur', stats:{flat:62,mountain:68,cobbles:70,timeTrial:58,sprint:72,stamina:65}},
-  {name:'Toms Skujiņš', teamId:'lidl-trek', age:35, specialism:'classics', stats:{flat:65,mountain:55,cobbles:72,timeTrial:58,sprint:58,stamina:62}},
-
-  {name:'Ben Healy', teamId:'ef', age:26, specialism:'puncheur', stats:{flat:65,mountain:78,cobbles:62,timeTrial:68,sprint:62,stamina:76}},
-  {name:'Richard Carapaz', teamId:'ef', age:33, specialism:'climber', stats:{flat:58,mountain:86,cobbles:35,timeTrial:65,sprint:45,stamina:82}},
-  {name:'Kasper Asgreen', teamId:'ef', age:31, specialism:'classics', stats:{flat:75,mountain:38,cobbles:85,timeTrial:68,sprint:60,stamina:68}},
-  {name:'Neilson Powless', teamId:'ef', age:29, specialism:'puncheur', stats:{flat:65,mountain:72,cobbles:58,timeTrial:65,sprint:55,stamina:72}},
-  {name:'Marijn van den Berg', teamId:'ef', age:26, specialism:'sprinter', stats:{flat:72,mountain:28,cobbles:50,timeTrial:42,sprint:80,stamina:48}},
-  {name:'Alex Baudin', teamId:'ef', age:25, specialism:'climber', stats:{flat:55,mountain:76,cobbles:35,timeTrial:60,sprint:42,stamina:70}},
-  {name:'Michael Valgren', teamId:'ef', age:33, specialism:'classics', stats:{flat:68,mountain:42,cobbles:75,timeTrial:55,sprint:55,stamina:62}},
-
-  {name:'Enric Mas', teamId:'movistar', age:31, specialism:'climber', stats:{flat:58,mountain:86,cobbles:32,timeTrial:68,sprint:42,stamina:80}},
-  {name:'Nairo Quintana', teamId:'movistar', age:36, specialism:'climber', stats:{flat:50,mountain:82,cobbles:28,timeTrial:55,sprint:35,stamina:78}},
-  {name:'Iván García Cortina', teamId:'movistar', age:30, specialism:'classics', stats:{flat:70,mountain:40,cobbles:70,timeTrial:55,sprint:65,stamina:60}},
-  {name:'Einer Rubio', teamId:'movistar', age:29, specialism:'climber', stats:{flat:52,mountain:80,cobbles:28,timeTrial:55,sprint:38,stamina:76}},
-  {name:'Cian Uijtdebroeks', teamId:'movistar', age:23, specialism:'climber', stats:{flat:55,mountain:78,cobbles:32,timeTrial:62,sprint:40,stamina:74}},
-  {name:'Gonzalo Serrano', teamId:'movistar', age:31, specialism:'sprinter', stats:{flat:68,mountain:30,cobbles:48,timeTrial:45,sprint:78,stamina:48}},
-  {name:'Davide Formolo', teamId:'movistar', age:34, specialism:'allrounder', stats:{flat:60,mountain:68,cobbles:45,timeTrial:62,sprint:45,stamina:65}},
-
-  {name:'David Gaudu', teamId:'fdj', age:30, specialism:'climber', stats:{flat:55,mountain:82,cobbles:32,timeTrial:62,sprint:42,stamina:76}},
-  {name:'Valentin Madouas', teamId:'fdj', age:30, specialism:'classics', stats:{flat:68,mountain:55,cobbles:70,timeTrial:58,sprint:58,stamina:65}},
-  {name:'Romain Grégoire', teamId:'fdj', age:23, specialism:'puncheur', stats:{flat:62,mountain:70,cobbles:58,timeTrial:60,sprint:65,stamina:66}},
-  {name:'Rémi Cavagna', teamId:'fdj', age:31, specialism:'allrounder', stats:{flat:75,mountain:40,cobbles:55,timeTrial:85,sprint:50,stamina:62}},
-  {name:'Guillaume Martin', teamId:'fdj', age:33, specialism:'climber', stats:{flat:52,mountain:78,cobbles:30,timeTrial:58,sprint:35,stamina:72}},
-  {name:'Kevin Geniets', teamId:'fdj', age:30, specialism:'allrounder', stats:{flat:60,mountain:60,cobbles:48,timeTrial:65,sprint:42,stamina:62}},
-  {name:'Olivier Le Gac', teamId:'fdj', age:33, specialism:'classics', stats:{flat:62,mountain:42,cobbles:65,timeTrial:52,sprint:55,stamina:58}}
-];
 
 const DIFFICULTY_PRIZE_STEP = 3000;
 function prizeForDifficulty(difficulty){return Math.round(difficulty*DIFFICULTY_PRIZE_STEP/500)*500}
@@ -350,6 +266,14 @@ const GRAND_TOUR_CATALOG = [
     140000)
 ];
 const GRAND_TOUR_BY_ID = new Map(GRAND_TOUR_CATALOG.map((tour) => [tour.id, tour]));
+const RACE_POOLS = new Map([...RACE_CATALOG,...GRAND_TOUR_CATALOG].map((race) => {
+  const data=require(`./data/races/${race.id}.json`);
+  if(!Array.isArray(data.riderIds)||data.riderIds.length!==50||new Set(data.riderIds).size!==50){
+    throw new Error(`CycClub-racepool ${race.id} moet exact 50 unieke riderIds bevatten.`);
+  }
+  for(const riderId of data.riderIds)if(!RIDER_BY_ID.has(riderId))throw new Error(`Onbekende riderId ${riderId} in racepool ${race.id}.`);
+  return [race.id,data.riderIds];
+}));
 
 function buildStageRaceId(tourId,stageNumber){return `${tourId}${STAGE_ID_SEP}${stageNumber}`}
 function parseStageRaceId(raceId){
@@ -378,46 +302,45 @@ function pick(list){return list[Math.floor(Math.random()*list.length)]}
 function clamp(value,min,max){return Math.max(min,Math.min(max,value))}
 function makeId(prefix){return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2,8)}`}
 
-function jitteredStats(baseStats){
-  const stats={};
-  for(const key of STAT_KEYS) stats[key]=clamp(baseStats[key]+randInt(-2,2),1,99);
-  return stats;
-}
-
 function marketValueFor(stats,age){
   const avg=STAT_KEYS.reduce((sum,key)=>sum+stats[key],0)/STAT_KEYS.length;
   const primeFactor=age>=24&&age<=30?1.15:(age<22||age>33?0.85:1);
-  return Math.round((avg*avg*4*primeFactor)/50)*50;
+  const baseValue=Math.round((avg*avg*4*primeFactor)/50)*50;
+  return Math.round((baseValue*MARKET_PRICE_MULTIPLIER)/50)*50;
 }
 
 function makeRealRider(entry){
-  const stats=jitteredStats(entry.stats);
+  const stats={...entry.stats};
   return {
-    id:makeId('r'), name:entry.name, age:entry.age, teamId:entry.teamId,
+    id:entry.id, name:entry.name, age:entry.age, teamId:entry.teamId,
     marketValue:marketValueFor(stats,entry.age), stats,
     status:'active', statusUntil:0, fatigue:0, gelsRemaining:GELS_PER_RACE, specialism:entry.specialism
   };
 }
 
-function ridersExcluding(excludeNames){
-  const exclude=excludeNames instanceof Set?excludeNames:new Set(excludeNames||[]);
-  const pool=REAL_RIDERS.filter((entry) => !exclude.has(entry.name));
-  return pool.length?pool:REAL_RIDERS;
+function ridersExcluding(excludeIds){
+  const exclude=excludeIds instanceof Set?excludeIds:new Set(excludeIds||[]);
+  return RIDER_CATALOG.filter((entry) => !entry.retired&&!exclude.has(entry.id));
 }
 
-function starterRiders(count,excludeNames){
-  const pool=[...ridersExcluding(excludeNames)].sort(() => Math.random()-0.5);
+function racePoolFor(raceId){
+  const parsed=parseStageRaceId(raceId);
+  return RACE_POOLS.get(parsed?.tourId||raceId)||[];
+}
+
+function starterRiders(count,excludeIds){
+  const pool=[...ridersExcluding(excludeIds)].sort(() => Math.random()-0.5);
   return pool.slice(0,count).map(makeRealRider);
 }
 
-function scoutCandidates(excludeNames){
-  const source=ridersExcluding(excludeNames);
+function scoutCandidates(excludeIds){
+  const source=ridersExcluding(excludeIds);
   const picks=[];
   const used=new Set();
   while(picks.length<SCOUT_MARKET_SIZE&&used.size<source.length){
     const entry=pick(source);
-    if(used.has(entry.name))continue;
-    used.add(entry.name);
+    if(used.has(entry.id))continue;
+    used.add(entry.id);
     picks.push(makeRealRider(entry));
   }
   return picks;
@@ -439,16 +362,17 @@ function describeShopEffects(shop){
 function defaultCareer(){return {victories:0,podiums:0,monumentsWon:0,grandToursWon:0,gtStagesWon:0,prizeMoney:0,racesEntered:0}}
 
 function sanitizeRider(rider){
+  const catalog=RIDER_BY_ID.get(String(rider?.id))||RIDER_CATALOG.find((entry) => entry.name===rider?.name);
   const stats={};
-  for(const key of STAT_KEYS) stats[key]=clamp(Number(rider?.stats?.[key])||40,1,99);
+  for(const key of STAT_KEYS) stats[key]=clamp(Number(catalog?.stats?.[key]??rider?.stats?.[key])||40,1,99);
   return {
-    id:String(rider?.id||makeId('r')), name:String(rider?.name||'Onbekende renner'), age:Number(rider?.age)||24,
-    teamId:rider?.teamId?String(rider.teamId):null,
+    id:String(catalog?.id||rider?.id||makeId('r')), name:String(catalog?.name||rider?.name||'Onbekende renner'), age:Number(catalog?.age??rider?.age)||24,
+    teamId:catalog?.teamId||(rider?.teamId?String(rider.teamId):null),
     marketValue:Math.max(0,Number(rider?.marketValue)||marketValueFor(stats,Number(rider?.age)||24)),
     stats, status:['active','injured','sick'].includes(rider?.status)?rider.status:'active',
     statusUntil:Number(rider?.statusUntil)||0, fatigue:clamp(Number(rider?.fatigue)||0,0,100),
     gelsRemaining:clamp(Number.isFinite(Number(rider?.gelsRemaining))?Number(rider.gelsRemaining):GELS_PER_RACE,0,GELS_PER_RACE),
-    specialism:SPECIALISMS[rider?.specialism]?rider.specialism:'allrounder'
+    specialism:catalog?.specialism||(SPECIALISMS[rider?.specialism]?rider.specialism:'allrounder')
   };
 }
 
@@ -465,9 +389,32 @@ function hydrateTeam(saved){
 
 function defaultTeam(isNpc){
   return {
-    wallet:STARTING_WALLET, riders:starterRiders(isNpc?NPC_STARTER_RIDERS:STARTER_RIDERS), shop:defaultShop(),
+    wallet:STARTING_WALLET, riders:starterRiders(isNpc?0:STARTER_RIDERS), shop:defaultShop(),
     career:defaultCareer(), raceCount:0
   };
+}
+
+function humanPlayers(game){return game.players.filter((player) => !player.isNpc)}
+function ownedRiderIds(game,exceptPlayerId=null){
+  return new Set(humanPlayers(game).filter((player) => player.id!==exceptPlayerId)
+    .flatMap((player) => player.team.riders.map((rider) => rider.id)));
+}
+function refreshScoutMarkets(game){
+  const owned=ownedRiderIds(game);
+  for(const player of humanPlayers(game)){
+    const exclude=new Set([...owned,...player.team.riders.map((rider) => rider.id)]);
+    game.scoutMarkets[player.id]=scoutCandidates(exclude);
+  }
+}
+function reconcileHumanOwnership(game){
+  const claimed=new Set();
+  for(const player of humanPlayers(game)){
+    player.team.riders=player.team.riders.filter((rider) => {
+      if(claimed.has(rider.id))return false;
+      claimed.add(rider.id);
+      return true;
+    });
+  }
 }
 
 function weightedStat(stats,terrain){
@@ -495,10 +442,10 @@ function recoverTeam(team){
 function enterClubPhase(game,{recover=false}={}){
   game.phase='club';
   game.race=null;
-  for(const player of game.players){
+  for(const player of raceActors(game)){
     refreshRiderStatus(player.team);
     if(recover) recoverTeam(player.team);
-    if(!player.isNpc) game.scoutMarkets[player.id]=scoutCandidates(player.team.riders.map((rider) => rider.name));
+    if(!player.isNpc) game.scoutMarkets[player.id]=scoutCandidates(ownedRiderIds(game));
   }
 }
 
@@ -573,17 +520,32 @@ function statFactorFor(rider,team,segment){
 }
 
 function startRacing(game){
+  const humanEntryIds=humanPlayers(game).flatMap((player) => game.race.lineups[player.id]||[]);
+  const humanEntrySet=new Set(humanEntryIds);
+  if(humanEntrySet.size!==humanEntryIds.length)throw new Error('Een renner kan maar één keer aan een koers deelnemen.');
+  const npcCount=RACE_FIELD_SIZE-humanEntryIds.length;
+  if(npcCount<0)throw new Error(`Een koers kan maximaal ${RACE_FIELD_SIZE} renners bevatten.`);
+  const owned=ownedRiderIds(game);
+  const npcEntries=racePoolFor(game.race.raceId).filter((riderId) => !owned.has(riderId)&&!humanEntrySet.has(riderId)).slice(0,npcCount);
+  if(npcEntries.length!==npcCount)throw new Error('De racepool bevat onvoldoende beschikbare NPC-renners voor een veld van 30.');
+  game.race.npcPlayer={
+    id:RACE_NPC_ID,name:'NPC-peloton',isNpc:true,
+    team:{riders:npcEntries.map((riderId) => makeRealRider(RIDER_BY_ID.get(riderId))),shop:defaultShop(),raceCount:0}
+  };
+  game.race.lineups[RACE_NPC_ID]=npcEntries;
   game.phase='racing';
   game.race.npcTimers={};
   game.race.segmentIndex=0;
   game.race.progress={};
-  for(const player of game.players){
+  for(const player of raceActors(game)){
     const riderIds=game.race.lineups[player.id]||[];
     const riders={};
     for(const riderId of riderIds) riders[riderId]={pr:0,timeAccumulated:0,pointsGreen:0,pointsPolka:0,segments:[],dnf:false};
     game.race.progress[player.id]={pendingRoll:null, confirmed:false, riders};
   }
 }
+
+function raceActors(game){return game.race?.npcPlayer?[...game.players,game.race.npcPlayer]:game.players}
 
 function maybeStartRacing(game){
   if(allSubmitted(game)){startRacing(game);return true}
@@ -642,7 +604,7 @@ function closeSegment(game){
   const segment=race.segments[race.segmentIndex];
   const fieldMultipliers=[];
   const segmentResults=[];
-  for(const player of game.players){
+  for(const player of raceActors(game)){
     const prog=race.progress[player.id];
     if(!prog)continue;
     for(const riderId of Object.keys(prog.riders)){
@@ -671,13 +633,13 @@ function closeSegment(game){
 function maybeAdvanceSegment(game){
   if(game.phase!=='racing'||!game.race)return false;
   const race=game.race;
-  const stillWaiting=game.players.some((player) => playerAwaitsConfirmation(race.progress[player.id]||{riders:{},confirmed:true}));
+  const stillWaiting=raceActors(game).some((player) => playerAwaitsConfirmation(race.progress[player.id]||{riders:{},confirmed:true}));
   if(stillWaiting)return false;
   closeSegment(game);
   race.segmentIndex+=1;
-  const finished=race.segmentIndex>=SEGMENTS_PER_RACE||game.players.every((player) => activeRiderIds(race.progress[player.id]).length===0);
+  const finished=race.segmentIndex>=SEGMENTS_PER_RACE||raceActors(game).every((player) => activeRiderIds(race.progress[player.id]).length===0);
   if(finished){
-    for(const player of game.players){
+    for(const player of raceActors(game)){
       const prog=race.progress[player.id];
       if(!prog)continue;
       for(const riderId of Object.keys(prog.riders)){
@@ -689,7 +651,7 @@ function maybeAdvanceSegment(game){
     finalizeRace(game);
     return true;
   }
-  for(const player of game.players){
+  for(const player of raceActors(game)){
     const prog=race.progress[player.id];
     if(prog)prog.confirmed=false;
   }
@@ -702,7 +664,7 @@ function finalizeRace(game){
   for(const player of game.players) player.team.raceCount+=1;
 
   const entries=[];
-  for(const player of game.players){
+  for(const player of raceActors(game)){
     const prog=race.progress[player.id];
     if(!prog)continue;
     for(const riderId of Object.keys(prog.riders)){
@@ -759,8 +721,8 @@ function finalizeStandaloneRace(game,race,catalogRace,finishers,dnfs){
 
   game.lastResult={
     type:'one_day', raceId:race.raceId, raceName:catalogRace.name, category:catalogRace.category,
-    classification:finishers.map((entry) => ({place:entry.place, playerId:entry.playerId, playerName:entry.playerName, riderName:entry.riderName, event:entry.event, segments:entry.segments, prize:entry.prize||0})),
-    dnfs:dnfs.map((entry) => ({playerId:entry.playerId, playerName:entry.playerName, riderName:entry.riderName, event:entry.event, segments:entry.segments})),
+    classification:finishers.map((entry) => ({place:entry.place, playerId:entry.playerId, playerName:entry.playerName, riderId:entry.riderId, riderName:entry.riderName, event:entry.event, segments:entry.segments, prize:entry.prize||0})),
+    dnfs:dnfs.map((entry) => ({playerId:entry.playerId, playerName:entry.playerName, riderId:entry.riderId, riderName:entry.riderName, event:entry.event, segments:entry.segments})),
     payouts
   };
 
@@ -789,7 +751,7 @@ function finalizeStandaloneRace(game,race,catalogRace,finishers,dnfs){
 function classificationStandings(gc){
   const entries=Object.values(gc);
   const rank=(list,key,ascending) => list.slice().sort((a,b) => ascending?a[key]-b[key]:b[key]-a[key])
-    .map((entry,index) => ({place:index+1, playerId:entry.playerId, playerName:entry.playerName, riderName:entry.riderName, value:entry[key], stageWins:entry.stageWins}));
+    .map((entry,index) => ({place:index+1, playerId:entry.playerId, playerName:entry.playerName, riderId:entry.riderId, riderName:entry.riderName, value:entry[key], stageWins:entry.stageWins}));
   const byPlayer=new Map();
   for(const entry of entries){
     if(!byPlayer.has(entry.playerId))byPlayer.set(entry.playerId,{playerId:entry.playerId, playerName:entry.playerName, riders:[]});
@@ -861,8 +823,8 @@ function finalizeGrandTourStage(game,race,catalogRace,finishers,dnfs){
 
   game.lastResult={
     type:'grand_tour_stage', tourId:tour.id, raceName:catalogRace.name, stageNumber, totalStages:tour.stages,
-    classification:finishers.map((entry) => ({place:entry.place, playerId:entry.playerId, playerName:entry.playerName, riderName:entry.riderName, event:entry.event, segments:entry.segments, prize:entry.prize||0})),
-    dnfs:dnfs.map((entry) => ({playerId:entry.playerId, playerName:entry.playerName, riderName:entry.riderName, event:entry.event, segments:entry.segments})),
+    classification:finishers.map((entry) => ({place:entry.place, playerId:entry.playerId, playerName:entry.playerName, riderId:entry.riderId, riderName:entry.riderName, event:entry.event, segments:entry.segments, prize:entry.prize||0})),
+    dnfs:dnfs.map((entry) => ({playerId:entry.playerId, playerName:entry.playerName, riderId:entry.riderId, riderName:entry.riderName, event:entry.event, segments:entry.segments})),
     classifications:classificationStandings(game.grandTour.gc)
   };
   game.phase='stageResult';
@@ -897,7 +859,7 @@ function finalizeGrandTourOverall(game,tour){
   game.lastResult={
     type:'grand_tour_final', tourId:tour.id, raceName:tour.name, totalStages:tour.stages,
     stages:game.grandTour.stageLog,
-    gc:gcEntries.slice(0,10).map((entry) => ({place:entry.gcPlace, playerId:entry.playerId, playerName:entry.playerName, riderName:entry.riderName, stageWins:entry.stageWins})),
+    gc:gcEntries.slice(0,10).map((entry) => ({place:entry.gcPlace, playerId:entry.playerId, playerName:entry.playerName, riderId:entry.riderId, riderName:entry.riderName, stageWins:entry.stageWins})),
     classifications:classificationStandings(game.grandTour.gc),
     payouts
   };
@@ -942,7 +904,8 @@ function createGame(roomPlayers){
     })),
     race:null, grandTour:null, lastResult:null, log:[], scoutMarkets:{}, pendingRoundRecord:null
   };
-  for(const player of game.players) if(!player.isNpc) game.scoutMarkets[player.id]=scoutCandidates(player.team.riders.map((rider) => rider.name));
+  reconcileHumanOwnership(game);
+  refreshScoutMarkets(game);
   return game;
 }
 
@@ -962,18 +925,18 @@ function handleAction(game,playerId,action,payload={}){
     if(index<0)throw new Error('Deze renner is niet meer beschikbaar.');
     if(player.team.riders.length>=MAX_RIDERS)throw new Error(`Je ploeg heeft maximaal ${MAX_RIDERS} renners.`);
     const candidate=market[index];
+    if(ownedRiderIds(game,playerId).has(candidate.id))throw new Error('Deze renner is al eigendom van een andere ploeg.');
     if(player.team.wallet<candidate.marketValue)throw new Error('Onvoldoende budget.');
     player.team.wallet-=candidate.marketValue;
     player.team.riders.push(candidate);
-    const exclude=new Set([...player.team.riders.map((rider) => rider.name), ...market.map((rider) => rider.name)]);
-    market.splice(index,1,scoutCandidates(exclude)[0]);
+    refreshScoutMarkets(game);
     return;
   }
 
   if(action==='refreshScoutMarket'){
     if(game.phase!=='club')throw new Error('Dit kan alleen in de club.');
     if(player.isNpc)throw new Error('NPC-ploegen scouten niet zelf.');
-    game.scoutMarkets[playerId]=scoutCandidates(player.team.riders.map((rider) => rider.name));
+    game.scoutMarkets[playerId]=scoutCandidates(ownedRiderIds(game));
     return;
   }
 
@@ -983,6 +946,7 @@ function handleAction(game,playerId,action,payload={}){
     if(!rider)throw new Error('Renner niet gevonden.');
     player.team.riders=player.team.riders.filter((candidate) => candidate.id!==rider.id);
     player.team.wallet+=Math.round(rider.marketValue*SELL_RATE/50)*50;
+    refreshScoutMarkets(game);
     return;
   }
 
@@ -1011,7 +975,8 @@ function handleAction(game,playerId,action,payload={}){
   if(action==='resetTeam'){
     if(game.phase!=='club')throw new Error('Dit kan alleen in de club.');
     player.team=defaultTeam(player.isNpc);
-    if(!player.isNpc)game.scoutMarkets[playerId]=scoutCandidates();
+    reconcileHumanOwnership(game);
+    refreshScoutMarkets(game);
     return;
   }
 
@@ -1105,7 +1070,7 @@ function tick(game,now=Date.now()){
 
   if(game.phase==='racing'){
     const segment=game.race.segments[game.race.segmentIndex];
-    for(const player of game.players){
+    for(const player of raceActors(game)){
       if(!player.isNpc)continue;
       const prog=game.race.progress[player.id];
       if(!prog||!playerAwaitsConfirmation(prog))continue;
@@ -1232,7 +1197,7 @@ function afterStateChange(room,{db}){
 
 module.exports={
   meta, createGame, handleAction, serialize, tick, preparePlayers, afterStateChange,
-  RACE_CATALOG, GRAND_TOUR_CATALOG, SHOP_COSTS, STAT_KEYS, SQUAD_SIZE, MAX_RIDERS, TEAMS, REAL_RIDERS,
+  RACE_CATALOG, GRAND_TOUR_CATALOG, RACE_POOLS, RIDER_CATALOG, RIDER_BY_ID, SHOP_COSTS, STAT_KEYS, SQUAD_SIZE, MAX_RIDERS, RACE_FIELD_SIZE, MARKET_PRICE_MULTIPLIER, TEAMS, REAL_RIDERS:RIDER_CATALOG,
   STAGES_PER_GRAND_TOUR, SEGMENTS_PER_RACE, RIDER_TACTICS, TACTIC_LABELS, TACTIC_EFFECTS, GELS_PER_RACE,
   calculateSegmentStep, buildSegmentPlan, raceGroupForGap, buildRaceSituation
 };
