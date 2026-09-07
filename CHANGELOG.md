@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.28.6 — cycclub redesign
+
+- cycclub redesign
+
 ## v1.28.5 — Game-specifieke leaderboards
 
 - Games kunnen hun leaderboardkolommen, labels, breedtes en formattering declaratief configureren via het gedeelde leaderboardmodel.

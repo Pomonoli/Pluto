@@ -569,6 +569,12 @@ const RELEASES = [
     improvements:[
       'Leaderboards tonen nu relevante statistieken per game: CycClub zonder gelijkspel en met ruimere geldkolommen, en The Big Blue C gerangschikt op ontdekte soorten zonder die als algemene wins te tellen.'
     ]
+  },
+  {
+    version:"1.28.6",
+    improvements:[
+      "cycclub redesign"
+    ]
   }
 ];
 
