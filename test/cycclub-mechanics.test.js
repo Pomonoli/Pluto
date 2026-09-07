@@ -92,6 +92,26 @@ test('buildSegmentPlan: produces the expected number of segments with valid terr
   assert.ok(mountainCats.every((cat) => cat >= 1 && cat <= 4));
 });
 
+test('hydrating a team saved before gelsRemaining existed defaults it to a full ration, not NaN/undefined', () => {
+  const oldSavedTeam = {
+    wallet: 50000,
+    riders: [{
+      id: 'old1', name: 'Old Rider', age: 28, teamId: 'uae', marketValue: 20000,
+      stats: {flat: 60, mountain: 60, cobbles: 60, timeTrial: 60, sprint: 60, stamina: 60},
+      status: 'active', statusUntil: 0, fatigue: 15, specialism: 'climber'
+      // no gelsRemaining field, as in a save from before this feature shipped
+    }],
+    shop: {bikes: 1, nutrition: 0, trainers: 0, medical: 0},
+    career: {victories: 0, podiums: 0, monumentsWon: 0, grandToursWon: 0, gtStagesWon: 0, prizeMoney: 0, racesEntered: 0},
+    raceCount: 3
+  };
+  const roomPlayers = [{id: 'p1', name: 'Alice', isNpc: false, cycclubTeam: oldSavedTeam}, {id: 'p2', name: 'Bot', isNpc: true}];
+  const game = cc.createGame(roomPlayers);
+  const rider = game.players.find((player) => player.id === 'p1').team.riders[0];
+  assert.equal(rider.gelsRemaining, cc.GELS_PER_RACE);
+  assert.equal(rider.fatigue, 15);
+});
+
 function buildGame() {
   const roomPlayers = [{id: 'p1', name: 'Alice', isNpc: false}, {id: 'p2', name: 'Bot', isNpc: true}];
   const game = cc.createGame(roomPlayers);

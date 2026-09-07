@@ -416,7 +416,7 @@ function sanitizeRider(rider){
     marketValue:Math.max(0,Number(rider?.marketValue)||marketValueFor(stats,Number(rider?.age)||24)),
     stats, status:['active','injured','sick'].includes(rider?.status)?rider.status:'active',
     statusUntil:Number(rider?.statusUntil)||0, fatigue:clamp(Number(rider?.fatigue)||0,0,100),
-    gelsRemaining:clamp(Number(rider?.gelsRemaining)??GELS_PER_RACE,0,GELS_PER_RACE),
+    gelsRemaining:clamp(Number.isFinite(Number(rider?.gelsRemaining))?Number(rider.gelsRemaining):GELS_PER_RACE,0,GELS_PER_RACE),
     specialism:SPECIALISMS[rider?.specialism]?rider.specialism:'allrounder'
   };
 }
