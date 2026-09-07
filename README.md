@@ -2,6 +2,10 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
+## Nieuw in versie 1.28.4
+
+cycclub seconden
+
 ## Nieuw in versie 1.28.0
 
 CycClub heeft een nieuw diepgaand tactieksysteem: elke renner kiest elk segment zelf een tactiek (Herstel, Volg, Kop, Val aan of Bidons) met een eigen effect op multiplier en vermoeidheid, renners hebben een individuele vermoeidheidsmeter en energiegels, en Grote Rondes bouwen nu vijf volwaardige klassementen op (Algemeen, Punten, Bergen, Jongeren en Ploegen).
@@ -28,6 +32,7 @@ Alle games zijn ondergebracht in zelfstandige modules onder `games/`. Iedere gam
 | Hofslag | 2-4 | Ja |
 | Isle of Skye | 2-4 | Ja |
 | Kingdomino | 2-4 | Ja |
+| Lutro | 1-4 | Ja |
 | Minigolf | 1-4 | Ja |
 | Pesten | 2-4 | Ja |
 | Presidenten | 3-4 | Ja |

@@ -1,0 +1,15 @@
+{
+  "key": "lutro",
+  "name": "Lutro",
+  "category": "original",
+  "version": "2",
+  "description": "Mens-erger-je-niet ontmoet lane battler & tower defense: leid Elven, Dwergen, Mensen of Orks over een isometrische Midden-aarde-kaart, plaats troepen met de dobbelsteen en beleger de kastelen van je rivalen.",
+  "icon": "🏰",
+  "badge": "1-4",
+  "actionLabel": "Nieuw beleg",
+  "minPlayers": 1,
+  "maxPlayers": 4,
+  "supportsNpc": true,
+  "realtime": true,
+  "solo": false
+}

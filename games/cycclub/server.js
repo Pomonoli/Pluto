@@ -32,16 +32,14 @@ const SPECIALISMS = {
 // segment een houding, die samen met terrein en vermoeidheid zijn personalMultiplier bepaalt.
 const RIDER_TACTICS = ['recover','follow','leadout','attack','fetch_bidons'];
 const TACTIC_LABELS = {recover:'Herstel', follow:'Volg', leadout:'Kop', attack:'Val aan', fetch_bidons:'Bidons'};
-// multiplier hier is de multiplicatieve intentie uit het ontwerp; in de somformule van
-// calculateSegmentStep wordt dit gebruikt als (multiplier-1), dus als een optelbare bonus/malus.
 const TACTIC_EFFECTS = {
-  recover:{multiplier:0.85, fatigueDelta:-10},
-  follow:{multiplier:1.00, fatigueDelta:5},
-  leadout:{multiplier:1.25, fatigueDelta:20},
-  attack:{multiplier:1.50, fatigueDelta:35},
-  fetch_bidons:{multiplier:0.80, fatigueDelta:15}
+  recover:{rollBonus:0, fatigueDelta:-10},
+  follow:{rollBonus:2, fatigueDelta:5},
+  leadout:{rollBonus:3, fatigueDelta:20},
+  attack:{rollBonus:5, fatigueDelta:35},
+  fetch_bidons:{rollBonus:0, fatigueDelta:15}
 };
-const LEADOUT_DRAFT_BONUS = 0.15;
+const LEADOUT_DRAFT_BONUS = 1.5;
 const FETCH_BIDONS_RELIEF = 15;
 const GEL_FATIGUE_RELIEF = 25;
 const GELS_PER_RACE = 2;
@@ -91,11 +89,14 @@ function calculateSegmentStep(riders,tacticsByRiderId,gelsByRiderId,segment,base
     const effects=TACTIC_EFFECTS[tactic];
     const role=riderRole(rider);
     const terrain=terrainFactorFor(role,segment.terrainType);
-    const tacticBonus=(effects.multiplier-1)+((tactic==='follow'&&hasLeadout)?LEADOUT_DRAFT_BONUS:0);
+    const tacticRollBonus=effects.rollBonus+((tactic==='follow'&&hasLeadout)?LEADOUT_DRAFT_BONUS:0);
     const effectiveFatigue=rider.fatigue*(1-(team?.shop?.nutrition||0)*0.08);
     const fatiguePenalty=bonked?0.5:fatiguePenaltyFor(effectiveFatigue);
     const statFactor=team?statFactorFor(rider,team,segment):0;
-    let personalMultiplier=(1+terrain+tacticBonus+bikeBonus+statFactor-fatiguePenalty)*(baseDiceRoll/10);
+    // Alle effecten worden als punten bij de worp opgeteld of ervan afgetrokken.
+    // Delen door tien bewaart het bestaande multiplierformaat voor scoring en klassementen.
+    const effectiveRoll=baseDiceRoll+tacticRollBonus+(terrain*10)+(bikeBonus*10)+(statFactor*10)-(fatiguePenalty*10);
+    let personalMultiplier=effectiveRoll/10;
     if(bonked)personalMultiplier=Math.min(personalMultiplier,0.5);
     personalMultiplier=Math.round(personalMultiplier*1000)/1000;
     rider.fatigue=clamp(rider.fatigue+effects.fatigueDelta,0,100);
@@ -106,6 +107,36 @@ function calculateSegmentStep(riders,tacticsByRiderId,gelsByRiderId,segment,base
 
 function scoreFromMultiplier(personalMultiplier){return Math.round((personalMultiplier-1)*20)}
 function timeDeltaFromMultiplier(personalMultiplier,fieldAverage){return Math.round((fieldAverage-personalMultiplier)*30)}
+
+function raceGroupForGap(gapSeconds){
+  if(gapSeconds<=5)return 'breakaway';
+  if(gapSeconds<=20)return 'chasers';
+  if(gapSeconds<=60)return 'peloton';
+  return 'tail';
+}
+
+function buildRaceSituation(game){
+  if(!game.race?.progress)return {leader:null,byEntry:{}};
+  const entries=[];
+  for(const player of game.players){
+    const prog=game.race.progress[player.id];
+    if(!prog)continue;
+    for(const [riderId,state] of Object.entries(prog.riders)){
+      if(state.dnf)continue;
+      const rider=player.team.riders.find((candidate) => candidate.id===riderId);
+      entries.push({playerId:player.id,playerName:player.name,riderId,riderName:rider?.name||'Renner',timeAccumulated:state.timeAccumulated});
+    }
+  }
+  entries.sort((a,b) => a.timeAccumulated-b.timeAccumulated||a.riderName.localeCompare(b.riderName));
+  if(!entries.length)return {leader:null,byEntry:{}};
+  const leaderTime=entries[0].timeAccumulated;
+  const byEntry={};
+  for(const entry of entries){
+    const gapToLeader=Math.max(0,entry.timeAccumulated-leaderTime);
+    byEntry[`${entry.playerId}:${entry.riderId}`]={gapToLeader,raceGroup:raceGroupForGap(gapToLeader)};
+  }
+  return {leader:{...entries[0],gapToLeader:0,raceGroup:'breakaway'},byEntry};
+}
 
 const TERRAIN_TYPE_LABELS = {flat:'Vlak',hills:'Heuvels',mountain:'Berg',cobbles:'Kasseien',timeTrial:'Tijdrit'};
 const MOUNTAIN_POINTS = {1:15,2:10,3:6,4:3};
@@ -1133,16 +1164,20 @@ function serializeRace(game,requesterId,catalogRace){
   base.segmentIndex=game.race.segmentIndex;
   base.segment=game.race.segments[game.race.segmentIndex];
   base.tacticLabels=TACTIC_LABELS;
+  const situation=buildRaceSituation(game);
+  if(game.race.segmentIndex>0)base.leader=situation.leader;
   const myProg=game.race.progress[requesterId];
   const requester=game.players.find((candidate) => candidate.id===requesterId);
   base.myProgress=myProg?{
     awaitingConfirmation:playerAwaitsConfirmation(myProg),
     riders:Object.fromEntries(Object.entries(myProg.riders).map(([riderId,state]) => {
       const rider=requester?.team.riders.find((candidate) => candidate.id===riderId);
+      const position=situation.byEntry[`${requesterId}:${riderId}`]||{};
       return [riderId,{
         name:rider?.name||'Renner', role:rider?riderRole(rider):'allrounder',
         fatigue:rider?.fatigue??0, gelsRemaining:rider?.gelsRemaining??0,
-        pr:Math.round(state.pr*10)/10, segments:state.segments, dnf:state.dnf
+        pr:Math.round(state.pr*10)/10, segments:state.segments, dnf:state.dnf,
+        gapToLeader:position.gapToLeader??null, raceGroup:position.raceGroup||null
       }];
     }))
   }:null;
@@ -1199,5 +1234,5 @@ module.exports={
   meta, createGame, handleAction, serialize, tick, preparePlayers, afterStateChange,
   RACE_CATALOG, GRAND_TOUR_CATALOG, SHOP_COSTS, STAT_KEYS, SQUAD_SIZE, MAX_RIDERS, TEAMS, REAL_RIDERS,
   STAGES_PER_GRAND_TOUR, SEGMENTS_PER_RACE, RIDER_TACTICS, TACTIC_LABELS, TACTIC_EFFECTS, GELS_PER_RACE,
-  calculateSegmentStep, buildSegmentPlan
+  calculateSegmentStep, buildSegmentPlan, raceGroupForGap, buildRaceSituation
 };

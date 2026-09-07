@@ -1,6 +1,22 @@
 # Changelog
 
-## v1.28.0 — CycClub: individuele renner-tactieken, vermoeidheid en klassementen
+## v1.28.4 — cycclub seconden
+
+- cycclub seconden
+
+## v1.28.3 — cycclub fix full
+
+- cycclub fix full
+
+## v1.28.2 — Cycclub fix
+
+- Cycclub fix
+
+## v1.28.1 — Cycclub dropdown fix
+
+- Cycclub dropdown fix
+
+## v1.28.0 — Lutro en vernieuwde CycClub-tactieken
 
 - De permanente tactiekkaarten zijn vervangen door een dieper systeem: elke renner in je opstelling kiest elk segment zelf een tactiek — Herstel, Volg, Kop, Val aan of Bidons — met een eigen effect op zijn multiplier en vermoeidheid.
 - Renners hebben nu een individuele vermoeidheidsmeter (0-100%) en twee energiegels per rit; een gel verlicht direct vermoeidheid, en boven 90% vermoeidheid zit een renner in de Hongerklop (geen aanval of kopwerk meer, sterk verlaagde multiplier).
@@ -8,6 +24,11 @@
 - Elk segment heeft nu een eigen terrein (vlak, heuvels, berg, kasseien of tijdrit); klimmers, sprinters en allrounders krijgen een terreingebonden bonus of malus op hun tactiek.
 - Grote Rondes bouwen nu vijf volwaardige klassementen op: Algemeen (tijd), Punten/Groen, Bergen/Bolletjes, Jongeren/Wit en Ploegen, elk met een eigen tabblad tijdens de rit en in de ritresultaten.
 - De knop "Rol de dobbelsteen" is pas beschikbaar zodra elke renner in de opstelling een tactiek heeft, en toont een live voorbeeld van zijn basismultiplier.
+- Nieuwe game "Lutro: Siege of the Four Realms" — een realtime hybride van Mens-erger-je-niet, een lane battler en tower defense op een isometrische Midden-aarde-kaart.
+- Kies Rivendell, Erebor, Barad-dûr of Minas Tirith; elk rijk heeft eigen troepen (Verkenner, Infanterie, Belegeringseenheid), een eigen verdedigingstoren en gevechtstraits.
+- Rol de dobbelsteen om troepen in te zetten en te verplaatsen over een 48-tegel pad; een volledige omloop leidt via je eigen kleurbaan naar de centrale Belegeringsplaats om een rivaliserend kasteel te raken.
+- Speciale tegels geven een tijdelijke schilddome of een directe aanval op je doelwitkasteel; verdien goud, herstel je kasteel en verbeter je toren.
+- Drie AI-persoonlijkheden (agressief, defensief, goud sparend) besturen onbezette rijken zodat je ook solo kan spelen.
 
 ## v1.27.0 — Add Elements and hide it
 
