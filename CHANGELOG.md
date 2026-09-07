@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.28.8 — cycclub banner weg
+
+- cycclub banner weg
+
 ## v1.28.7 — Age of Civilization: Napoleon en historische tijdperken
 
 - Age of Civilization: Napoleon vervangt Einstein en de zeven tijdperken krijgen historische Nederlandse namen.

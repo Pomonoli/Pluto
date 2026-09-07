@@ -581,6 +581,12 @@ const RELEASES = [
     improvements:[
       "Age of Civilization: Napoleon vervangt Einstein met vanaf beurt 1 +10 procentpunten bonus op vaste gebouwen en de zeven tijdperken krijgen historische Nederlandse namen. Kaarten en gebouwen tonen grotere afbeeldingen en tekst; geldeenheden gebruiken een hoofdletter G."
     ]
+  },
+  {
+    version:"1.28.8",
+    improvements:[
+      "cycclub banner weg"
+    ]
   }
 ];
 

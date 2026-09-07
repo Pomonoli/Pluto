@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.28.7
+## Nieuw in versie 1.28.8
 
-Age of Civilization: Napoleon vervangt Einstein met vanaf beurt 1 +10 procentpunten bonus op vaste gebouwen en de zeven tijdperken krijgen historische Nederlandse namen. Kaarten en gebouwen tonen grotere afbeeldingen en tekst; geldeenheden gebruiken een hoofdletter G.
+cycclub banner weg
 
 ## Nieuw in versie 1.28.0
 
