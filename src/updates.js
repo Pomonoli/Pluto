@@ -614,6 +614,12 @@ const RELEASES = [
     improvements:[
       "golf fullscreen"
     ]
+  },
+  {
+    version:"1.28.13",
+    improvements:[
+      "golf fix"
+    ]
   }
 ];
 
