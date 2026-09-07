@@ -47,6 +47,27 @@ function minigolfPathPoint(path, t) {
 
 function golfScoreLabel(strokes,par){const d=strokes-par;return d===0?'E':d>0?`+${d}`:String(d)}
 
+const PORTRAIT_WIDTH=520;
+const PORTRAIT_HEIGHT=900;
+function portraitPoint(point){return point?{x:point.y,y:PORTRAIT_HEIGHT-point.x}:point}
+function landscapePoint(point){return point?{x:PORTRAIT_HEIGHT-point.y,y:point.x}:point}
+function portraitRect(rect){return {...rect,x:rect.y,y:PORTRAIT_HEIGHT-rect.x-rect.w,w:rect.h,h:rect.w}}
+function portraitHole(hole){
+  const terrain=(hole.terrain||[]).map(zone=>zone.shape==='ellipse'
+    ?{...zone,cx:zone.cy,cy:PORTRAIT_HEIGHT-zone.cx,rx:zone.ry,ry:zone.rx}
+    :portraitRect(zone));
+  const props=(hole.props||[]).map(prop=>prop.shape==='circle'
+    ?{...prop,cx:prop.cy,cy:PORTRAIT_HEIGHT-prop.cx}
+    :portraitRect(prop));
+  return {...hole,start:portraitPoint(hole.start),cup:portraitPoint(hole.cup),startZone:portraitRect(hole.startZone),terrain,
+    walls:(hole.walls||[]).map(portraitRect),props,boosts:(hole.boosts||[]).map(boost=>({...portraitRect(boost),angle:(boost.angle||0)-Math.PI/2}))};
+}
+function portraitGame(game){
+  return {...game,course:{...game.course,width:PORTRAIT_WIDTH,height:PORTRAIT_HEIGHT},hole:portraitHole(game.hole),
+    players:game.players.map(player=>({...player,ball:portraitPoint(player.ball)})),pendingShot:game.pendingShot?{...game.pendingShot,
+      paths:Object.fromEntries(Object.entries(game.pendingShot.paths||{}).map(([id,path])=>[id,path.map(portraitPoint)]))}:game.pendingShot};
+}
+
 function minigolfTerrainNode(zone) {
   if(zone.shape==='ellipse') return svgEl('ellipse',{
     cx:zone.cx,cy:zone.cy,rx:zone.rx,ry:zone.ry,
@@ -88,6 +109,7 @@ function minigolfBoostNode(boost) {
 }
 
 function renderMinigolf(room,game) {
+  game=portraitGame(game);
   const me=game.players.find(p=>p.id===room.meId);
   const turn=game.players.find(p=>p.id===game.turnPlayerId);
   let status='';
@@ -126,11 +148,12 @@ function renderMinigolf(room,game) {
   const courseWrap=E('div','golf-full-course-wrap');
   const svg=svgEl('svg',{
     viewBox:`0 0 ${game.course.width} ${game.course.height}`,
-    preserveAspectRatio:'none',
+    preserveAspectRatio:'xMidYMid meet',
     class:'minigolf-course golf-full-course',
     role:'img',
     'aria-label':`Minigolf hole ${game.hole.number}: ${game.hole.name}`
   });
+  svg.style.aspectRatio=`${game.course.width}/${game.course.height}`;
 
   svg.append(svgEl('rect',{x:0,y:0,width:game.course.width,height:game.course.height,rx:16,class:'golf-world'}));
   svg.append(svgEl('rect',{x:5,y:5,width:game.course.width-10,height:game.course.height-10,rx:12,class:'golf-border'}));
@@ -223,7 +246,7 @@ function renderMinigolf(room,game) {
     svg.addEventListener('pointerdown',(event)=>{
       const point=logicalPoint(event);
       if(point.x<sz.x||point.x>sz.x+sz.w||point.y<sz.y||point.y>sz.y+sz.h)return;
-      action('placeBall',point);
+      action('placeBall',landscapePoint(point));
       event.preventDefault()
     })
   }
@@ -271,7 +294,7 @@ function renderMinigolf(room,game) {
       if(!dragging||event.pointerId!==pointerId)return;
       const shotData=updateAim(logicalPoint(event));
       dragging=false;dragStart=null;aim.classList.add('hidden');
-      if(shotData&&shotData.power>=.06){sound('card');action('shoot',shotData)}
+      if(shotData&&shotData.power>=.06){sound('card');action('shoot',{...shotData,angle:shotData.angle+Math.PI/2})}
       event.preventDefault()
     };
     svg.addEventListener('pointerup',finish);
