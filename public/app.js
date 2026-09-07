@@ -1,5 +1,5 @@
-import { createGameUi } from './js/game-ui.js?v=1.28.4';
-import { createScreenWakeLock } from './js/screen-wake-lock.js?v=1.28.4';
+import { createGameUi } from './js/game-ui.js?v=1.28.5';
+import { createScreenWakeLock } from './js/screen-wake-lock.js?v=1.28.5';
 const socket = window.io();
 const screenWakeLock = createScreenWakeLock({ navigator, document, window });
   const $ = (id) => document.getElementById(id);
@@ -379,15 +379,34 @@ const screenWakeLock = createScreenWakeLock({ navigator, document, window });
     els.leaderboardContent.replaceChildren();
     if (!rows.length) { els.leaderboardContent.append(E('p','muted','Nog geen resultaten.')); return; }
     const table=E('table','stats-table');
-    const plugin=state.gamePlugins[gameKey],columns=plugin?.leaderboardColumns||['#','Speler','Wins','Draw','Games','Winrate'];
-    const shortLabels={'Speler':'Speler','Wins':'W','Draw':'½','Games':'G','Winrate':'%','Chips':'Chips','Beste':'Beste','Netto waarde':'NW','Zeges':'Z','Prijzengeld':'€'};
-    const head=E('tr');columns.forEach(x=>{const th=E('th','',x);th.dataset.short=shortLabels[x]||x;head.append(th)});
+    const plugin=state.gamePlugins[gameKey];
+    const columns=plugin?.leaderboardConfig?.columns||[
+      {key:'rank',label:'#',short:'#',width:'rank'},
+      {key:'username',label:'Speler',short:'Speler',width:'player'},
+      {key:'wins',label:'Wins',short:'W'},
+      {key:'draws',label:'Draw',short:'½'},
+      {key:'games',label:'Games',short:'G'},
+      {key:'winRate',label:'Winrate',short:'%',format:'percent'}
+    ];
+    const formatValue=(column,row,index)=>{
+      if(column.key==='rank')return String(index+1);
+      const value=row[column.key];
+      if(column.format==='currency')return `€${Math.round(Number(value)||0).toLocaleString('nl-BE')}`;
+      if(column.format==='percent')return `${Number(value)||0}%`;
+      if(column.format==='duration')return formatDuration(value);
+      return value===null||value===undefined?'—':String(value);
+    };
+    const head=E('tr');columns.forEach(column=>{const th=E('th','',column.label);th.dataset.short=column.short||column.label;th.dataset.columnWidth=column.width||'stat';head.append(th)});
     table.append(head);
     rows.forEach((row,index)=>{
       const tr=E('tr');
-      tr.append(E('td','',String(index+1)));
-      const td=E('td'); const link=E('button','profile-link',row.username); link.type='button'; link.onclick=()=>{setRoute(`/profile/${encodeURIComponent(row.username)}`);showProfile(row.username)};td.append(link);tr.append(td);
-      const cells=plugin?.renderLeaderboardCells?.({row,E})||[E('td','',String(row.wins)),E('td','',String(row.draws||0)),E('td','',String(row.games)),E('td','',`${row.winRate||0}%`)];tr.append(...cells);
+      columns.forEach(column=>{
+        const td=E('td');td.dataset.columnWidth=column.width||'stat';
+        if(column.key==='username'){
+          const link=E('button','profile-link',row.username);link.type='button';link.onclick=()=>{setRoute(`/profile/${encodeURIComponent(row.username)}`);showProfile(row.username)};td.append(link);
+        }else td.textContent=formatValue(column,row,index);
+        tr.append(td);
+      });
       table.append(tr);
     });
     els.leaderboardContent.append(table);
@@ -662,7 +681,7 @@ const screenWakeLock = createScreenWakeLock({ navigator, document, window });
   if('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.28.4', {
+        const registration = await navigator.serviceWorker.register('/service-worker.js?v=1.28.5', {
           updateViaCache:'none'
         });
         await registration.update();

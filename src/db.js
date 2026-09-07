@@ -615,15 +615,15 @@ function deepBleuCLeaderboard(limit = 100) {
     } catch {
       return null;
     }
+    const discoveryFields = ['discovered', 'woodDiscovered', 'rockDiscovered', 'meatDiscovered'];
     return {
       username: row.username,
-      draws: 0,
       cash: Math.round(Number(state?.cash || 0)),
-      discovered: Array.isArray(state?.discovered) ? state.discovered.length : 0,
+      discovered: discoveryFields.reduce((total, field) => total + (Array.isArray(state?.[field]) ? state[field].length : 0), 0),
       heaviestKg: Math.round(Number(state?.heaviestKg || 0) * 10) / 10
     };
   }).filter(Boolean)
-    .sort((a, b) => b.cash - a.cash || b.discovered - a.discovered || a.username.localeCompare(b.username, 'nl-BE', { sensitivity: 'base' }))
+    .sort((a, b) => b.discovered - a.discovered || b.cash - a.cash || a.username.localeCompare(b.username, 'nl-BE', { sensitivity: 'base' }))
     .slice(0, safeLimit);
 }
 

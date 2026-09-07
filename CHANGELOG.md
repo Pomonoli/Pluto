@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.28.5 — Game-specifieke leaderboards
+
+- Games kunnen hun leaderboardkolommen, labels, breedtes en formattering declaratief configureren via het gedeelde leaderboardmodel.
+- CycClub toont geen gelijkspelkolom meer en geeft Netto waarde en Prijzengeld extra ruimte zonder horizontaal scrollen.
+- The Big Blue C rangschikt spelers op hun bestaande aantal ontdekte soorten; deze voortgang telt niet mee als win in het algemene Pluto-leaderboard.
+
 ## v1.28.4 — cycclub seconden
 
 - cycclub seconden

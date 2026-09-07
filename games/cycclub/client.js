@@ -5,17 +5,20 @@ export function render(api){bind(api);renderCycClub(api.room,api.game)}
 export const showResult=false;
 export const roomOptions={allowRematch:false,bodyClass:'cycclub-active'};
 export const playerStrip=true;
-export const leaderboardColumns=['#','Speler','Draw','Netto waarde','Zeges','Prijzengeld'];
-export function renderLeaderboardCells({row,E:e}){
-  return [e('td','',String(row.draws||0)),e('td','',euro(row.netWorth)),e('td','',String(row.victories)),e('td','',euro(row.prizeMoney))];
-}
+export const leaderboardConfig={columns:[
+  {key:'rank',label:'#',short:'#',width:'rank'},
+  {key:'username',label:'Speler',short:'Speler',width:'player'},
+  {key:'netWorth',label:'Netto waarde',short:'NW',width:'wide',format:'currency'},
+  {key:'victories',label:'Zeges',short:'Z'},
+  {key:'prizeMoney',label:'Prijzengeld',short:'€P',width:'wide',format:'currency'}
+]};
 export function profileExtra({stat}){return stat.games?`${stat.wins} zeges`:'—'}
 export function metric({player}){return {text:euro(player.wallet), score:player.career.victories}}
 
 const STAT_LABELS={flat:'Vlak',mountain:'Berg',cobbles:'Kasseien',timeTrial:'Tijdrit',sprint:'Sprint',stamina:'Uithouding'};
 const STAT_SHORT={flat:'VLK',mountain:'BRG',cobbles:'KSW',timeTrial:'TT',sprint:'SPR',stamina:'UIT'};
 const SHOP_LABELS={bikes:'Fietsen & Materiaal',nutrition:'Voeding & Supplementen',trainers:'Trainers & Analyse',medical:'Medische Staf'};
-const SHOP_ICONS={bikes:'🚲',nutrition:'🍎',trainers:'📈',medical:'⚕️'};
+const SHOP_ICONS={bikes:'BIKE',nutrition:'FUEL',trainers:'DATA',medical:'MED'};
 const CATEGORY_ORDER=['monument','classic','grand_tour'];
 const CATEGORY_LABELS={monument:'Monumenten',classic:'Vlaamse Klassiekers',grand_tour:'Grote Rondes'};
 const STATUS_LABELS={active:'Fit',injured:'Geblesseerd',sick:'Ziek'};
@@ -138,44 +141,27 @@ function renderRosterPanel(me,maxRiders){
     panel.append(E('p','muted','Je hebt nog geen renners. Koop je eerste renner in de Scoutingmarkt.'));
     return panel;
   }
-  const wrap=E('div','stats-table-wrap');
-  const table=E('table','cc-roster-table cc-block-table');
+  const wrap=E('div','cc-card-list');
   me.riders.slice().sort((a,b) => b.marketValue-a.marketValue).forEach((rider) => {
     let rest;
     if(rider.status==='active'&&rider.fatigue>0){
-      rest=E('button','secondary',`💤 Rust (${euro(600)})`);
+      rest=E('button','secondary',`Rust · ${euro(600)}`);
       rest.onclick=() => action('restRider',{riderId:rider.id});
     } else rest=E('span','muted','—');
-    const sell=E('button','secondary',`💰 ${euro(sellPrice(rider))}`);
+    const sell=E('button','cc-overflow-btn',`Verkoop · ${euro(sellPrice(rider))}`);
     sell.onclick=() => action('sellRider',{riderId:rider.id});
 
-    const row1=E('tr','cc-block-start');
-    row1.append(
-      tableCell('Naam',rider.name),
-      tableCell('Team',rider.team||'—'),
-      tableCell('Leeftijd',`${rider.age}j`),
-      tableCell('Specialisme',SPECIALISM_LABELS[rider.specialism]||rider.specialism),
-      tableCell('Status',riderStatusBadge(rider))
-    );
-    const row2=E('tr');
-    row2.append(
-      tableCell('VLK',String(rider.stats.flat)),
-      tableCell('BRG',String(rider.stats.mountain)),
-      tableCell('KSW',String(rider.stats.cobbles)),
-      tableCell('TT',String(rider.stats.timeTrial)),
-      tableCell('SPR',String(rider.stats.sprint))
-    );
-    const row3=E('tr','cc-block-end');
-    row3.append(
-      tableCell('UIT',String(rider.stats.stamina)),
-      tableCell('Kostprijs',euro(rider.marketValue)),
-      tableCell('Vermoeidheid',`${rider.fatigue}%`),
-      tableCell('Rust',rest),
-      tableCell('Verkoop',sell)
-    );
-    table.append(row1,row2,row3);
+    const card=E('article','cc-manager-card cc-roster-card');
+    const head=E('div','cc-card-head');
+    const identity=E('div','cc-card-identity');
+    identity.append(E('strong','',rider.name),E('small','',`${rider.team||'—'} · ${SPECIALISM_LABELS[rider.specialism]||rider.specialism} · ${rider.age}j`));
+    head.append(identity,riderStatusBadge(rider));
+    card.append(head,statLine(rider.stats),fatigueMeter(rider.fatigue));
+    const actions=E('div','cc-card-actions');
+    actions.append(rest,sell);
+    card.append(actions);
+    wrap.append(card);
   });
-  wrap.append(table);
   panel.append(wrap);
   return panel;
 }
@@ -191,7 +177,7 @@ function renderShopPanel(me){
   for(const category of Object.keys(SHOP_LABELS)){
     const level=me.shop[category];
     const box=E('div','cc-shop-item');
-    box.append(E('strong','',`${SHOP_ICONS[category]} ${SHOP_LABELS[category]}`));
+    box.append(E('span','cc-upgrade-icon',SHOP_ICONS[category]),E('strong','',SHOP_LABELS[category]));
     const progress=E('div','cc-progress');
     const fill=E('div','cc-progress-fill');
     fill.style.width=`${(level/SHOP_MAX_LEVEL)*100}%`;
@@ -201,7 +187,7 @@ function renderShopPanel(me){
     box.append(E('p','cc-shop-effect',effects[category]||'Geen bonus'));
     if(level<SHOP_MAX_LEVEL){
       const cost=SHOP_COSTS[level];
-      const buy=E('button','primary',`⬆️ Upgrade (${euro(cost)})`);
+      const buy=E('button','primary',`Upgrade · ${euro(cost)}`);
       buy.disabled=me.wallet<cost;
       buy.onclick=() => action('buyUpgrade',{category});
       box.append(buy);
@@ -244,39 +230,22 @@ function renderScoutPanel(room,game,me){
   filterBar.append(statSelect,minStatInput,maxPriceInput,resetFilter);
   panel.append(filterBar);
 
-  const wrap=E('div','stats-table-wrap');
-  const table=E('table','cc-roster-table cc-block-table');
+  const wrap=E('div','cc-card-list cc-market-list');
   const blocks=[];
   market.forEach((candidate) => {
-    const buy=E('button','primary',`🛒 ${euro(candidate.marketValue)}`);
+    const buy=E('button','primary',`Koop · ${euro(candidate.marketValue)}`);
     buy.disabled=me.wallet<candidate.marketValue||me.riders.length>=maxRiders;
     buy.onclick=() => action('buyRider',{candidateId:candidate.id});
 
-    const row1=E('tr','cc-block-start');
-    row1.append(
-      tableCell('Naam',candidate.name),
-      tableCell('Team',candidate.team||'—'),
-      tableCell('Leeftijd',`${candidate.age}j`),
-      tableCell('Specialisme',SPECIALISM_LABELS[candidate.specialism]||candidate.specialism)
-    );
-    const row2=E('tr');
-    row2.append(
-      tableCell('VLK',String(candidate.stats.flat)),
-      tableCell('BRG',String(candidate.stats.mountain)),
-      tableCell('KSW',String(candidate.stats.cobbles)),
-      tableCell('TT',String(candidate.stats.timeTrial))
-    );
-    const row3=E('tr','cc-block-end');
-    row3.append(
-      tableCell('SPR',String(candidate.stats.sprint)),
-      tableCell('UIT',String(candidate.stats.stamina)),
-      tableCell('Kostprijs',euro(candidate.marketValue)),
-      tableCell('Koop',buy)
-    );
-    table.append(row1,row2,row3);
-    blocks.push({candidate,rows:[row1,row2,row3]});
+    const card=E('article','cc-manager-card cc-market-card');
+    const head=E('div','cc-card-head');
+    const identity=E('div','cc-card-identity');
+    identity.append(E('strong','',candidate.name),E('small','',`${candidate.team||'—'} · ${SPECIALISM_LABELS[candidate.specialism]||candidate.specialism} · ${candidate.age}j`));
+    head.append(identity,E('b','cc-market-price',euro(candidate.marketValue)));
+    card.append(head,statLine(candidate.stats),buy);
+    wrap.append(card);
+    blocks.push({candidate,card});
   });
-  wrap.append(table);
   panel.append(wrap);
 
   const emptyMsg=E('p','muted cc-filter-empty','Geen renners voldoen aan deze filters.');
@@ -294,7 +263,7 @@ function renderScoutPanel(room,game,me){
       let match=true;
       if(scoutFilterStat&&minStat!==null&&block.candidate.stats[scoutFilterStat]<minStat)match=false;
       if(maxPrice!==null&&block.candidate.marketValue>maxPrice)match=false;
-      for(const row of block.rows)row.classList.toggle('hidden',!match);
+      block.card.classList.toggle('hidden',!match);
       if(match)visibleCount+=1;
     }
     emptyMsg.hidden=visibleCount>0;
@@ -313,17 +282,25 @@ function renderScoutPanel(room,game,me){
 
 function renderRaceCatalogPanel(room,game,me){
   const panel=E('div','panel cc-panel');
-  panel.append(panelHeading('Koerskalender'));
+  panel.append(panelHeading('Koersen'));
   if(!room.isHost)panel.append(E('p','muted','Alleen de host kan een koers starten.'));
   const groups=new Map();
   for(const race of game.raceCatalog){
     if(!groups.has(race.category))groups.set(race.category,[]);
     groups.get(race.category).push(race);
   }
+  const categorySelect=document.createElement('select');
+  categorySelect.className='cc-category-select';
+  categorySelect.append(new Option('Alle categorieën',''));
+  for(const category of CATEGORY_ORDER)if(groups.has(category))categorySelect.append(new Option(CATEGORY_LABELS[category]||category,category));
+  panel.append(categorySelect);
+  const categorySections=[];
   for(const category of CATEGORY_ORDER){
     const races=groups.get(category);
     if(!races||!races.length)continue;
-    panel.append(E('h4','cc-category-title',CATEGORY_LABELS[category]||category));
+    const section=E('section','cc-race-category');
+    section.dataset.category=category;
+    section.append(E('h4','cc-category-title',CATEGORY_LABELS[category]||category));
     const grid=E('div','cc-race-grid');
     races.forEach((race) => {
       const card=E('div','cc-race-card');
@@ -336,14 +313,17 @@ function renderRaceCatalogPanel(room,game,me){
       const terrain=Object.entries(race.terrain).sort((a,b) => b[1]-a[1]).map(([key]) => STAT_LABELS[key]).slice(0,2).join(' · ');
       card.append(E('small','',terrain));
       if(room.isHost){
-        const start=E('button','primary','🏁 Start koers');
+        const start=E('button','primary','Start koers');
         start.onclick=() => action('selectRace',{raceId:race.id});
         card.append(start);
       }
       grid.append(card);
     });
-    panel.append(grid);
+    section.append(grid);
+    panel.append(section);
+    categorySections.push(section);
   }
+  categorySelect.onchange=() => categorySections.forEach((section) => section.classList.toggle('hidden',categorySelect.value&&section.dataset.category!==categorySelect.value));
   return panel;
 }
 
@@ -370,6 +350,10 @@ function tabBackButton(){
 }
 
 function renderClub(room,game,me){
+  const manager=E('div','cc-manager-shell');
+  const header=E('header','cc-manager-header');
+  header.append(E('div','cc-manager-title','CycClub'),E('div','cc-manager-budget',`Budget ${euro(me.wallet)}`));
+  const content=E('main','cc-manager-content');
   const summary=E('div','cc-summary');
   summary.append(summaryItem('Budget',euro(me.wallet)));
   summary.append(summaryItem('Zeges',String(me.career.victories)));
@@ -378,7 +362,7 @@ function renderClub(room,game,me){
   summary.append(summaryItem('Grote Rondes',String(me.career.grandToursWon)));
   summary.append(summaryItem('Grote Ritten',String(me.career.gtStagesWon)));
   summary.append(summaryItem('Totaal prijzengeld',euro(me.career.prizeMoney)));
-  els.gameStage.append(summary);
+  content.append(summary);
 
   const rosterSection=E('div','cc-tab-section');
   rosterSection.append(renderRosterPanel(me,game.maxRiders||10));
@@ -404,35 +388,32 @@ function renderClub(room,game,me){
     }
   };
 
-  const topBar=E('div','cc-top-tabs cc-club-tabs');
+  const topBar=E('nav','cc-club-tabs');
   topBar.setAttribute('role','tablist');
-  const rosterTab=E('button','cc-club-tab','Mijn ploeg');
+  const rosterTab=E('button','cc-club-tab','Ploeg');
   rosterTab.type='button';
   rosterTab.onclick=() => applyTab('roster');
   tabButtons.roster=rosterTab;
-  const shopTab=E('button','cc-club-tab','Teambeheer');
+  const shopTab=E('button','cc-club-tab','Upgrades');
   shopTab.type='button';
   shopTab.onclick=() => applyTab('shop');
   tabButtons.shop=shopTab;
-  topBar.append(shopTab);
   const scoutOpenBtn=E('button','cc-tab-open-btn',`🔍 Scoutingmarkt (${(game.myScoutMarket||[]).length})`);
-  scoutOpenBtn.textContent=`Scoutingmarkt (${(game.myScoutMarket||[]).length})`;
+  scoutOpenBtn.textContent='Markt';
   scoutOpenBtn.className='cc-club-tab';
   scoutOpenBtn.type='button';
   scoutOpenBtn.onclick=() => applyTab('scout');
   tabButtons.scout=scoutOpenBtn;
-  topBar.append(scoutOpenBtn);
   const racesOpenBtn=E('button','cc-tab-open-btn',`📅 Koerskalender (${game.raceCatalog.length})`);
-  racesOpenBtn.textContent=`Koerskalender (${game.raceCatalog.length})`;
+  racesOpenBtn.textContent='Koersen';
   racesOpenBtn.className='cc-club-tab';
   racesOpenBtn.type='button';
   racesOpenBtn.onclick=() => applyTab('races');
   tabButtons.races=racesOpenBtn;
-  topBar.append(racesOpenBtn);
-  topBar.append(rosterTab);
+  topBar.append(rosterTab,racesOpenBtn,scoutOpenBtn,shopTab);
   for(const button of Object.values(tabButtons))button.setAttribute('role','tab');
 
-  const resetBtn=E('button','cc-danger-btn','♻️ Opnieuw beginnen');
+  const resetBtn=E('button','cc-danger-btn','Opnieuw beginnen');
   resetBtn.type='button';
   resetBtn.onclick=() => {
     if(confirm('Weet je zeker dat je opnieuw wilt beginnen? Je budget, renners, upgrades en carrièrestats worden definitief gewist.')){
@@ -441,9 +422,9 @@ function renderClub(room,game,me){
     }
   };
   rosterSection.append(resetBtn);
-  els.gameStage.append(topBar);
-
-  els.gameStage.append(rosterSection,scoutSection,shopSection,racesSection);
+  content.append(rosterSection,scoutSection,shopSection,racesSection);
+  manager.append(header,content,topBar);
+  els.gameStage.append(manager);
   applyTab(clubTab);
 }
 
@@ -461,8 +442,9 @@ function renderLineup(room,game,me){
     panel.append(E('p','muted',terrain));
   }
 
-  const available=me.riders.filter((rider) => rider.status==='active');
+  const available=me.riders;
   const submitted=(race.readyIds||[]).includes(me.id);
+  let submitButton;
   if(!available.length){
     panel.append(E('p','muted','Geen beschikbare renners.'));
   } else {
@@ -470,11 +452,12 @@ function renderLineup(room,game,me){
     available.forEach((rider) => {
       const card=E('button','cc-rider-card cc-selectable');
       card.type='button';
-      card.disabled=submitted;
+      card.disabled=submitted||rider.status!=='active';
       const updateSelectedState=() => {
         const selected=selectedLineup.has(rider.id);
         card.classList.toggle('selected',selected);
         card.setAttribute('aria-pressed',selected?'true':'false');
+        if(submitButton)submitButton.textContent=`Klaar · ${selectedLineup.size} / ${game.squadSize}`;
       };
       updateSelectedState();
       card.onclick=() => {
@@ -486,7 +469,7 @@ function renderLineup(room,game,me){
         updateSelectedState();
       };
       const head=E('div','cc-rider-head');
-      head.append(E('strong','',rider.name),E('span','muted',`${rider.age}j · ${rider.specialism}`));
+      head.append(E('strong','',rider.name),E('span','muted',`${STATUS_LABELS[rider.status]} · ${rider.fatigue}% moe · ${SPECIALISM_LABELS[rider.specialism]||rider.specialism}`));
       card.append(head);
       card.append(statLine(rider.stats));
       card.append(labelValue('Vermoeidheid',`${rider.fatigue}%`));
@@ -497,7 +480,8 @@ function renderLineup(room,game,me){
 
   const actionsRow=E('div','cc-rider-actions');
   if(!submitted){
-    const submit=E('button','primary',`✅ Opstelling bevestigen (max ${game.squadSize})`);
+    const submit=E('button','primary',`Klaar · ${selectedLineup.size} / ${game.squadSize}`);
+    submitButton=submit;
     submit.onclick=() => {action('submitLineup',{riderIds:[...selectedLineup]});};
     actionsRow.append(submit);
   } else actionsRow.append(E('span','muted','Wachten op de rest van het peloton…'));
@@ -832,7 +816,7 @@ function renderRacing(room,game,me){
     const activeEntries=Object.entries(myProgress.riders).filter(([,riderState]) => !riderState.dnf);
     const grid=E('div','cc-rider-grid');
     const cardRefs=[];
-    const rollBtn=E('button','primary','🎲 Rol de dobbelsteen');
+    const rollBtn=E('button','primary','Werp segment');
 
     const refreshTacticUI=() => {
       const hasLeadout=activeEntries.some(([riderId]) => riderTactics.get(riderId)==='leadout');
@@ -884,7 +868,7 @@ function renderRacing(room,game,me){
       }
       card.append(tacticButtons);
 
-      const gelBtn=E('button','secondary cc-gel-btn',`💧 Gels: ${riderState.gelsRemaining}`);
+      const gelBtn=E('button','secondary cc-gel-btn',`Gel ${riderState.gelsRemaining}`);
       gelBtn.type='button';
       gelBtn.disabled=riderState.gelsRemaining<=0;
       gelBtn.onclick=() => {
@@ -1003,7 +987,8 @@ let classificationTab='gc';
 function renderClassificationTabs(classifications){
   if(!classifications)return E('div');
   const wrap=E('div','cc-classification-wrap');
-  const tabBar=E('div','cc-classification-tabs');
+  const selector=document.createElement('select');
+  selector.className='cc-classification-select';
   const body=E('div','cc-classification-body');
   const renderTab=(tabKey) => {
     body.replaceChildren();
@@ -1025,18 +1010,10 @@ function renderClassificationTabs(classifications){
     tableWrap.append(table);
     body.append(tableWrap);
   };
-  CLASSIFICATION_TABS.forEach((tab) => {
-    const btn=E('button',`cc-classification-tab${classificationTab===tab.key?' active':''}`,tab.label);
-    btn.type='button';
-    btn.onclick=() => {
-      classificationTab=tab.key;
-      tabBar.querySelectorAll('.cc-classification-tab').forEach((el) => el.classList.remove('active'));
-      btn.classList.add('active');
-      renderTab(tab.key);
-    };
-    tabBar.append(btn);
-  });
-  wrap.append(tabBar,body);
+  CLASSIFICATION_TABS.forEach((tab) => selector.append(new Option(tab.label,tab.key)));
+  selector.value=classificationTab;
+  selector.onchange=() => {classificationTab=selector.value;renderTab(classificationTab);};
+  wrap.append(selector,body);
   renderTab(classificationTab);
   return wrap;
 }

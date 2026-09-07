@@ -138,6 +138,13 @@ h1{font-size:31px}
 .stats-table th{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em}
 .stats-table th:not(:nth-child(2)),.stats-table td:not(:nth-child(2)){text-align:right}
 .stats-table th:first-child,.stats-table td:first-child{text-align:left;width:38px}
+#leaderboardContent{max-width:100%;overflow:hidden}
+#leaderboardContent .stats-table{table-layout:fixed}
+#leaderboardContent .stats-table [data-column-width="rank"]{width:38px}
+#leaderboardContent .stats-table [data-column-width="player"]{width:auto;text-align:left}
+#leaderboardContent .stats-table [data-column-width="stat"]{width:12%;text-align:right}
+#leaderboardContent .stats-table [data-column-width="wide"]{width:22%;text-align:right}
+#leaderboardContent .stats-table td{overflow:hidden;text-overflow:ellipsis}
 .profile-link{min-height:0;border:0;background:transparent;padding:0;color:var(--accent);font-weight:800}
 .profile-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:14px}
 .recent-list{display:grid;gap:7px}
@@ -1307,9 +1314,10 @@ body.game-active #gameStage{padding:calc(58px + env(safe-area-inset-top)) max(10
   #leaderboardContent{max-width:100%;overflow:hidden}#leaderboardContent .stats-table{width:100%;table-layout:fixed;font-size:10px}
   #leaderboardContent .stats-table th,#leaderboardContent .stats-table td{min-width:0;padding:8px 3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   #leaderboardContent .stats-table th{font-size:0;letter-spacing:0}#leaderboardContent .stats-table th::after{content:attr(data-short);font-size:8px}
-  #leaderboardContent .stats-table th:first-child,#leaderboardContent .stats-table td:first-child{width:25px}
-  #leaderboardContent .stats-table th:nth-child(2),#leaderboardContent .stats-table td:nth-child(2){width:auto;text-align:left}
-  #leaderboardContent .stats-table th:nth-child(n+3),#leaderboardContent .stats-table td:nth-child(n+3){width:38px;text-align:right}
+  #leaderboardContent .stats-table [data-column-width="rank"]{width:25px}
+  #leaderboardContent .stats-table [data-column-width="player"]{width:auto;text-align:left}
+  #leaderboardContent .stats-table [data-column-width="stat"]{width:38px;text-align:right}
+  #leaderboardContent .stats-table [data-column-width="wide"]{width:64px;text-align:right}
   #leaderboardContent .profile-link{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
 
   .account-modal{max-height:calc(100dvh - max(20px,env(safe-area-inset-top)) - max(20px,env(safe-area-inset-bottom)))}

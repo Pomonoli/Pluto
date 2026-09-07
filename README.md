@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.28.4
+## Nieuw in versie 1.28.5
 
-cycclub seconden
+Leaderboards ondersteunen nu betekenisvolle statistieken per game. CycClub toont Netto waarde, Zeges en Prijzengeld zonder gelijkspelkolom; The Big Blue C rangschikt spelers op ontdekte soorten, volledig los van de algemene winstatistieken.
 
 ## Nieuw in versie 1.28.0
 

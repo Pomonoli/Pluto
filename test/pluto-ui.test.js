@@ -151,8 +151,17 @@ test('sound button is icon-only en app knop heet App',()=>{
 
 test('leaderboard toont wins en draws voor games',()=>{
   const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
-  assert.match(app,/\['#','Speler','Wins','Draw','Games','Winrate'\]/);
-  assert.match(app,/String\(row\.wins\).*String\(row\.games\).*row\.winRate/s);
+  assert.match(app,/key:'wins',label:'Wins'.*key:'draws',label:'Draw'.*key:'games',label:'Games'.*key:'winRate',label:'Winrate'/s);
+  assert.match(app,/plugin\?\.leaderboardConfig\?\.columns/);
+});
+
+test('game-specifieke leaderboards gebruiken gedeelde kolomconfiguratie',()=>{
+  const cycclub=fs.readFileSync(path.join(root,'games/cycclub/client.js'),'utf8');
+  const deepBleuC=fs.readFileSync(path.join(root,'games/deep-bleu-c/client.js'),'utf8');
+  assert.match(cycclub,/leaderboardConfig/);
+  assert.doesNotMatch(cycclub,/key:'draws'/);
+  assert.match(cycclub,/key:'netWorth'.*width:'wide'.*key:'prizeMoney'.*width:'wide'/s);
+  assert.match(deepBleuC,/leaderboardConfig.*key:'discovered',label:'Ontdekte soorten'/s);
 });
 
 test('profiel toont eerst maximaal vijf recente matches met toon meer',()=>{

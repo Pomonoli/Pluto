@@ -1,5 +1,11 @@
 import { hexToPixel, hexCorners, hexDistance } from './hex-client.js';
 
+export const leaderboardConfig={columns:[
+  {key:'rank',label:'#',short:'#',width:'rank'},
+  {key:'username',label:'Speler',short:'Speler',width:'player'},
+  {key:'discovered',label:'Ontdekte soorten',short:'Soorten',width:'wide'}
+]};
+
 const HEX_SIZE = 18;
 const HEX_DRAW_SIZE = HEX_SIZE * 1.03; // iets groter dan de rasterpitch: verbergt anti-aliasing-naden tussen tegels
 // Iets meer tegels tonen dan voorheen — een lichte zoom-out zodat je wat

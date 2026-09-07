@@ -3,8 +3,12 @@ function bind(api){({state,els,E,action,profileButton,sound,socket,handleAck,car
 export function render(api){bind(api);renderBlackjack(api.room,api.game)}
 export const showResult=false;
 export const roomOptions={allowRematch:false};
-export const leaderboardColumns=['#','Speler','Draw','Chips'];
-export function renderLeaderboardCells({row,E}){return [E('td','',String(row.draws||0)),E('td','',String(row.chips))]}
+export const leaderboardConfig={columns:[
+  {key:'rank',label:'#',short:'#',width:'rank'},
+  {key:'username',label:'Speler',short:'Speler',width:'player'},
+  {key:'draws',label:'Draw',short:'½'},
+  {key:'chips',label:'Chips',short:'Chips',width:'wide'}
+]};
 
 function renderBlackjack(room,game) {
   const me=game.players.find(p=>p.id===room.meId); const turn=game.players.find(p=>p.id===game.turnPlayerId); const status=game.phase==='round_end'?'Ronde afgelopen':game.phase==='dealer'?'Dealer speelt stap voor stap…':turn?`${turn.name} is aan de beurt.`:'Dealer speelt.';const heading=titlebar('Blackjack',status);heading.classList.add('blackjack-titlebar');els.gameStage.append(heading);
