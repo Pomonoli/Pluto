@@ -17,6 +17,7 @@ const CAMPS = [
   { key: 'yellow', name: 'Dwergen', color: '#c79a32', startIndex: 26 },
   { key: 'blue', name: 'Mensen', color: '#557b9f', startIndex: 39 }
 ];
+const ATTACK_SITES = [[0, 49], [9, 13], [23, 26], [37, 39]];
 
 const UNIT_TYPES = {
   normal: { label: 'Soldaat', cost: 20, damage: 10, maxHp: 10, speed: 10, march: 2, castleDamageOnDefeat: 10 },
@@ -44,6 +45,10 @@ function normalizeRoomOptions(options = {}) {
 }
 
 function rollDie() { return 1 + Math.floor(Math.random() * 6); }
+function cyclicDistance(a, b, length = PATH_LENGTH) {
+  const distance = Math.abs(a - b);
+  return Math.min(distance, length - distance);
+}
 function currentPlayer(game) { return game.players[game.turnIndex] || null; }
 function campFor(player) { return CAMPS[player.seat]; }
 function absolutePathIndex(player, progress) { return (campFor(player).startIndex + progress) % PATH_LENGTH; }
@@ -75,6 +80,7 @@ function createPawn(playerId, seat, type, index) {
     progress: -1,
     hp: 0,
     ringUsed: false,
+    attackedSites: [],
     hero: type === 'hero' ? HEROES[seat] : null,
     ...stats,
     label: FACTION_UNITS[seat][type]
