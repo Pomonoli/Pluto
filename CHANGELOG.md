@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.28.16 — Lutro-aanvalzones naar de kasteelpoorten verplaatst
+
+- Lutro-aanvalzones naar de kasteelpoorten verplaatst
+
 ## v1.28.15 — update lutro
 
 - update lutro

@@ -632,6 +632,12 @@ const RELEASES = [
     improvements:[
       "update lutro"
     ]
+  },
+  {
+    version:"1.28.16",
+    improvements:[
+      "Lutro-aanvalzones naar de kasteelpoorten verplaatst"
+    ]
   }
 ];
 
