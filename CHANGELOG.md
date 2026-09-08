@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.28.17 — Lutro-aanvalsvakken gecorrigeerd
+
+- De acht aanvalsvakken staan op de twee routevakken direct langs ieder kasteel en zijn correct aan dat rijk gekoppeld.
+
 ## v1.28.16 — golf update
 
 - golf update

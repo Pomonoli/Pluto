@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.28.16
+## Nieuw in versie 1.28.17
 
-golf update
+De acht Lutro-aanvalsvakken staan nu op de twee routevakken direct langs ieder kasteel, zoals aangeduid op het bord.
 
 ## Nieuw in versie 1.28.0
 

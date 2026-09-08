@@ -169,7 +169,7 @@ test('een kasteelzone kan vanaf hetzelfde vak maar één keer worden aangevallen
 });
 
 test('alleen de acht rood gemarkeerde vakken zijn gewone kasteelaanvalsvakken', () => {
-  assert.deepEqual(lutro.ATTACK_SITES, [[0, 49], [9, 13], [23, 26], [37, 39]]);
+  assert.deepEqual(lutro.ATTACK_SITES, [[0, 9], [13, 22], [26, 35], [39, 48]]);
   const game = lutro.createGame(players(2));
   const red = game.players[0];
   readyPawn(red, 'normal', 12); // naast, maar niet op, Elven-aanvalsvak 13
@@ -180,7 +180,7 @@ test('alleen de acht rood gemarkeerde vakken zijn gewone kasteelaanvalsvakken', 
 test('Legolas valt van extra afstand aan en Gimli vermindert inkomende schade', () => {
   const game = lutro.createGame(players(3));
   const red = game.players[0], green = game.players[1], dwarves = game.players[2];
-  const legolas = readyPawn(green, 'hero', 11); // absoluut 24, naast aanvalsvak 23 van de Dwergen
+  const legolas = readyPawn(green, 'hero', 12); // absoluut 25, naast aanvalsvak 26 van de Dwergen
   forceAction(game, green.id, 1);
   assert.ok(lutro.attackOptions(game, green).some((option) => option.pawnId === legolas.id && option.targetPlayerId === dwarves.id));
 

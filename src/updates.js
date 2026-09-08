@@ -638,6 +638,12 @@ const RELEASES = [
     improvements:[
       "golf update"
     ]
+  },
+  {
+    version:"1.28.17",
+    improvements:[
+      "De acht Lutro-aanvalsvakken staan nu op de twee routevakken direct langs ieder kasteel."
+    ]
   }
 ];
 

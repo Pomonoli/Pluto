@@ -7,10 +7,10 @@ const CAMPS = [
   { key: 'blue', name: 'Mensen', glyph: '♜', startIndex: 39 }
 ];
 const ATTACK_SITES = new Map([
-  [0, 0], [49, 0],
-  [9, 1], [13, 1],
-  [23, 2], [26, 2],
-  [37, 3], [39, 3]
+  [0, 0], [9, 0],
+  [13, 1], [22, 1],
+  [26, 2], [35, 2],
+  [39, 3], [48, 3]
 ]);
 function unitSprite(E, player, pawn, className) {
   const sprite = E('span', `${className} lutro-unit-sprite camp-${player.camp} unit-${pawn.type}`);
