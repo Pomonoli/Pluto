@@ -220,20 +220,20 @@
 html:has(body.minigolf-mode.game-active),body.minigolf-mode.game-active{width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
 .minigolf-mode.game-active #gameStage{position:relative;width:100%;height:100%;padding:0!important;overflow:hidden!important;background:#72c83d}
 .golf-game-screen{isolation:isolate;height:100%;min-height:100%;background:#72c83d}
-.golf-full-course-wrap{top:calc(146px + env(safe-area-inset-top));right:8px;bottom:max(8px,env(safe-area-inset-bottom));left:8px;display:grid;place-items:center;background:transparent}
+.golf-full-course-wrap{top:var(--golf-course-top,calc(146px + env(safe-area-inset-top)));right:8px;bottom:max(8px,env(safe-area-inset-bottom));left:8px;display:grid;place-items:center;background:transparent}
 .golf-full-course{position:static;width:auto;height:100%;max-width:100%;max-height:100%;overflow:hidden;filter:drop-shadow(0 7px 5px rgba(48,83,25,.2))}
-.golf-hud{top:calc(66px + env(safe-area-inset-top));width:min(980px,calc(100% - 24px));padding:6px 8px;border:2px solid rgba(255,255,255,.76);border-radius:15px;background:rgba(37,91,33,.91);box-shadow:0 5px 0 rgba(37,73,27,.24),0 14px 28px rgba(26,62,20,.18);backdrop-filter:blur(8px);gap:5px}
+.golf-hud{top:calc(66px + env(safe-area-inset-top));width:min(980px,calc(100% - 24px),var(--golf-course-width,calc(100% - 24px)));padding:4px 6px;border:2px solid rgba(255,255,255,.76);border-radius:13px;background:rgba(37,91,33,.91);box-shadow:0 4px 0 rgba(37,73,27,.24),0 10px 20px rgba(26,62,20,.16);backdrop-filter:blur(8px);gap:3px}
 .golf-player-hud{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;overflow:visible}
-.golf-player-card{min-width:0;padding:4px 6px;grid-template-columns:28px minmax(0,1fr) 25px;gap:6px;border:2px solid rgba(255,255,255,.22);border-radius:10px;background:rgba(22,103,45,.48);box-shadow:inset 0 1px rgba(255,255,255,.12)}
+.golf-player-card{min-width:0;padding:2px 4px;grid-template-columns:24px minmax(0,1fr) 22px;gap:4px;border:2px solid rgba(255,255,255,.22);border-radius:9px;background:rgba(22,103,45,.48);box-shadow:inset 0 1px rgba(255,255,255,.12)}
 .golf-player-card.active{outline:0;border-color:#fff;background:#358f3d;box-shadow:0 0 0 2px rgba(255,255,255,.28)}
-.golf-avatar{width:28px;height:28px;border-width:2px;font-size:10px;box-shadow:0 2px 0 rgba(0,0,0,.16)}
+.golf-avatar{width:24px;height:24px;border-width:2px;font-size:9px;box-shadow:0 2px 0 rgba(0,0,0,.16)}
 .golf-player-info strong{font-size:10px}.golf-player-info small{font-size:8px;color:#e6f7dc}
-.golf-point-badge{width:25px;height:25px;background:#ef5267;box-shadow:0 2px 0 #a52f45;font-size:10px}
+.golf-point-badge{width:22px;height:22px;background:#ef5267;box-shadow:0 2px 0 #a52f45;font-size:9px}
 .golf-hole-hud{min-width:0;display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:7px;justify-content:stretch;font-size:9px}
 .golf-hole-hud>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;align-self:center}
 .golf-hole-hud>strong,.golf-hole-hud>b,.golf-status-pill{padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.16);white-space:nowrap}
 .golf-status-pill{min-width:0;overflow:hidden;text-overflow:ellipsis;color:#fff;background:#f05b59;font-style:normal;text-align:center}
-.golf-hole-summary{padding:3px 7px;border-radius:7px;background:rgba(255,226,126,.17);color:#fff4c8;font-size:9px;text-align:center}
+.golf-hole-summary{padding:2px 6px;border-radius:6px;background:rgba(255,226,126,.17);color:#fff4c8;font-size:8px;line-height:1.2;text-align:center}
 .golf-world,.editor-world{fill:#72c83d}
 .golf-border{stroke:#9a6035;stroke-width:22;stroke-dasharray:none;filter:drop-shadow(0 4px 1px rgba(69,42,23,.28))}
 .golf-cement{fill:#ef9bc4;stroke:#c15e91}.golf-sand{fill:#f5ce55;stroke:#d09b2e}.golf-water{fill:#45aee6;stroke:#197fb9}
@@ -250,7 +250,7 @@ html:has(body.minigolf-mode.game-active),body.minigolf-mode.game-active{width:10
 .map-tool.boost{color:#83c76e}.map-tool.wall i{background:#ad7040}.map-tool.sand i{background:#f5ce55}.map-tool.cement i{background:#ef9bc4}.map-tool.water i{background:#45aee6}
 
 @media(max-width:600px){
-  .golf-hud{top:calc(61px + env(safe-area-inset-top));width:calc(100% - 10px);padding:5px;gap:4px;border-radius:12px}
+  .golf-hud{top:calc(61px + env(safe-area-inset-top));width:min(calc(100% - 10px),var(--golf-course-width,calc(100% - 10px)));padding:5px;gap:4px;border-radius:12px}
   .golf-player-hud{gap:3px}
   .golf-player-card{grid-template-columns:22px minmax(0,1fr);padding:3px;gap:3px;border-width:1px}
   .golf-avatar{width:22px;height:22px;font-size:8px}
@@ -259,12 +259,12 @@ html:has(body.minigolf-mode.game-active),body.minigolf-mode.game-active{width:10
   .golf-hole-hud{grid-template-columns:auto minmax(0,1fr) auto;font-size:8px;gap:3px}
   .golf-status-pill{grid-column:1/-1;padding:2px 6px}
   .golf-hole-summary{font-size:8px;padding:2px 5px}
-  .golf-full-course-wrap{top:calc(139px + env(safe-area-inset-top));right:5px;bottom:max(5px,env(safe-area-inset-bottom));left:5px}
+  .golf-full-course-wrap{top:var(--golf-course-top,calc(139px + env(safe-area-inset-top)));right:5px;bottom:max(5px,env(safe-area-inset-bottom));left:5px}
 }
 @media(max-height:560px){
-  .golf-hud{top:calc(59px + env(safe-area-inset-top));width:min(900px,calc(100% - 110px))}
+  .golf-hud{top:calc(59px + env(safe-area-inset-top));width:min(900px,calc(100% - 110px),var(--golf-course-width,calc(100% - 110px)))}
   .golf-player-card{grid-template-columns:22px minmax(0,1fr) 22px;padding:2px 4px}.golf-avatar{width:22px;height:22px}.golf-point-badge{width:22px;height:22px}
   .golf-hole-summary{display:none}
-  .golf-full-course-wrap{top:calc(101px + env(safe-area-inset-top))}
+  .golf-full-course-wrap{top:var(--golf-course-top,calc(101px + env(safe-area-inset-top)))}
 }
 @media(orientation:portrait){.golf-full-course{width:100%;height:auto}}

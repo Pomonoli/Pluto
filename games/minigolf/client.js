@@ -203,6 +203,22 @@ function renderMinigolf(room,game) {
   courseWrap.append(svg);
   screen.append(courseWrap);
 
+  const keepHudAboveCourse=()=>{
+    if(!screen.isConnected)return;
+    const screenRect=screen.getBoundingClientRect();
+    const hudRect=hud.getBoundingClientRect();
+    const courseRect=svg.getBoundingClientRect();
+    if(courseRect.width>0)screen.style.setProperty('--golf-course-width',`${courseRect.width}px`);
+    if(hudRect.height>0)screen.style.setProperty('--golf-course-top',`${Math.ceil(hudRect.bottom-screenRect.top+6)}px`)
+  };
+  keepHudAboveCourse();
+  requestAnimationFrame(keepHudAboveCourse);
+  if(typeof ResizeObserver==='function'){
+    const layoutResizeObserver=new ResizeObserver(keepHudAboveCourse);
+    layoutResizeObserver.observe(svg);
+    layoutResizeObserver.observe(hud)
+  }
+
   if(game.lastHoleSummary)hud.append(E('div','golf-hole-summary',game.lastHoleSummary));
   els.gameStage.append(screen);
 
@@ -260,7 +276,7 @@ function renderMinigolf(room,game) {
       let dx=dragStart.x-point.x,dy=dragStart.y-point.y;
       const d=Math.hypot(dx,dy);
       if(d<2){aim.classList.add('hidden');return null}
-      const max=180,clamped=Math.min(max,d),ux=dx/d,uy=dy/d,power=Math.min(1,clamped/max);
+      const max=324,clamped=Math.min(max,d),ux=dx/d,uy=dy/d,power=Math.min(1,clamped/max);
       const end={x:origin.x+ux*(60+power*145),y:origin.y+uy*(60+power*145)};
       aim.classList.remove('hidden');
       aimLine.setAttribute('x1',origin.x);aimLine.setAttribute('y1',origin.y);
@@ -272,8 +288,8 @@ function renderMinigolf(room,game) {
 
       const pct=Math.round(power*100);
       powerText.textContent=`${pct}%`;
-      const tx=Math.max(42,Math.min(game.course.width-42,point.x));
-      const ty=Math.max(28,Math.min(game.course.height-18,point.y-18));
+      const tx=Math.max(42,Math.min(game.course.width-42,dragStart.x));
+      const ty=Math.max(28,Math.min(game.course.height-18,dragStart.y-18));
       powerText.setAttribute('x',tx);powerText.setAttribute('y',ty+4);
       powerBg.setAttribute('x',tx-31);powerBg.setAttribute('y',ty-15);
       powerBg.setAttribute('width',62);powerBg.setAttribute('height',27);
