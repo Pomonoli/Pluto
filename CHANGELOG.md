@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.28.18 — Lutro-beweging vernieuwd
+
+- Troepen maken geen automatische verplaatsing meer; alleen de gekozen troep beweegt met de worp plus zijn eigen bewegingsbonus.
+- De coinbeloning blijft 10 coins per gegooid oog.
+
 ## v1.28.17 — Lutro-aanvalsvakken gecorrigeerd
 
 - De acht aanvalsvakken staan op de twee routevakken direct langs ieder kasteel en zijn correct aan dat rijk gekoppeld.

@@ -644,6 +644,12 @@ const RELEASES = [
     improvements:[
       "De acht Lutro-aanvalsvakken staan nu op de twee routevakken direct langs ieder kasteel."
     ]
+  },
+  {
+    version:"1.28.18",
+    improvements:[
+      "Lutro-troepen bewegen niet langer automatisch: alleen de gekozen troep gebruikt de worp plus zijn eigen bewegingsbonus, terwijl de coinbeloning gelijk blijft."
+    ]
   }
 ];
 

@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.28.17
+## Nieuw in versie 1.28.18
 
-De acht Lutro-aanvalsvakken staan nu op de twee routevakken direct langs ieder kasteel, zoals aangeduid op het bord.
+Lutro-troepen bewegen niet langer automatisch. Alleen de gekozen troep beweegt met de worp plus zijn eigen bewegingsbonus; de coinbeloning per worp blijft gelijk.
 
 ## Nieuw in versie 1.28.0
 

@@ -20,10 +20,10 @@ const CAMPS = [
 const ATTACK_SITES = [[0, 9], [13, 22], [26, 35], [39, 48]];
 
 const UNIT_TYPES = {
-  normal: { label: 'Soldaat', cost: 20, damage: 10, maxHp: 10, speed: 10, march: 2, castleDamageOnDefeat: 10 },
-  fast: { label: 'Snelle soldaat', cost: 60, damage: 5, maxHp: 5, speed: 20, march: 4, castleDamageOnDefeat: 15 },
-  strong: { label: 'Sterke soldaat', cost: 40, damage: 15, maxHp: 15, speed: 5, march: 1, castleDamageOnDefeat: 15 },
-  hero: { label: 'Held', cost: 100, damage: 20, maxHp: 20, speed: 20, march: 3, castleDamageOnDefeat: 25 }
+  normal: { label: 'Soldaat', cost: 20, damage: 10, maxHp: 10, speed: 10, movementBonus: 2, castleDamageOnDefeat: 10 },
+  fast: { label: 'Snelle soldaat', cost: 60, damage: 5, maxHp: 5, speed: 20, movementBonus: 4, castleDamageOnDefeat: 15 },
+  strong: { label: 'Sterke soldaat', cost: 40, damage: 15, maxHp: 15, speed: 5, movementBonus: 1, castleDamageOnDefeat: 15 },
+  hero: { label: 'Held', cost: 100, damage: 20, maxHp: 20, speed: 20, movementBonus: 3, castleDamageOnDefeat: 25 }
 };
 const UNIT_ORDER = ['normal', 'fast', 'strong', 'hero'];
 const FACTION_UNITS = [
@@ -58,8 +58,7 @@ function pawnZone(pawn) {
   if (pawn.progress < FINISH_PROGRESS) return 'home';
   return 'finished';
 }
-function movementSteps(_pawn, roll) { return roll; }
-function automaticSteps(pawn) { return UNIT_TYPES[pawn.type].march; }
+function movementSteps(pawn, roll) { return roll + pawn.movementBonus; }
 function canMovePawn(pawn, roll) {
   if (pawn.progress < 0 || pawn.progress === FINISH_PROGRESS) return false;
   return pawn.progress + movementSteps(pawn, roll) <= FINISH_PROGRESS;
@@ -140,12 +139,6 @@ function applyRoll(game, player) {
   game.lastCoinGain = income;
   game.phase = 'action';
   addLog(game, `${player.name} gooit ${roll} en verdient ${income} coins.`);
-  marchTroops(game, player);
-  if (game.gameOver) return roll;
-  if (player.eliminated) {
-    advanceTurn(game);
-    return roll;
-  }
   scheduleNpc(game);
   return roll;
 }
@@ -228,21 +221,12 @@ function movePawn(game, player, pawn, steps, description) {
   checkWin(game);
 }
 
-function marchTroops(game, player) {
-  const deployed = player.pawns.filter((pawn) => pawn.progress >= 0 && pawn.progress < FINISH_PROGRESS);
-  deployed.forEach((pawn) => {
-    if (game.gameOver || pawn.progress < 0) return;
-    const steps = automaticSteps(pawn);
-    if (pawn.progress + steps <= FINISH_PROGRESS) movePawn(game, player, pawn, steps, 'marcheert automatisch');
-  });
-}
-
 function applyMove(game, player, pawnId) {
   if (game.phase !== 'action' || !game.lastRoll) throw new Error('Rol eerst de dobbelsteen.');
   const pawn = player.pawns.find((item) => item.id === pawnId);
   if (!pawn || !canMovePawn(pawn, game.lastRoll)) throw new Error('Deze troep kan niet met de huidige worp bewegen.');
   const steps = movementSteps(pawn, game.lastRoll);
-  movePawn(game, player, pawn, steps, 'gebruikt de worp en beweegt nog');
+  movePawn(game, player, pawn, steps, `gebruikt de worp plus ${pawn.movementBonus} bonus en beweegt`);
   advanceTurn(game);
 }
 
@@ -337,7 +321,7 @@ function serializePawn(player, pawn) {
   return {
     id: pawn.id, number: pawn.number, type: pawn.type, label: pawn.type === 'hero' ? pawn.hero.name : pawn.label,
     progress: pawn.progress, zone, hp: pawn.hp, maxHp: pawn.maxHp, damage: pawn.damage,
-    speed: pawn.speed, march: pawn.march, cost: pawn.cost, castleDamageOnDefeat: pawn.castleDamageOnDefeat,
+    speed: pawn.speed, movementBonus: pawn.movementBonus, cost: pawn.cost, castleDamageOnDefeat: pawn.castleDamageOnDefeat,
     hero: pawn.hero, ringUsed: pawn.ringUsed,
     pathIndex: zone === 'track' ? absolutePathIndex(player, pawn.progress) : null,
     homeIndex: zone === 'home' || zone === 'finished' ? pawn.progress - TRACK_STEPS : null
@@ -349,7 +333,7 @@ function serialize(game, requesterId, connected = new Map()) {
   const mine = turn?.id === requesterId;
   const canAct = Boolean(!game.gameOver && mine && game.phase === 'action');
   return {
-    kind: 'lutro', schemaVersion: 7, phase: game.phase, gameOver: game.gameOver,
+    kind: 'lutro', schemaVersion: 8, phase: game.phase, gameOver: game.gameOver,
     winnerId: game.winnerId, resultText: game.resultText, turnPlayerId: game.gameOver ? null : turn?.id,
     lastRoll: game.lastRoll, lastCoinGain: game.lastCoinGain,
     canRoll: Boolean(!game.gameOver && mine && game.phase === 'roll'), canAct,
@@ -379,5 +363,5 @@ module.exports = {
   createGame, handleAction, serialize, tick, results, normalizeRoomOptions,
   CAMPS, ATTACK_SITES, UNIT_TYPES, UNIT_ORDER, FACTION_UNITS, HEROES, PATH_LENGTH, TRACK_STEPS, HOME_STEPS,
   FINISH_PROGRESS, CASTLE_MAX_HP, COINS_PER_PIP, CENTER_DAMAGE,
-  absolutePathIndex, pawnZone, movementSteps, automaticSteps, canMovePawn, movablePawns, attackOptions
+  absolutePathIndex, pawnZone, movementSteps, canMovePawn, movablePawns, attackOptions
 };

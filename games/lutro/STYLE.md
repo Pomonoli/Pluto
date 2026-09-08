@@ -7,8 +7,8 @@
 - Pionnen zijn donkere, metalen factiemedaillons met een factieteken en afzonderlijk nummerplaatje. Selecteerbare pionnen krijgen een duidelijke lichte ring en rustige pulse.
 - Spelerskaart en dobbelpaneel gebruiken perkament, donker gesmeed metaal en warm oranje vuurlicht. Behoud minimaal 44px voor primaire mobiele acties.
 - Spelerskaarten tonen kasteel-HP en coins zonder het bord te verdringen. Iedere actieve troep toont een kleine HP-balk; type en factie blijven herkenbaar via teken, rand en medaillon.
-- De actietray bevat de worp, vier compacte koopkaarten en alleen wanneer relevant kasteelaanvallen. Toon stats steeds in de vaste volgorde damage/HP/automatische marsafstand.
-- Maak na de worp duidelijk dat alle ingezette troepen automatisch marcheerden en dat één oplichtende troep de gegooide waarde als extra beweging kan gebruiken.
+- De actietray bevat de worp, vier compacte koopkaarten en alleen wanneer relevant kasteelaanvallen. Toon stats steeds in de vaste volgorde damage/HP/bewegingsbonus.
+- Maak na de worp duidelijk dat alleen de gekozen oplichtende troep beweegt en dat zijn eigen bewegingsbonus bovenop de worp komt.
 - Markeer de acht vaste kasteelaanvalsvakken met een helderrode vierkante omlijning; twee vakken per kasteel, op de dwarsroute direct naast het rijk.
 - Toon in de lobby vier grote thematische heldenkaarten. De gekozen kaart krijgt een gouden/factiekleurige focusring en bepaalt de startfactie van de eerste speler; de overige spelers volgen met de resterende rijken.
 - Gebruik de transparante `units-*.png`-atlassen voor alle pionnen en koopkaarten. De 2×2-posities zijn steeds normaal linksboven, snel rechtsboven, sterk linksonder en held rechtsonder; behoud de factiekleurige medaillonrand en HP-balk voor spelduidelijkheid.

@@ -58,10 +58,10 @@ test('iedere factie gebruikt vier eigen thematische troepen', () => {
 });
 
 test('troepenstats en kostprijzen volgen de afgesproken waarden', () => {
-  assert.deepEqual(lutro.UNIT_TYPES.normal, { label: 'Soldaat', cost: 20, damage: 10, maxHp: 10, speed: 10, march: 2, castleDamageOnDefeat: 10 });
-  assert.deepEqual(lutro.UNIT_TYPES.fast, { label: 'Snelle soldaat', cost: 60, damage: 5, maxHp: 5, speed: 20, march: 4, castleDamageOnDefeat: 15 });
-  assert.deepEqual(lutro.UNIT_TYPES.strong, { label: 'Sterke soldaat', cost: 40, damage: 15, maxHp: 15, speed: 5, march: 1, castleDamageOnDefeat: 15 });
-  assert.deepEqual(lutro.UNIT_TYPES.hero, { label: 'Held', cost: 100, damage: 20, maxHp: 20, speed: 20, march: 3, castleDamageOnDefeat: 25 });
+  assert.deepEqual(lutro.UNIT_TYPES.normal, { label: 'Soldaat', cost: 20, damage: 10, maxHp: 10, speed: 10, movementBonus: 2, castleDamageOnDefeat: 10 });
+  assert.deepEqual(lutro.UNIT_TYPES.fast, { label: 'Snelle soldaat', cost: 60, damage: 5, maxHp: 5, speed: 20, movementBonus: 4, castleDamageOnDefeat: 15 });
+  assert.deepEqual(lutro.UNIT_TYPES.strong, { label: 'Sterke soldaat', cost: 40, damage: 15, maxHp: 15, speed: 5, movementBonus: 1, castleDamageOnDefeat: 15 });
+  assert.deepEqual(lutro.UNIT_TYPES.hero, { label: 'Held', cost: 100, damage: 20, maxHp: 20, speed: 20, movementBonus: 3, castleDamageOnDefeat: 25 });
 });
 
 test('ieder oog levert tien coins en opent één actiefase', () => {
@@ -95,34 +95,38 @@ test('kopen controleert prijs en beschikbaarheid', () => {
   assert.throws(() => lutro.handleAction(game, 'p0', 'buy', { type: 'hero' }), /al ingezet/i);
 });
 
-test('iedere troepenklasse heeft een vaste automatische marsafstand', () => {
+test('iedere troepenklasse telt een vaste bonus bij de worp', () => {
   const game = lutro.createGame(players(2));
   const player = game.players[0];
-  assert.deepEqual(player.pawns.map(lutro.automaticSteps), [2, 4, 1, 3]);
+  assert.deepEqual(player.pawns.map((pawn) => lutro.movementSteps(pawn, 3)), [5, 7, 4, 6]);
 });
 
-test('na de worp marcheren alle reeds ingezette troepen automatisch', () => {
+test('de worp geeft coins maar verplaatst geen troepen automatisch', () => {
   const game = lutro.createGame(players(2));
   const player = game.players[0];
   player.pawns.forEach((pawn) => readyPawn(player, pawn.type, 0));
-  withRandom(0, () => lutro.handleAction(game, player.id, 'roll'));
-  assert.deepEqual(player.pawns.map((pawn) => pawn.progress), [2, 4, 1, 3]);
+  withRandom(0.5, () => lutro.handleAction(game, player.id, 'roll')); // 4
+  assert.equal(player.coins, 40);
+  assert.equal(game.lastCoinGain, 40);
+  assert.deepEqual(player.pawns.map((pawn) => pawn.progress), [0, 0, 0, 0]);
   assert.equal(game.phase, 'action');
 });
 
-test('de worp kan daarna als extra beweging aan één troep worden gegeven', () => {
+test('alleen de gekozen troep beweegt met de worp plus zijn bonus', () => {
   const game = lutro.createGame(players(2));
   const player = game.players[0];
+  const stationary = readyPawn(player, 'normal', 0);
   const pawn = readyPawn(player, 'strong', 0);
-  withRandom(0.5, () => lutro.handleAction(game, player.id, 'roll')); // 4; eerst 1 automatische stap
+  withRandom(0.5, () => lutro.handleAction(game, player.id, 'roll')); // 4 + 1 bonus
   lutro.handleAction(game, player.id, 'move', { pawnId: pawn.id });
   assert.equal(pawn.progress, 5);
+  assert.equal(stationary.progress, 0);
 });
 
 test('landen op een vijand beschadigt de troep en een uitschakeling beschadigt het kasteel', () => {
   const game = lutro.createGame(players(2));
   const red = game.players[0], green = game.players[1];
-  const attacker = readyPawn(red, 'strong', 19);
+  const attacker = readyPawn(red, 'strong', 18);
   const defender = readyPawn(green, 'normal', 7); // absoluut routevak 20
   forceAction(game, red.id, 1);
   lutro.handleAction(game, red.id, 'move', { pawnId: attacker.id });
@@ -135,7 +139,7 @@ test('landen op een vijand beschadigt de troep en een uitschakeling beschadigt h
 test('een overlevende verdediger slaat terug en HP blijft bewaard', () => {
   const game = lutro.createGame(players(2));
   const red = game.players[0], green = game.players[1];
-  const attacker = readyPawn(red, 'fast', 18);
+  const attacker = readyPawn(red, 'fast', 14);
   const defender = readyPawn(green, 'strong', 7); // absoluut routevak 20
   forceAction(game, red.id, 2);
   lutro.handleAction(game, red.id, 'move', { pawnId: attacker.id });
@@ -147,7 +151,7 @@ test('een overlevende verdediger slaat terug en HP blijft bewaard', () => {
 test('het midden doet alle andere kastelen 25 damage', () => {
   const game = lutro.createGame(players(4));
   const red = game.players[0];
-  const pawn = readyPawn(red, 'normal', lutro.FINISH_PROGRESS - 1);
+  const pawn = readyPawn(red, 'normal', lutro.FINISH_PROGRESS - 3);
   forceAction(game, red.id, 1);
   lutro.handleAction(game, red.id, 'move', { pawnId: pawn.id });
   assert.equal(pawn.progress, lutro.FINISH_PROGRESS);
@@ -184,7 +188,7 @@ test('Legolas valt van extra afstand aan en Gimli vermindert inkomende schade', 
   forceAction(game, green.id, 1);
   assert.ok(lutro.attackOptions(game, green).some((option) => option.pawnId === legolas.id && option.targetPlayerId === dwarves.id));
 
-  const attacker = readyPawn(red, 'normal', 19);
+  const attacker = readyPawn(red, 'normal', 17);
   const gimli = readyPawn(dwarves, 'hero', 46); // absoluut routevak 20
   forceAction(game, red.id, 1);
   lutro.handleAction(game, red.id, 'move', { pawnId: attacker.id });
@@ -195,7 +199,7 @@ test('Sauron overleeft één dodelijke treffer dankzij de Ring', () => {
   const game = lutro.createGame(players(2));
   const red = game.players[0], green = game.players[1];
   const sauron = readyPawn(red, 'hero', 20);
-  const legolas = readyPawn(green, 'hero', 5); // absoluut 18; worp 2 landt op 20
+  const legolas = readyPawn(green, 'hero', 2); // absoluut 15; worp 2 + bonus 3 landt op 20
   forceAction(game, green.id, 2);
   lutro.handleAction(game, green.id, 'move', { pawnId: legolas.id });
   assert.equal(sauron.hp, 1);
@@ -206,7 +210,7 @@ test('Sauron overleeft één dodelijke treffer dankzij de Ring', () => {
 test('Aragorn herstelt 5 HP na een overleefd gevecht', () => {
   const game = lutro.createGame(players(4));
   const green = game.players[1], men = game.players[3];
-  const aragorn = readyPawn(men, 'hero', 31, 10); // absoluut 18; worp 2 beweegt naar 20
+  const aragorn = readyPawn(men, 'hero', 28, 10); // absoluut 15; worp 2 + bonus 3 beweegt naar 20
   readyPawn(green, 'fast', 7); // absoluut routevak 20
   forceAction(game, men.id, 2);
   lutro.handleAction(game, men.id, 'move', { pawnId: aragorn.id });
@@ -232,12 +236,12 @@ test('serialize levert coins, kasteel-HP, troepenstats en geldige acties', () =>
   readyPawn(game.players[0], 'normal', 4);
   forceAction(game, 'p0', 3);
   const view = lutro.serialize(game, 'p0', new Map([['p0', true], ['p1', true]]));
-  assert.equal(view.schemaVersion, 7);
+  assert.equal(view.schemaVersion, 8);
   assert.equal(view.canAct, true);
   assert.equal(view.players[0].castleMaxHp, 100);
   assert.equal(view.players[0].coins, 80);
   assert.equal(view.players[0].pawns[0].damage, 10);
-  assert.equal(view.players[0].pawns[0].march, 2);
+  assert.equal(view.players[0].pawns[0].movementBonus, 2);
   assert.deepEqual(view.movablePawnIds, [game.players[0].pawns[0].id]);
 });
 

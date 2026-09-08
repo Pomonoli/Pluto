@@ -92,7 +92,7 @@ function turnStatus(game) {
   if (game.gameOver) return game.resultText || 'De strijd is afgelopen.';
   const turn = game.players.find((player) => player.id === game.turnPlayerId);
   if (game.canRoll) return 'Jij bent aan de beurt. Gooi voor coins.';
-  if (game.canAct) return `Je verdiende ${game.lastCoinGain} coins en je leger marcheerde. Kies één actie.`;
+  if (game.canAct) return `Je verdiende ${game.lastCoinGain} coins. Kies één troep voor worp + bonus, koop of val aan.`;
   return `${turn?.name || 'De volgende speler'} is aan de beurt.`;
 }
 
@@ -117,7 +117,7 @@ function buildPawnToken(player, pawn, canMove, E, action, sound) {
     token.onclick = () => { sound('score'); action('move', { pawnId: pawn.id }); };
     token.setAttribute('aria-label', `Verplaats ${pawn.label}`);
   } else token.setAttribute('aria-label', `${player.name}, ${pawn.label}`);
-  token.title = `${pawn.label} · ${pawn.damage} damage · ${pawn.hp}/${pawn.maxHp} HP · automatisch ${pawn.march} vakken`;
+  token.title = `${pawn.label} · ${pawn.damage} damage · ${pawn.hp}/${pawn.maxHp} HP · +${pawn.movementBonus} beweging`;
   token.append(unitSprite(E, player, pawn, 'lutro-pawn-glyph'));
   if (pawn.zone !== 'yard') {
     const hp = E('span', 'lutro-unit-hp');
@@ -192,7 +192,7 @@ function buildShop(game, me, E, action, sound) {
     button.append(
       unitSprite(E, me, pawn, 'lutro-unit-card-icon'),
       E('strong', '', pawn.label),
-      E('span', 'lutro-unit-card-stats', `${pawn.damage}⚔ ${pawn.maxHp}♥ ${pawn.march} auto➜`),
+      E('span', 'lutro-unit-card-stats', `${pawn.damage}⚔ ${pawn.maxHp}♥ +${pawn.movementBonus}➜`),
       E('b', 'lutro-unit-card-cost', pawn.zone === 'yard' ? `${pawn.cost} coins` : 'Ingezet')
     );
     if (available) button.onclick = () => { sound('score'); action('buy', { type: pawn.type }); };
@@ -228,7 +228,7 @@ function buildControls(game, E, action, sound) {
     });
     if (attacks.childElementCount) controls.append(attacks);
     const footer = E('div', 'lutro-action-footer');
-    footer.append(E('span', '', game.movablePawnIds.length ? `Tik een oplichtende troep om je worp (${game.lastRoll}) extra te bewegen.` : 'Geen troep kan de worp nog gebruiken.'));
+    footer.append(E('span', '', game.movablePawnIds.length ? `Tik één oplichtende troep: worp ${game.lastRoll} + diens bonus.` : 'Geen troep kan de worp gebruiken.'));
     const pass = E('button', 'lutro-pass', 'Pas');
     pass.type = 'button';
     pass.onclick = () => action('pass');
@@ -239,7 +239,7 @@ function buildControls(game, E, action, sound) {
 }
 
 export function render({ game, els, E, action, titlebar, logBox, sound }) {
-  const legacyRoom = game.schemaVersion !== 7 || !game.players.every((player) => Array.isArray(player.pawns));
+  const legacyRoom = game.schemaVersion !== 8 || !game.players.every((player) => Array.isArray(player.pawns));
   if (legacyRoom) {
     const notice = E('div', 'lutro-legacy');
     notice.append(E('strong', '', 'Deze spelronde gebruikt de vorige Lutro-versie.'), E('span', '', 'Ga terug naar de lobby en start een nieuw spel om de kasteelstrijd te laden.'));
