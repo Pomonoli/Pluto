@@ -159,10 +159,64 @@ test('een aanlegsteiger bouwen lukt op een strandtegel en kan maar één keer pe
   assert.equal(game.harbors.length, 1);
 });
 
-test('VS1-content valideert de twee bijltiers en bootstations', () => {
-  assert.equal(sliceContent.tools.axe.tiers.length, 2);
+test('toolcontent valideert vijf volledige upgradepaden en bootstations', () => {
+  assert.deepEqual(Object.keys(sliceContent.tools), ['rod', 'bait', 'boat', 'axe', 'pickaxe']);
+  for (const tool of Object.values(sliceContent.tools)) assert.equal(tool.tiers.length, 5);
   assert.equal(sliceContent.tools.axe.tiers[1].requires.station, 'workbench');
   assert.doesNotThrow(() => sliceContent.validateSliceContent(sliceContent));
+});
+
+test('alle vijf gereedschappen vragen werkbank, materiaal, geld en gekoppeld skillniveau', () => {
+  const materialBefore = {
+    rod: 200,
+    bait: 20,
+    boat: 200,
+    axe: 200,
+    pickaxe: 200
+  };
+  const skillFor = { rod: 'fishing', bait: 'fishing', boat: 'collecting', axe: 'woodcutting', pickaxe: 'mining' };
+
+  for (const key of Object.keys(sliceContent.tools)) {
+    const game = makeGame();
+    const player = playerOf(game, 'a');
+    const requirements = sliceContent.tools[key].tiers[1].requires;
+    player.cash = 10000;
+    player.skills[skillFor[key]] = 1000000000;
+    player.boat.stations = ['workbench'];
+    player.woodInventory.push({ uid: `${key}-wood`, speciesId: 'berk', weightKg: 200, caughtAt: Date.now() });
+    player.rockInventory.push({ uid: `${key}-rock`, speciesId: 'kalksteen', weightKg: 200, caughtAt: Date.now() });
+    player.materials.kelpFiber = 20;
+
+    dbc.handleAction(game, 'a', 'buyUpgrade', { category: key });
+
+    assert.equal(player.gear[key], 1, `${key} werd niet geüpgraded`);
+    assert.equal(player.cash, 10000 - requirements.cash);
+    if (requirements.softWoodKg) assert.equal(player.woodInventory[0].weightKg, materialBefore[key] - requirements.softWoodKg);
+    if (requirements.rockKg) assert.equal(player.rockInventory[0].weightKg, materialBefore[key] - requirements.rockKg);
+    if (requirements.kelpFiber) assert.equal(player.materials.kelpFiber, materialBefore[key] - requirements.kelpFiber);
+
+    const serialized = dbc.serialize(game, 'a').you.toolUpgrades.find((tool) => tool.key === key);
+    assert.equal(serialized.level, 1);
+    assert.equal(serialized.current.name, sliceContent.tools[key].tiers[1].name);
+  }
+});
+
+test('gereedschapsupgrade weigert iedere ontbrekende vereiste afzonderlijk', () => {
+  const game = makeGame();
+  const player = playerOf(game, 'a');
+  player.cash = 10000;
+
+  assert.throws(() => dbc.handleAction(game, 'a', 'buyUpgrade', { category: 'rod' }), /Werkbank/);
+  player.boat.stations = ['workbench'];
+  assert.throws(() => dbc.handleAction(game, 'a', 'buyUpgrade', { category: 'rod' }), /Vissen 3/);
+  player.skills.fishing = 100000;
+  assert.throws(() => dbc.handleAction(game, 'a', 'buyUpgrade', { category: 'rod' }), /8 kg zacht hout/);
+  player.woodInventory.push({ uid: 'rod-wood', speciesId: 'berk', weightKg: 8, caughtAt: Date.now() });
+  player.cash = 0;
+  assert.throws(() => dbc.handleAction(game, 'a', 'buyUpgrade', { category: 'rod' }), /150/);
+  player.cash = 150;
+  dbc.handleAction(game, 'a', 'buyUpgrade', { category: 'rod' });
+  assert.equal(player.gear.rod, 1);
 });
 
 test('een eik verbruikt niets en benoemt exact de ontbrekende tool en skill', () => {

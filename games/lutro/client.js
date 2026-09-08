@@ -1,411 +1,264 @@
-/* Lutro — isometric parchment board rendered as inline SVG.
-   Board geometry mirrors server.js exactly (pure math, no network payload). */
-
-const PATH_LENGTH = 48;
-const EDGE_LENGTH = 12;
-const HOME_STEPS = 4;
-const CENTER = { gx: 6, gy: 6 };
-const TILE_W = 34;
-const TILE_H = 18;
-
-const FACTIONS = [
-  { key: 'rivendell', name: 'Rivendell', people: 'Elven', color: '#7fb7e0', dark: '#2c4c66', icon: '🧝', turretName: 'Elfenboogtoren' },
-  { key: 'erebor', name: 'Erebor', people: 'Dwarven', color: '#e0b23c', dark: '#5a4114', icon: '⛏️', turretName: 'Dwergballista' },
-  { key: 'baraddur', name: 'Barad-dûr', people: 'Orc', color: '#c14a4a', dark: '#1c1010', icon: '👁️', turretName: 'Oog van Sauron' },
-  { key: 'minastirith', name: 'Minas Tirith', people: 'Human', color: '#5fa06f', dark: '#274430', icon: '🛡️', turretName: 'Gondorijnse trebuchet' }
+const BOARD_SIZE = 15;
+const DICE = ['–', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+const CAMPS = [
+  { key: 'red', name: 'Sauron', glyph: '◉', startIndex: 0 },
+  { key: 'green', name: 'Elven', glyph: '❧', startIndex: 13 },
+  { key: 'yellow', name: 'Dwergen', glyph: '⚒', startIndex: 26 },
+  { key: 'blue', name: 'Mensen', glyph: '♜', startIndex: 39 }
 ];
-const UNIT_META = {
-  scout: {
-    cost: 50, icon: '🐎',
-    names: { rivendell: 'Rivendell Verkenner', erebor: 'Berg-rijder', baraddur: 'Warg-rijder', minastirith: 'Rohan-ruiter' }
-  },
-  infantry: {
-    cost: 100, icon: '⚔️',
-    names: { rivendell: 'Elfenwacht', erebor: 'Moria-strijder', baraddur: 'Uruk-hai Kliever', minastirith: 'Torenwacht' }
-  },
-  siege: {
-    cost: 250, icon: '🗿',
-    names: { rivendell: 'Ent-bewaker', erebor: 'IJzeren Stormram', baraddur: 'Bergtrol', minastirith: 'Belegeringsmachine' }
-  }
-};
-const UNIT_ORDER = ['scout', 'infantry', 'siege'];
+const ATTACK_SITES = new Map([
+  [0, 0], [49, 0],
+  [9, 1], [13, 1],
+  [23, 2], [26, 2],
+  [37, 3], [39, 3]
+]);
+function unitSprite(E, player, pawn, className) {
+  const sprite = E('span', `${className} lutro-unit-sprite camp-${player.camp} unit-${pawn.type}`);
+  sprite.setAttribute('aria-hidden', 'true');
+  return sprite;
+}
+const FACTION_CHOICES = [
+  { key: 'red', faction: 'Mordor', hero: 'Sauron', glyph: '◉', ability: 'De Ene Ring', copy: 'Overleeft één dodelijke treffer met 1 HP.' },
+  { key: 'green', faction: 'Elven', hero: 'Legolas', glyph: '❧', ability: 'Elvenboog', copy: 'Valt kastelen aan vanaf één extra routevak.' },
+  { key: 'yellow', faction: 'Dwergen', hero: 'Gimli', glyph: '⚒', ability: 'Mithrilpantser', copy: 'Ontvangt 5 minder schade van troepen.' },
+  { key: 'blue', faction: 'Mensen', hero: 'Aragorn', glyph: '♜', ability: 'Athelas', copy: 'Geneest 5 HP na een overleefd gevecht.' }
+];
 
-function factionMeta(key) { return FACTIONS.find((f) => f.key === key) || FACTIONS[0]; }
-function factionIndex(key) { return FACTIONS.findIndex((f) => f.key === key); }
-function cornerIndex(f) { return f * EDGE_LENGTH; }
+export function renderLobbyOptions({ room, container, E, socket, handleAck }) {
+  const selected = room.gameOptions?.startingFaction || 'red';
+  const wrap = E('section', 'lutro-faction-picker');
+  const head = E('div', 'lutro-faction-picker-head');
+  head.append(
+    E('strong', '', 'Kies je factie en held'),
+    E('small', '', room.isHost ? 'Jouw keuze bepaalt waar de eerste speler start' : 'De host kiest de startfactie')
+  );
+  const choices = E('div', 'lutro-faction-choices');
+  FACTION_CHOICES.forEach((choice) => {
+    const active = selected === choice.key;
+    const button = E('button', `lutro-faction-choice camp-${choice.key}${active ? ' active' : ''}`);
+    button.type = 'button';
+    button.disabled = !room.isHost;
+    button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    button.append(
+      E('span', 'lutro-faction-glyph', choice.glyph),
+      E('span', 'lutro-faction-realm', choice.faction),
+      E('strong', 'lutro-faction-hero', choice.hero),
+      E('b', 'lutro-faction-ability', choice.ability),
+      E('small', 'lutro-faction-copy', choice.copy)
+    );
+    button.onclick = () => socket.emit('room:setOptions', { startingFaction: choice.key }, handleAck);
+    choices.append(button);
+  });
+  wrap.append(head, choices);
+  container.append(wrap);
+}
+const PATH = [
+  [6,1],[6,2],[6,3],[6,4],[6,5], [5,6],[4,6],[3,6],[2,6],[1,6],[0,6], [0,7],[0,8],
+  [1,8],[2,8],[3,8],[4,8],[5,8], [6,9],[6,10],[6,11],[6,12],[6,13],[6,14], [7,14],[8,14],
+  [8,13],[8,12],[8,11],[8,10],[8,9], [9,8],[10,8],[11,8],[12,8],[13,8],[14,8], [14,7],[14,6],
+  [13,6],[12,6],[11,6],[10,6],[9,6], [8,5],[8,4],[8,3],[8,2],[8,1],[8,0], [7,0],[6,0]
+];
+const HOME_LANES = [
+  [[7,1],[7,2],[7,3],[7,4],[7,5],[7,6]],
+  [[1,7],[2,7],[3,7],[4,7],[5,7],[6,7]],
+  [[7,13],[7,12],[7,11],[7,10],[7,9],[7,8]],
+  [[13,7],[12,7],[11,7],[10,7],[9,7],[8,7]]
+];
+const YARDS = [
+  [[1,1],[1,4],[4,1],[4,4]], [[1,10],[1,13],[4,10],[4,13]],
+  [[10,10],[10,13],[13,10],[13,13]], [[10,1],[10,4],[13,1],[13,4]]
+];
 
-function pathTileCoord(index) {
-  const edge = Math.floor(index / EDGE_LENGTH), off = index % EDGE_LENGTH;
-  if (edge === 0) return { gx: off, gy: 0 };
-  if (edge === 1) return { gx: 12, gy: off };
-  if (edge === 2) return { gx: 12 - off, gy: 12 };
-  return { gx: 0, gy: 12 - off };
+function key(row, col) { return `${row},${col}`; }
+const PATH_LOOKUP = new Map(PATH.map(([row, col], index) => [key(row, col), index]));
+const HOME_LOOKUP = new Map();
+HOME_LANES.forEach((lane, seat) => lane.forEach(([row, col], index) => HOME_LOOKUP.set(key(row, col), { seat, index })));
+const YARD_LOOKUP = new Set(YARDS.flat().map(([row, col]) => key(row, col)));
+
+function baseSeat(row, col) {
+  if (row <= 5 && col <= 5) return 0;
+  if (row <= 5 && col >= 9) return 1;
+  if (row >= 9 && col >= 9) return 2;
+  if (row >= 9 && col <= 5) return 3;
+  return -1;
 }
-function tileRole(index) {
-  const edge = Math.floor(index / EDGE_LENGTH), off = index % EDGE_LENGTH;
-  if (off === 0) return { role: 'corner', faction: FACTIONS[edge].key };
-  if (off === 2) return { role: 'start', faction: FACTIONS[edge].key };
-  if (off === 5) return { role: 'defence' };
-  if (off === 9) return { role: 'attack' };
-  if (off === 11) return { role: 'entrance', faction: FACTIONS[(edge + 1) % 4].key };
-  return { role: 'plain' };
-}
-function homeTileCoord(f, step) {
-  const c = pathTileCoord(cornerIndex(f));
-  const t = [0.25, 0.45, 0.65, 0.85][step];
-  return { gx: c.gx + (CENTER.gx - c.gx) * t, gy: c.gy + (CENTER.gy - c.gy) * t };
-}
-function castleCoord(f) {
-  const c = pathTileCoord(cornerIndex(f));
-  return { gx: c.gx + (c.gx - CENTER.gx) * 0.55, gy: c.gy + (c.gy - CENTER.gy) * 0.55 };
-}
-function isoX(gx, gy) { return (gx - gy) * (TILE_W / 2); }
-function isoY(gx, gy) { return (gx + gy) * (TILE_H / 2); }
-function diamond(cx, cy, w, h) {
-  return `${cx},${cy - h / 2} ${cx + w / 2},${cy} ${cx},${cy + h / 2} ${cx - w / 2},${cy}`;
-}
-function svgEl(tag, attrs = {}) {
-  const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
-  Object.entries(attrs).forEach(([k, v]) => node.setAttribute(k, String(v)));
-  return node;
-}
-function findUnit(game, unitId) {
-  for (const p of game.players) { const u = p.units.find((x) => x.id === unitId); if (u) return { p, u }; }
+function pawnCoord(player, pawn) {
+  if (pawn.zone === 'yard') return YARDS[player.seat][pawn.number - 1];
+  if (pawn.zone === 'track') return PATH[pawn.pathIndex];
+  if (pawn.zone === 'home' || pawn.zone === 'finished') return HOME_LANES[player.seat][Math.min(5, pawn.homeIndex)];
   return null;
 }
-
-export function render({ game, state, els, E, action, titlebar, logBox, sound }) {
-  const you = game.players.find((p) => p.isYou);
-  const s = state.lutro || (state.lutro = { selectedUnitId: null, panel: null });
-  if (s.selectedUnitId && !findUnit(game, s.selectedUnitId)) s.selectedUnitId = null;
-
-  const canAct = you && !you.eliminated && !game.gameOver;
-  if (!canAct) s.panel = null;
-
-  const doAction = (name, payload) => { sound(name === 'roll' ? 'turn' : 'score'); action(name, payload); };
-
-  const root = E('div', 'lutro-root');
-  root.append(buildTopBar({ game, you, E, doAction }));
-  root.append(buildBoard({ game, you, s, E }));
-  if (you) root.append(buildStatusBar({ you, E }));
-  root.append(buildTray({ game, you, s, canAct, E, doAction }));
-  root.append(buildTicker({ game, E }));
-
-  const status = game.gameOver
-    ? (game.resultText || 'Het beleg is afgelopen.')
-    : (you && you.eliminated ? 'Je kasteel is gevallen — kijk toe.' : 'Het beleg woedt voort.');
-  els.gameStage.append(titlebar('Lutro', status), root);
+function turnStatus(game) {
+  if (game.gameOver) return game.resultText || 'De strijd is afgelopen.';
+  const turn = game.players.find((player) => player.id === game.turnPlayerId);
+  if (game.canRoll) return 'Jij bent aan de beurt. Gooi voor coins.';
+  if (game.canAct) return `Je verdiende ${game.lastCoinGain} coins en je leger marcheerde. Kies één actie.`;
+  return `${turn?.name || 'De volgende speler'} is aan de beurt.`;
 }
 
-/* ---------------- top bar ---------------- */
-
-function elapsedLabel(ms) {
-  const total = Math.max(0, Math.floor((ms || 0) / 1000));
-  const m = Math.floor(total / 60), sec = total % 60;
-  return `${m}:${String(sec).padStart(2, '0')}`;
+function buildPlayerCard(player, game, E) {
+  const card = E('div', `lutro-player camp-${player.camp}${player.id === game.turnPlayerId ? ' active' : ''}${player.eliminated ? ' eliminated' : ''}${player.connected === false ? ' offline' : ''}`);
+  const marker = E('span', 'lutro-player-marker', CAMPS[player.seat]?.glyph || '•');
+  const identity = E('div', 'lutro-player-identity');
+  identity.append(marker, E('strong', '', player.name), E('span', 'lutro-camp-name', CAMPS[player.seat]?.name || player.camp));
+  const economy = E('span', 'lutro-economy', `◉ ${player.coins}`);
+  const hp = E('div', 'lutro-castle-hp');
+  const fill = E('span', 'lutro-castle-hp-fill');
+  fill.style.width = `${player.castleHp}%`;
+  hp.append(fill);
+  card.append(identity, economy, hp, E('span', 'lutro-castle-hp-text', `${player.castleHp}/100 HP`));
+  return card;
 }
 
-function buildTopBar({ game, you, E, doAction }) {
-  const bar = E('div', 'lutro-topbar');
-  bar.append(E('div', 'lutro-clock', `⏱ ${elapsedLabel(game.elapsedMs)}`));
-  if (you) {
-    bar.append(E('div', 'lutro-gold', `💰 ${you.gold}g`));
-    const enemies = game.players.filter((p) => p.id !== you.id && !p.eliminated);
-    const targetBtn = E('button', 'lutro-target');
-    targetBtn.type = 'button';
-    if (!enemies.length) {
-      targetBtn.textContent = 'Geen doelwit';
-      targetBtn.disabled = true;
-    } else {
-      const target = enemies.find((p) => p.faction === you.targetFaction) || enemies[0];
-      const meta = factionMeta(target.faction);
-      targetBtn.textContent = `🎯 ${meta.icon} ${meta.name}`;
-      targetBtn.style.setProperty('--faction-color', meta.color);
-      targetBtn.onclick = () => {
-        const idx = enemies.findIndex((p) => p.faction === target.faction);
-        const next = enemies[(idx + 1) % enemies.length];
-        doAction('setTarget', { faction: next.faction });
-      };
-    }
-    bar.append(targetBtn);
+function buildPawnToken(player, pawn, canMove, E, action, sound) {
+  const token = E(canMove ? 'button' : 'span', `lutro-pawn camp-${player.camp} unit-${pawn.type}${canMove ? ' movable' : ''}${pawn.zone === 'yard' ? ' inactive' : ''}${pawn.zone === 'finished' ? ' finished' : ''}`);
+  if (canMove) {
+    token.type = 'button';
+    token.onclick = () => { sound('score'); action('move', { pawnId: pawn.id }); };
+    token.setAttribute('aria-label', `Verplaats ${pawn.label}`);
+  } else token.setAttribute('aria-label', `${player.name}, ${pawn.label}`);
+  token.title = `${pawn.label} · ${pawn.damage} damage · ${pawn.hp}/${pawn.maxHp} HP · automatisch ${pawn.march} vakken`;
+  token.append(unitSprite(E, player, pawn, 'lutro-pawn-glyph'));
+  if (pawn.zone !== 'yard') {
+    const hp = E('span', 'lutro-unit-hp');
+    const hpFill = E('span', 'lutro-unit-hp-fill');
+    hpFill.style.width = `${Math.max(0, (pawn.hp / pawn.maxHp) * 100)}%`;
+    hp.append(hpFill);
+    token.append(hp);
   }
-  return bar;
+  token.append(E('span', 'lutro-pawn-number', String(pawn.number)));
+  return token;
 }
 
-/* ---------------- board ---------------- */
-
-function buildBoard({ game, you, s, E }) {
+function buildBoard(game, movable, E, action, sound) {
   const wrap = E('div', 'lutro-board-wrap');
+  const board = E('div', 'lutro-board');
+  board.setAttribute('role', 'grid');
+  board.setAttribute('aria-label', 'Lutro-slagveld');
+  const occupants = new Map();
+  game.players.forEach((player) => player.pawns.forEach((pawn) => {
+    const coord = pawnCoord(player, pawn);
+    if (!coord) return;
+    const id = key(coord[0], coord[1]);
+    if (!occupants.has(id)) occupants.set(id, []);
+    occupants.get(id).push({ player, pawn });
+  }));
 
-  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-  const extend = (gx, gy, pad = 1) => {
-    const x = isoX(gx, gy), y = isoY(gx, gy);
-    minX = Math.min(minX, x - pad * TILE_W); maxX = Math.max(maxX, x + pad * TILE_W);
-    minY = Math.min(minY, y - pad * TILE_H); maxY = Math.max(maxY, y + pad * TILE_H);
-  };
-  for (let i = 0; i < PATH_LENGTH; i += 1) { const c = pathTileCoord(i); extend(c.gx, c.gy, 0.6); }
-  FACTIONS.forEach((f, idx) => {
-    const cc = castleCoord(idx); extend(cc.gx, cc.gy, 1.6);
-    for (let step = 0; step < HOME_STEPS; step += 1) { const h = homeTileCoord(idx, step); extend(h.gx, h.gy, 0.6); }
-  });
-  extend(CENTER.gx, CENTER.gy, 1.2);
-
-  const pad = 14;
-  const svg = svgEl('svg', { viewBox: `${minX - pad} ${minY - pad} ${maxX - minX + pad * 2} ${maxY - minY + pad * 2}`, class: 'lutro-svg' });
-  const landLayer = svgEl('g', { class: 'lutro-land' });
-  const homeLayer = svgEl('g', { class: 'lutro-home' });
-  const castleLayer = svgEl('g', { class: 'lutro-castles' });
-  const unitLayer = svgEl('g', { class: 'lutro-units' });
-  svg.append(landLayer, homeLayer, castleLayer, unitLayer);
-
-  // Siege square
-  const sc = { x: isoX(CENTER.gx, CENTER.gy), y: isoY(CENTER.gx, CENTER.gy) };
-  landLayer.append(svgEl('polygon', { points: diamond(sc.x, sc.y, TILE_W * 1.5, TILE_H * 1.5), class: 'lutro-siege-tile' }));
-  const siegeLabel = svgEl('text', { x: sc.x, y: sc.y + 3, 'text-anchor': 'middle', class: 'lutro-siege-label' });
-  siegeLabel.textContent = '⚔️';
-  landLayer.append(siegeLabel);
-
-  // Home stretches
-  FACTIONS.forEach((f, idx) => {
-    for (let step = 0; step < HOME_STEPS; step += 1) {
-      const h = homeTileCoord(idx, step);
-      const x = isoX(h.gx, h.gy), y = isoY(h.gx, h.gy);
-      const poly = svgEl('polygon', { points: diamond(x, y, TILE_W * 0.85, TILE_H * 0.85), class: 'lutro-home-tile' });
-      poly.style.setProperty('--faction-color', f.color);
-      homeLayer.append(poly);
-    }
-  });
-
-  // Main path
-  for (let i = 0; i < PATH_LENGTH; i += 1) {
-    const c = pathTileCoord(i);
-    const x = isoX(c.gx, c.gy), y = isoY(c.gx, c.gy);
-    const info = tileRole(i);
-    const poly = svgEl('polygon', { points: diamond(x, y, TILE_W, TILE_H), class: `lutro-tile lutro-tile-${info.role}` });
-    if (info.faction) poly.style.setProperty('--faction-color', factionMeta(info.faction).color);
-    landLayer.append(poly);
-    if (info.role === 'defence' || info.role === 'attack') {
-      const glyph = svgEl('text', { x, y: y + 3, 'text-anchor': 'middle', class: 'lutro-tile-glyph' });
-      glyph.textContent = info.role === 'defence' ? '🛡' : '🎯';
-      landLayer.append(glyph);
+  for (let row = 0; row < BOARD_SIZE; row += 1) {
+    for (let col = 0; col < BOARD_SIZE; col += 1) {
+      const id = key(row, col);
+      const pathIndex = PATH_LOOKUP.get(id);
+      const home = HOME_LOOKUP.get(id);
+      const seat = baseSeat(row, col);
+      const classes = ['lutro-cell'];
+      if (seat >= 0) classes.push('base', `camp-${CAMPS[seat].key}`);
+      if (YARD_LOOKUP.has(id)) classes.push('yard');
+      if (pathIndex !== undefined) classes.push('track');
+      if (ATTACK_SITES.has(pathIndex)) classes.push('attack-site');
+      if (home) classes.push('home-lane', `camp-${CAMPS[home.seat].key}`);
+      const startSeat = CAMPS.findIndex((camp) => camp.startIndex === pathIndex);
+      if (startSeat >= 0) classes.push('safe', `camp-${CAMPS[startSeat].key}`);
+      if (row >= 6 && row <= 8 && col >= 6 && col <= 8) classes.push('centre');
+      const cell = E('div', classes.join(' '));
+      if (ATTACK_SITES.has(pathIndex)) cell.title = `Aanvalsveld voor het kasteel van ${CAMPS[ATTACK_SITES.get(pathIndex)].name}`;
+      cell.style.gridRow = String(row + 1);
+      cell.style.gridColumn = String(col + 1);
+      if (pathIndex !== undefined && pathIndex % 3 === 1 && startSeat < 0) {
+        const rune = E('span', 'lutro-rune', ['ᚠ', 'ᚢ', 'ᚦ', 'ᚱ'][pathIndex % 4]);
+        rune.setAttribute('aria-hidden', 'true');
+        cell.append(rune);
+      }
+      (occupants.get(id) || []).forEach(({ player, pawn }, index, list) => {
+        const token = buildPawnToken(player, pawn, movable.has(pawn.id), E, action, sound);
+        token.style.setProperty('--stack-x', `${(index - (list.length - 1) / 2) * 22}%`);
+        token.style.setProperty('--stack-y', `${(index % 2) * 13}%`);
+        cell.append(token);
+      });
+      board.append(cell);
     }
   }
-
-  // Castles
-  FACTIONS.forEach((f, idx) => {
-    const p = game.players.find((pl) => pl.faction === f.key);
-    const cc = castleCoord(idx);
-    const x = isoX(cc.gx, cc.gy), y = isoY(cc.gx, cc.gy);
-    const group = svgEl('g', { class: `lutro-castle${p && p.eliminated ? ' fallen' : ''}` });
-    group.style.setProperty('--faction-color', f.color);
-    group.style.setProperty('--faction-dark', f.dark);
-
-    const towerW = TILE_W * 1.4, towerH = TILE_H * 2.6;
-    group.append(svgEl('polygon', { points: diamond(x, y, towerW, towerH * 0.55), class: 'lutro-castle-base' }));
-    const tower = svgEl('polygon', { points: `${x - towerW * 0.28},${y} ${x + towerW * 0.28},${y} ${x + towerW * 0.2},${y - towerH} ${x - towerW * 0.2},${y - towerH}`, class: 'lutro-castle-tower' });
-    group.append(tower);
-    const flag = svgEl('text', { x, y: y - towerH - 6, 'text-anchor': 'middle', class: 'lutro-castle-flag' });
-    flag.textContent = f.icon;
-    group.append(flag);
-
-    if (p) {
-      const hpPct = Math.max(0, p.castleHp / p.castleMaxHp);
-      const barW = towerW * 1.1;
-      group.append(svgEl('rect', { x: x - barW / 2, y: y - towerH - 20, width: barW, height: 5, class: 'lutro-hp-back' }));
-      group.append(svgEl('rect', { x: x - barW / 2, y: y - towerH - 20, width: Math.max(0, barW * hpPct), height: 5, class: 'lutro-hp-fill' }));
-      const tierLabel = svgEl('text', { x, y: y - towerH - 26, 'text-anchor': 'middle', class: 'lutro-tier-label' });
-      tierLabel.textContent = '★'.repeat(p.turretTier) + '☆'.repeat(3 - p.turretTier);
-      group.append(tierLabel);
-      const nameLabel = svgEl('text', { x, y: y + towerH * 0.55 + 14, 'text-anchor': 'middle', class: 'lutro-castle-name' });
-      nameLabel.textContent = `${f.name}${p.isNpc ? ' 🤖' : ''}`;
-      group.append(nameLabel);
-    }
-    castleLayer.append(group);
-  });
-
-  // Units, grouped by occupied tile so stacks fan out
-  const stacks = new Map();
-  game.players.forEach((p) => {
-    p.units.forEach((u) => {
-      const coord = u.zone === 'home' ? homeTileCoord(factionIndex(p.faction), u.homeStep) : pathTileCoord(u.pos);
-      const key = `${coord.gx.toFixed(2)},${coord.gy.toFixed(2)}`;
-      if (!stacks.has(key)) stacks.set(key, { coord, list: [] });
-      stacks.get(key).list.push({ p, u });
-    });
-  });
-  stacks.forEach(({ coord, list }) => {
-    const baseX = isoX(coord.gx, coord.gy), baseY = isoY(coord.gx, coord.gy);
-    list.forEach((entry, i) => {
-      const offset = (i - (list.length - 1) / 2) * 11;
-      unitLayer.append(buildUnitToken({ ...entry, x: baseX + offset, y: baseY - 4, s, you }));
-    });
-  });
-
-  wrap.append(svg);
+  wrap.append(board);
   return wrap;
 }
 
-function buildUnitToken({ p, u, x, y, s, you }) {
-  const meta = factionMeta(p.faction);
-  const g = svgEl('g', { class: `lutro-unit${s.selectedUnitId === u.id ? ' selected' : ''}${p.isYou ? ' mine' : ''}` });
-  g.style.setProperty('--faction-color', meta.color);
-  g.style.cursor = 'pointer';
-  const r = 8;
-  if (u.shielded) g.append(svgEl('circle', { cx: x, cy: y, r: r + 4, class: 'lutro-unit-shield' }));
-  g.append(svgEl('circle', { cx: x, cy: y, r, class: 'lutro-unit-body' }));
-  const hpPct = Math.max(0, u.hp / u.maxHp);
-  const circumference = 2 * Math.PI * (r + 1.5);
-  const ring = svgEl('circle', {
-    cx: x, cy: y, r: r + 1.5, class: 'lutro-unit-hp',
-    'stroke-dasharray': `${circumference * hpPct} ${circumference}`
-  });
-  g.append(ring);
-  const glyph = svgEl('text', { x, y: y + 3, 'text-anchor': 'middle', class: 'lutro-unit-glyph' });
-  glyph.textContent = UNIT_META[u.cls].icon;
-  g.append(glyph);
-  g.addEventListener('click', () => {
-    if (you && p.id === you.id) s.selectedUnitId = s.selectedUnitId === u.id ? null : u.id;
-  });
-  return g;
-}
-
-/* ---------------- status bar ---------------- */
-
-function buildStatusBar({ you, E }) {
-  const meta = factionMeta(you.faction);
-  const bar = E('div', 'lutro-statusbar');
-  bar.style.setProperty('--faction-color', meta.color);
-  bar.append(E('span', 'lutro-status-icon', meta.icon));
-  bar.append(E('span', 'lutro-status-name', `${meta.name} · ${meta.turretName} Lv${you.turretTier}`));
-  const hpWrap = E('div', 'lutro-status-hp');
-  const hpFill = E('div', 'lutro-status-hp-fill');
-  hpFill.style.width = `${Math.max(0, Math.min(100, (you.castleHp / you.castleMaxHp) * 100))}%`;
-  hpWrap.append(hpFill);
-  bar.append(hpWrap, E('span', 'lutro-status-hp-text', `${Math.max(0, Math.round(you.castleHp))}/${you.castleMaxHp}`));
-  return bar;
-}
-
-/* ---------------- bottom action tray ---------------- */
-
-function buildTray({ game, you, s, canAct, E, doAction }) {
-  const tray = E('div', 'lutro-tray');
-  if (!you) { tray.append(E('div', 'lutro-tray-hint', 'Toeschouwer.')); return tray; }
-  if (!canAct) {
-    tray.append(E('div', 'lutro-tray-hint', you.eliminated ? 'Je kasteel is gevallen.' : (game.resultText || 'Beleg afgelopen.')));
-    return tray;
-  }
-
-  const now = Date.now();
-  const cooling = !you.rollPending && now < you.nextRollAt;
-  const grid = E('div', 'lutro-actions');
-
-  // ACTIE 1 — troepen plaatsen
-  const btn1 = E('button', 'lutro-actbtn');
-  btn1.type = 'button';
-  btn1.disabled = cooling;
-  if (you.rollPending) {
-    btn1.append(E('span', 'lutro-actbtn-icon', '🎲'), E('span', 'lutro-actbtn-label', `Worp: ${you.lastRoll}`));
-    btn1.disabled = you.lastRoll !== 6;
-  } else {
-    btn1.append(E('span', 'lutro-actbtn-icon', '🎲'), E('span', 'lutro-actbtn-label', 'Worp'));
-  }
-  btn1.onclick = () => {
-    if (!you.rollPending) { doAction('roll'); return; }
-    s.panel = s.panel === 'deploy' ? null : 'deploy';
-  };
-  grid.append(btn1);
-
-  // ACTIE 2 — versterk kasteel
-  const btn2 = E('button', 'lutro-actbtn');
-  btn2.type = 'button';
-  btn2.append(E('span', 'lutro-actbtn-icon', '🏰'), E('span', 'lutro-actbtn-label', 'Versterk'));
-  btn2.onclick = () => { s.panel = s.panel === 'reinforce' ? null : 'reinforce'; };
-  grid.append(btn2);
-
-  // ACTIE 3 — verplaats troepen
-  const btn3 = E('button', 'lutro-actbtn');
-  btn3.type = 'button';
-  btn3.disabled = !you.rollPending;
-  btn3.append(E('span', 'lutro-actbtn-icon', '🏃'), E('span', 'lutro-actbtn-label', you.rollPending ? `Verplaats ${you.lastRoll}` : 'Verplaats'));
-  btn3.onclick = () => { doAction('move', { unitId: s.selectedUnitId || 0 }); };
-  grid.append(btn3);
-
-  // ACTIE 4 — actie troepen (contextual)
-  const selected = s.selectedUnitId ? you.units.find((u) => u.id === s.selectedUnitId) : null;
-  const role = selected && selected.zone === 'path' ? tileRole(selected.pos).role : null;
-  const btn4 = E('button', 'lutro-actbtn');
-  btn4.type = 'button';
-  const label4 = role === 'defence' ? 'Schild' : role === 'attack' ? 'Belegeren' : 'Actie';
-  btn4.append(E('span', 'lutro-actbtn-icon', role === 'defence' ? '🛡' : role === 'attack' ? '🎯' : '✋'), E('span', 'lutro-actbtn-label', label4));
-  btn4.disabled = !selected || (role !== 'defence' && role !== 'attack');
-  btn4.onclick = () => { if (selected) doAction('tileAction', { unitId: selected.id }); };
-  grid.append(btn4);
-
-  tray.append(grid);
-
-  if (s.panel === 'deploy' && you.rollPending && you.lastRoll === 6) {
-    tray.append(buildDeployPanel({ you, E, doAction }));
-  } else if (s.panel === 'reinforce') {
-    tray.append(buildReinforcePanel({ you, E, doAction }));
-  } else if (!you.rollPending) {
-    const secsLeft = Math.max(0, Math.ceil((you.nextRollAt - now) / 1000));
-    tray.append(E('div', 'lutro-tray-hint', secsLeft > 0 ? `Volgende worp over ${secsLeft}s.` : 'Klaar om te rollen.'));
-  } else if (you.lastRoll !== 6) {
-    tray.append(E('div', 'lutro-tray-hint', 'Tik een eenheid aan en verplaats haar met deze worp.'));
-  }
-
-  return tray;
-}
-
-function buildDeployPanel({ you, E, doAction }) {
-  const panel = E('div', 'lutro-panel');
-  UNIT_ORDER.forEach((cls) => {
-    const meta = UNIT_META[cls];
-    const btn = E('button', 'lutro-panel-btn');
-    btn.type = 'button';
-    btn.disabled = you.gold < meta.cost;
-    btn.append(
-      E('span', 'lutro-panel-icon', meta.icon),
-      E('span', 'lutro-panel-name', meta.names[you.faction]),
-      E('span', 'lutro-panel-cost', `${meta.cost}g`)
+function buildShop(game, me, E, action, sound) {
+  const shop = E('div', 'lutro-shop');
+  me.pawns.forEach((pawn) => {
+    const available = pawn.zone === 'yard' && me.coins >= pawn.cost;
+    const button = E('button', `lutro-unit-card unit-${pawn.type}`);
+    button.type = 'button';
+    button.disabled = !available;
+    button.title = pawn.type === 'hero' ? `${pawn.hero.ability}: ${pawn.hero.description}` : pawn.label;
+    button.append(
+      unitSprite(E, me, pawn, 'lutro-unit-card-icon'),
+      E('strong', '', pawn.label),
+      E('span', 'lutro-unit-card-stats', `${pawn.damage}⚔ ${pawn.maxHp}♥ ${pawn.march} auto➜`),
+      E('b', 'lutro-unit-card-cost', pawn.zone === 'yard' ? `${pawn.cost} coins` : 'Ingezet')
     );
-    btn.onclick = () => doAction('deploy', { cls });
-    panel.append(btn);
+    if (available) button.onclick = () => { sound('score'); action('buy', { type: pawn.type }); };
+    shop.append(button);
   });
-  return panel;
+  return shop;
 }
 
-function buildReinforcePanel({ you, E, doAction }) {
-  const panel = E('div', 'lutro-panel');
-  const repair = E('button', 'lutro-panel-btn');
-  repair.type = 'button';
-  repair.disabled = you.gold < 200 || you.castleHp >= you.castleMaxHp;
-  repair.append(E('span', 'lutro-panel-icon', '🧱'), E('span', 'lutro-panel-name', 'Herstel +250 HP'), E('span', 'lutro-panel-cost', '200g'));
-  repair.onclick = () => doAction('repair');
-  panel.append(repair);
-
-  const upgrade = E('button', 'lutro-panel-btn');
-  upgrade.type = 'button';
-  upgrade.disabled = you.gold < 150 || you.turretTier >= 3;
-  upgrade.append(E('span', 'lutro-panel-icon', '🔧'), E('span', 'lutro-panel-name', 'Toren upgraden'), E('span', 'lutro-panel-cost', '150g'));
-  upgrade.onclick = () => doAction('upgradeTurret');
-  panel.append(upgrade);
-  return panel;
+function buildControls(game, E, action, sound) {
+  const me = game.players.find((player) => player.isYou);
+  const controls = E('div', 'lutro-controls');
+  const summary = E('div', 'lutro-roll-summary');
+  const die = E('div', `lutro-die${game.lastRoll ? ' rolled' : ''}`, DICE[game.lastRoll || 0]);
+  const copy = E('div', 'lutro-control-copy');
+  copy.append(E('strong', '', game.lastRoll ? `Worp ${game.lastRoll} · +${game.lastCoinGain} coins` : 'Jouw worp'), E('span', '', turnStatus(game)));
+  summary.append(die, copy);
+  controls.append(summary);
+  if (game.canRoll) {
+    const roll = E('button', 'lutro-roll', 'Gooi voor coins');
+    roll.type = 'button';
+    roll.onclick = () => { sound('turn'); action('roll'); };
+    controls.append(roll);
+  } else if (game.canAct && me) {
+    controls.append(buildShop(game, me, E, action, sound));
+    const attacks = E('div', 'lutro-attack-actions');
+    (game.attackOptions || []).forEach((option) => {
+      const pawn = me.pawns.find((item) => item.id === option.pawnId);
+      const target = game.players.find((player) => player.id === option.targetPlayerId);
+      const attack = E('button', 'lutro-castle-attack', `⚔ ${pawn.label} valt ${target.name} aan (${pawn.damage})`);
+      attack.type = 'button';
+      attack.onclick = () => { sound('score'); action('castleAttack', option); };
+      attacks.append(attack);
+    });
+    if (attacks.childElementCount) controls.append(attacks);
+    const footer = E('div', 'lutro-action-footer');
+    footer.append(E('span', '', game.movablePawnIds.length ? `Tik een oplichtende troep om je worp (${game.lastRoll}) extra te bewegen.` : 'Geen troep kan de worp nog gebruiken.'));
+    const pass = E('button', 'lutro-pass', 'Pas');
+    pass.type = 'button';
+    pass.onclick = () => action('pass');
+    footer.append(pass);
+    controls.append(footer);
+  }
+  return controls;
 }
 
-/* ---------------- event ticker ---------------- */
-
-function buildTicker({ game, E }) {
-  const wrap = E('div', 'lutro-ticker');
-  wrap.textContent = (game.log && game.log[game.log.length - 1]) || 'Het beleg begint...';
-  return wrap;
+export function render({ game, els, E, action, titlebar, logBox, sound }) {
+  const legacyRoom = game.schemaVersion !== 7 || !game.players.every((player) => Array.isArray(player.pawns));
+  if (legacyRoom) {
+    const notice = E('div', 'lutro-legacy');
+    notice.append(E('strong', '', 'Deze spelronde gebruikt de vorige Lutro-versie.'), E('span', '', 'Ga terug naar de lobby en start een nieuw spel om de kasteelstrijd te laden.'));
+    els.gameStage.append(titlebar('Lutro', 'Start een nieuwe spelronde.'), notice);
+    return;
+  }
+  const root = E('div', 'lutro-root');
+  const players = E('div', 'lutro-players');
+  game.players.forEach((player) => players.append(buildPlayerCard(player, game, E)));
+  root.append(players, buildBoard(game, new Set(game.movablePawnIds || []), E, action, sound), buildControls(game, E, action, sound));
+  els.gameStage.append(titlebar('Lutro', turnStatus(game)), root, logBox(game.log || []));
 }
-
-/* ---------------- lobby / leaderboard helpers ---------------- */
 
 export function metric({ game, player }) {
-  const p = game.players.find((pl) => pl.id === player.id);
-  return { text: p ? `${Math.max(0, Math.round(p.castleHp))} HP` : '', score: p ? Math.round(p.castleHp) : 0 };
+  const current = game.players.find((item) => item.id === player.id);
+  return { text: current ? `${current.castleHp}/100 HP` : '', score: current?.castleHp || 0 };
 }
 export function isWinner({ game, myId }) { return game.winnerId === myId; }
-export function presentResult({ game }) { return game.resultText; }
+export function presentResult({ game }) {
+  const winner = game.players.find((player) => player.id === game.winnerId);
+  return winner ? { title: winner.name, copy: 'heeft het laatste kasteel overeind en wint Lutro.' } : game.resultText;
+}

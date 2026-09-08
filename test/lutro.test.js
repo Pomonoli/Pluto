@@ -1,5 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const lutro = require('../games/lutro/server');
 
 function withRandom(value, fn) {
@@ -7,142 +9,269 @@ function withRandom(value, fn) {
   Math.random = () => value;
   try { return fn(); } finally { Math.random = original; }
 }
-
-function players(count = 4, npcFrom = 1) {
-  return Array.from({ length: count }, (_, i) => ({ id: `p${i}`, name: `Speler ${i}`, isNpc: i >= npcFrom }));
+function players(count = 4, npcFrom = count) {
+  return Array.from({ length: count }, (_, index) => ({ id: `p${index}`, name: `Speler ${index}`, isNpc: index >= npcFrom }));
+}
+function readyPawn(player, type, progress, hp) {
+  const pawn = player.pawns.find((item) => item.type === type);
+  pawn.progress = progress;
+  pawn.hp = hp ?? pawn.maxHp;
+  return pawn;
+}
+function forceAction(game, playerId, roll = 1) {
+  game.turnIndex = game.players.findIndex((player) => player.id === playerId);
+  game.phase = 'action';
+  game.lastRoll = roll;
 }
 
-test('createGame wijst rijken toe volgens de vaste zitorde en start met volle middelen', () => {
+test('ieder rijk start met een kasteel van 100 HP, nul coins en vier vaste troepentypes', () => {
   const game = lutro.createGame(players(4));
-  assert.equal(game.players.p0.faction, 'minastirith');
-  assert.equal(game.players.p1.faction, 'baraddur');
-  assert.equal(game.players.p2.faction, 'erebor');
-  assert.equal(game.players.p3.faction, 'rivendell');
-  game.order.forEach((id) => {
-    const p = game.players[id];
-    assert.equal(p.castleHp, lutro.CASTLE_MAX_HP);
-    assert.equal(p.gold, 350);
-    assert.equal(p.units.length, 0);
-    assert.ok(p.targetFaction);
+  assert.deepEqual(game.players.map((player) => player.camp), ['red', 'green', 'yellow', 'blue']);
+  assert.deepEqual(lutro.CAMPS.map((camp) => camp.name), ['Sauron', 'Elven', 'Dwergen', 'Mensen']);
+  game.players.forEach((player) => {
+    assert.equal(player.castleHp, 100);
+    assert.equal(player.coins, 0);
+    assert.deepEqual(player.pawns.map((pawn) => pawn.type), ['normal', 'fast', 'strong', 'hero']);
   });
 });
 
-test('serialize geeft een consistente publieke weergave', () => {
-  const game = lutro.createGame(players(2));
-  const view = lutro.serialize(game, 'p0', new Map([['p0', true], ['p1', true]]));
-  assert.equal(view.kind, 'lutro');
-  assert.equal(view.players.length, 2);
-  const you = view.players.find((p) => p.isYou);
-  assert.equal(you.id, 'p0');
-  assert.equal(typeof you.castleHp, 'number');
+test('de lobbykeuze bepaalt de startfactie en bijbehorende held', () => {
+  assert.deepEqual(lutro.normalizeRoomOptions({ startingFaction: 'green' }), { startingFaction: 'green' });
+  assert.deepEqual(lutro.normalizeRoomOptions({ startingFaction: 'onbekend' }), { startingFaction: 'red' });
+  const game = lutro.createGame(players(4), { startingFaction: 'green' });
+  assert.deepEqual(game.players.map((player) => player.camp), ['green', 'yellow', 'blue', 'red']);
+  assert.deepEqual(game.players.map((player) => player.pawns.find((pawn) => pawn.type === 'hero').hero.name), ['Legolas', 'Gimli', 'Aragorn', 'Sauron']);
+  assert.match(game.log[0], /begint voor Elven/);
 });
 
-test('een worp van 6 ontgrendelt inzetten; goud wordt afgeschreven en de eenheid start bij de vertrekplaats', () => {
-  const game = lutro.createGame(players(2));
-  withRandom(0.999, () => lutro.handleAction(game, 'p0', 'roll'));
-  const p = game.players.p0;
-  assert.equal(p.lastRoll, 6);
-  lutro.handleAction(game, 'p0', 'deploy', { cls: 'scout' });
-  assert.equal(p.gold, 350 - lutro.UNIT_CLASSES.scout.cost);
-  assert.equal(p.units.length, 1);
-  assert.equal(p.units[0].pos, lutro.startTileIndex(3)); // p0 zit op minastirith, faction-index 3
+test('iedere factie gebruikt vier eigen thematische troepen', () => {
+  assert.deepEqual(lutro.FACTION_UNITS, [
+    { normal: 'Orc', fast: 'Nazgûl', strong: 'Trol', hero: 'Sauron' },
+    { normal: 'Elf met boog', fast: 'Adelaar', strong: 'Elf met zwaard', hero: 'Legolas' },
+    { normal: 'Lonely Mountain-dwerg', fast: 'Dwerg op pony', strong: 'Iron Hills-dwerg', hero: 'Gimli' },
+    { normal: 'Minas Tirith-soldaat', fast: 'Rohirrim', strong: 'Númenóreaan', hero: 'Aragorn' }
+  ]);
+  const game = lutro.createGame(players(4));
+  game.players.forEach((player, seat) => {
+    assert.deepEqual(player.pawns.map((pawn) => pawn.label), ['normal', 'fast', 'strong', 'hero'].map((type) => lutro.FACTION_UNITS[seat][type]));
+  });
 });
 
-test('inzetten zonder een 6 faalt', () => {
-  const game = lutro.createGame(players(2));
-  withRandom(0, () => lutro.handleAction(game, 'p0', 'roll'));
-  assert.equal(game.players.p0.lastRoll, 1);
-  assert.throws(() => lutro.handleAction(game, 'p0', 'deploy', { cls: 'scout' }), /geen 6/i);
+test('troepenstats en kostprijzen volgen de afgesproken waarden', () => {
+  assert.deepEqual(lutro.UNIT_TYPES.normal, { label: 'Soldaat', cost: 20, damage: 10, maxHp: 10, speed: 10, march: 2, castleDamageOnDefeat: 10 });
+  assert.deepEqual(lutro.UNIT_TYPES.fast, { label: 'Snelle soldaat', cost: 60, damage: 5, maxHp: 5, speed: 20, march: 4, castleDamageOnDefeat: 15 });
+  assert.deepEqual(lutro.UNIT_TYPES.strong, { label: 'Sterke soldaat', cost: 40, damage: 15, maxHp: 15, speed: 5, march: 1, castleDamageOnDefeat: 15 });
+  assert.deepEqual(lutro.UNIT_TYPES.hero, { label: 'Held', cost: 100, damage: 20, maxHp: 20, speed: 20, march: 3, castleDamageOnDefeat: 25 });
 });
 
-test('verplaatsen zonder geldige worp faalt, met worp beweegt de eenheid het juiste aantal tegels', () => {
+test('ieder oog levert tien coins en opent één actiefase', () => {
   const game = lutro.createGame(players(2));
-  const p = game.players.p0;
-  withRandom(0.999, () => lutro.handleAction(game, 'p0', 'roll'));
-  lutro.handleAction(game, 'p0', 'deploy', { cls: 'scout' });
-  const unit = p.units[0];
-  const startPos = unit.pos;
-  p.nextRollAt = Date.now(); // omzeil de persoonlijke worp-cooldown voor de test
-  withRandom(0.2, () => lutro.handleAction(game, 'p0', 'roll')); // 1 + floor(0.2*6) = 2
-  assert.equal(p.lastRoll, 2);
-  lutro.handleAction(game, 'p0', 'move', { unitId: unit.id });
-  assert.equal(unit.pos, (startPos + 2) % lutro.PATH_LENGTH);
-  assert.equal(p.rollPending, false);
+  withRandom(0.5, () => lutro.handleAction(game, 'p0', 'roll')); // 4
+  assert.equal(game.lastRoll, 4);
+  assert.equal(game.lastCoinGain, 40);
+  assert.equal(game.players[0].coins, 40);
+  assert.equal(game.phase, 'action');
+  assert.throws(() => lutro.handleAction(game, 'p0', 'roll'), /kies eerst/i);
 });
 
-test('landen op een vijandelijke tegel lost een botsing op', () => {
+test('een troep wordt met coins gekocht zonder zes en start op het eigen startvak', () => {
   const game = lutro.createGame(players(2));
-  const attackerP = game.players.p0; // minastirith
-  const defenderP = game.players.p1; // baraddur
-  const targetPos = 20;
-  attackerP.units.push({ id: 'u1', cls: 'siege', hp: 260, maxHp: 260, zone: 'path', pos: (targetPos - 1 + lutro.PATH_LENGTH) % lutro.PATH_LENGTH, homeStep: 0, shieldUntil: 0, tileCooldownUntil: 0 });
-  defenderP.units.push({ id: 'u2', cls: 'scout', hp: 10, maxHp: 60, zone: 'path', pos: targetPos, homeStep: 0, shieldUntil: 0, tileCooldownUntil: 0 });
-  attackerP.rollPending = true;
-  attackerP.lastRoll = 1;
-  lutro.handleAction(game, 'p0', 'move', { unitId: 'u1' });
-  assert.equal(defenderP.units.length, 0, 'de zwakke verdediger sneuvelt tegen een belegeringseenheid');
-  assert.equal(attackerP.units.length, 1);
+  withRandom(0.2, () => lutro.handleAction(game, 'p0', 'roll')); // 2 = 20 coins
+  lutro.handleAction(game, 'p0', 'buy', { type: 'normal' });
+  const pawn = game.players[0].pawns[0];
+  assert.equal(pawn.progress, 0);
+  assert.equal(pawn.hp, 10);
+  assert.equal(game.players[0].coins, 0);
+  assert.equal(game.turnIndex, 1);
 });
 
-test('een volledige omloop leidt via de kleurbaan naar een aanval op de Belegeringsplaats', () => {
+test('kopen controleert prijs en beschikbaarheid', () => {
   const game = lutro.createGame(players(2));
-  const p = game.players.p0; // minastirith, faction index 3
-  const target = game.players.p1;
-  p.targetFaction = target.faction;
-  const entrance = lutro.entranceTileIndex(3);
-  p.units.push({ id: 'u1', cls: 'infantry', hp: 130, maxHp: 130, zone: 'path', pos: entrance, homeStep: 0, shieldUntil: 0, tileCooldownUntil: 0 });
-  p.rollPending = true;
-  p.lastRoll = lutro.HOME_STEPS + 1;
-  const beforeHp = target.castleHp;
-  lutro.handleAction(game, 'p0', 'move', { unitId: 'u1' });
-  assert.equal(p.units.length, 0, 'de eenheid verdwijnt na de belegeringsaanval');
-  assert.equal(target.castleHp, beforeHp - lutro.UNIT_CLASSES.infantry.siegeDamage);
+  forceAction(game, 'p0', 1);
+  assert.throws(() => lutro.handleAction(game, 'p0', 'buy', { type: 'hero' }), /onvoldoende coins/i);
+  game.players[0].coins = 100;
+  lutro.handleAction(game, 'p0', 'buy', { type: 'hero' });
+  forceAction(game, 'p0', 1);
+  assert.throws(() => lutro.handleAction(game, 'p0', 'buy', { type: 'hero' }), /al ingezet/i);
 });
 
-test('torens beschieten vijandelijke eenheden binnen bereik en vernietigen ze', () => {
+test('iedere troepenklasse heeft een vaste automatische marsafstand', () => {
   const game = lutro.createGame(players(2));
-  const defenderCastleOwner = game.players.p1; // baraddur, faction-index 2
-  const attackerP = game.players.p0;
-  const corner = lutro.cornerIndex(2);
-  attackerP.units.push({ id: 'u1', cls: 'scout', hp: 60, maxHp: 60, zone: 'path', pos: corner, homeStep: 0, shieldUntil: 0, tileCooldownUntil: 0 });
-  defenderCastleOwner.turretNextFireAt = Date.now() - 1;
-  let destroyed = false;
-  for (let i = 0; i < 10 && !destroyed; i += 1) {
-    lutro.tick(game, Date.now() + i * 3000);
-    destroyed = attackerP.units.length === 0;
-  }
-  assert.ok(destroyed, 'de toren moet de eenheid binnen enkele salvo\'s vernietigen');
+  const player = game.players[0];
+  assert.deepEqual(player.pawns.map(lutro.automaticSteps), [2, 4, 1, 3]);
 });
 
-test('een gevallen kasteel schakelt de speler uit en het spel eindigt met één overlevende', () => {
+test('na de worp marcheren alle reeds ingezette troepen automatisch', () => {
   const game = lutro.createGame(players(2));
-  game.players.p1.castleHp = 0;
-  const changed = lutro.tick(game, Date.now());
-  assert.ok(changed);
-  assert.ok(game.players.p1.eliminated);
+  const player = game.players[0];
+  player.pawns.forEach((pawn) => readyPawn(player, pawn.type, 0));
+  withRandom(0, () => lutro.handleAction(game, player.id, 'roll'));
+  assert.deepEqual(player.pawns.map((pawn) => pawn.progress), [2, 4, 1, 3]);
+  assert.equal(game.phase, 'action');
+});
+
+test('de worp kan daarna als extra beweging aan één troep worden gegeven', () => {
+  const game = lutro.createGame(players(2));
+  const player = game.players[0];
+  const pawn = readyPawn(player, 'strong', 0);
+  withRandom(0.5, () => lutro.handleAction(game, player.id, 'roll')); // 4; eerst 1 automatische stap
+  lutro.handleAction(game, player.id, 'move', { pawnId: pawn.id });
+  assert.equal(pawn.progress, 5);
+});
+
+test('landen op een vijand beschadigt de troep en een uitschakeling beschadigt het kasteel', () => {
+  const game = lutro.createGame(players(2));
+  const red = game.players[0], green = game.players[1];
+  const attacker = readyPawn(red, 'strong', 19);
+  const defender = readyPawn(green, 'normal', 7); // absoluut routevak 20
+  forceAction(game, red.id, 1);
+  lutro.handleAction(game, red.id, 'move', { pawnId: attacker.id });
+  assert.equal(defender.progress, -1);
+  assert.equal(defender.hp, 0);
+  assert.equal(green.castleHp, 90);
+  assert.equal(attacker.hp, 15);
+});
+
+test('een overlevende verdediger slaat terug en HP blijft bewaard', () => {
+  const game = lutro.createGame(players(2));
+  const red = game.players[0], green = game.players[1];
+  const attacker = readyPawn(red, 'fast', 18);
+  const defender = readyPawn(green, 'strong', 7); // absoluut routevak 20
+  forceAction(game, red.id, 2);
+  lutro.handleAction(game, red.id, 'move', { pawnId: attacker.id });
+  assert.equal(defender.hp, 10, 'snelle soldaat doet 5 damage');
+  assert.equal(attacker.progress, -1, 'de tegenaanval schakelt de snelle soldaat uit');
+  assert.equal(red.castleHp, 85, 'verlies van een snelle soldaat doet 15 kasteelschade');
+});
+
+test('het midden doet alle andere kastelen 25 damage', () => {
+  const game = lutro.createGame(players(4));
+  const red = game.players[0];
+  const pawn = readyPawn(red, 'normal', lutro.FINISH_PROGRESS - 1);
+  forceAction(game, red.id, 1);
+  lutro.handleAction(game, red.id, 'move', { pawnId: pawn.id });
+  assert.equal(pawn.progress, lutro.FINISH_PROGRESS);
+  assert.deepEqual(game.players.slice(1).map((player) => player.castleHp), [75, 75, 75]);
+  assert.equal(red.castleHp, 100);
+});
+
+test('een kasteelzone kan vanaf hetzelfde vak maar één keer worden aangevallen', () => {
+  const game = lutro.createGame(players(2));
+  const red = game.players[0], green = game.players[1];
+  const pawn = readyPawn(red, 'normal', 13); // rood aanvalsvak bij het Elvenkasteel
+  forceAction(game, red.id, 3);
+  const option = lutro.attackOptions(game, red)[0];
+  assert.deepEqual({ pawnId: option.pawnId, targetPlayerId: option.targetPlayerId }, { pawnId: pawn.id, targetPlayerId: green.id });
+  lutro.handleAction(game, red.id, 'castleAttack', option);
+  assert.equal(green.castleHp, 90);
+  forceAction(game, red.id, 3);
+  assert.equal(lutro.attackOptions(game, red).length, 0);
+});
+
+test('alleen de acht rood gemarkeerde vakken zijn gewone kasteelaanvalsvakken', () => {
+  assert.deepEqual(lutro.ATTACK_SITES, [[0, 49], [9, 13], [23, 26], [37, 39]]);
+  const game = lutro.createGame(players(2));
+  const red = game.players[0];
+  readyPawn(red, 'normal', 12); // naast, maar niet op, Elven-aanvalsvak 13
+  forceAction(game, red.id, 1);
+  assert.equal(lutro.attackOptions(game, red).length, 0);
+});
+
+test('Legolas valt van extra afstand aan en Gimli vermindert inkomende schade', () => {
+  const game = lutro.createGame(players(3));
+  const red = game.players[0], green = game.players[1], dwarves = game.players[2];
+  const legolas = readyPawn(green, 'hero', 11); // absoluut 24, naast aanvalsvak 23 van de Dwergen
+  forceAction(game, green.id, 1);
+  assert.ok(lutro.attackOptions(game, green).some((option) => option.pawnId === legolas.id && option.targetPlayerId === dwarves.id));
+
+  const attacker = readyPawn(red, 'normal', 19);
+  const gimli = readyPawn(dwarves, 'hero', 46); // absoluut routevak 20
+  forceAction(game, red.id, 1);
+  lutro.handleAction(game, red.id, 'move', { pawnId: attacker.id });
+  assert.equal(gimli.hp, 15, 'Mithrilpantser vermindert 10 damage naar 5');
+});
+
+test('Sauron overleeft één dodelijke treffer dankzij de Ring', () => {
+  const game = lutro.createGame(players(2));
+  const red = game.players[0], green = game.players[1];
+  const sauron = readyPawn(red, 'hero', 20);
+  const legolas = readyPawn(green, 'hero', 5); // absoluut 18; worp 2 landt op 20
+  forceAction(game, green.id, 2);
+  lutro.handleAction(game, green.id, 'move', { pawnId: legolas.id });
+  assert.equal(sauron.hp, 1);
+  assert.equal(sauron.progress, 20);
+  assert.equal(sauron.ringUsed, true);
+});
+
+test('Aragorn herstelt 5 HP na een overleefd gevecht', () => {
+  const game = lutro.createGame(players(4));
+  const green = game.players[1], men = game.players[3];
+  const aragorn = readyPawn(men, 'hero', 31, 10); // absoluut 18; worp 2 beweegt naar 20
+  readyPawn(green, 'fast', 7); // absoluut routevak 20
+  forceAction(game, men.id, 2);
+  lutro.handleAction(game, men.id, 'move', { pawnId: aragorn.id });
+  assert.equal(aragorn.hp, 15);
+});
+
+test('het laatste overgebleven kasteel wint', () => {
+  const game = lutro.createGame(players(2));
+  const red = game.players[0], green = game.players[1];
+  green.castleHp = 10;
+  const pawn = readyPawn(red, 'normal', 13);
+  forceAction(game, red.id, 1);
+  const option = lutro.attackOptions(game, red)[0];
+  lutro.handleAction(game, red.id, 'castleAttack', option);
+  assert.equal(green.eliminated, true);
   assert.equal(game.gameOver, true);
-  assert.equal(game.winnerId, 'p0');
+  assert.equal(game.winnerId, red.id);
 });
 
-test('NPC-tick voert acties uit zonder te crashen', () => {
-  const game = lutro.createGame(players(4, 0));
+test('serialize levert coins, kasteel-HP, troepenstats en geldige acties', () => {
+  const game = lutro.createGame(players(2));
+  game.players[0].coins = 80;
+  readyPawn(game.players[0], 'normal', 4);
+  forceAction(game, 'p0', 3);
+  const view = lutro.serialize(game, 'p0', new Map([['p0', true], ['p1', true]]));
+  assert.equal(view.schemaVersion, 7);
+  assert.equal(view.canAct, true);
+  assert.equal(view.players[0].castleMaxHp, 100);
+  assert.equal(view.players[0].coins, 80);
+  assert.equal(view.players[0].pawns[0].damage, 10);
+  assert.equal(view.players[0].pawns[0].march, 2);
+  assert.deepEqual(view.movablePawnIds, [game.players[0].pawns[0].id]);
+});
+
+test('NPC verdient coins en voert koop- of bewegingsacties uit', () => {
+  const game = lutro.createGame(players(2, 0));
   let now = Date.now();
-  for (let i = 0; i < 30; i += 1) {
-    now += 2200;
+  for (let index = 0; index < 40 && !game.gameOver; index += 1) {
+    now += 1000;
     assert.doesNotThrow(() => lutro.tick(game, now));
   }
-  const anyGoldSpent = game.order.some((id) => game.players[id].gold !== 350 || game.players[id].units.length > 0 || game.players[id].castleHp !== lutro.CASTLE_MAX_HP);
-  assert.ok(anyGoldSpent, 'na verloop van tijd moet minstens één NPC iets hebben ondernomen');
+  assert.ok(game.log.length > 4);
+  assert.ok(game.players.some((player) => player.coins > 0 || player.pawns.some((pawn) => pawn.progress >= 0)));
 });
 
-test('results rangschikt overlevenden voor uitgeschakelde spelers', () => {
-  const game = lutro.createGame(players(2));
-  game.players.p1.castleHp = 0;
-  lutro.tick(game, Date.now());
-  const res = lutro.results(game, 1000);
-  const winner = res.find((r) => r.playerId === 'p0');
-  const loser = res.find((r) => r.playerId === 'p1');
-  assert.equal(winner.placement, 1);
-  assert.equal(winner.won, true);
-  assert.equal(loser.outcome, 'Kasteel gevallen');
+test('de client toont de thematische kasteelstrijd, shop en HP-balken fullscreen', () => {
+  const client = fs.readFileSync(path.join(__dirname, '../games/lutro/client.js'), 'utf8');
+  const css = fs.readFileSync(path.join(__dirname, '../games/lutro/styles.css'), 'utf8');
+  const boardArt = path.join(__dirname, '../games/lutro/assets/four-realms-board.png');
+  const unitAtlases = ['units-mordor.png', 'units-elven.png', 'units-dwarves.png', 'units-men.png']
+    .map((name) => path.join(__dirname, '../games/lutro/assets', name));
+  assert.match(client, /buildShop/);
+  assert.match(client, /export function renderLobbyOptions/);
+  assert.match(client, /Sauron.*Legolas.*Gimli.*Aragorn/s);
+  assert.match(client, /unitSprite/);
+  assert.match(client, /castleAttack/);
+  assert.match(client, /ATTACK_SITES/);
+  assert.match(client, /lutro-unit-hp/);
+  assert.match(css, /four-realms-board\.png/);
+  assert.match(css, /lutro-castle-hp/);
+  assert.match(css, /lutro-cell\.attack-site/);
+  assert.match(css, /lutro-faction-choices/);
+  assert.match(css, /units-mordor\.png/);
+  assert.match(css, /#gameStage:has\(\.lutro-root\)/);
+  assert.ok(fs.statSync(boardArt).size > 100000);
+  unitAtlases.forEach((atlas) => assert.ok(fs.statSync(atlas).size > 500000));
+  assert.doesNotMatch(client, /isoX|turret/i);
 });

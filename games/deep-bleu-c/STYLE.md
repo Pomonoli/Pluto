@@ -1,13 +1,14 @@
-# The Big Blue C
+# The Big Blue C · style guide v6
 
 ## Visual direction
 
-- Zongebleekt en aards Noords palet — licht draagt de diepte, niet duisternis.
+- Warme, handgeïllustreerde zee-RPG: zachte hexlandschappen, perkamenten
+  systeemschermen en tastbaar hout/brons voor handelingen en bootbeheer.
 - Land blijft licht en uitnodigend (weide, naaldwoud, zonhout); het water
   wordt donkerder naarmate de zone zwaarder is (Ondiep → Kelpwouden → Wadzee
   → Rifzee). De waterkleur is zelf de moeilijkheidsindicator.
-- Bleke berkenpanelen met een dunne inktrand i.p.v. donker glas; scherpe
-  hoeken, geen zware slagschaduwen op UI-chrome.
+- Perkament is het informatiemateriaal; hout en brons markeren tabs, acties en
+  de permanente bootbasis-HUD. Schaduwen zijn zacht en functioneel.
 - Sintel/ember blijft het enige warme accent: de actieknop, vuur, zeil, het
   dobbelgevecht. Verder blijft alles gedempt en licht.
 - Het eiland en de speelwereld blijven de visuele hero; UI zweeft eromheen
@@ -31,23 +32,35 @@
 
 ## Controls
 
-- Ronde actieknoppen (thumb-friendly) maar met bleek berken-vlak, dunne
-  inktrand en géén gradient — geen "speelgoed"-glans meer.
+- Ronde actieknoppen zijn thumb-friendly en minimaal `44×44px`; systeemschermen
+  gebruiken brede houten tabs en een duidelijke ronde sluitknop.
 - Vierkante, licht afgeronde knoppen voor systeem-/menufuncties.
-- De belangrijkste actie is sintel/ember, niet groter — er is geen apart
-  uitgelicht "primary"-anker meer; alle railknoppen zijn gelijkwaardig.
+- De belangrijkste actie gebruikt sintel/ember; vaste menuacties in de
+  bootbasis blijven onderling gelijkwaardig.
 
 ## HUD and layout
 
-- Alle actieknoppen (Inventaris, Marktplaats, Hall of Fame, Vaardigheden,
-  Map) staan samen in één rail rechts, verticaal gecentreerd — geen losse
-  rail linksboven.
-- Gezondheid/energie als balken, pantser als badge, actieve buffs als kleine
-  klok-badges — allemaal net onder de geld/soorten/level-pillen.
+- Alle vaste menuacties (Inventaris, Marktplaats, Hall of Fame, Vaardigheden,
+  Map) staan samen met de bootstatus in de compacte boat-base HUD rechtsboven;
+  op mobiel vormt die HUD een compacte balk onderaan.
+- De bootbasis groepeert Hengel, Aas, Vaartuig, Bijl en Houweel met hun niveau,
+  volgende upgrade en vereisten; Inventaris > Uitrusting bevat alleen kleding,
+  wapens en schilden.
+- De bovenste HUD volgt twee duidelijke rijen in houten kaders: dag en geld,
+  ontdekte soorten en level bovenaan; brede gezondheid/energiebalken en een
+  compacte edelsteenbadge voor pantser eronder. Iconen mogen het kader licht
+  overlappen; waarden gebruiken grote, stabiele cijfers.
+- Actieve buffs blijven kleine klok-badges onder of naast de statusmeters.
 - Dag/nacht toont zich als een ☀️/🌙-pil plus een koelere, donkerdere tint
   over de hele kaart 's nachts — geen aparte UI nodig.
 - Een geopend paneel (Inventaris, Marktplaats, ...) schuift als een sheet
   over de kaart; de kaart blijft altijd zichtbaar.
+- Bootbasis is op mobiel de uitzondering: dit complexe beheerscherm gebruikt
+  een vaste fullscreen sheet met een sticky sluitkop. Alleen de paneelinhoud
+  scrollt; boot, stations, gereedschappen en creëren blijven aparte secties.
+- Gereedschappen gebruikt mobiel vijf kleine keuzetabs en toont slechts één
+  detailkaart tegelijk. De maakactie is compact en rechts uitgelijnd, nooit
+  een overgrote schermbrede knop.
 - Houd alle belangrijke controls bereikbaar rond de rand van het scherm,
   zonder paginascroll op de kaart zelf.
 
@@ -57,14 +70,19 @@
   hex-coördinatensysteem (positie, camera, klikafhandeling ongewijzigd), maar
   alles wat op het terrein staat toont een front-facade/dimensie i.p.v. een
   plat silhouet — geen volledige derde-persoonscamera.
-- Eén doorlopend terreinvlak (geen zichtbaar hexraster, geen blur/waas);
-  reliëf komt uit een kaartbrede lichtval en losse decor-objecten (bomen,
-  rotsen, golven) met een ovale slagschaduw, niet uit een per-tegel gradient
-  of een geblurde textuur.
-- Gebouwen zijn echte kleine illustraties (muur, dak, deur, venster, hangend
-  uithangbord met het bestaande emoji-icoon) i.p.v. een icoon-in-kader; het
-  Hall of Fame-monument is een obelisk, havens/aanlegsteigers zijn een
-  dokplateau op palen — geen generieke iconenset.
+- Hexen blijven zichtbaar met een lage-contrastlijn, maar beweging blijft vrij.
+  Objecten overschrijden visueel celranden; reliëf komt uit kaartbrede lichtval,
+  zachte schildertextuur en losse decor-objecten met een ovale grondschaduw.
+- Terrein gebruikt per type drie nabije schildertonen: weide met grassprieten en
+  bloemen, zand met fijne ribbels, gemengd loof-/naaldwoud, en gefacetteerde
+  rotsen en sneeuwtoppen. De vormen blijven helder leesbaar op mobiel.
+- Kusten krijgen een lichte schuimrand. Water toont meerdere losse golfstreken;
+  de vier dieptezones lopen van helder cyaan naar donker petrol, met sterker
+  zichtbare glinstering en visscholen in open water.
+- Vaste gebouwen zijn uitsluitend decoratieve oriëntatiepunten: rustieke
+  huisjes, een zuilentempel, een koepelgebouw, een groeveloods en een
+  havengebouw. Ze hebben geen labels, emoji-uithangbord, status of klikfunctie;
+  alleen een door spelers gebouwde aanlegsteiger blijft een functioneel dok.
 - Personages blijven chunky RPG-avonturiers (kap, cape, zichtbaar
   gereedschap/wapen); vermijd een vlak silhouet.
 - De wereldrand (buitenste rand van de kaart) is een donkere, vage waterval
@@ -75,6 +93,9 @@
 ## Responsive rules
 
 - De game moet op mobiel, tablet en desktop functioneel en compact blijven.
+- De sandbox toont circa 50% meer kaart dan de vorige 18×12-uitsnede; portret
+  gebruikt een hoge 9×20-uitsnede zodat ook achter de mobiele HUD voldoende
+  omgeving rond het personage zichtbaar blijft.
 - Gebruik extra schermruimte om kaart en informatie beter te tonen, niet om
   knoppen buitensporig groot uit te rekken.
 - Controls mogen de kaart niet onnodig bedekken en moeten zonder scrollen

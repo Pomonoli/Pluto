@@ -7,21 +7,26 @@ export const leaderboardConfig={columns:[
 ]};
 
 const HEX_SIZE = 18;
-const HEX_DRAW_SIZE = HEX_SIZE * 1.03; // iets groter dan de rasterpitch: verbergt anti-aliasing-naden tussen tegels
-// Iets meer tegels tonen dan voorheen — een lichte zoom-out zodat je wat
-// meer van de omgeving overziet, zonder de tegels te klein te maken.
-const COLS = 18;
-const ROWS = 12;
+// v6 gebruikt de hex als rustige kaarttaal. De tegelrand valt exact op de
+// rasterpitch, zodat de lage-contrastlijn overal even breed blijft.
+const HEX_DRAW_SIZE = HEX_SIZE;
+// Desktop toont 22×15 i.p.v. 18×12 tegels: 330 tegenover 216, dus ongeveer
+// 53% meer wereld. In portret gebruiken we een hoge uitsnede zodat mobiel niet
+// alsnog het grootste deel van die extra context door `slice` verliest.
+const VIEWPORT_PRESETS = {
+  desktop: { cols: 22, rows: 15 },
+  portrait: { cols: 9, rows: 20 }
+};
 
-// Exacte omvattende rechthoek van de zichtbare COLS x ROWS tegels (in de
+// Exacte omvattende rechthoek van de gekozen cols × rows-tegels (in de
 // eigen hex-pixelruimte). De viewBox hierop baseren — i.p.v. een handmatig
 // geschatte marge — garandeert dat de rand-tegels het venster volledig
 // vullen: elke marge-mismatch liet eerder een reep achtergrondkleur zien
 // (het "blauwe randje") aan één kant van de kaart.
-function computeCoreBounds() {
+function computeCoreBounds(cols, rows) {
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-  for (let row = 0; row < ROWS; row += 1) {
-    for (let col = 0; col < COLS; col += 1) {
+  for (let row = 0; row < rows; row += 1) {
+    for (let col = 0; col < cols; col += 1) {
       const { x, y } = hexToPixel(col, row, HEX_SIZE);
       for (const [cx, cy] of hexCorners(x, y, HEX_SIZE)) {
         if (cx < minX) minX = cx;
@@ -33,19 +38,22 @@ function computeCoreBounds() {
   }
   return { minX, minY, width: maxX - minX, height: maxY - minY };
 }
-const VIEW_BOX = computeCoreBounds();
+Object.values(VIEWPORT_PRESETS).forEach((preset) => { preset.bounds = computeCoreBounds(preset.cols, preset.rows); });
+function currentViewportPreset() {
+  return window.innerHeight > window.innerWidth ? VIEWPORT_PRESETS.portrait : VIEWPORT_PRESETS.desktop;
+}
 const HOOK_WINDOW_MS = 900;
 const REEL_WINDOW_MS = 1300;
-// Eén platte kleur per tegeltype i.p.v. een per-tegel gradient: een gradient
-// die zichzelf op iedere hex herhaalt creëert net een zichtbaar herhalend
-// "hex-grid"-patroon, ook zonder rand. Kleuren volgen het v3-styleguide-palet
-// ("The Big Blue C"): zongebleekt en aards op het land, water dat donkerder
-// wordt naarmate de zone zwaarder is (Ondiep → Kelpwouden → Wadzee → Rifzee).
-// 'w' is de wereldrand: een platte-aarde-waterval die in het niets stort.
-const TILE_COLOR = {
-  L: '#8FAE72', B: '#A8875F', f: '#3F6247', h: '#949D98', p: '#7C8480',
-  K: '#5F875D', q: '#376B55',
-  r: '#8FC6CC', k: '#4E8FA0', a: '#2A5A6B', m: '#17414F', w: '#0B1D24'
+// Drie nabije schildertonen per terrein houden de v6-hexstructuur zichtbaar
+// en geven tegelijk zacht reliëf. Water verloopt per zone van cyaan naar petrol;
+// 'w' is de donkere wereldrand die in het niets stort.
+const TILE_PALETTE = {
+  L: ['#A9C98A', '#8FAE72', '#78995F'], B: ['#D0B27C', '#B79261', '#927047'],
+  f: ['#587B55', '#3F6247', '#2A4433'], h: ['#B4BBB4', '#949D98', '#737D78'],
+  p: ['#A6AAA4', '#7C8480', '#565E5A'], K: ['#78A06E', '#5F875D', '#456C4B'],
+  q: ['#4C8466', '#376B55', '#24513F'], r: ['#B7E1DF', '#8FC6CC', '#68AEB9'],
+  k: ['#72B2BF', '#4E8FA0', '#376F82'], a: ['#42788C', '#2A5A6B', '#1D4352'],
+  m: ['#28596A', '#17414F', '#0F303B'], w: ['#163641', '#0B1D24', '#061116']
 };
 const MINIMAP_RGB = {
   L: [143, 174, 114], B: [168, 135, 95], f: [63, 98, 71], h: [148, 157, 152], p: [124, 132, 128],
@@ -56,16 +64,18 @@ const WATER_CHARS = new Set(['r', 'k', 'a', 'm']);
 const WOOD_TILE = 'f';
 const ROCK_TILE = 'p';
 const KELP_TILE = 'q';
-const GEAR_LABELS = { rod: { icon: '🎣', label: 'Hengel', help: 'Ruimer tijdvenster om aan te slaan bij een beet.' },
-  bait: { icon: '🪱', label: 'Aas', help: 'Grotere kans op zeldzame en epische vis.' },
-  boat: { icon: '🚤', label: 'Vaartuig', help: 'Je kano vaart vanaf de start; latere rompen openen zwaardere zeezones.' },
-  axe: { icon: '🪓', label: 'Bijl', help: 'Een vaste tool: materiaal, Kappen en je bootwerkbank bepalen welke houtsoorten opengaan.' },
-  pickaxe: { icon: '⛏️', label: 'Houweel', help: 'Ruimer tijdvenster om raak te houwen bij een rots.' } };
 const GEAR_CATEGORY_META = {
   clothes: { icon: '🧥', label: 'Kleding' },
   weapons: { icon: '⚔️', label: 'Wapens' },
   shields: { icon: '🛡️', label: 'Schilden' }
 };
+const TOOL_FALLBACK_META = [
+  { key: 'rod', icon: '🎣', label: 'Hengel' },
+  { key: 'bait', icon: '🪱', label: 'Aas' },
+  { key: 'boat', icon: '⛵', label: 'Vaartuig' },
+  { key: 'axe', icon: '🪓', label: 'Bijl' },
+  { key: 'pickaxe', icon: '⛏️', label: 'Houweel' }
+];
 // Kookrecepten — puur weergave; de server (recipes.js) is de bron van
 // waarheid en valideert alles zelf.
 const DISH_DISPLAY = [
@@ -76,11 +86,9 @@ const DISH_DISPLAY = [
 ];
 const QUALITY_LABEL = { raw: 'Rauw', roasted: 'Geroosterd', dish: 'Gerecht' };
 
-// De actieknoppen staan rechts, verticaal gecentreerd, in dezelfde blauwe
-// stijl als elkaar (geen apart uitgelichte "primary"-knop meer) — zo blijft
-// de speler zelf altijd centraal op de kaart in beeld.
-// Alle actieknoppen in één rail aan de rechterkant, verticaal gecentreerd.
-const RIGHT_BUTTONS = [
+// De vaste menuacties horen bij de bootbasis: ze staan samen onder de
+// bootstatus in één compacte HUD, in plaats van als losse rail over de kaart.
+const BOAT_BASE_BUTTONS = [
   { id: 'inventaris', icon: '🎒', label: 'Inventaris' },
   { id: 'markt', icon: '🏪', label: 'Marktplaats' },
   { id: 'monument', icon: '🏆', label: 'Hall of Fame', square: true },
@@ -126,6 +134,7 @@ function ensureWorld() {
 }
 
 let activePanel = 'map';
+let activeToolKey = 'rod';
 let leaderboardData = null;
 let leaderboardPromise = null;
 function loadLeaderboard() {
@@ -192,20 +201,31 @@ function renderDeepBleuC(room, game) {
 // paneel (Inventaris, Marktplaats, ...) schuift eroverheen als een los "sheet"
 // in plaats van de kaart te vervangen — zo blijft de wereld altijd in beeld.
 function renderStage(you, worldData, others, harbors, dayPhase) {
-  const camX = clampInt(you.x - Math.floor(COLS / 2), 0, worldData.width - COLS);
-  const camY = clampInt(you.y - Math.floor(ROWS / 2), 0, worldData.height - ROWS);
+  const viewport = currentViewportPreset();
+  const camX = clampInt(you.x - Math.floor(viewport.cols / 2), 0, worldData.width - viewport.cols);
+  const camY = clampInt(you.y - Math.floor(viewport.rows / 2), 0, worldData.height - viewport.rows);
   const stage = E('div', 'dbc-stage');
-  stage.append(renderMapWrap(you, worldData, camX, camY, others, harbors, dayPhase));
+  stage.append(renderMapWrap(you, worldData, camX, camY, others, harbors, dayPhase, viewport));
   if (activePanel !== 'map') stage.append(renderPanelSheet(you, others, harbors));
   return stage;
 }
 
 function renderStatPills(you, dayPhase) {
   const wrap = E('div', 'dbc-stat-pills');
-  wrap.append(E('div', 'dbc-stat-pill', `${dayPhase === 'night' ? '🌙' : '☀️'}`));
-  wrap.append(E('div', 'dbc-stat-pill', `💰 €${you.cash}`));
-  wrap.append(E('div', 'dbc-stat-pill', `📖 ${you.discovered.length}`));
-  wrap.append(E('div', 'dbc-stat-pill', `⭐ Lv. ${you.totalLevel}`));
+  const wealth = E('div', 'dbc-stat-pill dbc-stat-wealth');
+  wealth.setAttribute('aria-label', `${dayPhase === 'night' ? 'Nacht' : 'Dag'}, ${you.cash} euro`);
+  wealth.append(E('span', 'dbc-stat-hero-icon', dayPhase === 'night' ? '🌙' : '☀️'));
+  wealth.append(E('span', 'dbc-stat-support-icon', '💰'));
+  wealth.append(E('strong', 'dbc-stat-number', `€${you.cash}`));
+
+  const discoveries = E('div', 'dbc-stat-pill dbc-stat-discoveries');
+  discoveries.setAttribute('aria-label', `${you.discovered.length} ontdekte soorten`);
+  discoveries.append(E('span', 'dbc-stat-hero-icon', '📖'), E('strong', 'dbc-stat-number', String(you.discovered.length)));
+
+  const level = E('div', 'dbc-stat-pill dbc-stat-level');
+  level.setAttribute('aria-label', `Level ${you.totalLevel}`);
+  level.append(E('span', 'dbc-stat-hero-icon', '⭐'), E('strong', 'dbc-stat-number', `Lv. ${you.totalLevel}`));
+  wrap.append(wealth, discoveries, level);
   return wrap;
 }
 
@@ -217,7 +237,8 @@ function renderStatBar(icon, value, max, kind) {
   fill.style.width = `${Math.max(0, Math.min(100, (value / max) * 100))}%`;
   track.append(fill);
   bar.append(track);
-  bar.append(E('span', 'dbc-stat-bar-value', `${value}/${max}`));
+  bar.append(E('strong', 'dbc-stat-bar-value', `${value}/${max}`));
+  bar.setAttribute('aria-label', `${kind === 'health' ? 'Gezondheid' : 'Energie'} ${value} van ${max}`);
   return bar;
 }
 
@@ -229,7 +250,10 @@ function renderStatBars(you) {
   const wrap = E('div', 'dbc-stat-bars');
   wrap.append(renderStatBar('❤️', you.stats.health, you.stats.maxHealth, 'health'));
   wrap.append(renderStatBar('⚡', you.stats.energy, you.stats.maxEnergy, 'energy'));
-  wrap.append(E('div', 'dbc-stat-armor', `🛡️ ${you.stats.armor}`));
+  const armor = E('div', 'dbc-stat-armor');
+  armor.setAttribute('aria-label', `Pantser ${you.stats.armor}`);
+  armor.append(E('span', 'dbc-stat-armor-icon', '💎'), E('strong', 'dbc-stat-number', String(you.stats.armor)));
+  wrap.append(armor);
   (you.buffs || []).forEach((buff) => {
     const minutes = Math.max(1, Math.round(buff.remainingMs / 60000));
     const badge = E('div', 'dbc-stat-clock', `${buff.icon} ${minutes}m`);
@@ -244,6 +268,7 @@ function renderIconButton(b) {
   const btn = E('button', `dbc-icon-btn${b.square ? ' square' : ''}`, b.icon);
   btn.type = 'button';
   btn.title = b.label;
+  btn.setAttribute('aria-label', b.label);
   btn.onclick = () => {
     activePanel = b.id;
     if (b.id === 'monument') loadLeaderboard();
@@ -253,20 +278,16 @@ function renderIconButton(b) {
   return col;
 }
 
-function renderButtonRail(className, buttons) {
-  const rail = E('div', className);
-  buttons.forEach((b) => rail.append(renderIconButton(b)));
-  return rail;
-}
-
 function renderPanelSheet(you, others, harbors) {
   const overlay = E('div', 'dbc-sheet-overlay');
   overlay.onclick = (event) => {
     if (event.target === overlay) { activePanel = 'map'; renderGame(state.room); }
   };
-  const sheet = E('div', 'dbc-sheet');
+  const usesV6Sheet = ['boat', 'inventaris', 'markt', 'monument', 'vaardigheden', 'world-map'].includes(activePanel);
+  const sheet = E('div', `dbc-sheet dbc-sheet-${activePanel}${usesV6Sheet ? ' dbc-sheet-v6' : ''}`);
   const header = E('div', 'dbc-sheet-header');
   header.append(E('div', 'dbc-sheet-handle'));
+  if (activePanel === 'boat') header.append(E('strong', 'dbc-sheet-mobile-title', `Bootbasis · ${you.boat.name} ${you.boat.tier}`));
   const close = E('button', 'dbc-sheet-close', '✕');
   close.type = 'button';
   close.setAttribute('aria-label', 'Sluiten');
@@ -382,8 +403,8 @@ function toolFor(fishingPhase, gatheringKind, inCombat) {
   return null;
 }
 
-function renderOtherPlayerMarker(svg, p, camX, camY, colorIndex) {
-  if (p.x < camX - 1 || p.x > camX + COLS || p.y < camY - 1 || p.y > camY + ROWS) return;
+function renderOtherPlayerMarker(svg, p, camX, camY, colorIndex, viewport) {
+  if (p.x < camX - 1 || p.x > camX + viewport.cols || p.y < camY - 1 || p.y > camY + viewport.rows) return;
   const { cx, cy } = hexPoints(p.x - camX, p.y - camY);
   const facingLeft = facingLeftFor(p.id, p);
   const color = OTHER_PLAYER_COLORS[colorIndex % OTHER_PLAYER_COLORS.length];
@@ -416,11 +437,18 @@ function tileHash(wx, wy) {
 // userSpaceOnUse over de volle viewBox, dus volledig los van de individuele
 // tegelgrenzen. 's Nachts komt daar een blauwige, donkerder overlay bij (zie
 // appendNightOverlay) zodat het hele eiland zichtbaar in sfeer verandert.
-function buildTileDefs() {
+function buildTileDefs(bounds) {
   const defs = svgEl('defs');
+  Object.entries(TILE_PALETTE).forEach(([tile, colors]) => {
+    const terrain = svgEl('linearGradient', { id: `dbc-terrain-${tile}`, x1: '0', y1: '0', x2: '1', y2: '1' });
+    terrain.append(svgEl('stop', { offset: '0%', 'stop-color': colors[0] }));
+    terrain.append(svgEl('stop', { offset: '55%', 'stop-color': colors[1] }));
+    terrain.append(svgEl('stop', { offset: '100%', 'stop-color': colors[2] }));
+    defs.append(terrain);
+  });
   const grad = svgEl('linearGradient', {
     id: 'dbc-atmosphere', gradientUnits: 'userSpaceOnUse',
-    x1: '0', y1: VIEW_BOX.minY, x2: '0', y2: VIEW_BOX.minY + VIEW_BOX.height
+    x1: '0', y1: bounds.minY, x2: '0', y2: bounds.minY + bounds.height
   });
   grad.append(svgEl('stop', { offset: '0%', 'stop-color': '#fff', 'stop-opacity': '0.12' }));
   grad.append(svgEl('stop', { offset: '55%', 'stop-color': '#fff', 'stop-opacity': '0' }));
@@ -433,47 +461,69 @@ function buildTileDefs() {
 // bomen/rotsen/watertegels uit klassieke top-down Pokémon-kaarten.
 function appendTreeDecor(svg, cx, cy, seed) {
   const g = svgEl('g', { transform: `translate(${cx},${cy})`, class: 'dbc-tile-decor' });
-  const cluster = (ox, oy, scale) => {
+  const broadleaf = (ox, oy, scale) => {
     const tg = svgEl('g', { transform: `translate(${ox},${oy}) scale(${scale})` });
-    tg.append(svgEl('rect', { x: -1.4, y: 3, width: 2.8, height: 5, rx: 1, class: 'dbc-tile-tree-trunk' }));
-    tg.append(svgEl('ellipse', { cx: 0, cy: 4.5, rx: 6, ry: 1.6, class: 'dbc-tile-tree-shadow' }));
-    tg.append(svgEl('circle', { cx: -3, cy: -1, r: 5.4, class: 'dbc-tile-tree-leaf' }));
-    tg.append(svgEl('circle', { cx: 3, cy: 0, r: 5, class: 'dbc-tile-tree-leaf' }));
-    tg.append(svgEl('circle', { cx: 0, cy: -5, r: 5.6, class: 'dbc-tile-tree-leaf' }));
-    tg.append(svgEl('circle', { cx: -2, cy: -6, r: 2, class: 'dbc-tile-tree-highlight' }));
+    tg.append(svgEl('ellipse', { cx: 1, cy: 7, rx: 8.5, ry: 2.3, class: 'dbc-tile-tree-shadow' }));
+    tg.append(svgEl('path', { d: 'M -1 6 L -1 -1 L 2 -1 L 3 6 Z', class: 'dbc-tile-tree-trunk' }));
+    tg.append(svgEl('circle', { cx: -4.2, cy: -2, r: 5.7, class: 'dbc-tile-tree-leaf dbc-tree-leaf-dark' }));
+    tg.append(svgEl('circle', { cx: 4, cy: -1, r: 5.8, class: 'dbc-tile-tree-leaf' }));
+    tg.append(svgEl('circle', { cx: 0, cy: -7, r: 6.3, class: 'dbc-tile-tree-leaf dbc-tree-leaf-mid' }));
+    tg.append(svgEl('path', { d: 'M -4 -8 Q -1 -12 3 -9 Q 0 -7 -3 -5 Z', class: 'dbc-tile-tree-highlight' }));
     return tg;
   };
-  if (seed < 0.5) g.append(cluster(0, -1, 1));
-  else { g.append(cluster(-4.5, 2, 0.66)); g.append(cluster(4, -1, 0.78)); }
+  const conifer = (ox, oy, scale) => {
+    const tg = svgEl('g', { transform: `translate(${ox},${oy}) scale(${scale})` });
+    tg.append(svgEl('ellipse', { cx: 1, cy: 8, rx: 7.5, ry: 2.1, class: 'dbc-tile-tree-shadow' }));
+    tg.append(svgEl('rect', { x: -1.2, y: 3, width: 2.4, height: 6, rx: 0.8, class: 'dbc-tile-tree-trunk' }));
+    tg.append(svgEl('path', { d: 'M 0 -13 L -7 -2 L -4 -2 L -9 5 L 9 5 L 4 -2 L 7 -2 Z', class: 'dbc-conifer-crown' }));
+    tg.append(svgEl('path', { d: 'M 0 -12 L -1 -2 L -5 4 L -8 4 L -4 -2 L -7 -2 Z', class: 'dbc-conifer-light' }));
+    return tg;
+  };
+  if (seed < 0.43) g.append(conifer(0, -1, 1));
+  else if (seed < 0.72) g.append(broadleaf(0, -1, 1));
+  else { g.append(conifer(-4.8, 2, 0.7)); g.append(broadleaf(4.2, -1, 0.76)); }
   svg.append(g);
 }
 
-function appendHillDecor(svg, cx, cy) {
+function appendHillDecor(svg, cx, cy, seed) {
   const g = svgEl('g', { transform: `translate(${cx},${cy})`, class: 'dbc-tile-decor' });
-  g.append(svgEl('ellipse', { cx: 0, cy: 5, rx: 10, ry: 3, class: 'dbc-tile-hill-shadow' }));
-  g.append(svgEl('path', { d: 'M -9 4 Q -9 -5 0 -6 Q 9 -5 9 4 Z', class: 'dbc-tile-hill-face' }));
-  g.append(svgEl('path', { d: 'M -6 0 Q -3 -5 3 -5', class: 'dbc-tile-hill-highlight' }));
+  const flip = seed > 0.5 ? -1 : 1;
+  g.append(svgEl('ellipse', { cx: 1, cy: 7, rx: 11.5, ry: 3, class: 'dbc-tile-hill-shadow' }));
+  g.append(svgEl('path', { d: 'M -10 6 L -7 -3 L -1 -8 L 7 -4 L 10 5 L 5 8 L -6 8 Z', class: 'dbc-tile-hill-face' }));
+  g.append(svgEl('path', { d: flip > 0 ? 'M -7 -3 L -1 -8 L 0 5 L -6 8 Z' : 'M 7 -4 L -1 -8 L 0 5 L 5 8 Z', class: 'dbc-tile-hill-light' }));
+  g.append(svgEl('path', { d: 'M -1 -8 L 7 -4 L 3 1 L 0 5 Z', class: 'dbc-tile-hill-shade' }));
+  g.append(svgEl('circle', { cx: -9, cy: 7, r: 1.6, class: 'dbc-tile-scree' }));
+  g.append(svgEl('circle', { cx: 9, cy: 7, r: 1.1, class: 'dbc-tile-scree' }));
   svg.append(g);
 }
 
-function appendPeakDecor(svg, cx, cy) {
+function appendPeakDecor(svg, cx, cy, seed) {
   const g = svgEl('g', { transform: `translate(${cx},${cy})`, class: 'dbc-tile-decor' });
-  g.append(svgEl('ellipse', { cx: 0, cy: 6, rx: 11, ry: 2.6, class: 'dbc-tile-hill-shadow' }));
-  g.append(svgEl('polygon', { points: '-10,6 -3,-9 3,-3 10,6', class: 'dbc-tile-peak-face' }));
-  g.append(svgEl('polygon', { points: '3,-3 10,6 5,6 1,-2', class: 'dbc-tile-peak-shadow' }));
-  g.append(svgEl('polygon', { points: '-3,-9 1,-4 -1,-2 -4,-3', class: 'dbc-tile-peak-snow' }));
+  const shoulder = seed > 0.5 ? 5 : -5;
+  g.append(svgEl('ellipse', { cx: 1, cy: 8, rx: 13, ry: 3.2, class: 'dbc-tile-hill-shadow' }));
+  g.append(svgEl('polygon', { points: '-12,8 -4,-12 1,-6 5,-14 13,8', class: 'dbc-tile-peak-face' }));
+  g.append(svgEl('polygon', { points: '5,-14 13,8 4,8 1,-5', class: 'dbc-tile-peak-shadow' }));
+  g.append(svgEl('polygon', { points: '-4,-12 0,-7 -2,-5 -5,-7 -7,-5', class: 'dbc-tile-peak-snow' }));
+  g.append(svgEl('polygon', { points: '5,-14 9,-7 6,-8 4,-5 2,-8', class: 'dbc-tile-peak-snow' }));
+  g.append(svgEl('circle', { cx: shoulder, cy: 8, r: 1.5, class: 'dbc-tile-scree' }));
   svg.append(g);
 }
 
-function appendWaveDecor(svg, cx, cy, seed) {
+function appendWaveDecor(svg, cx, cy, seed, tile) {
   const g = svgEl('g', { transform: `translate(${cx},${cy + (seed - 0.5) * 7})`, class: 'dbc-tile-decor' });
-  g.append(svgEl('path', { d: 'M -7 0 Q -3.5 -2.6 0 0 Q 3.5 2.6 7 0', class: 'dbc-tile-wave' }));
+  g.append(svgEl('path', { d: 'M -9 -2 Q -5 -5 -1 -2 Q 3 1 7 -2', class: `dbc-tile-wave dbc-wave-${tile}` }));
+  g.append(svgEl('path', { d: 'M -6 3 Q -2 0 2 3 Q 5 5 9 2', class: `dbc-tile-wave dbc-wave-${tile} dbc-wave-soft` }));
+  if (tile === 'a' || tile === 'm') g.append(svgEl('path', { d: 'M -3 7 Q 0 5 4 7', class: `dbc-tile-wave dbc-wave-${tile} dbc-wave-glint` }));
   svg.append(g);
 }
 
 function appendGrassDecor(svg, cx, cy, seed) {
   const g = svgEl('g', { transform: `translate(${cx + (seed - 0.5) * 8},${cy + 3})`, class: 'dbc-tile-decor' });
-  g.append(svgEl('path', { d: 'M -3 3 Q -3.4 -1 -4.4 -3 M 0 3 Q 0 -2 1 -4.4 M 3 3 Q 3.2 -0.4 4.2 -2.6', class: 'dbc-tile-grass' }));
+  g.append(svgEl('path', { d: 'M -4 4 Q -4 -1 -6 -4 M -1 4 Q -1 -3 1 -6 M 2 4 Q 3 0 6 -3 M 0 3 Q 3 -1 5 -1', class: 'dbc-tile-grass' }));
+  if (seed > 0.72) {
+    g.append(svgEl('circle', { cx: -5.8, cy: -4.2, r: 1.15, class: 'dbc-wildflower dbc-wildflower-light' }));
+    g.append(svgEl('circle', { cx: 5.8, cy: -3.2, r: 1, class: 'dbc-wildflower' }));
+  }
   svg.append(g);
 }
 
@@ -485,7 +535,28 @@ function appendSandDecor(svg, cx, cy, seed) {
     const [dx, dy] = spots[i];
     g.append(svgEl('circle', { cx: dx, cy: dy, r: 0.9, class: 'dbc-tile-sand-dot' }));
   }
+  g.append(svgEl('path', { d: 'M -8 5 Q -3 2 2 4 M 2 -6 Q 6 -4 8 -5', class: 'dbc-tile-sand-ripple' }));
   svg.append(g);
+}
+
+function appendCoastFoam(svg, cx, cy, wx, wy, worldData) {
+  for (let ny = wy - 1; ny <= wy + 1; ny += 1) {
+    for (let nx = wx - 1; nx <= wx + 1; nx += 1) {
+      if (nx < 0 || ny < 0 || nx >= worldData.width || ny >= worldData.height) continue;
+      if (hexDistance(wx, wy, nx, ny) !== 1) continue;
+      const neighbor = worldData.tiles[ny * worldData.width + nx];
+      if (WATER_CHARS.has(neighbor) || neighbor === 'w' || neighbor === 'q') continue;
+      const here = hexToPixel(wx, wy, HEX_SIZE);
+      const there = hexToPixel(nx, ny, HEX_SIZE);
+      const dx = there.x - here.x, dy = there.y - here.y;
+      const length = Math.hypot(dx, dy) || 1;
+      const ux = dx / length, uy = dy / length, tx = -uy, ty = ux;
+      const bx = cx + ux * 14.7, by = cy + uy * 14.7;
+      const x1 = bx - tx * 7, y1 = by - ty * 7, x2 = bx + tx * 7, y2 = by + ty * 7;
+      const path = `M ${x1} ${y1} Q ${bx - ux * 2.2} ${by - uy * 2.2} ${x2} ${y2}`;
+      svg.append(svgEl('path', { d: path, class: 'dbc-coast-foam dbc-tile-decor' }));
+    }
+  }
 }
 
 // Wereldrand: een waterval die letterlijk in het niets stort — twee vage,
@@ -500,60 +571,78 @@ function appendVoidDecor(svg, cx, cy, seed) {
 
 function appendFishSchoolDecor(svg, cx, cy) {
   const school = svgEl('g', { class: 'dbc-fish-school' });
-  [[-7, 0], [0, -3], [7, 2]].forEach(([dx, dy]) => {
-    school.append(svgEl('ellipse', { cx: cx + dx, cy: cy + dy, rx: 3.2, ry: 1.1 }));
+  [[-8, 1, 1], [0, -4, 0.82], [7, 2, 0.72], [-1, 6, 0.58]].forEach(([dx, dy, scale]) => {
+    school.append(svgEl('path', {
+      d: `M ${cx + dx - 4 * scale} ${cy + dy} Q ${cx + dx} ${cy + dy - 2 * scale} ${cx + dx + 3 * scale} ${cy + dy} Q ${cx + dx} ${cy + dy + 2 * scale} ${cx + dx - 4 * scale} ${cy + dy} L ${cx + dx - 6 * scale} ${cy + dy - 2 * scale} L ${cx + dx - 6 * scale} ${cy + dy + 2 * scale} Z`
+    }));
   });
   svg.append(school);
 }
 
-// Echte kleine gebouwen i.p.v. een icoon-in-kader: muur + dak + deur + venster
-// plus een hangend uithangbord met het bestaande emoji-icoon. Een lichte
-// zijmuur-sliver geeft het geheel dimensie (dezelfde 2.5D-kanteling als de
-// speler- en boomfiguren), zonder de hex-positionering aan te raken.
+// Vaste gebouwen zijn illustratieve herkenningspunten uit het landschap.
+// Ze hebben bewust geen label, status, uithangbord of interactie.
 const BUILDING_VARIANT = {
-  vishandel: { roof: 'pitched', roofColor: 'var(--dbc-sea-deep)' },
-  aquarium: { roof: 'dome', roofColor: 'var(--dbc-stone)' },
-  markt: { roof: 'tent', roofColor: 'var(--dbc-ember)' },
-  lumberyard: { roof: 'pitched', roofColor: 'var(--dbc-bark-2)', accessory: 'logs' },
-  quarry: { roof: 'pitched', roofColor: 'var(--dbc-iron)', accessory: 'rocks' }
+  vishandel: { roofColor: '#7B4D34', accessory: 'barrels' },
+  markt: { roofColor: '#A3623E', accessory: 'crates' },
+  lumberyard: { roofColor: '#68432F', accessory: 'logs' }
 };
 
 function appendCottage(g, variant) {
-  g.append(svgEl('ellipse', { cx: 0, cy: 15, rx: 15, ry: 3.4, class: 'dbc-bldg-shadow' }));
-  g.append(svgEl('rect', { x: -9, y: -4, width: 20, height: 16, class: 'dbc-bldg-wall-side' }));
-  g.append(svgEl('rect', { x: -11, y: -6, width: 20, height: 16, class: 'dbc-bldg-wall' }));
-  g.append(svgEl('rect', { x: -3, y: 2, width: 6, height: 8, rx: 1, class: 'dbc-bldg-door' }));
-  g.append(svgEl('rect', { x: -8, y: -2, width: 5, height: 5, rx: 0.6, class: 'dbc-bldg-window' }));
-  if (variant.roof === 'dome') {
-    g.append(svgEl('path', { d: 'M -13 -6 Q -1 -22 11 -6 Z', style: `fill:${variant.roofColor}`, class: 'dbc-bldg-roof' }));
-    g.append(svgEl('circle', { cx: -1, cy: -18, r: 1.6, class: 'dbc-bldg-roof-finial' }));
-  } else if (variant.roof === 'tent') {
-    g.append(svgEl('path', { d: 'M -14 -6 L -1 -19 L 12 -6 Z', style: `fill:${variant.roofColor}`, class: 'dbc-bldg-roof' }));
-    g.append(svgEl('path', { d: 'M -14 -6 L -1 -19 L -1 -6 Z', class: 'dbc-bldg-roof-shade' }));
-  } else {
-    g.append(svgEl('path', { d: 'M -14 -6 L -1 -17 L 12 -6 Z', style: `fill:${variant.roofColor}`, class: 'dbc-bldg-roof' }));
-    g.append(svgEl('path', { d: 'M -1 -17 L 12 -6 L 9 -6 L -1 -14 Z', class: 'dbc-bldg-roof-shade' }));
-  }
+  g.append(svgEl('ellipse', { cx: 1, cy: 15, rx: 20, ry: 4.2, class: 'dbc-bldg-shadow' }));
+  g.append(svgEl('path', { d: 'M -14 -8 L 15 -8 L 15 12 L 8 16 L -14 12 Z', class: 'dbc-bldg-wall-side' }));
+  g.append(svgEl('rect', { x: -16, y: -10, width: 27, height: 22, rx: 1, class: 'dbc-bldg-wall' }));
+  g.append(svgEl('rect', { x: -4, y: 1, width: 8, height: 11, rx: 1, class: 'dbc-bldg-door' }));
+  g.append(svgEl('rect', { x: -13, y: -4, width: 6, height: 6, rx: 0.8, class: 'dbc-bldg-window' }));
+  g.append(svgEl('rect', { x: 7, y: -24, width: 4, height: 10, class: 'dbc-bldg-chimney' }));
+  g.append(svgEl('path', { d: 'M -19 -9 L -2 -25 L 17 -9 L 12 -6 L -16 -6 Z', style: `fill:${variant.roofColor}`, class: 'dbc-bldg-roof' }));
+  g.append(svgEl('path', { d: 'M -2 -25 L 17 -9 L 12 -6 L -2 -19 Z', class: 'dbc-bldg-roof-shade' }));
   if (variant.accessory === 'logs') {
-    const logs = svgEl('g', { transform: 'translate(13,6)' });
+    const logs = svgEl('g', { transform: 'translate(17,8)' });
     [0, 1, 2].forEach((i) => logs.append(svgEl('circle', { cx: 0, cy: -i * 3.4, r: 3, class: 'dbc-bldg-log' })));
     g.append(logs);
-  } else if (variant.accessory === 'rocks') {
-    const rocks = svgEl('g', { transform: 'translate(13,7)' });
-    rocks.append(svgEl('circle', { cx: -2, cy: 0, r: 3.4, class: 'dbc-bldg-rock' }));
-    rocks.append(svgEl('circle', { cx: 3, cy: 1.4, r: 2.6, class: 'dbc-bldg-rock' }));
-    g.append(rocks);
+  } else if (variant.accessory === 'barrels') {
+    g.append(svgEl('ellipse', { cx: 16, cy: 8, rx: 4, ry: 5.5, class: 'dbc-bldg-barrel' }));
+  } else if (variant.accessory === 'crates') {
+    g.append(svgEl('rect', { x: 13, y: 4, width: 8, height: 8, class: 'dbc-bldg-crate' }));
   }
 }
 
 // Hall of Fame krijgt een obelisk i.p.v. een huisje — thematisch een monument,
 // geen winkel.
-function appendObelisk(g) {
-  g.append(svgEl('ellipse', { cx: 0, cy: 13, rx: 12, ry: 3, class: 'dbc-bldg-shadow' }));
-  g.append(svgEl('rect', { x: -10, y: 8, width: 20, height: 4, rx: 1, class: 'dbc-bldg-base' }));
-  g.append(svgEl('polygon', { points: '-5,8 -4,-16 4,-16 5,8', class: 'dbc-bldg-obelisk' }));
-  g.append(svgEl('polygon', { points: '0,-16 4,-16 5,8 2.5,8', class: 'dbc-bldg-obelisk-shade' }));
-  g.append(svgEl('polygon', { points: '-2,-16 2,-16 0,-22', class: 'dbc-bldg-obelisk-tip' }));
+function appendTemple(g) {
+  g.append(svgEl('ellipse', { cx: 0, cy: 18, rx: 25, ry: 4.5, class: 'dbc-bldg-shadow' }));
+  g.append(svgEl('path', { d: 'M -23 13 H 23 L 20 18 H -20 Z', class: 'dbc-bldg-plaza' }));
+  g.append(svgEl('rect', { x: -19, y: 9, width: 38, height: 4, class: 'dbc-bldg-base' }));
+  [-14, -5, 5, 14].forEach((x) => {
+    g.append(svgEl('rect', { x: x - 2, y: -8, width: 4, height: 18, class: 'dbc-bldg-column' }));
+    g.append(svgEl('rect', { x: x - 3, y: -10, width: 6, height: 2.5, class: 'dbc-bldg-column-cap' }));
+  });
+  g.append(svgEl('path', { d: 'M -23 -9 L 0 -27 L 23 -9 Z', class: 'dbc-bldg-pediment' }));
+  g.append(svgEl('path', { d: 'M -17 -10 L 0 -22 L 17 -10 Z', class: 'dbc-bldg-pediment-inset' }));
+  g.append(svgEl('polygon', { points: '0,-20 4,-16 0,-12 -4,-16', class: 'dbc-bldg-gem' }));
+}
+
+function appendRotunda(g) {
+  g.append(svgEl('ellipse', { cx: 0, cy: 18, rx: 24, ry: 4.5, class: 'dbc-bldg-shadow' }));
+  g.append(svgEl('rect', { x: -17, y: -8, width: 34, height: 22, rx: 2, class: 'dbc-bldg-wall' }));
+  g.append(svgEl('path', { d: 'M -18 -8 Q -15 -29 0 -34 Q 15 -29 18 -8 Z', class: 'dbc-bldg-dome' }));
+  g.append(svgEl('rect', { x: -4, y: -38, width: 8, height: 6, class: 'dbc-bldg-cupola' }));
+  g.append(svgEl('path', { d: 'M -5 -38 Q 0 -45 5 -38 Z', class: 'dbc-bldg-cupola-roof' }));
+  [-11, -4, 4, 11].forEach((x) => g.append(svgEl('ellipse', { cx: x, cy: -1, rx: 2.2, ry: 4, class: 'dbc-bldg-round-window' })));
+  g.append(svgEl('path', { d: 'M -19 8 L 0 -5 L 19 8 Z', class: 'dbc-bldg-pediment' }));
+  [-11, -4, 4, 11].forEach((x) => g.append(svgEl('rect', { x: x - 1.7, y: 7, width: 3.4, height: 10, class: 'dbc-bldg-column' })));
+  g.append(svgEl('rect', { x: -21, y: 16, width: 42, height: 4, class: 'dbc-bldg-base' }));
+}
+
+function appendQuarryHouse(g) {
+  appendCottage(g, { roofColor: '#666A67' });
+  g.append(svgEl('path', { d: 'M 11 13 L 15 2 L 22 -2 L 27 9 L 23 15 Z', class: 'dbc-bldg-quarry-rock' }));
+  g.append(svgEl('path', { d: 'M 15 2 L 22 -2 L 20 9 L 11 13 Z', class: 'dbc-bldg-quarry-light' }));
+}
+
+function appendHarborHouse(g) {
+  g.append(svgEl('path', { d: 'M -22 8 L 19 8 L 24 18 L -18 18 Z', class: 'dbc-bldg-plaza' }));
+  appendCottage(g, { roofColor: '#70452E', accessory: 'barrels' });
 }
 
 // Haven en speler-aanlegsteigers krijgen een dokplateau op palen i.p.v. een
@@ -573,27 +662,26 @@ function appendBasaltNeedle(g) {
   g.append(svgEl('circle', { cx: -1, cy: -20, r: 2.2, class: 'dbc-wierlight' }));
 }
 
-function appendBuildingArt(svg, cx, cy, { type, icon, active }) {
-  const g = svgEl('g', { class: `dbc-building ${active ? 'active' : 'locked'}`, transform: `translate(${cx},${cy})` });
-  if (type === 'monument') appendObelisk(g);
-  else if (type === 'haven' || type === 'harbor') appendDock(g);
+function appendBuildingArt(svg, cx, cy, { type }) {
+  const scale = type === 'monument' || type === 'aquarium' ? 1.24
+    : type === 'landmark' || type === 'harbor' ? 1
+      : 1.08;
+  const g = svgEl('g', { class: `dbc-building dbc-building-${type}`, transform: `translate(${cx},${cy}) scale(${scale})` });
+  if (type === 'monument') appendTemple(g);
+  else if (type === 'aquarium') appendRotunda(g);
+  else if (type === 'quarry') appendQuarryHouse(g);
+  else if (type === 'haven') appendHarborHouse(g);
+  else if (type === 'harbor') appendDock(g);
   else if (type === 'landmark') appendBasaltNeedle(g);
   else appendCottage(g, BUILDING_VARIANT[type] || BUILDING_VARIANT.vishandel);
-  if (type === 'landmark') { svg.append(g); return; }
-  const sign = svgEl('g', { transform: 'translate(0,-20)' });
-  sign.append(svgEl('rect', { x: -8, y: -8, width: 16, height: 14, rx: 3, class: 'dbc-bldg-sign' }));
-  const label = svgEl('text', { x: 0, y: 3, class: 'dbc-bldg-sign-icon', 'text-anchor': 'middle' });
-  label.textContent = icon;
-  sign.append(label);
-  g.append(sign);
   svg.append(g);
 }
 
-function appendTileDecor(svg, tile, cx, cy, wx, wy) {
+function appendTileDecor(svg, tile, cx, cy, wx, wy, worldData) {
   const seed = tileHash(wx, wy);
   if (tile === 'f') appendTreeDecor(svg, cx, cy, seed);
-  else if (tile === 'h') appendHillDecor(svg, cx, cy);
-  else if (tile === 'p') appendPeakDecor(svg, cx, cy);
+  else if (tile === 'h') appendHillDecor(svg, cx, cy, seed);
+  else if (tile === 'p') appendPeakDecor(svg, cx, cy, seed);
   else if (tile === 'w') appendVoidDecor(svg, cx, cy, seed);
   else if (tile === 'K') {
     appendGrassDecor(svg, cx, cy, seed);
@@ -605,8 +693,9 @@ function appendTileDecor(svg, tile, cx, cy, wx, wy) {
     svg.append(kelp);
   }
   else if (WATER_CHARS.has(tile)) {
-    if (seed < 0.4) appendWaveDecor(svg, cx, cy, seed);
-    else if (seed < 0.47) appendFishSchoolDecor(svg, cx, cy);
+    if (seed < 0.68) appendWaveDecor(svg, cx, cy, seed, tile);
+    else if (seed < 0.76) appendFishSchoolDecor(svg, cx, cy);
+    if (tile === 'r') appendCoastFoam(svg, cx, cy, wx, wy, worldData);
   }
   else if (tile === 'L') { if (seed < 0.3) appendGrassDecor(svg, cx, cy, seed); }
   else if (tile === 'B') { if (seed < 0.4) appendSandDecor(svg, cx, cy, seed); }
@@ -626,9 +715,10 @@ function appendBoatModel(svg, boat, cx, cy, { moving = false } = {}) {
   svg.append(g);
 }
 
-function renderMapWrap(you, worldData, camX, camY, others = [], harbors = [], dayPhase = 'day') {
+function renderMapWrap(you, worldData, camX, camY, others = [], harbors = [], dayPhase = 'day', viewport = VIEWPORT_PRESETS.desktop) {
+  const { cols, rows, bounds } = viewport;
   const svg = svgEl('svg', {
-    viewBox: `${VIEW_BOX.minX} ${VIEW_BOX.minY} ${VIEW_BOX.width} ${VIEW_BOX.height}`,
+    viewBox: `${bounds.minX} ${bounds.minY} ${bounds.width} ${bounds.height}`,
     // Keep hexagons proportional while scaling the visible map just enough
     // to cover the fixed game viewport without empty edges.
     preserveAspectRatio: 'xMidYMid slice',
@@ -636,7 +726,7 @@ function renderMapWrap(you, worldData, camX, camY, others = [], harbors = [], da
     role: 'img',
     'aria-label': 'Kaart van The Big Blue C'
   });
-  svg.append(buildTileDefs());
+  svg.append(buildTileDefs(bounds));
 
   // Eén extra ring tegels buiten het zichtbare venster tekenen: de SVG clipt
   // alles buiten de viewBox vanzelf, maar zonder deze rand tonen de rechte
@@ -646,15 +736,16 @@ function renderMapWrap(you, worldData, camX, camY, others = [], harbors = [], da
   // pas zodat ze nooit onder een lateref gebuurtegel wegvallen wanneer ze
   // buiten hun eigen hex uitsteken.
   const decorQueue = [];
-  for (let row = -1; row <= ROWS; row += 1) {
-    for (let col = -1; col <= COLS; col += 1) {
+  for (let row = -1; row <= rows; row += 1) {
+    for (let col = -1; col <= cols; col += 1) {
       const wx = camX + col, wy = camY + row;
       if (wx < 0 || wx >= worldData.width || wy < 0 || wy >= worldData.height) continue;
       const tile = worldData.tiles[wy * worldData.width + wx] || 'L';
       const { cx, cy } = hexPoints(col, row);
       const points = hexCorners(cx, cy, HEX_DRAW_SIZE).map(([px, py]) => `${px},${py}`).join(' ');
-      const hex = svgEl('polygon', { points, fill: TILE_COLOR[tile] || TILE_COLOR.L, class: 'dbc-tile' });
-      if (row >= 0 && row < ROWS && col >= 0 && col < COLS) hex.onclick = () => handleTileClick(wx, wy, tile, you);
+      const terrain = TILE_PALETTE[tile] ? tile : 'L';
+      const hex = svgEl('polygon', { points, fill: `url(#dbc-terrain-${terrain})`, class: `dbc-tile dbc-tile-${terrain}` });
+      if (row >= 0 && row < rows && col >= 0 && col < cols) hex.onclick = () => handleTileClick(wx, wy, tile, you);
       svg.append(hex);
       decorQueue.push({ tile, cx, cy, wx, wy });
     }
@@ -663,15 +754,15 @@ function renderMapWrap(you, worldData, camX, camY, others = [], harbors = [], da
   // (zie buildTileDefs) — vóór de reliëfdecors zodat bomen/rotsen/golven
   // fris en scherp blijven.
   svg.append(svgEl('rect', {
-    x: VIEW_BOX.minX, y: VIEW_BOX.minY, width: VIEW_BOX.width, height: VIEW_BOX.height,
+    x: bounds.minX, y: bounds.minY, width: bounds.width, height: bounds.height,
     fill: 'url(#dbc-atmosphere)', 'pointer-events': 'none'
   }));
-  decorQueue.forEach(({ tile, cx, cy, wx, wy }) => appendTileDecor(svg, tile, cx, cy, wx, wy));
+  decorQueue.forEach(({ tile, cx, cy, wx, wy }) => appendTileDecor(svg, tile, cx, cy, wx, wy, worldData));
 
   // Decoratieve bootjes in de Haven — puur sfeer, de bootupgrade zelf koop je
   // op de Handelsmarkt en werkt overal op de kaart.
   (worldData.boats || []).forEach((boat) => {
-    if (boat.x < camX - 1 || boat.x > camX + COLS || boat.y < camY - 1 || boat.y > camY + ROWS) return;
+    if (boat.x < camX - 1 || boat.x > camX + cols || boat.y < camY - 1 || boat.y > camY + rows) return;
     const { cx, cy } = hexPoints(boat.x - camX, boat.y - camY);
     const g = svgEl('g', { class: 'dbc-boat', transform: `translate(${cx},${cy})` });
     g.append(svgEl('ellipse', { cx: 0, cy: 4, rx: 8, ry: 2.5, class: 'dbc-boat-shadow' }));
@@ -682,31 +773,31 @@ function renderMapWrap(you, worldData, camX, camY, others = [], harbors = [], da
   });
 
   worldData.buildings.forEach((building) => {
-    if (building.x < camX || building.x >= camX + COLS || building.y < camY || building.y >= camY + ROWS) return;
+    if (building.x < camX || building.x >= camX + cols || building.y < camY || building.y >= camY + rows) return;
     // Sla het gebouw over als een speler er precies op staat — anders piept
     // het gebouw achter de visserfiguur uit.
     const occupied = (you.x === building.x && you.y === building.y)
       || others.some((other) => other.x === building.x && other.y === building.y);
     if (occupied) return;
     const { cx, cy } = hexPoints(building.x - camX, building.y - camY);
-    appendBuildingArt(svg, cx, cy, { type: building.type, icon: building.icon, active: building.active });
+    appendBuildingArt(svg, cx, cy, { type: building.type });
   });
 
   // Door spelers gebouwde aanlegsteigers — dynamisch (per sessie), niet
   // onderdeel van de vaste wereld, maar visueel dezelfde dok-illustratie.
   harbors.forEach((harbor) => {
-    if (harbor.x < camX || harbor.x >= camX + COLS || harbor.y < camY || harbor.y >= camY + ROWS) return;
+    if (harbor.x < camX || harbor.x >= camX + cols || harbor.y < camY || harbor.y >= camY + rows) return;
     const occupied = (you.x === harbor.x && you.y === harbor.y) || others.some((other) => other.x === harbor.x && other.y === harbor.y);
     if (occupied) return;
     const { cx, cy } = hexPoints(harbor.x - camX, harbor.y - camY);
-    appendBuildingArt(svg, cx, cy, { type: 'harbor', icon: '⚓', active: true });
+    appendBuildingArt(svg, cx, cy, { type: 'harbor' });
   });
 
   // Wilde dieren: klein icoontje met slagschaduw op hun vaste graslandplek,
   // aanklikbaar zoals een boom (hout) of rots (steen) — start een
   // dobbelgevecht i.p.v. een gewone stap.
   (worldData.wildlife || []).forEach((spot) => {
-    if (spot.x < camX || spot.x >= camX + COLS || spot.y < camY || spot.y >= camY + ROWS) return;
+    if (spot.x < camX || spot.x >= camX + cols || spot.y < camY || spot.y >= camY + rows) return;
     const occupied = (you.x === spot.x && you.y === spot.y) || others.some((other) => other.x === spot.x && other.y === spot.y);
     if (occupied) return;
     const { cx, cy } = hexPoints(spot.x - camX, spot.y - camY);
@@ -716,10 +807,10 @@ function renderMapWrap(you, worldData, camX, camY, others = [], harbors = [], da
     svg.append(icon);
   });
 
-  others.forEach((other, index) => renderOtherPlayerMarker(svg, other, camX, camY, index));
+  others.forEach((other, index) => renderOtherPlayerMarker(svg, other, camX, camY, index, viewport));
 
   if (you.mode === 'land' && Number.isFinite(you.boat.x) && Number.isFinite(you.boat.y)
-    && you.boat.x >= camX - 1 && you.boat.x <= camX + COLS && you.boat.y >= camY - 1 && you.boat.y <= camY + ROWS) {
+    && you.boat.x >= camX - 1 && you.boat.x <= camX + cols && you.boat.y >= camY - 1 && you.boat.y <= camY + rows) {
     const docked = hexPoints(you.boat.x - camX, you.boat.y - camY);
     appendBoatModel(svg, you.boat, docked.cx, docked.cy);
   }
@@ -741,7 +832,7 @@ function renderMapWrap(you, worldData, camX, camY, others = [], harbors = [], da
   // is zelf de dag/nacht-indicator, net als bij de zeezones.
   if (dayPhase === 'night') {
     svg.append(svgEl('rect', {
-      x: VIEW_BOX.minX, y: VIEW_BOX.minY, width: VIEW_BOX.width, height: VIEW_BOX.height,
+      x: bounds.minX, y: bounds.minY, width: bounds.width, height: bounds.height,
       fill: '#17414F', opacity: '0.32', 'pointer-events': 'none'
     }));
   }
@@ -751,10 +842,7 @@ function renderMapWrap(you, worldData, camX, camY, others = [], harbors = [], da
 
   wrapDiv.append(renderStatPills(you, dayPhase));
   wrapDiv.append(renderStatBars(you));
-  wrapDiv.append(renderBoatButton(you));
-  if (activePanel === 'map') {
-    wrapDiv.append(renderButtonRail('dbc-rail-right', RIGHT_BUTTONS));
-  }
+  if (activePanel === 'map') wrapDiv.append(renderBoatBaseHud(you));
 
   const activityPanel = renderFishingPanel(you.fishing) || renderCombatPanel(you.combat) || renderGatheringPanel(you.gathering);
   if (activityPanel) {
@@ -879,12 +967,115 @@ function renderBoatButton(you) {
   button.type = 'button';
   button.setAttribute('aria-label', 'Open bootbasis');
   const condition = Math.round((you.boat.hp / you.boat.maxHp) * 100);
-  button.append(E('span', 'dbc-boat-mini', '⛵'));
+  const boat = svgEl('svg', { viewBox: '0 0 96 56', class: 'dbc-boat-mini', 'aria-hidden': 'true' });
+  boat.append(
+    svgEl('ellipse', { cx: 48, cy: 47, rx: 34, ry: 5, class: 'dbc-boat-hud-shadow' }),
+    svgEl('path', { d: 'M11 31 Q48 49 85 29 Q77 48 49 52 Q20 49 11 31Z', class: 'dbc-boat-hud-hull' }),
+    svgEl('path', { d: 'M23 33 Q49 42 74 32', class: 'dbc-boat-hud-rim' }),
+    svgEl('path', { d: 'M43 35 L75 10', class: 'dbc-boat-hud-oar' }),
+    svgEl('path', { d: 'M72 8 Q80 6 84 11 Q80 15 75 12Z', class: 'dbc-boat-hud-oar-blade' })
+  );
+  button.append(boat);
   const copy = E('span', 'dbc-boat-button-copy');
   copy.append(E('strong', '', `${you.boat.name} · ${you.boat.tier}`), E('small', '', `${condition}% romp · ${you.boat.stations.length}/${you.boat.baseSlots} stations`));
   button.append(copy);
   button.onclick = () => { activePanel = 'boat'; renderGame(state.room); };
   return button;
+}
+
+function renderBoatBaseHud(you) {
+  const hud = E('div', 'dbc-boat-base-hud');
+  hud.setAttribute('role', 'navigation');
+  hud.setAttribute('aria-label', 'Bootbasis en menu');
+  hud.append(renderBoatButton(you));
+  const actions = E('div', 'dbc-boat-base-actions');
+  BOAT_BASE_BUTTONS.forEach((button) => actions.append(renderIconButton(button)));
+  hud.append(actions);
+  return hud;
+}
+
+function formatUpgradeAmount(value) {
+  return Number.isInteger(value) ? String(value) : Number(value).toFixed(1);
+}
+
+function visibleToolUpgrades(you) {
+  if (Array.isArray(you.toolUpgrades) && you.toolUpgrades.length) return you.toolUpgrades;
+  return TOOL_FALLBACK_META.map((tool) => ({
+    ...tool,
+    level: Number(you.gear?.[tool.key]) || 0,
+    maxLevel: 4,
+    current: { name: tool.label, benefit: 'Herstart de Pluto-server om de upgradevereisten te laden.' },
+    next: null,
+    serverRestartRequired: true
+  }));
+}
+
+function renderToolUpgrades(you) {
+  const section = E('section', 'dbc-tool-section');
+  section.append(E('h5', '', 'Gereedschappen'));
+  const tools = visibleToolUpgrades(you);
+  if (!tools.some((tool) => tool.key === activeToolKey)) activeToolKey = tools[0]?.key || 'rod';
+  const menu = E('div', 'dbc-tool-menu');
+  menu.setAttribute('role', 'tablist');
+  menu.setAttribute('aria-label', 'Kies gereedschap');
+  tools.forEach((tool) => {
+    const fallback = TOOL_FALLBACK_META.find((entry) => entry.key === tool.key);
+    const label = fallback?.label || tool.current.name.split(' ')[0];
+    const button = E('button', `dbc-tool-menu-btn${tool.key === activeToolKey ? ' active' : ''}`);
+    button.type = 'button';
+    button.setAttribute('role', 'tab');
+    button.setAttribute('aria-selected', String(tool.key === activeToolKey));
+    button.setAttribute('aria-controls', `dbc-tool-panel-${tool.key}`);
+    button.dataset.toolKey = tool.key;
+    button.append(E('span', 'dbc-tool-menu-icon', tool.icon), E('span', 'dbc-tool-menu-label', label));
+    button.onclick = () => {
+      activeToolKey = tool.key;
+      menu.querySelectorAll('.dbc-tool-menu-btn').forEach((item) => {
+        const selected = item.dataset.toolKey === activeToolKey;
+        item.classList.toggle('active', selected);
+        item.setAttribute('aria-selected', String(selected));
+      });
+      grid.querySelectorAll('.dbc-tool-card').forEach((item) => item.classList.toggle('active', item.dataset.toolKey === activeToolKey));
+    };
+    menu.append(button);
+  });
+  section.append(menu);
+  const grid = E('div', 'dbc-tool-grid');
+  tools.forEach((tool) => {
+    const card = E('div', `dbc-upgrade-card dbc-tool-card${tool.key === activeToolKey ? ' active' : ''}`);
+    card.id = `dbc-tool-panel-${tool.key}`;
+    card.dataset.toolKey = tool.key;
+    card.setAttribute('role', 'tabpanel');
+    const title = tool.serverRestartRequired
+      ? tool.current.name
+      : tool.next ? `${tool.current.name} → ${tool.next.name}` : `${tool.current.name} · voltooid`;
+    card.append(E('h5', '', `${tool.icon} ${title}`));
+    card.append(E('div', 'dbc-tool-level', `Niveau ${tool.level}/${tool.maxLevel}`));
+    card.append(E('p', 'dbc-panel-copy', tool.next?.benefit || tool.current.benefit));
+    if (tool.serverRestartRequired) {
+      const button = E('button', 'secondary', 'Serverherstart vereist');
+      button.disabled = true;
+      card.append(button);
+    }
+    if (tool.next) {
+      const req = tool.next.requires;
+      const material = tool.material;
+      const checklist = E('div', 'dbc-requirement-list');
+      const unit = material.unit ? ` ${material.unit}` : '';
+      checklist.append(E('span', material.available >= material.required ? 'met' : 'missing', `${formatUpgradeAmount(material.available)}/${material.required}${unit} ${material.label}`));
+      checklist.append(E('span', you.cash >= req.cash ? 'met' : 'missing', `€${you.cash}/€${req.cash}`));
+      checklist.append(E('span', tool.skillLevel >= req.skill ? 'met' : 'missing', `${tool.skillLabel} ${tool.skillLevel}/${req.skill}`));
+      checklist.append(E('span', tool.hasWorkbench ? 'met' : 'missing', tool.hasWorkbench ? 'Werkbank aanwezig' : 'Werkbank vereist'));
+      card.append(checklist);
+      const button = E('button', 'primary', `Maak ${tool.next.name}`);
+      button.disabled = material.available < material.required || you.cash < req.cash || tool.skillLevel < req.skill || !tool.hasWorkbench;
+      button.onclick = () => action('buyUpgrade', { category: tool.key });
+      card.append(button);
+    }
+    grid.append(card);
+  });
+  section.append(grid);
+  return section;
 }
 
 function renderBoatBasePanel(you) {
@@ -903,7 +1094,9 @@ function renderBoatBasePanel(you) {
   diagram.append(slots);
   wrap.append(diagram);
 
-  const stationGrid = E('div', 'dbc-gear-grid');
+  const stationSection = E('section', 'dbc-station-section');
+  stationSection.append(E('h5', '', 'Bootstations'));
+  const stationGrid = E('div', 'dbc-gear-grid dbc-station-grid');
   (you.boatStations || []).forEach((station) => {
     const placed = you.boat.stations.includes(station.id);
     const cost = station.cost?.softWoodKg || 0;
@@ -916,28 +1109,11 @@ function renderBoatBasePanel(you) {
     card.append(button);
     stationGrid.append(card);
   });
-  wrap.append(stationGrid);
+  stationSection.append(stationGrid);
+  wrap.append(stationSection);
+  wrap.append(renderToolUpgrades(you));
 
-  const upgrade = you.axeUpgrade;
-  const upgradeCard = E('div', 'dbc-upgrade-card');
-  upgradeCard.append(E('h5', '', `🪓 ${upgrade.current.name}${upgrade.next ? ` → ${upgrade.next.name}` : ' · voltooid'}`));
-  if (upgrade.next) {
-    const req = upgrade.next.requires;
-    upgradeCard.append(E('p', 'dbc-panel-copy', upgrade.next.benefit));
-    const checklist = E('div', 'dbc-requirement-list');
-    checklist.append(E('span', you.softWoodKg >= req.softWoodKg ? 'met' : 'missing', `${you.softWoodKg.toFixed(1)}/${req.softWoodKg} kg zacht hout`));
-    checklist.append(E('span', you.cash >= req.cash ? 'met' : 'missing', `€${you.cash}/€${req.cash}`));
-    checklist.append(E('span', upgrade.skillLevel >= req.skill ? 'met' : 'missing', `Kappen ${upgrade.skillLevel}/${req.skill}`));
-    checklist.append(E('span', upgrade.hasWorkbench ? 'met' : 'missing', upgrade.hasWorkbench ? 'Werkbank aanwezig' : 'Werkbank vereist'));
-    upgradeCard.append(checklist);
-    const button = E('button', 'primary', 'Maak Bijl II');
-    button.disabled = you.softWoodKg < req.softWoodKg || you.cash < req.cash || upgrade.skillLevel < req.skill || !upgrade.hasWorkbench;
-    button.onclick = () => action('buyUpgrade', { category: 'axe' });
-    upgradeCard.append(button);
-  }
-  wrap.append(upgradeCard);
-
-  const loop = E('div', 'dbc-upgrade-card');
+  const loop = E('div', 'dbc-upgrade-card dbc-create-loop');
   loop.append(E('h5', '', 'Catch → Cook → Create'));
   loop.append(E('p', 'dbc-panel-copy', `Kelpvezel ${you.materials.kelpFiber} · expeditierantsoenen ${you.createdSupplies}`));
   const rawFish = you.inventory.filter((item) => item.quality !== 'cooked');
@@ -966,8 +1142,8 @@ function renderActivePanel(you, others, harbors) {
 }
 
 function renderMapPanel(you) {
-  const wrap = E('div', 'dbc-panel dbc-world-map-panel');
-  wrap.append(E('h4', '', 'Grote map'));
+  const wrap = E('div', 'dbc-panel dbc-v6-panel dbc-world-map-panel');
+  wrap.append(renderV6PanelTitle('🗺️', 'Grote map'));
   wrap.append(E('p', 'dbc-panel-copy', 'Een uitgezoomd overzicht van de volledige wereld. Je positie staat in het rood.'));
 
   if (!world) {
@@ -986,18 +1162,17 @@ function renderMapPanel(you) {
   ctx.beginPath();
   ctx.arc(you.x, you.y, 1.8, 0, Math.PI * 2);
   ctx.fill();
-  wrap.append(canvas);
+  const frame = E('div', 'dbc-world-map-frame');
+  frame.append(canvas);
+  wrap.append(frame);
   return wrap;
 }
 
-// Vaartuignaam per bootniveau (0..3), met de zone die je er vanaf kunt
-// bereiken — de dobbelsteen/het schip communiceert zelf de voortgang.
-const BOAT_TIER_TEXT = [
-  'Kano — vaart door Het Ondiep naar Wierlicht.',
-  'Vlot — extra ruimte voor kusttochten.',
-  'Sloep — vaart tot in de Wadzee.',
-  'Langschip — vaart overal, tot in de Rifzee.'
-];
+function renderV6PanelTitle(icon, label, className = '') {
+  const title = E('h4', `dbc-v6-title${className ? ` ${className}` : ''}`);
+  title.append(E('span', 'dbc-v6-title-icon', icon), E('span', '', label));
+  return title;
+}
 
 function renderSubtabs(tabs, activeId, onSelect) {
   const row = E('div', 'dbc-subtab-row');
@@ -1077,8 +1252,17 @@ function renderBouwenSection(you, harbors) {
 }
 
 function renderInventarisPanel(you, harbors) {
-  const wrap = E('div', 'dbc-panel');
-  wrap.append(E('h4', '', '🎒 Inventaris'));
+  const wrap = E('div', 'dbc-panel dbc-inventory-panel');
+  const title = E('h4', 'dbc-inventory-title');
+  const icon = svgEl('svg', { viewBox: '0 0 48 48', class: 'dbc-inventory-title-icon', 'aria-hidden': 'true' });
+  icon.append(
+    svgEl('path', { d: 'M16 14V10c0-4 3-7 8-7s8 3 8 7v4', class: 'dbc-inventory-icon-handle' }),
+    svgEl('path', { d: 'M9 15h30l3 8-2 20H8L6 23Z', class: 'dbc-inventory-icon-bag' }),
+    svgEl('path', { d: 'M7 23q17 8 34 0M14 15v25M34 15v25', class: 'dbc-inventory-icon-seam' }),
+    svgEl('rect', { x: 20, y: 24, width: 8, height: 10, rx: 2, class: 'dbc-inventory-icon-lock' })
+  );
+  title.append(icon, E('span', '', 'Inventaris'));
+  wrap.append(title);
   wrap.append(E('p', 'dbc-panel-copy', 'Al je bezittingen, je setvoortgang en je uitrusting op één plek.'));
   wrap.append(renderSubtabs(INVENTARIS_TABS, inventarisTab, (id) => { inventarisTab = id; renderGame(state.room); }));
 
@@ -1093,27 +1277,6 @@ function renderInventarisPanel(you, harbors) {
     wrap.append(renderSets(you, 'rock'));
     wrap.append(renderSets(you, 'meat'));
   } else if (inventarisTab === 'uitrusting') {
-    const grid = E('div', 'dbc-gear-grid');
-    Object.keys(GEAR_LABELS).forEach((key) => {
-      const info = GEAR_LABELS[key];
-      const level = you.gear[key];
-      const maxed = level >= you.gearMaxLevel;
-      const card = E('div', 'dbc-gear-card');
-      card.append(E('div', 'dbc-gear-title', key === 'axe'
-        ? `${info.icon} ${info.label} · ${you.axeUpgrade.current.name}`
-        : `${info.icon} ${info.label} · niveau ${level}/${you.gearMaxLevel}`));
-      card.append(E('p', 'dbc-gear-help', info.help));
-      if (key === 'boat') card.append(E('p', 'dbc-gear-help', BOAT_TIER_TEXT[Math.min(level, 3)]));
-      const button = E('button', 'secondary', key === 'axe' ? 'Open Bootbasis' : (maxed ? 'Maximum bereikt' : `Upgraden (€${you.gearCosts[level]})`));
-      button.disabled = key === 'axe' ? false : maxed || you.cash < you.gearCosts[level];
-      button.onclick = () => {
-        if (key === 'axe') { activePanel = 'boat'; renderGame(state.room); }
-        else action('buyUpgrade', { category: key });
-      };
-      card.append(button);
-      grid.append(card);
-    });
-    wrap.append(grid);
     wrap.append(renderEquipSection(you));
   } else if (inventarisTab === 'bouwen') {
     wrap.append(renderBouwenSection(you, harbors));
@@ -1175,8 +1338,8 @@ const MARKT_TABS = [
 ];
 
 function renderMarktplaatsPanel(you, others) {
-  const wrap = E('div', 'dbc-panel');
-  wrap.append(E('h4', '', '🏪 Marktplaats'));
+  const wrap = E('div', 'dbc-panel dbc-v6-panel dbc-market-panel');
+  wrap.append(renderV6PanelTitle('🏪', 'Marktplaats'));
   wrap.append(E('p', 'dbc-panel-copy', 'Verkoop je vangst, koop uitrusting of ruil met andere spelers in deze wereld.'));
   wrap.append(renderSubtabs(MARKT_TABS, marktTab, (id) => { marktTab = id; renderGame(state.room); }));
 
@@ -1194,18 +1357,20 @@ function renderMarktplaatsPanel(you, others) {
 }
 
 function renderVaardighedenPanel(you) {
-  const wrap = E('div', 'dbc-panel');
-  wrap.append(E('h4', '', `⭐ Vaardigheden · totaalniveau ${you.totalLevel}`));
+  const wrap = E('div', 'dbc-panel dbc-v6-panel dbc-skills-panel');
+  const heading = E('div', 'dbc-skills-heading');
+  heading.append(E('span', 'dbc-skills-sun', '☀️'), renderV6PanelTitle('', `Vaardigheden · totaalniveau ${you.totalLevel}`, 'dbc-skills-title'));
+  wrap.append(heading);
   wrap.append(E('p', 'dbc-panel-copy', 'Elke vangst, kap, delving, jacht, nieuwe ontdekking en ruil levert xp op. Niveau 1 tot en met 99 per vaardigheid.'));
   const grid = E('div', 'dbc-gear-grid');
   Object.keys(SKILL_LABELS).forEach((key) => {
     const info = SKILL_LABELS[key];
     const skill = you.skills[key];
-    const card = E('div', 'dbc-gear-card');
+    const card = E('div', `dbc-gear-card dbc-skill-card dbc-skill-${key}`);
     card.append(E('div', 'dbc-gear-title', `${info.icon} ${info.label} · niveau ${skill.level}/99`));
     card.append(E('p', 'dbc-gear-help', info.help));
-    const track = E('div', 'dbc-timer-track');
-    const fill = E('div', 'dbc-timer-fill');
+    const track = E('div', 'dbc-timer-track dbc-skill-track');
+    const fill = E('div', 'dbc-timer-fill dbc-skill-fill');
     fill.style.width = `${skill.maxed ? 100 : Math.round((skill.xpIntoLevel / skill.xpForNextLevel) * 100)}%`;
     track.append(fill);
     card.append(track);
@@ -1370,8 +1535,8 @@ function renderTradeList(you) {
 }
 
 function renderMonumentPanel() {
-  const wrap = E('div', 'dbc-panel');
-  wrap.append(E('h4', '', '🏆 Hall of Fame'));
+  const wrap = E('div', 'dbc-panel dbc-v6-panel dbc-monument-panel');
+  wrap.append(renderV6PanelTitle('🏆', 'Hall of Fame'));
   if (leaderboardData === null) {
     wrap.append(E('p', 'dbc-panel-copy', 'Leaderboard wordt geladen...'));
     if (!leaderboardPromise) loadLeaderboard();

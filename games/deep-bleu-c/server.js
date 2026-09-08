@@ -21,8 +21,7 @@ const STARTING_CASH = 120;
 const RARITY_WEIGHT = { common: 60, uncommon: 27, rare: 11, epic: 2 };
 
 const GEAR_KEYS = ['rod', 'bait', 'boat', 'axe', 'pickaxe'];
-const GEAR_COSTS = [150, 400, 900, 1800];
-const GEAR_MAX_LEVEL = GEAR_COSTS.length;
+const GEAR_MAX_LEVEL = Math.max(...GEAR_KEYS.map((key) => slice.tools[key].tiers.length - 1));
 const ROD_HOOK_BONUS_MS = 150;
 const TOOL_STRIKE_BONUS_MS = 150;
 const BAIT_RARE_MULTIPLIER = 1.3;
@@ -292,17 +291,42 @@ function softWoodKg(player) {
   ), 0);
 }
 
-function consumeSoftWood(player, amount) {
+function rockKg(player) {
+  return player.rockInventory.reduce((sum, item) => sum + item.weightKg, 0);
+}
+
+function consumeInventoryKg(inventory, amount, predicate = () => true) {
   let remaining = amount;
-  for (let index = player.woodInventory.length - 1; index >= 0 && remaining > 0; index -= 1) {
-    const item = player.woodInventory[index];
-    if (!slice.tools.axe.tiers[0].access.includes(item.speciesId)) continue;
+  for (let index = inventory.length - 1; index >= 0 && remaining > 0; index -= 1) {
+    const item = inventory[index];
+    if (!predicate(item)) continue;
     const used = Math.min(remaining, item.weightKg);
     item.weightKg = Math.round((item.weightKg - used) * 100) / 100;
     remaining = Math.round((remaining - used) * 100) / 100;
-    if (item.weightKg <= 0) player.woodInventory.splice(index, 1);
+    if (item.weightKg <= 0) inventory.splice(index, 1);
   }
   return remaining <= 0;
+}
+
+function consumeSoftWood(player, amount) {
+  return consumeInventoryKg(player.woodInventory, amount, (item) => slice.tools.axe.tiers[0].access.includes(item.speciesId));
+}
+
+function upgradeMaterial(player, requirements) {
+  if (requirements.softWoodKg) return { key: 'softWoodKg', label: 'zacht hout', unit: 'kg', required: requirements.softWoodKg, available: softWoodKg(player) };
+  if (requirements.rockKg) return { key: 'rockKg', label: 'steen', unit: 'kg', required: requirements.rockKg, available: rockKg(player) };
+  if (requirements.kelpFiber) return { key: 'kelpFiber', label: 'kelpvezel', unit: '', required: requirements.kelpFiber, available: player.materials.kelpFiber };
+  return null;
+}
+
+function consumeUpgradeMaterial(player, material) {
+  if (material.key === 'softWoodKg') return consumeSoftWood(player, material.required);
+  if (material.key === 'rockKg') return consumeInventoryKg(player.rockInventory, material.required);
+  if (material.key === 'kelpFiber') {
+    player.materials.kelpFiber -= material.required;
+    return true;
+  }
+  return false;
 }
 
 function sanitizeItems(kind, discoveredRaw, inventoryRaw) {
@@ -795,27 +819,21 @@ function doSell(game, player, payload) {
 function doBuyUpgrade(game, player, payload) {
   const category = String(payload.category || '');
   if (!GEAR_KEYS.includes(category)) throw new Error('Onbekende upgrade.');
+  const tool = slice.tools[category];
   const level = player.gear[category];
-  if (level >= GEAR_MAX_LEVEL) throw new Error('Deze upgrade zit al op het maximum.');
-  if (category === 'axe' && level === 0) {
-    const upgrade = slice.tools.axe.tiers[1];
-    const requirements = upgrade.requires;
-    if (!hasStation(player, requirements.station)) throw new Error('Bijl II vraagt een Werkbank op je boot.');
-    const skillLevel = levelForXp(player.skills.woodcutting);
-    if (skillLevel < requirements.skill) throw new Error(`Bijl II vraagt Kappen ${requirements.skill}; je bent ${skillLevel}.`);
-    if (softWoodKg(player) < requirements.softWoodKg) throw new Error(`Bijl II vraagt ${requirements.softWoodKg} kg zacht hout.`);
-    if (player.cash < requirements.cash) throw new Error(`Bijl II vraagt â‚¬${requirements.cash}.`);
-    consumeSoftWood(player, requirements.softWoodKg);
-    player.cash -= requirements.cash;
-    player.gear.axe = 1;
-    game.log.unshift('Bijl II gemaakt. Eiken geven nu mee. Meestal.');
-    return;
-  }
-  const cost = GEAR_COSTS[level];
-  if (player.cash < cost) throw new Error('Onvoldoende geld.');
-  player.cash -= cost;
+  const upgrade = tool.tiers[level + 1];
+  if (!upgrade) throw new Error('Deze upgrade zit al op het maximum.');
+  const requirements = upgrade.requires;
+  if (!hasStation(player, requirements.station)) throw new Error(`${upgrade.name} vraagt een Werkbank op je boot.`);
+  const skillLevel = levelForXp(player.skills[tool.skill]);
+  if (skillLevel < requirements.skill) throw new Error(`${upgrade.name} vraagt ${tool.skillLabel} ${requirements.skill}; je bent ${skillLevel}.`);
+  const material = upgradeMaterial(player, requirements);
+  if (!material || material.available < material.required) throw new Error(`${upgrade.name} vraagt ${material?.required || 0}${material?.unit ? ` ${material.unit}` : ''} ${material?.label || 'materiaal'}.`);
+  if (player.cash < requirements.cash) throw new Error(`${upgrade.name} vraagt â‚¬${requirements.cash}.`);
+  consumeUpgradeMaterial(player, material);
+  player.cash -= requirements.cash;
   player.gear[category] += 1;
-  game.log.unshift(`Upgrade gekocht: ${category} niveau ${player.gear[category]}.`);
+  game.log.unshift(`${upgrade.name} gemaakt op de bootwerkbank.`);
 }
 
 function doPlaceBoatStation(game, player, payload) {
@@ -1367,6 +1385,32 @@ function serializeGearSlot(player, category) {
   };
 }
 
+function serializeBoat(player) {
+  const tier = slice.tools.boat.tiers[Math.min(player.gear.boat, GEAR_MAX_LEVEL)];
+  return { ...player.boat, hull: tier.hull || player.boat.hull, name: tier.name, tier: tier.tier };
+}
+
+function serializeToolUpgrade(player, category) {
+  const tool = slice.tools[category];
+  const level = Math.min(player.gear[category], tool.tiers.length - 1);
+  const current = tool.tiers[level];
+  const next = tool.tiers[level + 1] || null;
+  const requirements = next?.requires || null;
+  return {
+    key: category,
+    label: tool.label,
+    icon: tool.icon,
+    level,
+    maxLevel: tool.tiers.length - 1,
+    current,
+    next,
+    skillLabel: tool.skillLabel,
+    skillLevel: levelForXp(player.skills[tool.skill]),
+    hasWorkbench: hasStation(player, 'workbench'),
+    material: requirements ? upgradeMaterial(player, requirements) : null
+  };
+}
+
 function serializeCombat(player) {
   if (!player.combat) return null;
   const item = itemLookup('meat', player.combat.speciesId);
@@ -1396,7 +1440,6 @@ function serialize(game, requesterId) {
   const world = getWorld();
   const player = game.players.find((candidate) => candidate.id === requesterId) || game.players[0];
   const now = Date.now();
-  const nearBuilding = world.buildings.find((building) => hexDistance(player.x, player.y, building.x, building.y) <= 1) || null;
   return {
     kind: game.gameKey,
     gameOver: false,
@@ -1414,7 +1457,7 @@ function serialize(game, requesterId) {
       fishingPhase: p.fishing ? p.fishing.phase : null,
       gatheringKind: p.gathering ? p.gathering.kind : null,
       mode: p.mode,
-      boat: p.boat,
+      boat: serializeBoat(p),
       inCombat: Boolean(p.combat),
       inventory: p.inventory.map((item) => ({ uid: item.uid, speciesId: item.speciesId, weightKg: item.weightKg, fish: getFish(item.speciesId) }))
     })),
@@ -1433,21 +1476,14 @@ function serialize(game, requesterId) {
       },
       gear: player.gear,
       mode: player.mode,
-      boat: player.boat,
+      boat: serializeBoat(player),
       boatStations: Object.values(slice.stations),
       materials: player.materials,
       discoveries: player.discoveries,
       createdSupplies: player.createdSupplies,
       softWoodKg: Math.round(softWoodKg(player) * 10) / 10,
-      axeUpgrade: {
-        current: slice.tools.axe.tiers[Math.min(player.gear.axe, 1)],
-        next: player.gear.axe === 0 ? slice.tools.axe.tiers[1] : null,
-        skillLevel: levelForXp(player.skills.woodcutting),
-        hasWorkbench: hasStation(player, 'workbench')
-      },
+      toolUpgrades: GEAR_KEYS.map((category) => serializeToolUpgrade(player, category)),
       personalNodes: player.personalNodes,
-      gearCosts: GEAR_COSTS,
-      gearMaxLevel: GEAR_MAX_LEVEL,
       gearShop: Object.fromEntries(gear.CATEGORIES.map((category) => [category, serializeGearSlot(player, category)])),
       consumableShop: CONSUMABLE_SHOP,
       inventory: player.inventory.map((item) => ({
@@ -1504,9 +1540,6 @@ function serialize(game, requesterId) {
       gathering: serializeGathering(player.gathering, now),
       combat: serializeCombat(player),
       buffs: serializeBuffs(player, now),
-      nearBuilding: nearBuilding
-        ? { id: nearBuilding.id, type: nearBuilding.type, name: nearBuilding.name, active: nearBuilding.active }
-        : null,
       trades: game.trades
         .filter((t) => t.fromId === requesterId || t.toId === requesterId)
         .map((t) => ({

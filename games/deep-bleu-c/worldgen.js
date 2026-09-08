@@ -308,13 +308,13 @@ function buildWorld() {
     .map(([x, y]) => ({ x, y }));
 
   const buildings = [
-    { id: 'vishandel', type: 'vishandel', name: 'De Vishandel', icon: '🐟', x: spawn.x, y: spawn.y, active: true },
-    { id: 'aquarium', type: 'aquarium', name: 'Aquarium-Museum', icon: '🏛️', x: aquarium.x, y: aquarium.y, active: true },
-    { id: 'markt', type: 'markt', name: 'Handelsmarkt', icon: '⚖️', x: markt.x, y: markt.y, active: true },
-    { id: 'monument', type: 'monument', name: 'Hall of Fame', icon: '🏆', x: monument.x, y: monument.y, active: true },
-    { id: 'lumberyard', type: 'lumberyard', name: 'Houthakkerij', icon: '🪵', x: lumberyard.x, y: lumberyard.y, active: true },
-    { id: 'quarry', type: 'quarry', name: 'Steengroeve', icon: '⛏️', x: quarry.x, y: quarry.y, active: true },
-    { id: 'haven', type: 'haven', name: 'De Haven', icon: '⚓', x: harborSpot.x, y: harborSpot.y, active: true }
+    { id: 'vishandel', type: 'vishandel', name: 'De Vishandel', x: spawn.x, y: spawn.y },
+    { id: 'aquarium', type: 'aquarium', name: 'Aquarium-Museum', x: aquarium.x, y: aquarium.y },
+    { id: 'markt', type: 'markt', name: 'Handelsmarkt', x: markt.x, y: markt.y },
+    { id: 'monument', type: 'monument', name: 'Hall of Fame', x: monument.x, y: monument.y },
+    { id: 'lumberyard', type: 'lumberyard', name: 'Houthakkerij', x: lumberyard.x, y: lumberyard.y },
+    { id: 'quarry', type: 'quarry', name: 'Steengroeve', x: quarry.x, y: quarry.y },
+    { id: 'haven', type: 'haven', name: 'De Haven', x: harborSpot.x, y: harborSpot.y }
   ];
 
   // Wilde dieren: verspreid over gewone graslandtegels ('L', niet bos/rots —
@@ -329,7 +329,7 @@ function buildWorld() {
     }
   }
 
-  buildings.push({ id: 'wierlicht', type: 'landmark', name: 'Wierlicht', icon: '✦', x: kelpIsland.x, y: kelpIsland.y - 1, active: true });
+  buildings.push({ id: 'wierlicht', type: 'landmark', name: 'Wierlicht', x: kelpIsland.x, y: kelpIsland.y - 1 });
 
   return { width: WIDTH, height: HEIGHT, tiles, buildings, boats, wildlife, spawn, kelpIsland, tileString: tiles.join('') };
 }
