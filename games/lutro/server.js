@@ -17,7 +17,7 @@ const CAMPS = [
   { key: 'yellow', name: 'Dwergen', color: '#c79a32', startIndex: 26 },
   { key: 'blue', name: 'Mensen', color: '#557b9f', startIndex: 39 }
 ];
-const ATTACK_SITES = [[0, 48], [9, 13], [22, 26], [35, 39]];
+const ATTACK_SITES = [[0, 49], [9, 13], [23, 26], [37, 39]];
 
 const UNIT_TYPES = {
   normal: { label: 'Soldaat', cost: 20, damage: 10, maxHp: 10, speed: 10, march: 2, castleDamageOnDefeat: 10 },
