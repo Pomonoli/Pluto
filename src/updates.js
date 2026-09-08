@@ -632,6 +632,12 @@ const RELEASES = [
     improvements:[
       "update lutro"
     ]
+  },
+  {
+    version:"1.28.16",
+    improvements:[
+      "golf update"
+    ]
   }
 ];
 
