@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.28.14
+## Nieuw in versie 1.28.15
 
-error fix
+update lutro
 
 ## Nieuw in versie 1.28.0
 
