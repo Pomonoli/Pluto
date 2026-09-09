@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.28.24 — civ bouwvelden grootte gefixt
+
+- civ bouwvelden grootte gefixt
+
 ## v1.28.23 — deep c leaderboards
 
 - deep c leaderboards

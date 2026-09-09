@@ -680,6 +680,12 @@ const RELEASES = [
     improvements:[
       "deep c leaderboards"
     ]
+  },
+  {
+    version:"1.28.24",
+    improvements:[
+      "civ bouwvelden grootte gefixt"
+    ]
   }
 ];
 
