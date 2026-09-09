@@ -656,6 +656,12 @@ const RELEASES = [
     improvements:[
       "update lutro"
     ]
+  },
+  {
+    version:"1.28.20",
+    improvements:[
+      "update visuals"
+    ]
   }
 ];
 
