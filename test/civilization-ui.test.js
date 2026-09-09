@@ -9,7 +9,10 @@ test('Age of Civilization houdt spelerkaarten vast, toont details en laat onbeta
   const css=fs.readFileSync(path.join(root,'games/civilization/styles.css'),'utf8');
   assert.match(css,/#gameStage:has\(\.civ-root\)\{[^}]*overflow:hidden!important/);
   assert.match(css,/\.civ-grid \{[^}]*grid-template-columns: repeat\(6, minmax\(0,1fr\)\)/);
+  assert.match(css,/\.civ-grid \.civ-tile\{[^}]*height:82px;min-height:0/);
+  assert.match(css,/@media\(max-height:700px\)\{[\s\S]*?\.civ-grid \.civ-tile\{height:72px;min-height:0\}/);
   assert.match(css,/@media\(min-height:720px\)\{[\s\S]*?\.civ-grid\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(css,/@media\(min-height:720px\)\{[\s\S]*?\.civ-grid \.civ-tile\{height:clamp\(82px,10\.5vh,92px\);min-height:0\}/);
   assert.match(css,/@media\(max-width:760px\)\{[\s\S]*?\.civ-grid\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)\}/);
   assert.match(css,/\.civ-modal-backdrop\{position:absolute;[^}]*place-items:center/);
   assert.match(client,/function showCivModal/);
