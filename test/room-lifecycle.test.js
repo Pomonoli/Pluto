@@ -148,6 +148,46 @@ test('andere human offline: geldige beurt gaat door, offline beurt blijft wachte
   assert.equal(invoke(resumed,'game:action',{action:'move',data:{row:1,col:4}}).ok,true);
 });
 
+test('opslagfout draait de volledige spelactie terug',t=>{
+  const {runtime,makeSocket}=harness(),room=playingRoom();
+  room.gameKey='blackjack';
+  room.players[0].userId=123;
+  room.gameState=getGame(room.gameKey).createGame(room.players);
+  room.gameState.pendingChipUpdates=[{playerId:'a',chips:250}];
+  runtime.rooms.set(room.id,room);
+  const host=makeSocket('socket-a',room.id,room.players[0].token);
+  const before=structuredClone(room.gameState);
+  const db=require('../src/db');
+  t.mock.method(db,'setBlackjackChips',()=>{throw new Error('database offline')});
+  t.mock.method(console,'error',()=>{});
+
+  const result=invoke(host,'game:action',{action:'hit'});
+
+  assert.equal(result.ok,false);
+  assert.match(result.error,/database offline/);
+  assert.deepEqual(room.gameState,before);
+  assert.equal(room.gameRevision,0);
+});
+
+test('opslagfout tijdens een tick bewaart de laatste consistente toestand',t=>{
+  const {runtime}=harness(),room=playingRoom();
+  room.gameKey='blackjack';
+  room.players[0].userId=123;
+  room.gameState=getGame(room.gameKey).createGame(room.players);
+  room.gameState.pendingChipUpdates=[{playerId:'a',chips:250}];
+  runtime.rooms.set(room.id,room);
+  const before=structuredClone(room.gameState);
+  const db=require('../src/db');
+  t.mock.method(db,'setBlackjackChips',()=>{throw new Error('database offline')});
+  t.mock.method(console,'error',()=>{});
+
+  const [tick]=maintenance(t,runtime);
+  tick();
+
+  assert.deepEqual(room.gameState,before);
+  assert.equal(room.gameRevision,0);
+});
+
 test('NPC tick gaat door met een offline human en stopt op de menselijke beurt',t=>{
   const {runtime}=harness(),room=playingRoom();
   room.players.push({id:'c',name:'NPC',isNpc:true,connected:true},{id:'d',name:'NPC 2',isNpc:true,connected:true});

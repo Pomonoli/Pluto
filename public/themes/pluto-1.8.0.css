@@ -456,6 +456,7 @@ html[data-theme="pluto-1-8-0"] .mobile-nav-item.active::after{background:#cb5d1b
   html[data-theme="pluto-1-8-0"] .top-actions>#soundButton{display:grid!important;width:46px;min-width:46px;height:46px;min-height:46px;padding:0;border-radius:50%}
   html[data-theme="pluto-1-8-0"] .top-actions>#installButton{color:#fff;background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.18)}
   html[data-theme="pluto-1-8-0"] .section-heading{margin-top:24px}
+  html[data-theme="pluto-1-8-0"] .games-heading{margin-top:12px}
   html[data-theme="pluto-1-8-0"] .section-heading .eyebrow{color:#17243a;font-size:15px;letter-spacing:0;text-transform:none}
   html[data-theme="pluto-1-8-0"] .game-grid{gap:11px}
   html[data-theme="pluto-1-8-0"] .game-card{grid-template-columns:58px minmax(0,1fr);padding:15px 66px 15px 15px;min-height:94px;border-radius:20px}

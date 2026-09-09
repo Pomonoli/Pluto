@@ -42,6 +42,18 @@ test('SQLite backup maakt een bruikbare snapshot', () => {
   const refreshed=db.getUserFromCookieHeader(`${db.SESSION_COOKIE}=${user.session.token}`);
   assert.equal(refreshed.gameSort,'popular');
 
+  assert.throws(() => db.withTransaction(() => {
+    db.setBlackjackChips(user.user.id, 275);
+    db.recordMatch({
+      gameKey:'hofslag', roomId:'ROLLBACK', players:[{
+        userId:user.user.id, displayName:'BackupUser', won:true
+      }]
+    });
+    throw new Error('opslag afbreken');
+  }), /opslag afbreken/);
+  assert.equal(db.getBlackjackChips(user.user.id),140);
+  assert.equal(db.gamePopularity(user.user.id).find(row=>row.gameKey==='hofslag').games,1);
+
   const backup = db.backupDatabase();
   const target = path.join(dir, 'backups', backup.filename);
   assert.equal(fs.existsSync(target), true);

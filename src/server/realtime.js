@@ -266,6 +266,23 @@ function createRealtime(io) {
 
   function runGameHook(room){gameModule(room).afterStateChange?.(room,{db:authDb})}
 
+  function commitGameStateChange(room, change) {
+    const before = {
+      gameState: structuredClone(room.gameState),
+      status: room.status,
+      startedAt: room.startedAt,
+      matchRecorded: room.matchRecorded,
+      gameRevision: room.gameRevision,
+      messages: structuredClone(room.messages)
+    };
+    try {
+      return authDb.withTransaction(change);
+    } catch (error) {
+      Object.assign(room, before);
+      throw error;
+    }
+  }
+
   function startGame(room) {
     const module = gameModule(room);
     const { minPlayers, maxPlayers } = module.meta;
@@ -558,21 +575,23 @@ function createRealtime(io) {
         if (room.status !== 'playing') return ackError(ack, 'Het spel is niet actief.');
 
         const module = gameModule(room);
-        module.handleAction(
-          room.gameState,
-          player.id,
-          String(payload.action || ''),
-          payload.data || {}
-        );
-        if (module.meta.key === 'solitaire' && payload.action === 'restart') room.startedAt = Date.now();
-        runGameHook(room);
-        room.gameRevision = (room.gameRevision || 0) + 1;
+        commitGameStateChange(room, () => {
+          module.handleAction(
+            room.gameState,
+            player.id,
+            String(payload.action || ''),
+            payload.data || {}
+          );
+          if (module.meta.key === 'solitaire' && payload.action === 'restart') room.startedAt = Date.now();
+          runGameHook(room);
+          room.gameRevision = (room.gameRevision || 0) + 1;
 
-        if (room.gameState.gameOver) {
-          room.status = 'finished';
-          addSystemMessage(room, room.gameState.resultText || `${module.meta.name} is afgelopen.`);
-          maybeRecordMatch(room);
-        }
+          if (room.gameState.gameOver) {
+            room.status = 'finished';
+            addSystemMessage(room, room.gameState.resultText || `${module.meta.name} is afgelopen.`);
+            maybeRecordMatch(room);
+          }
+        });
 
         broadcastRoom(room);
         if (typeof ack === 'function') ack({ ok: true });
@@ -689,19 +708,20 @@ function createRealtime(io) {
         if (typeof module.tick !== 'function') continue;
 
         try {
-          const changed = module.tick(room.gameState, now);
-          runGameHook(room);
+          const changed = commitGameStateChange(room, () => {
+            const stateChanged = module.tick(room.gameState, now);
+            runGameHook(room);
 
-          if (room.gameState.gameOver) {
-            room.status = 'finished';
-            addSystemMessage(room, room.gameState.resultText || `${module.meta.name} is afgelopen.`);
-            maybeRecordMatch(room);
-          }
+            if (room.gameState.gameOver) {
+              room.status = 'finished';
+              addSystemMessage(room, room.gameState.resultText || `${module.meta.name} is afgelopen.`);
+              maybeRecordMatch(room);
+            }
 
-          if (changed) {
-            room.gameRevision = (room.gameRevision || 0) + 1;
-            broadcastRoom(room);
-          }
+            if (stateChanged) room.gameRevision = (room.gameRevision || 0) + 1;
+            return stateChanged;
+          });
+          if (changed) broadcastRoom(room);
         } catch (error) {
           console.error('tick error', room.id, error);
         }

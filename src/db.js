@@ -9,6 +9,7 @@ fs.mkdirSync(DATA_DIR, { recursive: true });
 
 const DB_PATH = path.join(DATA_DIR, 'minigames.db');
 const db = new DatabaseSync(DB_PATH);
+let transactionSequence = 0;
 
 db.exec(`
   PRAGMA journal_mode = WAL;
@@ -324,11 +325,24 @@ function clearCookieHeader(secure = false) {
   return parts.join('; ');
 }
 
+function withTransaction(work) {
+  const savepoint = `pluto_${++transactionSequence}`;
+  db.exec(`SAVEPOINT ${savepoint}`);
+  try {
+    const result = work();
+    db.exec(`RELEASE SAVEPOINT ${savepoint}`);
+    return result;
+  } catch (error) {
+    db.exec(`ROLLBACK TO SAVEPOINT ${savepoint}`);
+    db.exec(`RELEASE SAVEPOINT ${savepoint}`);
+    throw error;
+  }
+}
+
 function recordMatch({ gameKey, roomId, startedAt, endedAt = Date.now(), players }) {
   if (!players.some((p) => p.userId)) return null;
 
-  db.exec('BEGIN IMMEDIATE');
-  try {
+  return withTransaction(() => {
     const matchResult = db.prepare(
       'INSERT INTO matches(game_key,room_id,started_at,ended_at) VALUES(?,?,?,?)'
     ).run(gameKey, roomId || null, startedAt || null, endedAt);
@@ -355,12 +369,8 @@ function recordMatch({ gameKey, roomId, startedAt, endedAt = Date.now(), players
       );
     }
 
-    db.exec('COMMIT');
     return matchId;
-  } catch (error) {
-    db.exec('ROLLBACK');
-    throw error;
-  }
+  });
 }
 
 function leaderboard(gameKey = null, limit = 100) {
@@ -834,6 +844,7 @@ module.exports = {
   cookieHeader,
   clearCookieHeader,
   clearExpiredSessions,
+  withTransaction,
   recordMatch,
   leaderboard,
   gamePopularity,
