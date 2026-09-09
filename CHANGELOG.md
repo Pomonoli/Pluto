@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.28.23 — deep c leaderboards
+
+- deep c leaderboards
+
 ## v1.28.22 — Total level in The Big Blue C Hall of Fame
 
 - The Big Blue C Hall of Fame toont nu Total level, afgeleid uit de bestaande opgeslagen vaardigheden.

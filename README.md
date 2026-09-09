@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.28.22
+## Nieuw in versie 1.28.23
 
-The Big Blue C Hall of Fame toont nu Total level in een volledig responsieve tabel.
+deep c leaderboards
 
 ## Nieuw in versie 1.28.0
 
