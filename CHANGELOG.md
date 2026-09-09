@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.28.25 — bakkermans leaderboard gefixt
+
+- bakkermans leaderboard gefixt
+
 ## v1.28.24 — civ bouwvelden grootte gefixt
 
 - civ bouwvelden grootte gefixt

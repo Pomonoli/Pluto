@@ -686,6 +686,12 @@ const RELEASES = [
     improvements:[
       "civ bouwvelden grootte gefixt"
     ]
+  },
+  {
+    version:"1.28.25",
+    improvements:[
+      "bakkermans leaderboard gefixt"
+    ]
   }
 ];
 
