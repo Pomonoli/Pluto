@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.28.19 — update lutro
+
+- update lutro
+
 ## v1.28.18 — Lutro-beweging vernieuwd
 
 - Troepen maken geen automatische verplaatsing meer; alleen de gekozen troep beweegt met de worp plus zijn eigen bewegingsbonus.

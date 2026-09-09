@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.28.18
+## Nieuw in versie 1.28.19
 
-Lutro-troepen bewegen niet langer automatisch. Alleen de gekozen troep beweegt met de worp plus zijn eigen bewegingsbonus; de coinbeloning per worp blijft gelijk.
+update lutro
 
 ## Nieuw in versie 1.28.0
 

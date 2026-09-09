@@ -650,6 +650,12 @@ const RELEASES = [
     improvements:[
       "Lutro-troepen bewegen niet langer automatisch: alleen de gekozen troep gebruikt de worp plus zijn eigen bewegingsbonus, terwijl de coinbeloning gelijk blijft."
     ]
+  },
+  {
+    version:"1.28.19",
+    improvements:[
+      "update lutro"
+    ]
   }
 ];
 
