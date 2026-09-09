@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.28.25
+## Nieuw in versie 1.28.26
 
-bakkermans leaderboard gefixt
+iets minder witruimte
 
 ## Nieuw in versie 1.28.0
 

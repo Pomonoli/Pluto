@@ -692,6 +692,12 @@ const RELEASES = [
     improvements:[
       "bakkermans leaderboard gefixt"
     ]
+  },
+  {
+    version:"1.28.26",
+    improvements:[
+      "iets minder witruimte"
+    ]
   }
 ];
 

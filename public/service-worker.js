@@ -1,26 +1,26 @@
-const CACHE = 'pluto-v1.28.25';
+const CACHE = 'pluto-v1.28.26';
 
 const OFFLINE_SHELL = [
   '/',
-  '/styles.css?v=1.28.25',
-  '/settings.css?v=1.28.25',
-  '/themes/pluto-1.8.0.css?v=1.28.25',
-  '/theme.js?v=1.28.25',
-  '/settings.js?v=1.28.25',
-  '/whats-new.js?v=1.28.25',
-  '/whats-new.css?v=1.28.25',
-  '/app.js?v=1.28.25',
-  '/js/game-ui.js?v=1.28.25',
-  '/js/screen-wake-lock.js?v=1.28.25',
-  '/js/home-game-filter.js?v=1.28.25',
-  '/manifest.webmanifest?v=1.28.25',
+  '/styles.css?v=1.28.26',
+  '/settings.css?v=1.28.26',
+  '/themes/pluto-1.8.0.css?v=1.28.26',
+  '/theme.js?v=1.28.26',
+  '/settings.js?v=1.28.26',
+  '/whats-new.js?v=1.28.26',
+  '/whats-new.css?v=1.28.26',
+  '/app.js?v=1.28.26',
+  '/js/game-ui.js?v=1.28.26',
+  '/js/screen-wake-lock.js?v=1.28.26',
+  '/js/home-game-filter.js?v=1.28.26',
+  '/manifest.webmanifest?v=1.28.26',
   '/icons/icon-192-v2.png',
   '/icons/icon-512-v2.png',
   '/icons/maskable-192-v2.png',
   '/icons/maskable-512-v2.png',
   '/assets/pluto-wallpaper.svg',
   '/assets/pluto-logo-v2.png',
-  '/assets/pluto-logo-v2.png?v=1.28.25'
+  '/assets/pluto-logo-v2.png?v=1.28.26'
 ];
 
 self.addEventListener('install', (event) => {

@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.28.26 — iets minder witruimte
+
+- iets minder witruimte
+
 ## v1.28.25 — bakkermans leaderboard gefixt
 
 - bakkermans leaderboard gefixt
