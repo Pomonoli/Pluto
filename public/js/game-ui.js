@@ -1,6 +1,7 @@
 export function createGameUi(ctx) {
   const { state, els, E, action, profileButton, sound, socket, handleAck, cardNode, valueLabel, requestRematch, requestReturnToLobby, requestLeaveFinishedRoom } = ctx;
   const pluginRenderers=new Map();
+  let renderedStageKey=null;
 
 function dismissResult(){els.gameResult.classList.add('hidden');els.gameResult.setAttribute('aria-hidden','true')}
 function resultActions(room){
@@ -35,7 +36,10 @@ function renderGame(room) {
   const plugin=pluginRenderers.get(game.kind);
   if(plugin?.shouldSkipRender?.({room,game,state}))return;
   const showGameResult=Boolean(game.gameOver&&plugin?.showResult!==false);
-  els.gameStage.replaceChildren();els.gameResult.replaceChildren();els.gameResult.classList.toggle('hidden',!showGameResult);els.gameResult.classList.remove('result-pop');
+  const stageKey=JSON.stringify([room.id,game.kind]);
+  if(!plugin?.preserveStage || renderedStageKey!==stageKey)els.gameStage.replaceChildren();
+  renderedStageKey=stageKey;
+  els.gameResult.replaceChildren();els.gameResult.classList.toggle('hidden',!showGameResult);els.gameResult.classList.remove('result-pop');
   if(showGameResult){
     els.gameResult.classList.add('result-pop');const presentation=resultPresentation(room,game),resultCard=E('div','result-modal-card');
     resultCard.append(E('span','eyebrow','SPEL AFGELOPEN'),E('h2','result-modal-title',presentation.title),E('p','result-modal-copy',presentation.copy));
@@ -144,6 +148,6 @@ function renderDiscardStack(previousCards,currentCards){
     gameMetric,
     registerPlugin(key,plugin){if(!key||typeof plugin?.render!=='function')throw new Error('Game-plugin mist render().');pluginRenderers.set(key,plugin)},
     onResize(){const room=state.room,game=room?.gameState,plugin=game&&pluginRenderers.get(game.kind);plugin?.onResize?.(pluginApi(room,game))},
-    resetRoom(){for(const plugin of pluginRenderers.values())plugin.onRoomReset?.()},
+    resetRoom(){renderedStageKey=null;for(const plugin of pluginRenderers.values())plugin.onRoomReset?.()},
   };
 }

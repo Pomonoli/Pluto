@@ -12,6 +12,25 @@ function element(tag,classes='',text=''){
   };
 }
 
+test('opt-in realtime renderers retain their stage until room reset or room change',async()=>{
+  const {createGameUi}=await import(pathToFileURL(path.join(__dirname,'../public/js/game-ui.js')).href);
+  const els={gameStage:element('div'),gameResult:element('div')},state={selection:null};
+  const ui=createGameUi({state,els,E:element});
+  let renders=0;
+  ui.registerPlugin('live',{preserveStage:true,render(){renders++;if(!els.gameStage.children.length)els.gameStage.append(element('button'))}});
+  const room={id:'a',gameState:{kind:'live',gameOver:false}};
+  ui.renderGame(room);
+  const button=els.gameStage.children[0];
+  ui.renderGame(room);
+  assert.equal(els.gameStage.children[0],button);
+  assert.equal(renders,2);
+  ui.resetRoom();ui.renderGame(room);
+  assert.notEqual(els.gameStage.children[0],button);
+  const resetButton=els.gameStage.children[0];
+  ui.renderGame({...room,id:'b'});
+  assert.notEqual(els.gameStage.children[0],resetButton);
+});
+
 test('resultaatscherm houdt hostacties intact en geeft niet-hosts Rematch en Verlaten',async()=>{
   const {createGameUi}=await import(pathToFileURL(path.join(__dirname,'../public/js/game-ui.js')).href);
   const calls=[],els={gameStage:element('div'),gameResult:element('div')},state={selection:null};

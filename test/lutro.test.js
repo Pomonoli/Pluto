@@ -148,6 +148,36 @@ test('een overlevende verdediger slaat terug en HP blijft bewaard', () => {
   assert.equal(red.castleHp, 85, 'verlies van een snelle soldaat doet 15 kasteelschade');
 });
 
+test('een gevecht tussen troepen levert een lastCombat-samenvatting voor de pop-up', () => {
+  const game = lutro.createGame(players(2));
+  const red = game.players[0], green = game.players[1];
+  const attacker = readyPawn(red, 'strong', 18);
+  readyPawn(green, 'normal', 7); // absoluut routevak 20
+  forceAction(game, red.id, 1);
+  lutro.handleAction(game, red.id, 'move', { pawnId: attacker.id });
+  assert.equal(game.lastCombat.attackerName, red.name);
+  assert.equal(game.lastCombat.defenderName, green.name);
+  assert.equal(game.lastCombat.defenderDefeated, true);
+  assert.equal(game.lastCombat.defenderCastleDamage, 10);
+  const view = lutro.serialize(game, red.id);
+  assert.equal(view.lastCombat.seq, game.lastCombat.seq);
+});
+
+test('passen mag alleen als geen enkele troep kan bewegen, kopen of aanvallen', () => {
+  const game = lutro.createGame(players(2));
+  const red = game.players[0];
+  const movablePawn = readyPawn(red, 'normal', 5);
+  forceAction(game, red.id, 1);
+  assert.equal(lutro.serialize(game, red.id).canPass, false);
+  assert.throws(() => lutro.handleAction(game, red.id, 'pass'), /geldige actie/i);
+  movablePawn.progress = lutro.FINISH_PROGRESS; // geen beweegbare troep meer
+  red.coins = 0; // niets meer te kopen
+  forceAction(game, red.id, 1);
+  assert.equal(lutro.serialize(game, red.id).canPass, true);
+  lutro.handleAction(game, red.id, 'pass');
+  assert.match(game.log[0], /past/);
+});
+
 test('het midden doet alle andere kastelen 25 damage', () => {
   const game = lutro.createGame(players(4));
   const red = game.players[0];

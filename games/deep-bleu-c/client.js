@@ -9,9 +9,9 @@ export const leaderboardConfig={columns:[
 ]};
 
 const HEX_SIZE = 18;
-// v6 gebruikt de hex als rustige kaarttaal. De tegelrand valt exact op de
-// rasterpitch, zodat de lage-contrastlijn overal even breed blijft.
-const HEX_DRAW_SIZE = HEX_SIZE;
+// Een kleine tekenoverlap voorkomt zichtbare antialiasingnaden tussen tegels.
+// Het bewegingsraster houdt zijn oorspronkelijke afmetingen.
+const HEX_DRAW_SIZE = HEX_SIZE + 0.3;
 // Desktop toont 22×15 i.p.v. 18×12 tegels: 330 tegenover 216, dus ongeveer
 // 53% meer wereld. In portret gebruiken we een hoge uitsnede zodat mobiel niet
 // alsnog het grootste deel van die extra context door `slice` verliest.
@@ -50,12 +50,12 @@ const REEL_WINDOW_MS = 1300;
 // en geven tegelijk zacht reliëf. Water verloopt per zone van cyaan naar petrol;
 // 'w' is de donkere wereldrand die in het niets stort.
 const TILE_PALETTE = {
-  L: ['#A9C98A', '#8FAE72', '#78995F'], B: ['#D0B27C', '#B79261', '#927047'],
-  f: ['#587B55', '#3F6247', '#2A4433'], h: ['#B4BBB4', '#949D98', '#737D78'],
-  p: ['#A6AAA4', '#7C8480', '#565E5A'], K: ['#78A06E', '#5F875D', '#456C4B'],
-  q: ['#4C8466', '#376B55', '#24513F'], r: ['#B7E1DF', '#8FC6CC', '#68AEB9'],
-  k: ['#72B2BF', '#4E8FA0', '#376F82'], a: ['#42788C', '#2A5A6B', '#1D4352'],
-  m: ['#28596A', '#17414F', '#0F303B'], w: ['#163641', '#0B1D24', '#061116']
+  L: ['#96B578', '#8FAE72', '#89A96D'], B: ['#BD9A68', '#B79261', '#AE8A5B'],
+  f: ['#45684B', '#3F6247', '#3A5B42'], h: ['#9CA59F', '#949D98', '#8C9590'],
+  p: ['#878E89', '#7C8480', '#737B77'], K: ['#658D61', '#5F875D', '#598059'],
+  q: ['#3C7159', '#376B55', '#326550'], r: ['#99CDD1', '#8FC6CC', '#85C0C7'],
+  k: ['#5798A8', '#4E8FA0', '#488799'], a: ['#306273', '#2A5A6B', '#275465'],
+  m: ['#1B4756', '#17414F', '#153D4A'], w: ['#0E232B', '#0B1D24', '#0A1A21']
 };
 const MINIMAP_RGB = {
   L: [143, 174, 114], B: [168, 135, 95], f: [63, 98, 71], h: [148, 157, 152], p: [124, 132, 128],

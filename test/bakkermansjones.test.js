@@ -8,6 +8,7 @@ test('createGame start in de voorbereidingsfase met volle voorraad en een startb
   const game = bj.createGame(players());
   assert.equal(game.playerId, 'p1');
   assert.equal(game.day, 1);
+  assert.equal(game.speed, 1);
   assert.equal(game.phase, 'prep');
   assert.equal(game.clockMin, bj.DAY_START);
   assert.equal(game.money, 150);
@@ -55,6 +56,7 @@ test('tick voltooit een oven na de baktijd en legt het resultaat op de plank', (
   const game = bj.createGame(players());
   game.ovens[0] = { recipeKey: 'stokbrood', startMin: game.clockMin, endMin: game.clockMin + 18 };
   const shelfBefore = game.shelf.stokbrood;
+  game.speed = 2;
   // speed=2 => 125ms per speltijd-minuut; 18 minuten vergt >=2250ms.
   const changed = bj.tick(game, game.lastTickAt + 2300);
   assert.equal(changed, true);
@@ -223,6 +225,7 @@ test('extra ovens en ovenupgrades vergroten de bakcapaciteit en batch', () => {
   game.phase = 'prep';
   bj.handleAction(game, 'p1', 'bake', { key: 'stokbrood' });
   assert.equal(game.ovens[0].endMin, 17);
+  game.speed = 2;
   bj.tick(game, game.lastTickAt + 2200);
   assert.equal(game.shelf.stokbrood, 5);
 });

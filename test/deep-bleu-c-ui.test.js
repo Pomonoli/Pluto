@@ -30,7 +30,7 @@ test('Deep Bleu C houdt de bootbasis vast in de HUD en toont vloeiende zee-detai
   assert.match(client, /appendBoatModel\(svg, you\.boat/);
   assert.match(client, /appendFishSchoolDecor/);
   assert.match(client, /class: 'dbc-boat-mini'/);
-  assert.match(css, /\.dbc-tile\{[^}]*stroke:rgba\(43,33,28,\.2\)/);
+  assert.match(css, /\.dbc-tile\{[^}]*stroke:rgba\(43,33,28,\.07\)/);
   assert.match(css, /\.dbc-boat-base-hud\{[^}]*width:300px/);
   assert.match(css, /\.dbc-boat-base-hud\{[^}]*background:linear-gradient\(145deg,#895838,var\(--dbc-wood-dark\)\)/);
   assert.match(css, /\.dbc-boat-base-actions\{[^}]*grid-template-columns:repeat\(5,minmax\(0,1fr\)\)/);
@@ -83,7 +83,7 @@ test('Deep Bleu C bouwt het v6-landschap op uit geschilderde terreinlagen', () =
   const client = fs.readFileSync(path.join(root, 'games/deep-bleu-c/client.js'), 'utf8');
   const css = fs.readFileSync(path.join(root, 'games/deep-bleu-c/styles.css'), 'utf8');
 
-  assert.match(client, /const TILE_PALETTE = \{[\s\S]*?r: \['#B7E1DF'[\s\S]*?m: \['#28596A'/);
+  assert.match(client, /const TILE_PALETTE = \{[\s\S]*?r: \['#[A-F0-9]{6}', '#8FC6CC'[\s\S]*?m: \['#[A-F0-9]{6}', '#17414F'/);
   assert.match(client, /Object\.entries\(TILE_PALETTE\)[\s\S]*?`dbc-terrain-\$\{tile\}`/);
   assert.match(client, /dbc-conifer-crown/);
   assert.match(client, /dbc-tree-leaf-dark/);

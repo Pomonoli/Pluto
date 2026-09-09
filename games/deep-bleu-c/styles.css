@@ -23,8 +23,8 @@
 .dbc-map-wrap{position:absolute;inset:0;background:var(--dbc-sea);line-height:0}
 .dbc-map{width:100%;height:100%;display:block;touch-action:manipulation}
 /* De hex is een lage-contrast kaarttaal, geen stap-voor-stapbesturing. */
-.dbc-tile{cursor:pointer;stroke:rgba(43,33,28,.2);stroke-width:.62;stroke-linejoin:round;vector-effect:non-scaling-stroke}
-.dbc-tile:hover{filter:brightness(1.06)}
+.dbc-tile{cursor:pointer;stroke:rgba(43,33,28,.07);stroke-width:.4;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.dbc-tile:hover{filter:brightness(1.03)}
 .dbc-tile-decor{pointer-events:none}
 .dbc-tile-tree-trunk{fill:#735238;stroke:#513B2B;stroke-width:.45}
 .dbc-tile-tree-shadow{fill:rgba(34,58,43,.26)}

@@ -111,7 +111,7 @@ function buildPlayerCard(player, game, E) {
 }
 
 function buildPawnToken(player, pawn, canMove, E, action, sound) {
-  const token = E(canMove ? 'button' : 'span', `lutro-pawn camp-${player.camp} unit-${pawn.type}${canMove ? ' movable' : ''}${pawn.zone === 'yard' ? ' inactive' : ''}${pawn.zone === 'finished' ? ' finished' : ''}`);
+  const token = E(canMove ? 'button' : 'span', `lutro-pawn camp-${player.camp} unit-${pawn.type}${canMove ? ' movable' : ''}${pawn.zone === 'yard' ? ' inactive' : ''}${pawn.zone === 'finished' ? ' finished' : ''}${player.isYou ? ' mine' : ''}`);
   if (canMove) {
     token.type = 'button';
     token.onclick = () => { sound('score'); action('move', { pawnId: pawn.id }); };
@@ -150,16 +150,16 @@ function buildBoard(game, movable, E, action, sound) {
       const pathIndex = PATH_LOOKUP.get(id);
       const home = HOME_LOOKUP.get(id);
       const seat = baseSeat(row, col);
-      const classes = ['lutro-cell'];
-      if (seat >= 0) classes.push('base', `camp-${CAMPS[seat].key}`);
-      if (YARD_LOOKUP.has(id)) classes.push('yard');
-      if (pathIndex !== undefined) classes.push('track');
-      if (ATTACK_SITES.has(pathIndex)) classes.push('attack-site');
-      if (home) classes.push('home-lane', `camp-${CAMPS[home.seat].key}`);
+      const classes = new Set(['lutro-cell']);
+      if (seat >= 0) { classes.add('base'); classes.add(`camp-${CAMPS[seat].key}`); }
+      if (YARD_LOOKUP.has(id)) classes.add('yard');
+      if (pathIndex !== undefined) classes.add('track');
+      if (ATTACK_SITES.has(pathIndex)) { classes.add('attack-site'); classes.add(`camp-${CAMPS[ATTACK_SITES.get(pathIndex)].key}`); }
+      if (home) { classes.add('home-lane'); classes.add(`camp-${CAMPS[home.seat].key}`); }
       const startSeat = CAMPS.findIndex((camp) => camp.startIndex === pathIndex);
-      if (startSeat >= 0) classes.push('safe', `camp-${CAMPS[startSeat].key}`);
-      if (row >= 6 && row <= 8 && col >= 6 && col <= 8) classes.push('centre');
-      const cell = E('div', classes.join(' '));
+      if (startSeat >= 0) { classes.add('safe'); classes.add(`camp-${CAMPS[startSeat].key}`); }
+      if (row >= 6 && row <= 8 && col >= 6 && col <= 8) classes.add('centre');
+      const cell = E('div', [...classes].join(' '));
       if (ATTACK_SITES.has(pathIndex)) cell.title = `Aanvalsveld voor het kasteel van ${CAMPS[ATTACK_SITES.get(pathIndex)].name}`;
       cell.style.gridRow = String(row + 1);
       cell.style.gridColumn = String(col + 1);
@@ -228,14 +228,42 @@ function buildControls(game, E, action, sound) {
     });
     if (attacks.childElementCount) controls.append(attacks);
     const footer = E('div', 'lutro-action-footer');
-    footer.append(E('span', '', game.movablePawnIds.length ? `Tik één oplichtende troep: worp ${game.lastRoll} + diens bonus.` : 'Geen troep kan de worp gebruiken.'));
-    const pass = E('button', 'lutro-pass', 'Pas');
-    pass.type = 'button';
-    pass.onclick = () => action('pass');
-    footer.append(pass);
+    let footerMsg = `Tik één oplichtende troep: worp ${game.lastRoll} + diens bonus.`;
+    if (!game.movablePawnIds.length) footerMsg = game.canPass ? 'Geen troep kan de worp gebruiken.' : 'Koop een troep of val een kasteel aan om verder te gaan.';
+    footer.append(E('span', '', footerMsg));
+    if (game.canPass) {
+      const pass = E('button', 'lutro-pass', 'Pas');
+      pass.type = 'button';
+      pass.onclick = () => action('pass');
+      footer.append(pass);
+    }
     controls.append(footer);
   }
   return controls;
+}
+
+let dismissedCombatSeq = 0;
+function combatMessage(combat) {
+  const lines = [`⚔ ${combat.attackerName}s ${combat.attackerUnit} valt ${combat.defenderName}s ${combat.defenderUnit} aan voor ${combat.damageToDefender} schade${combat.defenderRingSaved ? ' (De Ene Ring redt hem)' : ''}.`];
+  if (combat.defenderDefeated) lines.push(`${combat.defenderUnit} sneuvelt — ${combat.defenderName}s kasteel krijgt ${combat.defenderCastleDamage} schade.`);
+  else {
+    lines.push(`${combat.defenderUnit} slaat terug voor ${combat.damageToAttacker} schade${combat.attackerRingSaved ? ' (De Ene Ring redt hem)' : ''}.`);
+    if (combat.attackerDefeated) lines.push(`${combat.attackerUnit} sneuvelt — ${combat.attackerName}s kasteel krijgt ${combat.attackerCastleDamage} schade.`);
+  }
+  return lines;
+}
+function buildCombatToast(game, E) {
+  const combat = game.lastCombat;
+  if (!combat || combat.seq <= dismissedCombatSeq) return null;
+  const toast = E('div', `lutro-combat-toast camp-${combat.attackerCamp}`);
+  const body = E('div', 'lutro-combat-body');
+  combatMessage(combat).forEach((line) => body.append(E('p', '', line)));
+  const close = E('button', 'lutro-combat-close', '×');
+  close.type = 'button';
+  close.setAttribute('aria-label', 'Melding sluiten');
+  close.onclick = () => { dismissedCombatSeq = combat.seq; toast.remove(); };
+  toast.append(E('strong', 'lutro-combat-title', 'Gevecht!'), body, close);
+  return toast;
 }
 
 export function render({ game, els, E, action, titlebar, logBox, sound }) {
@@ -250,6 +278,8 @@ export function render({ game, els, E, action, titlebar, logBox, sound }) {
   const players = E('div', 'lutro-players');
   game.players.forEach((player) => players.append(buildPlayerCard(player, game, E)));
   root.append(players, buildBoard(game, new Set(game.movablePawnIds || []), E, action, sound), buildControls(game, E, action, sound));
+  const combatToast = buildCombatToast(game, E);
+  if (combatToast) root.append(combatToast);
   els.gameStage.append(titlebar('Lutro', turnStatus(game)), root, logBox(game.log || []));
 }
 

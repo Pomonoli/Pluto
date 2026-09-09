@@ -1,3 +1,6 @@
+import { patchChildren } from './dom-update.js';
+
+export const preserveStage = true;
 const RECIPE_ORDER = ['stokbrood', 'pistolet', 'croissant', 'koffiekoek', 'taart', 'brioche', 'muffin', 'slagroomtaart'];
 
 const ICONS = {
@@ -108,14 +111,18 @@ export function render({ game, els, E, action, titlebar, sound }) {
   const status = game.gameOver
     ? (game.resultText || 'Bakkermans Jones is gesloten.')
     : `Dag ${game.day} · ${fmtClock(game.clockMin)} · ${PHASE_LABEL[game.phase] || ''}`;
-  els.gameStage.append(titlebar('Bakkermans Jones', status));
+  const frame = E('div');
+  frame.append(titlebar('Bakkermans Jones', status));
 
   const root = E('div', 'bj-root');
   root.append(renderTopbar({ game, E, action }));
   if (game.log[0]) root.append(renderTicker({ game, E }));
   if (game.koelingBroken && game.phase !== 'dayEnd') root.append(renderKoelingAlert({ game, E, action }));
-  root.append(renderPhaseBody({ game, E, action, sound }));
-  els.gameStage.append(root);
+  const body = renderPhaseBody({ game, E, action, sound });
+  body.setAttribute('data-bj-key', 'body:' + game.phase + ':' + game.gameOver + ':' + (game.pendingIncident?.id || game.pendingIncident?.type || ''));
+  root.append(body);
+  frame.append(root);
+  patchChildren(els.gameStage, frame);
 }
 
 function renderTopbar({ game, E, action }) {
@@ -134,6 +141,7 @@ function renderTopbar({ game, E, action }) {
   const controls = E('div', 'bj-controls');
   const pauseBtn = E('button', 'bj-btn bj-ghost bj-round', game.paused ? '▶' : '⏸');
   pauseBtn.type = 'button';
+  pauseBtn.setAttribute('aria-label', game.paused ? 'Hervatten' : 'Pauzeren');
   pauseBtn.disabled = game.gameOver || promptPhase || Boolean(game.pendingIncident);
   pauseBtn.onclick = () => action('togglePause');
   controls.append(pauseBtn);
@@ -141,6 +149,7 @@ function renderTopbar({ game, E, action }) {
   const speedGroup = E('div', 'bj-speedgroup');
   [1, 2, 4].forEach((n) => {
     const btn = E('button', `bj-speedbtn ${game.speed === n ? 'active' : ''}`, `${n}×`);
+    btn.setAttribute('aria-pressed', String(game.speed === n));
     btn.type = 'button';
     btn.disabled = game.gameOver || Boolean(game.pendingIncident);
     btn.onclick = () => action('setSpeed', { value: n });
@@ -360,6 +369,7 @@ function renderCustomerPanel({ game, E, action, sound }) {
     const stripe = pct > 50 ? 'good' : pct > 25 ? 'mid' : 'low';
     const canServe = (game.shelf[c.wants.key] || 0) >= c.wants.qty;
     const card = E('div', `bj-customer-card bj-stripe-${stripe}`);
+    card.setAttribute('data-bj-key', `customer:${c.id}`);
     card.append(svgSpan(E, 'bj-icon', ICONS[c.wants.key] || ''));
     const text = E('div', 'bj-customer-text');
     text.append(E('div', 'bj-customer-want', `${c.wants.qty}× ${r.naam}`));
@@ -391,6 +401,7 @@ function renderOrdersPanel({ game, E, action, sound }) {
     const can = o.status === 'open' && (game.shelf[o.product] || 0) >= o.qty;
     const statusLabel = o.status === 'open' ? `vóór ${fmtClock(o.due)}` : o.status === 'done' ? 'voltooid' : 'mislukt';
     const ticket = E('div', `bj-ticket bj-ticket-${o.status}`);
+    ticket.setAttribute('data-bj-key', `order:${o.id}`);
     ticket.append(E('div', 'bj-ticket-head', `Bestelling · ${r.naam}`));
     const body = E('div', 'bj-ticket-body');
     const item = E('div', 'bj-ticket-item');

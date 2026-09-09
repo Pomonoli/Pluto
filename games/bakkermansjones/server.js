@@ -273,7 +273,7 @@ function createGame(roomPlayers) {
     daysSurvived: 0,
     clockMin: DAY_START,
     paused: false,
-    speed: 2,
+    speed: 1,
     money: 150,
     reputation: 60,
     difficulty: difficultyFor(1),

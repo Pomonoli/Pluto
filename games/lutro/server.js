@@ -106,7 +106,8 @@ function createGame(roomPlayers, options = {}) {
   });
   const game = {
     gameKey: 'lutro', players, turnIndex: 0, phase: 'roll', lastRoll: null,
-    lastCoinGain: 0, gameOver: false, winnerId: null, resultText: '', nextNpcAt: 0, log: []
+    lastCoinGain: 0, gameOver: false, winnerId: null, resultText: '', nextNpcAt: 0, log: [],
+    combatSeq: 0, lastCombat: null
   };
   addLog(game, `${players[0]?.name || 'De eerste speler'} begint voor ${CAMPS[players[0]?.seat || 0].name}.`);
   scheduleNpc(game, 500);
@@ -190,19 +191,38 @@ function resolveCombat(game, attackerPlayer, attacker) {
   const defenderPlayer = game.players.find((player) => player.id !== attackerPlayer.id && !player.eliminated && player.pawns.some((pawn) => pawn.progress >= 0 && pawn.progress < TRACK_STEPS && absolutePathIndex(player, pawn.progress) === pathIndex));
   if (!defenderPlayer) return;
   const defender = defenderPlayer.pawns.find((pawn) => pawn.progress >= 0 && pawn.progress < TRACK_STEPS && absolutePathIndex(defenderPlayer, pawn.progress) === pathIndex);
+  const attackerLabel = attacker.type === 'hero' ? attacker.hero.name : attacker.label;
+  const defenderLabel = defender.type === 'hero' ? defender.hero.name : defender.label;
+  const combat = {
+    seq: ++game.combatSeq,
+    attackerId: attackerPlayer.id, attackerName: attackerPlayer.name, attackerCamp: attackerPlayer.camp, attackerUnit: attackerLabel,
+    defenderId: defenderPlayer.id, defenderName: defenderPlayer.name, defenderCamp: defenderPlayer.camp, defenderUnit: defenderLabel,
+    damageToDefender: 0, defenderDefeated: false, defenderRingSaved: false, defenderCastleDamage: 0,
+    damageToAttacker: 0, attackerDefeated: false, attackerRingSaved: false, attackerCastleDamage: 0
+  };
+  game.lastCombat = combat;
   const hit = damageUnit(defender, attacker.damage);
+  combat.damageToDefender = hit.damage;
+  combat.defenderRingSaved = Boolean(hit.ringSaved);
   addLog(game, `${attackerPlayer.name} raakt ${defenderPlayer.name}s ${defender.type} voor ${hit.damage} damage.`);
   if (hit.ringSaved) addLog(game, `${defender.hero.name} wordt door De Ene Ring gered.`);
   if (hit.defeated) {
-    damageCastle(game, defenderPlayer, defender.castleDamageOnDefeat, `door het verlies van ${defender.type === 'hero' ? defender.hero.name : defender.label.toLowerCase()}`);
+    combat.defenderDefeated = true;
+    combat.defenderCastleDamage = defender.castleDamageOnDefeat;
+    damageCastle(game, defenderPlayer, defender.castleDamageOnDefeat, `door het verlies van ${defenderLabel.toLowerCase()}`);
     if (attacker.type === 'hero' && attacker.hero?.ability === 'Athelas') attacker.hp = Math.min(attacker.maxHp, attacker.hp + 5);
     return;
   }
   const counter = damageUnit(attacker, defender.damage);
+  combat.damageToAttacker = counter.damage;
+  combat.attackerRingSaved = Boolean(counter.ringSaved);
   addLog(game, `${defenderPlayer.name} slaat terug voor ${counter.damage} damage.`);
   if (counter.ringSaved) addLog(game, `${attacker.hero.name} wordt door De Ene Ring gered.`);
-  if (counter.defeated) damageCastle(game, attackerPlayer, attacker.castleDamageOnDefeat, `door het verlies van ${attacker.type === 'hero' ? attacker.hero.name : attacker.label.toLowerCase()}`);
-  else if (attacker.type === 'hero' && attacker.hero?.ability === 'Athelas') attacker.hp = Math.min(attacker.maxHp, attacker.hp + 5);
+  if (counter.defeated) {
+    combat.attackerDefeated = true;
+    combat.attackerCastleDamage = attacker.castleDamageOnDefeat;
+    damageCastle(game, attackerPlayer, attacker.castleDamageOnDefeat, `door het verlies van ${attackerLabel.toLowerCase()}`);
+  } else if (attacker.type === 'hero' && attacker.hero?.ability === 'Athelas') attacker.hp = Math.min(attacker.maxHp, attacker.hp + 5);
 }
 
 function reachCenter(game, player, pawn) {
@@ -260,6 +280,12 @@ function applyCastleAttack(game, player, pawnId, targetPlayerId) {
   advanceTurn(game);
 }
 
+function hasAnyAction(game, player) {
+  if (movablePawns(player, game.lastRoll).length) return true;
+  if (attackOptions(game, player).length) return true;
+  return player.pawns.some((pawn) => pawn.progress < 0 && player.coins >= pawn.cost);
+}
+
 function endGame(game, winnerId) {
   game.gameOver = true;
   game.winnerId = winnerId;
@@ -282,7 +308,12 @@ function handleAction(game, playerId, action, payload = {}) {
   else if (action === 'buy') applyBuy(game, player, String(payload.type || ''));
   else if (action === 'move') applyMove(game, player, String(payload.pawnId || ''));
   else if (action === 'castleAttack') applyCastleAttack(game, player, String(payload.pawnId || ''), String(payload.targetPlayerId || ''));
-  else if (action === 'pass' && game.phase === 'action') { addLog(game, `${player.name} past.`); advanceTurn(game); }
+  else if (action === 'pass') {
+    if (game.phase !== 'action') throw new Error('Rol eerst de dobbelsteen.');
+    if (hasAnyAction(game, player)) throw new Error('Je hebt nog een geldige actie: verzet een troep, koop een eenheid of val een kasteel aan.');
+    addLog(game, `${player.name} past.`);
+    advanceTurn(game);
+  }
   else throw new Error('Onbekende actie.');
 }
 
@@ -335,8 +366,9 @@ function serialize(game, requesterId, connected = new Map()) {
   return {
     kind: 'lutro', schemaVersion: 8, phase: game.phase, gameOver: game.gameOver,
     winnerId: game.winnerId, resultText: game.resultText, turnPlayerId: game.gameOver ? null : turn?.id,
-    lastRoll: game.lastRoll, lastCoinGain: game.lastCoinGain,
+    lastRoll: game.lastRoll, lastCoinGain: game.lastCoinGain, lastCombat: game.lastCombat || null,
     canRoll: Boolean(!game.gameOver && mine && game.phase === 'roll'), canAct,
+    canPass: canAct && !hasAnyAction(game, turn),
     movablePawnIds: canAct ? movablePawns(turn, game.lastRoll).map((pawn) => pawn.id) : [],
     attackOptions: canAct ? attackOptions(game, turn) : [],
     players: game.players.map((player) => ({

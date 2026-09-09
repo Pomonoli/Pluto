@@ -77,7 +77,9 @@
   hex-coördinatensysteem (positie, camera, klikafhandeling ongewijzigd), maar
   alles wat op het terrein staat toont een front-facade/dimensie i.p.v. een
   plat silhouet — geen volledige derde-persoonscamera.
-- Hexen blijven zichtbaar met een lage-contrastlijn, maar beweging blijft vrij.
+- Hexen blijven slechts zacht zichtbaar: zeer dunne, gedempte randlijnen en
+  minimaal licht-donkerverloop binnen elke tegel voorkomen een druk raster.
+  Beweging blijft vrij.
   Objecten overschrijden visueel celranden; reliëf komt uit kaartbrede lichtval,
   zachte schildertextuur en losse decor-objecten met een ovale grondschaduw.
 - Terrein gebruikt per type drie nabije schildertonen: weide met grassprieten en
