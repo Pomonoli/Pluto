@@ -1,6 +1,11 @@
 import { patchChildren } from './dom-update.js';
 
 export const preserveStage = true;
+export const leaderboardConfig={columns:[
+  {key:'rank',label:'#',short:'#',width:'rank'},
+  {key:'username',label:'Speler',short:'Speler',width:'player'},
+  {key:'recordDays',label:'Recorddagen',short:'Dagen',width:'wide'}
+]};
 const RECIPE_ORDER = ['stokbrood', 'pistolet', 'croissant', 'koffiekoek', 'taart', 'brioche', 'muffin', 'slagroomtaart'];
 
 const ICONS = {

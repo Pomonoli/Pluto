@@ -158,11 +158,14 @@ test('leaderboard toont wins en draws voor games',()=>{
 test('game-specifieke leaderboards gebruiken gedeelde kolomconfiguratie',()=>{
   const cycclub=fs.readFileSync(path.join(root,'games/cycclub/client.js'),'utf8');
   const deepBleuC=fs.readFileSync(path.join(root,'games/deep-bleu-c/client.js'),'utf8');
+  const bakkermansJones=fs.readFileSync(path.join(root,'games/bakkermansjones/client.js'),'utf8');
   assert.match(cycclub,/leaderboardConfig/);
   assert.doesNotMatch(cycclub,/key:'draws'/);
   assert.match(cycclub,/key:'netWorth'.*width:'wide'.*key:'prizeMoney'.*width:'wide'/s);
   assert.match(deepBleuC,/leaderboardConfig.*key:'discovered',label:'Ontdekte soorten'/s);
   assert.match(deepBleuC,/key:'totalLevel',label:'Total level',short:'Level'/);
+  assert.match(bakkermansJones,/leaderboardConfig.*key:'recordDays',label:'Recorddagen'/s);
+  assert.doesNotMatch(bakkermansJones,/key:'(?:wins|draws|games|winRate)'/);
 });
 
 test('profiel toont eerst maximaal vijf recente matches met toon meer',()=>{

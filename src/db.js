@@ -379,6 +379,18 @@ function leaderboard(gameKey = null, limit = 100) {
   if (gameKey === 'deep-bleu-c') {
     return deepBleuCLeaderboard(safeLimit);
   }
+  if (gameKey === 'bakkermansjones') {
+    return db.prepare(`
+      SELECT u.username, MAX(mp.score) AS recordDays
+      FROM match_players mp
+      JOIN matches m ON m.id = mp.match_id
+      JOIN users u ON u.id = mp.user_id
+      WHERE m.game_key = 'bakkermansjones' AND mp.score IS NOT NULL
+      GROUP BY u.id, u.username
+      ORDER BY recordDays DESC, u.username COLLATE NOCASE ASC
+      LIMIT ${safeLimit}
+    `).all();
+  }
   if (gameKey === 'solitaire') {
     return db.prepare(`
       SELECT
