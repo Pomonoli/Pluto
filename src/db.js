@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { DatabaseSync } = require('node:sqlite');
+const { totalLevel } = require('../games/deep-bleu-c/skill-levels');
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
 fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -620,6 +621,7 @@ function deepBleuCLeaderboard(limit = 100) {
       username: row.username,
       cash: Math.round(Number(state?.cash || 0)),
       discovered: discoveryFields.reduce((total, field) => total + (Array.isArray(state?.[field]) ? state[field].length : 0), 0),
+      totalLevel: totalLevel(state?.skills),
       heaviestKg: Math.round(Number(state?.heaviestKg || 0) * 10) / 10
     };
   }).filter(Boolean)

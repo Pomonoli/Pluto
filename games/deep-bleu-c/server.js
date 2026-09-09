@@ -6,6 +6,7 @@ const resources = require('./resources');
 const gear = require('./gear');
 const recipes = require('./recipes');
 const slice = require('./slice-content');
+const { SKILL_KEYS, MAX_SKILL_LEVEL, LEVEL_XP, levelForXp, totalLevel } = require('./skill-levels');
 
 const STEP_MS = 170;
 const HOOK_WINDOW_MS = 900;
@@ -77,8 +78,6 @@ const NIGHT_FRACTION = 0.32;
 // Vaardigheden-skilltree: elke vangst/kap/delving/jacht/nieuwe-soort-ontdekking/
 // ruil levert xp op voor de bijhorende vaardigheid, van niveau 1 tot 99 — net
 // als het gereedschap is dit puur progressie/statistiek, geen extra bonussen.
-const SKILL_KEYS = ['fishing', 'woodcutting', 'mining', 'hunting', 'collecting', 'trading'];
-const MAX_SKILL_LEVEL = 99;
 const SKILL_LABEL = { fishing: 'Vissen', woodcutting: 'Houthakken', mining: 'Delven', hunting: 'Jagen', collecting: 'Verzamelen', trading: 'Handelen' };
 const RARITY_XP = { common: 8, uncommon: 15, rare: 30, epic: 60 };
 const COLLECT_XP = 40;
@@ -86,21 +85,7 @@ const TRADE_XP = 25;
 
 // Cumulatieve xp om elk niveau te bereiken (LEVEL_XP[1] = 0). Elk volgend
 // niveau kost geleidelijk meer, tot een stevige lange-termijn-grind naar 99.
-const LEVEL_XP = (() => {
-  const table = [0, 0];
-  for (let level = 2; level <= MAX_SKILL_LEVEL; level += 1) {
-    const prev = level - 1;
-    table[level] = table[prev] + 100 + Math.round(prev * prev * 1.3);
-  }
-  return table;
-})();
 const MAX_SKILL_XP = LEVEL_XP[MAX_SKILL_LEVEL];
-
-function levelForXp(xp) {
-  let level = 1;
-  while (level < MAX_SKILL_LEVEL && xp >= LEVEL_XP[level + 1]) level += 1;
-  return level;
-}
 
 function defaultSkills() { return Object.fromEntries(SKILL_KEYS.map((key) => [key, 0])); }
 
@@ -1590,7 +1575,7 @@ function serialize(game, requesterId) {
           maxed
         }];
       })),
-      totalLevel: SKILL_KEYS.reduce((sum, key) => sum + levelForXp(player.skills[key]), 0),
+      totalLevel: totalLevel(player.skills),
       fishing: serializeFishing(player.fishing, now),
       gathering: serializeGathering(player.gathering, now),
       combat: serializeCombat(player),

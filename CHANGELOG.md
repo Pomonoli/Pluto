@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.28.22 — Total level in The Big Blue C Hall of Fame
+
+- The Big Blue C Hall of Fame toont nu Total level, afgeleid uit de bestaande opgeslagen vaardigheden.
+- De vijf leaderboardkolommen blijven zonder horizontaal scrollen leesbaar op mobiel, tablet en desktop.
+
 ## v1.28.21 — Civilization-iconen opgeschoond
 
 - Civilization-iconen opgeschoond

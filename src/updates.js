@@ -668,6 +668,12 @@ const RELEASES = [
     improvements:[
       "Civilization-iconen opgeschoond"
     ]
+  },
+  {
+    version:"1.28.22",
+    improvements:[
+      "The Big Blue C Hall of Fame toont nu Total level in een volledig responsieve tabel."
+    ]
   }
 ];
 

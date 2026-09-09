@@ -384,9 +384,12 @@
 .dbc-skill-trading .dbc-skill-fill{background:#8FCB98}
 
 /* Hall of Fame en wereldkaart gebruiken dezelfde systeemmaterialen. */
-.dbc-monument-panel .dbc-leaderboard{border:1.5px solid #8C5839;border-radius:9px;overflow:hidden;background:rgba(255,250,240,.5);box-shadow:0 3px 0 rgba(92,53,36,.24)}
+.dbc-monument-panel .dbc-leaderboard{table-layout:fixed;border:1.5px solid #8C5839;border-radius:9px;overflow:hidden;background:rgba(255,250,240,.5);box-shadow:0 3px 0 rgba(92,53,36,.24)}
 .dbc-monument-panel .dbc-leaderboard th{padding:11px 12px;background:linear-gradient(180deg,#B77A4E,#8A5537);color:#FFF7E9;font-family:'Grenze',serif;font-size:16px;text-transform:none}
 .dbc-monument-panel .dbc-leaderboard td{padding:11px 12px;border-color:rgba(155,104,71,.38);font-size:15px}
+.dbc-monument-panel .dbc-leaderboard :is(th,td):first-child{width:5%;text-align:center}
+.dbc-monument-panel .dbc-leaderboard :is(th,td):nth-child(2){width:35%;overflow-wrap:anywhere}
+.dbc-monument-panel .dbc-leaderboard :is(th,td):nth-child(n+3){width:20%;text-align:center;font-variant-numeric:tabular-nums}
 .dbc-monument-panel .dbc-leaderboard tr:nth-child(even) td{background:rgba(216,160,108,.16)}
 .dbc-world-map-panel{gap:12px}
 .dbc-world-map-frame{width:min(100%,720px);padding:14px;border:3px solid #8C5839;border-radius:12px;background:linear-gradient(145deg,#B97D50,#70452E);box-shadow:inset 0 0 0 2px #D8A06C,0 7px 0 rgba(92,53,36,.3)}
@@ -593,6 +596,10 @@ body.game-active #gameStage:has(.dbc-wrap) .dbc-boat-base-hud{top:calc(68px + en
   .dbc-skills-panel>.dbc-gear-grid{grid-template-columns:1fr}
   .dbc-skill-card{min-height:0}
   .dbc-world-map-frame{padding:8px}
+  .dbc-monument-panel .dbc-leaderboard :is(th,td){padding:8px 4px;font-size:clamp(11px,3.25vw,14px);line-height:1.15}
+  .dbc-monument-panel .dbc-leaderboard :is(th,td):first-child{width:7%;padding-inline:2px}
+  .dbc-monument-panel .dbc-leaderboard :is(th,td):nth-child(2){width:29%;text-align:left}
+  .dbc-monument-panel .dbc-leaderboard :is(th,td):nth-child(n+3){width:21.33%}
 
   /* Keep the close row below Pluto's fixed 58px navigation. The header
      never shrinks or scrolls away; only the boat controls scroll. */

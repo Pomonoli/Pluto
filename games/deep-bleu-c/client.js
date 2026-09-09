@@ -5,7 +5,8 @@ import { wildlifeStatus, wildlifeIconUrl } from './wildlife-visuals.js';
 export const leaderboardConfig={columns:[
   {key:'rank',label:'#',short:'#',width:'rank'},
   {key:'username',label:'Speler',short:'Speler',width:'player'},
-  {key:'discovered',label:'Ontdekte soorten',short:'Soorten',width:'wide'}
+  {key:'discovered',label:'Ontdekte soorten',short:'Soorten',width:'wide'},
+  {key:'totalLevel',label:'Total level',short:'Level',width:'compact'}
 ]};
 
 const HEX_SIZE = 18;
@@ -1626,7 +1627,7 @@ function renderMonumentPanel() {
   }
   const table = E('table', 'dbc-leaderboard');
   const head = E('tr');
-  ['#', 'Speler', 'Geld', 'Soorten'].forEach((label) => head.append(E('th', '', label)));
+  ['#', 'Speler', 'Geld', 'Soorten', 'Total level'].forEach((label) => head.append(E('th', '', label)));
   table.append(head);
   leaderboardData.forEach((row, index) => {
     const tr = E('tr');
@@ -1634,6 +1635,7 @@ function renderMonumentPanel() {
     tr.append(E('td', '', row.username));
     tr.append(E('td', '', `€${row.cash}`));
     tr.append(E('td', '', String(row.discovered)));
+    tr.append(E('td', '', String(row.totalLevel)));
     table.append(tr);
   });
   wrap.append(table);

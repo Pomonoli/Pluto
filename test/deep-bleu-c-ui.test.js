@@ -79,6 +79,16 @@ test('Deep Bleu C toont meer wereld en gebruikt een hoge mobiele uitsnede', () =
   assert.match(css, /body\.game-active #gameStage:has\(\.dbc-wrap\) \.dbc-boat-base-hud\{[\s\S]*?top:auto;left:10px;right:10px;[^}]*box-sizing:border-box/);
 });
 
+test('Deep Bleu C Hall of Fame houdt vijf kolommen zonder horizontale scroll leesbaar', () => {
+  const client = fs.readFileSync(path.join(root, 'games/deep-bleu-c/client.js'), 'utf8');
+  const css = fs.readFileSync(path.join(root, 'games/deep-bleu-c/styles.css'), 'utf8');
+
+  assert.match(client, /\['#', 'Speler', 'Geld', 'Soorten', 'Total level'\]/);
+  assert.match(client, /row\.totalLevel/);
+  assert.match(css, /\.dbc-monument-panel \.dbc-leaderboard\{table-layout:fixed/);
+  assert.match(css, /\.dbc-monument-panel \.dbc-leaderboard :is\(th,td\)\{padding:8px 4px;font-size:clamp\(11px,3\.25vw,14px\)/);
+});
+
 test('Deep Bleu C bouwt het v6-landschap op uit geschilderde terreinlagen', () => {
   const client = fs.readFileSync(path.join(root, 'games/deep-bleu-c/client.js'), 'utf8');
   const css = fs.readFileSync(path.join(root, 'games/deep-bleu-c/styles.css'), 'utf8');
