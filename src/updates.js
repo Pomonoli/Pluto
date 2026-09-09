@@ -662,6 +662,12 @@ const RELEASES = [
     improvements:[
       "update visuals"
     ]
+  },
+  {
+    version:"1.28.21",
+    improvements:[
+      "Civilization-iconen opgeschoond"
+    ]
   }
 ];
 

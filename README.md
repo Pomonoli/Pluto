@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.28.20
+## Nieuw in versie 1.28.21
 
-update visuals
+Civilization-iconen opgeschoond
 
 ## Nieuw in versie 1.28.0
 

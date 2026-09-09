@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.28.21 — Civilization-iconen opgeschoond
+
+- Civilization-iconen opgeschoond
+
 ## v1.28.20 — update visuals
 
 - update visuals
