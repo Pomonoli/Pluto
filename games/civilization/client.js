@@ -21,13 +21,17 @@ function buildingTheme(age, type) { return theme(age).buildings[type] || { color
 function assetSlug(name){
   return name.toLowerCase().replace(/['’]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 }
+function cardAssetFilename(name){
+  const slug=assetSlug(name);
+  return `${slug}.${slug==='trade-galley'?'png':'webp'}`;
+}
 function iconNode(E,{age,name,fixed=false},className='civ-tile-icon'){
   const badge=E('span',`${className} civ-icon-badge`);
   badge.setAttribute('aria-hidden','true');
   const image=E('img','civ-building-icon');
   image.src=fixed
     ?`${BUILDING_ASSET_PATH}/buildings/${assetSlug(name)}.webp`
-    :`${BUILDING_ASSET_PATH}/cards/age-${Math.min(age,7)}/${assetSlug(name)}.webp`;
+    :`${BUILDING_ASSET_PATH}/cards/age-${Math.min(age,7)}/${cardAssetFilename(name)}`;
   image.alt='';
   image.loading='lazy';
   image.decoding='async';

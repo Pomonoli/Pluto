@@ -56,3 +56,25 @@ test('Age of Civilization houdt spelerkaarten vast, toont details en laat onbeta
   assert.doesNotMatch(client,/civ-detail-slot/);
 });
 
+test('Age of Civilization toont ronde gebouwkunst zonder extra kader of cropping',()=>{
+  const css=fs.readFileSync(path.join(root,'games/civilization/styles.css'),'utf8');
+  assert.match(css,/\.civ-icon-badge\{[^}]*overflow:visible;[^}]*border:0;[^}]*border-radius:0;[^}]*background:none;[^}]*box-shadow:none/);
+  assert.match(css,/\.civ-building-icon\{[^}]*object-fit:contain/);
+  assert.doesNotMatch(css,/\.civ-modal-icon\{[^}]*border-radius/);
+});
+
+test('Age of Civilization card assets hebben een geldige RIFF-lengte',()=>{
+  const relative='games/civilization/assets/cards/age-3/moated-keep.webp';
+  const asset=fs.readFileSync(path.join(root,relative));
+  assert.equal(asset.subarray(0,4).toString('ascii'),'RIFF',relative);
+  assert.equal(asset.subarray(8,12).toString('ascii'),'WEBP',relative);
+  assert.equal(asset.readUInt32LE(4)+8,asset.length,relative);
+});
+
+test('Trade Galley gebruikt zijn leesbare PNG-asset',()=>{
+  const client=fs.readFileSync(path.join(root,'games/civilization/client.js'),'utf8');
+  const asset=fs.readFileSync(path.join(root,'games/civilization/assets/cards/age-2/trade-galley.png'));
+  assert.match(client,/slug==='trade-galley'\?'png':'webp'/);
+  assert.deepEqual([...asset.subarray(0,8)],[137,80,78,71,13,10,26,10]);
+});
+
