@@ -29,24 +29,28 @@ const DAY_START = 0;          // 00:00 in minuten sinds middernacht
 const SHOP_START = 420;       // 07:00
 const SHOP_END = 720;         // 12:00
 const SUPERMARKET_END = 900;  // 15:00 — einde van de dag
-const DAILY_COST = 35;        // vaste kosten per dag (huur, energie)
+const DAILY_COST = 35;        // basiskosten op dag 1 (huur, energie)
 const TICK_BASE_MS = 250;     // bij snelheid 1x kost één speltijd-minuut dit aantal ms
 const PAUSING_PHASES = new Set(['shopPrompt', 'closePrompt', 'dayEnd']);
 
 const RECIPES = {
-  stokbrood: { key: 'stokbrood', naam: 'Stokbrood', batch: 4, bakMin: 18, prijs: 2.60, kost: { bloem: 3, gist: 1 }, koeling: false },
-  pistolet: { key: 'pistolet', naam: 'Pistolets', batch: 8, bakMin: 15, prijs: 0.70, kost: { bloem: 3, gist: 1, boter: 1 }, koeling: false },
-  croissant: { key: 'croissant', naam: 'Croissants', batch: 8, bakMin: 24, prijs: 1.90, kost: { bloem: 4, boter: 3, eieren: 1 }, koeling: false },
-  koffiekoek: { key: 'koffiekoek', naam: 'Koffiekoeken', batch: 6, bakMin: 22, prijs: 2.30, kost: { bloem: 3, boter: 2, suiker: 2, eieren: 1 }, koeling: false },
-  taart: { key: 'taart', naam: 'Taart', batch: 1, bakMin: 40, prijs: 19.00, kost: { bloem: 2, boter: 2, eieren: 3, suiker: 3, room: 2 }, koeling: true }
+  stokbrood: { key: 'stokbrood', naam: 'Stokbrood', batch: 4, bakMin: 18, prijs: 2.60, kost: { bloem: 3, gist: 1 }, koeling: false, weight: 30 },
+  pistolet: { key: 'pistolet', naam: 'Pistolets', batch: 8, bakMin: 15, prijs: 0.70, kost: { bloem: 3, gist: 1, boter: 1 }, koeling: false, weight: 25 },
+  croissant: { key: 'croissant', naam: 'Croissants', batch: 8, bakMin: 24, prijs: 1.90, kost: { bloem: 4, boter: 3, eieren: 1 }, koeling: false, weight: 25 },
+  koffiekoek: { key: 'koffiekoek', naam: 'Koffiekoeken', batch: 6, bakMin: 22, prijs: 2.30, kost: { bloem: 3, boter: 2, suiker: 2, eieren: 1 }, koeling: false, weight: 15 },
+  taart: { key: 'taart', naam: 'Taart', batch: 1, bakMin: 40, prijs: 19.00, kost: { bloem: 2, boter: 2, eieren: 3, suiker: 3, room: 2 }, koeling: true, weight: 5 },
+  brioche: { key: 'brioche', naam: 'Brioche', batch: 6, bakMin: 28, prijs: 3.40, kost: { bloem: 4, gist: 1, boter: 3, suiker: 2, eieren: 2 }, koeling: false, weight: 13, unlockDay: 2, unlockPrice: 85, premium: true },
+  muffin: { key: 'muffin', naam: 'Muffins', batch: 8, bakMin: 25, prijs: 2.90, kost: { bloem: 3, boter: 2, suiker: 3, eieren: 2 }, koeling: false, weight: 14, unlockDay: 4, unlockPrice: 130, premium: true },
+  slagroomtaart: { key: 'slagroomtaart', naam: 'Slagroomtaart', batch: 2, bakMin: 48, prijs: 24.00, kost: { bloem: 3, boter: 3, suiker: 4, eieren: 4, room: 4 }, koeling: true, weight: 7, unlockDay: 6, unlockPrice: 190, premium: true }
 };
+const START_RECIPES = ['stokbrood', 'pistolet', 'croissant', 'koffiekoek', 'taart'];
 
 const INGREDIENT_META = { bloem: 'Bloem', gist: 'Gist', boter: 'Boter', suiker: 'Suiker', eieren: 'Eieren', room: 'Room' };
 const INGREDIENT_PRICES = { bloem: 0.15, gist: 0.40, boter: 0.35, suiker: 0.20, eieren: 0.25, room: 0.60 };
 const BUY_BATCH = 10; // eenheden per aankoopklik in de supermarkt
 
 const START_INGREDIENTS = { bloem: 70, gist: 12, boter: 28, suiker: 18, eieren: 22, room: 8 };
-const EMPTY_SHELF = { stokbrood: 0, pistolet: 0, croissant: 0, koffiekoek: 0, taart: 0 };
+const EMPTY_SHELF = Object.fromEntries(Object.keys(RECIPES).map((key) => [key, 0]));
 
 const EVENT_TITLES = ['Schoolreis passeert langs', 'Communiefeest bestelling', 'Buurtfeest catering', 'Kantoor bestelt ontbijt', 'Voetbalclub na de match'];
 
@@ -75,7 +79,7 @@ const EVENTS = [
     id: 'blogger', tone: 'good', title: 'Foodblogger schrijft een lovende recensie',
     desc: 'Extra volk over de vloer dankzij een online review.',
     apply(game) {
-      game.reputation = clampNum(game.reputation + 8, 0, 100);
+      changeReputation(game, 8);
       game.mods.push({ id: uid(), type: 'customerMult', value: 1.6, endMin: game.clockMin + 150 });
     }
   },
@@ -89,6 +93,49 @@ const EVENTS = [
           game.customerQueue.push({ id: uid(), wants: { key, qty: 1 }, bornAt: game.clockMin, patience: 16 });
         }
       }
+    }
+  }
+];
+
+const INCIDENTS = [
+  {
+    id: 'ovenstoring', title: 'Oven maakt een verdacht geluid',
+    desc: 'Een lager loopt warm. Laat je een technieker komen of bak je voorzichtig verder?',
+    choices(day) {
+      return [
+        { id: 'technieker', label: 'Technieker bellen', detail: `Kost €${25 + day * 3}, maar alles blijft draaien.` },
+        { id: 'doorbakken', label: 'Voorzichtig doorbakken', detail: `Ovens lopen vertraging op en je verliest ${3 + Math.ceil(day / 3)} reputatie.` }
+      ];
+    }
+  },
+  {
+    id: 'klacht', title: 'Boze klant aan de toonbank',
+    desc: 'Een vaste klant klaagt over de bestelling van gisteren. Hoe maak je dit goed?',
+    choices(day) {
+      return [
+        { id: 'terugbetalen', label: 'Ruim compenseren', detail: `Kost €${12 + day * 2} en levert 2 reputatie op.` },
+        { id: 'excuses', label: 'Alleen excuses', detail: `Kost niets, maar je verliest ${4 + Math.floor(day / 3)} reputatie.` }
+      ];
+    }
+  },
+  {
+    id: 'spoedlevering', title: 'Leverancier staat vast in het verkeer',
+    desc: 'Je basisvoorraad komt niet op tijd. Regel je een dure spoedrit of rek je de voorraad?',
+    choices(day) {
+      return [
+        { id: 'koerier', label: 'Spoedkoerier', detail: `Kost €${18 + day * 2} en brengt bloem en gist.` },
+        { id: 'rekken', label: 'Voorraad rekken', detail: `Je verliest een kwart bloem en gist en 2 reputatie.` }
+      ];
+    }
+  },
+  {
+    id: 'ochtendspits', title: 'Onverwachte ochtendspits', shopOnly: true,
+    desc: 'De rij groeit sneller dan voorzien. Zet je extra hulp in of probeer je het alleen?',
+    choices(day) {
+      return [
+        { id: 'hulp', label: 'Extra hulp inzetten', detail: `Kost €${20 + day * 2}; alle wachtende klanten houden langer vol.` },
+        { id: 'alleen', label: 'Zelf oplossen', detail: `Kost niets, maar je verliest ${3 + Math.floor(day / 4)} reputatie.` }
+      ];
     }
   }
 ];
@@ -110,26 +157,89 @@ function weightedPick(pairs) {
   return pairs[pairs.length - 1][0];
 }
 
+function dailyCostFor(day) { return DAILY_COST + Math.min(65, Math.max(0, day - 1) * 5); }
+function difficultyFor(day) {
+  const pressure = Math.max(1, day);
+  return {
+    level: pressure,
+    label: pressure < 3 ? 'Rustig' : pressure < 6 ? 'Druk' : pressure < 9 ? 'Heftig' : 'Meedogenloos',
+    customerPressure: 1 + Math.min(0.75, Math.max(0, day - 1) * 0.05),
+    patiencePenalty: Math.min(8, Math.floor(Math.max(0, day - 1) / 2)),
+    missPenalty: 2 + Math.floor(Math.max(0, day - 1) / 5)
+  };
+}
+
+function equipmentShopFor(game) {
+  const ovenCount = game.ovens.length;
+  const equipment = game.equipment;
+  return [
+    {
+      key: 'extraOven', name: 'Extra oven', level: ovenCount, maxLevel: 5,
+      cost: 120 + Math.max(0, ovenCount - 3) * 90,
+      description: 'Voegt een extra ovenplaats toe zodat je gelijktijdig meer kunt bakken.'
+    },
+    {
+      key: 'ovenUpgrade', name: 'Ovens upgraden', level: equipment.ovenLevel, maxLevel: 4,
+      cost: 95 + Math.max(0, equipment.ovenLevel - 1) * 105,
+      description: `Elke oven bakt grotere batches en werkt sneller. Nu +${(equipment.ovenLevel - 1) * 25}% opbrengst.`
+    },
+    {
+      key: 'cooling', name: 'Koelcel', level: equipment.coolingLevel, maxLevel: 3,
+      cost: 80 + equipment.coolingLevel * 80,
+      description: `Bewaart ${equipment.coolingLevel * 4} gekoelde producten voor de volgende dag.`
+    },
+    {
+      key: 'counter', name: 'Toonbank', level: equipment.counterLevel, maxLevel: 4,
+      cost: 75 + Math.max(0, equipment.counterLevel - 1) * 75,
+      description: `Meer wachtruimte en ${Math.max(0, equipment.counterLevel - 1) * 5}% extra verkoopopbrengst.`
+    }
+  ];
+}
+
+function batchFor(game, recipe) {
+  return Math.max(1, Math.ceil(recipe.batch * (1 + (game.equipment.ovenLevel - 1) * 0.25)));
+}
+
+function bakeMinutesFor(game, recipe) {
+  return Math.max(8, Math.ceil(recipe.bakMin * (1 - (game.equipment.ovenLevel - 1) * 0.08)));
+}
+
+function changeReputation(game, amount) {
+  game.reputation = clampNum(game.reputation + amount, 0, 100);
+  if (game.reputation > 0 || game.gameOver) return;
+  game.gameOver = true;
+  game.paused = true;
+  game.pendingIncident = null;
+  game.resultText = `De reputatie van Bakkermans Jones is ingestort. Je hield ${game.daysSurvived} volledige dagen stand en strandde op dag ${game.day}.`;
+}
+
 /* ---------------- lifecycle ---------------- */
 
-function genOrdersFor(day) {
-  const n = Math.random() < 0.5 ? 1 : 2;
+function genOrdersFor(day, unlockedRecipes = START_RECIPES) {
+  const n = Math.min(3, 1 + Math.floor((day - 1) / 4) + (Math.random() < 0.5 ? 0 : 1));
+  const premiumPool = unlockedRecipes.filter((key) => RECIPES[key]?.premium);
   const list = [];
   for (let i = 0; i < n; i += 1) {
     const due = 480 + Math.floor(Math.random() * 210); // 08:00 - 11:30
+    const product = premiumPool.length && Math.random() < 0.45
+      ? premiumPool[Math.floor(Math.random() * premiumPool.length)]
+      : 'taart';
+    const qty = product === 'taart' || product === 'slagroomtaart'
+      ? (day >= 8 && Math.random() < 0.35 ? 2 : 1)
+      : 3 + Math.floor(Math.random() * 4);
     list.push({
-      id: uid(), product: 'taart', qty: 1, due,
-      reward: Math.round(14 + Math.random() * 10 + day),
+      id: uid(), product, qty, due,
+      reward: Math.round(RECIPES[product].prijs * qty * 1.35 + 8 + day),
       repBonus: 3, status: 'open'
     });
   }
   return list;
 }
 
-function genEventFor(day) {
+function genEventFor(day, unlockedRecipes = START_RECIPES) {
   const chance = Math.min(0.75, 0.35 + day * 0.05);
   if (Math.random() >= chance) return null;
-  const pool = ['stokbrood', 'pistolet', 'croissant', 'koffiekoek'];
+  const pool = unlockedRecipes.filter((key) => !RECIPES[key].koeling);
   const shuffled = [...pool].sort(() => Math.random() - 0.5);
   const picks = shuffled.slice(0, 2 + (Math.random() < 0.4 ? 1 : 0));
   const needs = {};
@@ -160,11 +270,15 @@ function createGame(roomPlayers) {
     resultText: '',
     phase: 'prep',
     day: 1,
+    daysSurvived: 0,
     clockMin: DAY_START,
     paused: false,
     speed: 2,
     money: 150,
     reputation: 60,
+    difficulty: difficultyFor(1),
+    unlockedRecipes: [...START_RECIPES],
+    equipment: { ovenLevel: 1, coolingLevel: 0, counterLevel: 1 },
     ingredients: { ...START_INGREDIENTS },
     ovens: [null, null, null],
     shelf: { ...EMPTY_SHELF },
@@ -172,6 +286,7 @@ function createGame(roomPlayers) {
     mods: [],
     orders: [],
     event: null,
+    pendingIncident: null,
     customerQueue: [],
     nextCustomerAt: SHOP_START + 5,
     log: [{ min: DAY_START, text: 'Nieuwe dag bij Bakkermans Jones. De oven wordt aangestoken…', tone: 'info' }],
@@ -181,8 +296,8 @@ function createGame(roomPlayers) {
     lastTickAt: now,
     minuteAccumMs: 0
   };
-  game.orders = genOrdersFor(1);
-  game.event = genEventFor(1);
+  game.orders = genOrdersFor(1, game.unlockedRecipes);
+  game.event = genEventFor(1, game.unlockedRecipes);
   return game;
 }
 
@@ -206,16 +321,18 @@ function nextInterval(game) {
   else if (t < 660) base = 6 + Math.random() * 5;  // 09:00-11:00
   else base = 9 + Math.random() * 7;                // 11:00-12:00
   const repFactor = clampNum(0.6 + game.reputation / 150, 0.6, 1.4);
-  const mult = activeCustomerMultiplier(game);
+  const mult = activeCustomerMultiplier(game) * difficultyFor(game.day).customerPressure;
   return clampNum(Math.round(base / (repFactor * mult)), 2, 40);
 }
 
 function maybeSpawnCustomer(game) {
   if (game.clockMin < game.nextCustomerAt) return;
-  if (game.customerQueue.length < 4) {
-    const key = weightedPick([['stokbrood', 30], ['pistolet', 25], ['croissant', 25], ['koffiekoek', 15], ['taart', 5]]);
-    const qty = key === 'taart' ? 1 : 1 + Math.floor(Math.random() * 3);
-    const patience = 12 + Math.floor(Math.random() * 9);
+  const queueCapacity = 3 + game.equipment.counterLevel;
+  if (game.customerQueue.length < queueCapacity) {
+    const key = weightedPick(game.unlockedRecipes.map((recipeKey) => [recipeKey, RECIPES[recipeKey].weight || 10]));
+    const extraDemand = game.day >= 4 && Math.random() < Math.min(0.6, game.day * 0.04) ? 1 : 0;
+    const qty = key === 'taart' ? 1 : 1 + Math.floor(Math.random() * 3) + extraDemand;
+    const patience = Math.max(7, 12 + Math.floor(Math.random() * 9) - difficultyFor(game.day).patiencePenalty + (game.equipment.counterLevel - 1) * 2);
     game.customerQueue.push({ id: uid(), wants: { key, qty }, bornAt: game.clockMin, patience });
   } else {
     addLog(game, 'Een klant zag de rij en liep verder.', 'info');
@@ -228,7 +345,7 @@ function updateCustomerPatience(game) {
   game.customerQueue.forEach((c) => {
     if (game.clockMin - c.bornAt >= c.patience) {
       game.stats.missed += 1;
-      game.reputation = clampNum(game.reputation - 2, 0, 100);
+      changeReputation(game, -difficultyFor(game.day).missPenalty);
       addLog(game, `Een klant vertrok ongeduldig zonder ${RECIPES[c.wants.key].naam}.`, 'bad');
     } else {
       still.push(c);
@@ -241,14 +358,14 @@ function checkDeadlines(game) {
   game.orders.forEach((o) => {
     if (o.status === 'open' && game.clockMin > o.due) {
       o.status = 'failed';
-      game.reputation = clampNum(game.reputation - o.repBonus, 0, 100);
+      changeReputation(game, -o.repBonus);
       game.stats.ordersFailed += 1;
       addLog(game, `Bestelling (${RECIPES[o.product].naam}) niet op tijd geleverd.`, 'bad');
     }
   });
   if (game.event && game.event.status === 'open' && game.clockMin > game.event.due) {
     game.event.status = 'failed';
-    game.reputation = clampNum(game.reputation - game.event.repBonus, 0, 100);
+    changeReputation(game, -game.event.repBonus);
     addLog(game, `Evenement "${game.event.title}" mislukt: te laat.`, 'bad');
   }
 }
@@ -256,19 +373,32 @@ function checkDeadlines(game) {
 function completeOven(game, idx) {
   const o = game.ovens[idx];
   const r = RECIPES[o.recipeKey];
-  game.shelf[o.recipeKey] += r.batch;
+  const batch = batchFor(game, r);
+  game.shelf[o.recipeKey] += batch;
   game.ovens[idx] = null;
-  addLog(game, `${r.batch}× ${r.naam} vers uit de oven!`, 'good');
+  addLog(game, `${batch}× ${r.naam} vers uit de oven!`, 'good');
 }
 
 function maybeTriggerEvent(game) {
-  if (game.eventsToday >= game.maxEventsToday) return;
+  if (game.eventsToday >= game.maxEventsToday || game.pendingIncident) return;
   if (game.clockMin < 60) return;
-  if (Math.random() >= 0.0025) return;
-  const eligible = EVENTS.filter((e) => e.id !== 'school' || game.phase === 'shop');
+  const chance = Math.min(0.006, 0.0018 + game.day * 0.00025);
+  if (Math.random() >= chance) return;
+  game.eventsToday += 1;
+  if (Math.random() < 0.7) {
+    const eligible = INCIDENTS.filter((incident) => !incident.shopOnly || game.phase === 'shop');
+    const incident = eligible[Math.floor(Math.random() * eligible.length)];
+    game.pendingIncident = {
+      id: uid(), type: incident.id, title: incident.title, desc: incident.desc,
+      choices: incident.choices(game.day), wasPaused: game.paused
+    };
+    game.paused = true;
+    addLog(game, `${incident.title} — ingrijpen nodig!`, 'bad');
+    return;
+  }
+  const eligible = EVENTS.filter((e) => e.tone === 'good' && (e.id !== 'school' || game.phase === 'shop'));
   const ev = eligible[Math.floor(Math.random() * eligible.length)];
   ev.apply(game);
-  game.eventsToday += 1;
   addLog(game, `${ev.title} — ${ev.desc}`, ev.tone);
 }
 
@@ -283,7 +413,7 @@ function closeShop(game) {
   if (game.customerQueue.length) {
     game.customerQueue.forEach(() => {
       game.stats.missed += 1;
-      game.reputation = clampNum(game.reputation - 2, 0, 100);
+      changeReputation(game, -difficultyFor(game.day).missPenalty);
     });
     addLog(game, 'De winkel sluit — de rest van de rij gaat onverrichter zake naar huis.', 'bad');
     game.customerQueue = [];
@@ -301,13 +431,18 @@ function goToSupermarket(game) {
 }
 
 function endDay(game) {
-  game.money -= DAILY_COST;
+  const dailyCost = dailyCostFor(game.day);
+  game.money -= dailyCost;
   game.phase = 'dayEnd';
   game.paused = true;
   if (game.money < 0) {
-    game.gameOver = true;
-    game.resultText = `Bakkermans Jones is failliet gegaan na dag ${game.day} (eindstand €${fmtMoney(game.money)}).`;
+    const shortage = Math.abs(game.money);
+    const repLoss = Math.max(2, Math.ceil(shortage / 3));
+    game.money = 0;
+    addLog(game, `De dagkosten konden niet volledig betaald worden: -${repLoss} reputatie.`, 'bad');
+    changeReputation(game, -repLoss);
   }
+  if (!game.gameOver) game.daysSurvived = game.day;
 }
 
 function advanceOneMinute(game) {
@@ -315,10 +450,12 @@ function advanceOneMinute(game) {
   game.ovens.forEach((o, idx) => { if (o && game.clockMin >= o.endMin) completeOven(game, idx); });
   game.mods = game.mods.filter((m) => m.endMin > game.clockMin);
   checkDeadlines(game);
+  if (game.gameOver) return;
   if (game.phase === 'shop') {
     updateCustomerPatience(game);
     maybeSpawnCustomer(game);
   }
+  if (game.gameOver) return;
   maybeTriggerEvent(game);
 
   if (game.phase === 'prep' && game.clockMin >= SHOP_START) {
@@ -334,23 +471,36 @@ function advanceOneMinute(game) {
 function goToNextDay(game) {
   if (game.phase !== 'dayEnd') throw new Error('De dag is nog niet voorbij.');
   const wasBroken = game.koelingBroken;
+  let coolingSpace = game.equipment.coolingLevel * 4;
+  const chilledStock = {};
+  [...game.unlockedRecipes].sort((a, b) => RECIPES[b].prijs - RECIPES[a].prijs).forEach((key) => {
+    if (!RECIPES[key].koeling || coolingSpace <= 0) return;
+    const kept = Math.min(game.shelf[key] || 0, coolingSpace);
+    chilledStock[key] = kept;
+    coolingSpace -= kept;
+  });
   game.day += 1;
+  game.difficulty = difficultyFor(game.day);
   game.clockMin = DAY_START;
   game.phase = 'prep';
   game.ovens = [null, null, null];
   game.shelf = { ...EMPTY_SHELF };
+  Object.entries(chilledStock).forEach(([key, qty]) => { game.shelf[key] = qty; });
   game.koelingBroken = false;
   game.mods = [];
   game.customerQueue = [];
   game.nextCustomerAt = SHOP_START + Math.floor(Math.random() * 10);
-  game.orders = genOrdersFor(game.day);
-  game.event = genEventFor(game.day);
+  game.orders = genOrdersFor(game.day, game.unlockedRecipes);
+  game.event = genEventFor(game.day, game.unlockedRecipes);
+  game.pendingIncident = null;
   game.eventsToday = 0;
-  game.maxEventsToday = 2 + (game.day > 4 ? 1 : 0);
+  game.maxEventsToday = Math.min(5, 2 + Math.floor((game.day - 1) / 3));
   game.stats = { served: 0, missed: 0, revenueToday: 0, ordersDone: 0, ordersFailed: 0 };
   game.paused = false;
   game.minuteAccumMs = 0;
   if (wasBroken) addLog(game, 'De koelgroep is \'s nachts hersteld.', 'good');
+  const keptTotal = Object.values(chilledStock).reduce((sum, qty) => sum + qty, 0);
+  if (keptTotal) addLog(game, `${keptTotal} gekoelde producten bleven vers in de koelcel.`, 'good');
   addLog(game, `— Dag ${game.day} begint —`, 'info');
 }
 
@@ -359,13 +509,14 @@ function goToNextDay(game) {
 function bakeRecipe(game, key) {
   const r = RECIPES[key];
   if (!r) throw new Error('Onbekend recept.');
+  if (!game.unlockedRecipes.includes(key)) throw new Error('Dit recept is nog niet ontgrendeld.');
   if (game.phase !== 'prep') throw new Error('Je kunt enkel bakken tijdens de voorbereiding.');
   if (r.koeling && game.koelingBroken) throw new Error('De koeling is stuk — geen taarten mogelijk.');
   const idx = game.ovens.findIndex((o) => o === null);
   if (idx === -1) throw new Error('Geen vrije oven.');
   for (const ing in r.kost) { if ((game.ingredients[ing] || 0) < r.kost[ing]) throw new Error('Te weinig ingrediënten.'); }
   for (const ing in r.kost) { game.ingredients[ing] -= r.kost[ing]; }
-  game.ovens[idx] = { recipeKey: key, startMin: game.clockMin, endMin: game.clockMin + r.bakMin };
+  game.ovens[idx] = { recipeKey: key, startMin: game.clockMin, endMin: game.clockMin + bakeMinutesFor(game, r) };
   addLog(game, `Oven ${idx + 1} gestart met ${r.naam}.`, 'info');
 }
 
@@ -376,9 +527,9 @@ function serveCustomer(game, id) {
   const r = RECIPES[c.wants.key];
   if ((game.shelf[c.wants.key] || 0) < c.wants.qty) throw new Error('Niet genoeg op de plank.');
   game.shelf[c.wants.key] -= c.wants.qty;
-  const earn = c.wants.qty * r.prijs;
+  const earn = c.wants.qty * r.prijs * (1 + (game.equipment.counterLevel - 1) * 0.05);
   game.money += earn;
-  game.reputation = clampNum(game.reputation + 1, 0, 100);
+  changeReputation(game, 1);
   game.stats.served += 1;
   game.stats.revenueToday += earn;
   game.customerQueue = game.customerQueue.filter((x) => x.id !== id);
@@ -392,7 +543,7 @@ function deliverOrder(game, id) {
   if ((game.shelf[o.product] || 0) < o.qty) throw new Error('Niet genoeg op de plank.');
   game.shelf[o.product] -= o.qty;
   game.money += o.reward;
-  game.reputation = clampNum(game.reputation + o.repBonus, 0, 100);
+  changeReputation(game, o.repBonus);
   o.status = 'done';
   game.stats.ordersDone += 1;
   addLog(game, `Bestelling geleverd: ${o.qty}× ${RECIPES[o.product].naam} (+€${fmtMoney(o.reward)}).`, 'good');
@@ -405,7 +556,7 @@ function deliverEvent(game) {
   for (const k in ev.needs) { if ((game.shelf[k] || 0) < ev.needs[k]) throw new Error('Niet genoeg op de plank.'); }
   for (const k in ev.needs) { game.shelf[k] -= ev.needs[k]; }
   game.money += ev.reward;
-  game.reputation = clampNum(game.reputation + ev.repBonus, 0, 100);
+  changeReputation(game, ev.repBonus);
   ev.status = 'done';
   addLog(game, `Evenement "${ev.title}" geleverd! (+€${fmtMoney(ev.reward)})`, 'good');
 }
@@ -429,8 +580,90 @@ function buyIngredient(game, key) {
   addLog(game, `${BUY_BATCH}× ${INGREDIENT_META[key]} ingeslagen (-€${fmtMoney(cost)}).`, 'info');
 }
 
+function buyEquipment(game, key) {
+  if (game.phase !== 'supermarket') throw new Error('Je kunt nu alleen materiaal kopen in de supermarkt.');
+  const offer = equipmentShopFor(game).find((item) => item.key === key);
+  if (!offer) throw new Error('Onbekend materiaal.');
+  if (offer.level >= offer.maxLevel) throw new Error('Dit materiaal is maximaal verbeterd.');
+  if (game.money < offer.cost) throw new Error('Te weinig geld.');
+  game.money -= offer.cost;
+  if (key === 'extraOven') game.ovens.push(null);
+  else if (key === 'ovenUpgrade') game.equipment.ovenLevel += 1;
+  else if (key === 'cooling') game.equipment.coolingLevel += 1;
+  else if (key === 'counter') game.equipment.counterLevel += 1;
+  addLog(game, `${offer.name} gekocht of verbeterd (-€${fmtMoney(offer.cost)}).`, 'good');
+}
+
+function buyRecipe(game, key) {
+  if (game.phase !== 'supermarket') throw new Error('Je kunt nu alleen recepten kopen in de supermarkt.');
+  const recipe = RECIPES[key];
+  if (!recipe?.unlockPrice) throw new Error('Dit recept is niet te koop.');
+  if (game.unlockedRecipes.includes(key)) throw new Error('Dit recept is al ontgrendeld.');
+  if (game.day < recipe.unlockDay) throw new Error(`Dit recept is beschikbaar vanaf dag ${recipe.unlockDay}.`);
+  if (game.money < recipe.unlockPrice) throw new Error('Te weinig geld.');
+  game.money -= recipe.unlockPrice;
+  game.unlockedRecipes.push(key);
+  changeReputation(game, 3);
+  addLog(game, `Nieuw recept geleerd: ${recipe.naam}! (+3 reputatie)`, 'good');
+}
+
+function resolveIncident(game, choiceId) {
+  const incident = game.pendingIncident;
+  if (!incident) throw new Error('Er is geen incident om op te lossen.');
+  if (!incident.choices.some((choice) => choice.id === choiceId)) throw new Error('Ongeldige ingreep.');
+  const day = game.day;
+  let result = '';
+
+  if (incident.type === 'ovenstoring' && choiceId === 'technieker') {
+    const cost = 25 + day * 3;
+    if (game.money < cost) throw new Error('Te weinig geld voor deze ingreep.');
+    game.money -= cost;
+    result = `De technieker houdt de ovens draaiende (-€${fmtMoney(cost)}).`;
+  } else if (incident.type === 'ovenstoring') {
+    const delay = 20 + day * 2;
+    game.ovens.forEach((oven) => { if (oven) oven.endMin += delay; });
+    changeReputation(game, -(3 + Math.ceil(day / 3)));
+    result = `De ovens lopen ${delay} minuten vertraging op.`;
+  } else if (incident.type === 'klacht' && choiceId === 'terugbetalen') {
+    const cost = 12 + day * 2;
+    if (game.money < cost) throw new Error('Te weinig geld voor deze ingreep.');
+    game.money -= cost;
+    changeReputation(game, 2);
+    result = `De klant vertrekt tevreden na een compensatie van €${fmtMoney(cost)}.`;
+  } else if (incident.type === 'klacht') {
+    changeReputation(game, -(4 + Math.floor(day / 3)));
+    result = 'De excuses overtuigen niet en het verhaal doet de ronde.';
+  } else if (incident.type === 'spoedlevering' && choiceId === 'koerier') {
+    const cost = 18 + day * 2;
+    if (game.money < cost) throw new Error('Te weinig geld voor deze ingreep.');
+    game.money -= cost;
+    game.ingredients.bloem += 18;
+    game.ingredients.gist += 5;
+    result = `De spoedkoerier levert bloem en gist (-€${fmtMoney(cost)}).`;
+  } else if (incident.type === 'spoedlevering') {
+    game.ingredients.bloem = Math.floor(game.ingredients.bloem * 0.75);
+    game.ingredients.gist = Math.floor(game.ingredients.gist * 0.75);
+    changeReputation(game, -2);
+    result = 'De kleinere broden vallen op bij je vaste klanten.';
+  } else if (incident.type === 'ochtendspits' && choiceId === 'hulp') {
+    const cost = 20 + day * 2;
+    if (game.money < cost) throw new Error('Te weinig geld voor deze ingreep.');
+    game.money -= cost;
+    game.customerQueue.forEach((customer) => { customer.patience += 8; });
+    result = `Extra hulp kalmeert de rij (-€${fmtMoney(cost)}).`;
+  } else if (incident.type === 'ochtendspits') {
+    changeReputation(game, -(3 + Math.floor(day / 4)));
+    result = 'De wachtrij zorgt voor gemopper en slechte mond-tot-mondreclame.';
+  }
+
+  const shouldResume = !incident.wasPaused && !game.gameOver;
+  game.pendingIncident = null;
+  game.paused = !shouldResume;
+  addLog(game, result, game.gameOver ? 'bad' : 'info');
+}
+
 function togglePause(game) {
-  if (PAUSING_PHASES.has(game.phase)) throw new Error('Nu even niet.');
+  if (PAUSING_PHASES.has(game.phase) || game.pendingIncident) throw new Error('Nu even niet.');
   game.paused = !game.paused;
 }
 
@@ -443,12 +676,17 @@ function handleAction(game, playerId, action, payload = {}) {
   if (playerId !== game.playerId) throw new Error('Niet jouw spel.');
   if (game.gameOver) throw new Error('Het spel is afgelopen.');
 
+  if (game.pendingIncident && action !== 'resolveIncident') throw new Error('Los eerst het incident op.');
+
   if (action === 'bake') bakeRecipe(game, String(payload.key || ''));
   else if (action === 'serveCustomer') serveCustomer(game, String(payload.id || ''));
   else if (action === 'deliverOrder') deliverOrder(game, String(payload.id || ''));
   else if (action === 'deliverEvent') deliverEvent(game);
   else if (action === 'repairKoeling') repairKoeling(game);
   else if (action === 'buyIngredient') buyIngredient(game, String(payload.key || ''));
+  else if (action === 'buyEquipment') buyEquipment(game, String(payload.key || ''));
+  else if (action === 'buyRecipe') buyRecipe(game, String(payload.key || ''));
+  else if (action === 'resolveIncident') resolveIncident(game, String(payload.choiceId || ''));
   else if (action === 'togglePause') togglePause(game);
   else if (action === 'setSpeed') setSpeed(game, Number(payload.value));
   else if (action === 'openShop') openShop(game);
@@ -476,7 +714,7 @@ function tick(game, now) {
     advanceOneMinute(game);
     changed = true;
     guard += 1;
-    if (game.gameOver || PAUSING_PHASES.has(game.phase)) break;
+    if (game.gameOver || game.paused || PAUSING_PHASES.has(game.phase)) break;
   }
   return changed;
 }
@@ -495,7 +733,9 @@ function serialize(game) {
     shopStart: SHOP_START,
     shopEnd: SHOP_END,
     supermarketEnd: SUPERMARKET_END,
-    dailyCost: DAILY_COST,
+    dailyCost: dailyCostFor(game.day),
+    daysSurvived: game.daysSurvived,
+    difficulty: difficultyFor(game.day),
     paused: game.paused,
     speed: game.speed,
     money: game.money,
@@ -504,12 +744,27 @@ function serialize(game) {
     ingredientMeta: INGREDIENT_META,
     ingredientPrices: INGREDIENT_PRICES,
     buyBatch: BUY_BATCH,
-    recipes: RECIPES,
+    recipes: Object.fromEntries(Object.entries(RECIPES).map(([key, recipe]) => [key, {
+      ...recipe,
+      baseBatch: recipe.batch,
+      batch: batchFor(game, recipe),
+      bakMin: bakeMinutesFor(game, recipe)
+    }])),
+    unlockedRecipes: [...game.unlockedRecipes],
+    equipment: { ...game.equipment, ovenCount: game.ovens.length },
+    equipmentShop: equipmentShopFor(game),
     ovens: game.ovens.map((o) => (o ? { recipeKey: o.recipeKey, startMin: o.startMin, endMin: o.endMin } : null)),
     shelf: { ...game.shelf },
     koelingBroken: game.koelingBroken,
     orders: game.orders.map((o) => ({ ...o })),
     event: game.event ? { ...game.event, needs: { ...game.event.needs } } : null,
+    pendingIncident: game.pendingIncident ? {
+      id: game.pendingIncident.id,
+      type: game.pendingIncident.type,
+      title: game.pendingIncident.title,
+      desc: game.pendingIncident.desc,
+      choices: game.pendingIncident.choices.map((choice) => ({ ...choice }))
+    } : null,
     customerQueue: game.customerQueue.map((c) => ({ ...c })),
     log: game.log.slice(0, 40),
     stats: { ...game.stats }
@@ -522,9 +777,9 @@ function results(game, durationMs) {
   return [{
     playerId: game.playerId,
     placement: 1,
-    score: Math.round(game.money),
+    score: game.daysSurvived,
     won: false,
-    outcome: game.resultText || `Dag ${game.day} bereikt.`,
+    outcome: game.resultText || `${game.daysSurvived} dagen overleefd.`,
     durationMs
   }];
 }
@@ -533,5 +788,6 @@ module.exports = {
   createGame, handleAction, serialize, tick, results,
   // geëxporteerd voor tests / intern hergebruik
   RECIPES, INGREDIENT_META, INGREDIENT_PRICES, BUY_BATCH,
-  DAY_START, SHOP_START, SHOP_END, SUPERMARKET_END, DAILY_COST
+  DAY_START, SHOP_START, SHOP_END, SUPERMARKET_END, DAILY_COST,
+  dailyCostFor, difficultyFor
 };

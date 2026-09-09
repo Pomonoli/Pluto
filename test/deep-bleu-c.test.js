@@ -159,22 +159,25 @@ test('een aanlegsteiger bouwen lukt op een strandtegel en kan maar één keer pe
   assert.equal(game.harbors.length, 1);
 });
 
-test('toolcontent valideert vijf volledige upgradepaden en bootstations', () => {
-  assert.deepEqual(Object.keys(sliceContent.tools), ['rod', 'bait', 'boat', 'axe', 'pickaxe']);
-  for (const tool of Object.values(sliceContent.tools)) assert.equal(tool.tiers.length, 5);
+test('toolcontent valideert vier volledige upgradepaden en bootstations', () => {
+  assert.deepEqual(Object.keys(sliceContent.tools), ['rod', 'boat', 'axe', 'pickaxe']);
+  for (const tool of Object.values(sliceContent.tools)) assert.equal(tool.tiers.length, 10);
   assert.equal(sliceContent.tools.axe.tiers[1].requires.station, 'workbench');
   assert.doesNotThrow(() => sliceContent.validateSliceContent(sliceContent));
+  assert.deepEqual(sliceContent.tools.boat.tiers.map((tier) => tier.name), [
+    'Vlot', 'Kano', 'Roeiboot', 'Zeilboot', 'Kustboot', 'Langschip',
+    'Vrachtschip', 'Oorlogsschip', 'Drakkar', 'Koningsschip'
+  ]);
 });
 
-test('alle vijf gereedschappen vragen werkbank, materiaal, geld en gekoppeld skillniveau', () => {
+test('alle vier upgradepaden vragen werkbank, materiaal, geld en gekoppeld skillniveau', () => {
   const materialBefore = {
     rod: 200,
-    bait: 20,
     boat: 200,
     axe: 200,
     pickaxe: 200
   };
-  const skillFor = { rod: 'fishing', bait: 'fishing', boat: 'collecting', axe: 'woodcutting', pickaxe: 'mining' };
+  const skillFor = { rod: 'fishing', boat: 'collecting', axe: 'woodcutting', pickaxe: 'mining' };
 
   for (const key of Object.keys(sliceContent.tools)) {
     const game = makeGame();
@@ -199,6 +202,60 @@ test('alle vijf gereedschappen vragen werkbank, materiaal, geld en gekoppeld ski
     assert.equal(serialized.level, 1);
     assert.equal(serialized.current.name, sliceContent.tools[key].tiers[1].name);
   }
+});
+
+test('alle upgradepaden bereiken niveau 10 en weigeren daarna verdere kosten', () => {
+  for (const [key, tool] of Object.entries(sliceContent.tools)) {
+    const game = makeGame();
+    const player = playerOf(game, 'a');
+    player.cash = 1000000;
+    player.skills[tool.skill] = 1000000000;
+    player.boat.stations = ['workbench'];
+    player.woodInventory.push({ uid: 'wood', speciesId: 'berk', weightKg: 100000 });
+    player.rockInventory.push({ uid: 'rock', speciesId: 'kalksteen', weightKg: 100000 });
+    for (let level = 1; level < 10; level += 1) {
+      const before = player.cash;
+      dbc.handleAction(game, 'a', 'buyUpgrade', { category: key });
+      assert.equal(player.cash, before - tool.tiers[level].requires.cash);
+      assert.equal(player.gear[key], level);
+    }
+    const upgrade = dbc.serialize(game, 'a').you.toolUpgrades.find((entry) => entry.key === key);
+    assert.equal(upgrade.current.tier, 10);
+    assert.equal(upgrade.next, null);
+    const before = structuredClone(player);
+    assert.throws(() => dbc.handleAction(game, 'a', 'buyUpgrade', { category: key }), /maximum/);
+    assert.deepEqual(player, before);
+    let saved;
+    dbc.afterStateChange({ gameState: game, players: [{ id: 'a', userId: 'u' }] }, {
+      db: { saveDeepBleuCPlayer(_id, value) { saved = value; } }
+    });
+    const restored = dbc.createGame([{ id: 'c', name: 'Ada', dbcState: saved }]).players[0];
+    assert.equal(restored.gear[key], 9);
+  }
+});
+
+test('aas verdwijnt uit oude saves, upgrades en setbeloningen', () => {
+  const game = dbc.createGame([{ id: 'a', name: 'Ada', dbcState: { gear: { rod: 3, bait: 4, boat: 2, axe: 1, pickaxe: 2 } } }]);
+  assert.deepEqual(game.players[0].gear, { rod: 3, boat: 2, axe: 1, pickaxe: 2 });
+  assert.throws(() => dbc.handleAction(game, 'a', 'buyUpgrade', { category: 'bait' }), /Onbekende upgrade/);
+  assert.ok(dbc.serialize(game, 'a').you.toolUpgrades.every((entry) => entry.key !== 'bait'));
+  assert.ok(require('../games/deep-bleu-c/fish').SETS.every((set) => set.rewardGear !== 'bait'));
+});
+
+test('hogere vaartuigen varen sneller zonder wandelen te versnellen', () => {
+  const game = makeGame(), player = playerOf(game, 'a');
+  const world = worldgen.getWorld();
+  const water = world.boats[0];
+  player.gear.boat = 9;
+  player.path = [water];
+  player.nextStepAt = 0;
+  dbc.tick(game, 1000);
+  assert.equal(player.mode, 'sea');
+  assert.equal(player.nextStepAt, 1120);
+  player.path = [world.spawn];
+  dbc.tick(game, 2000);
+  assert.equal(player.mode, 'land');
+  assert.equal(player.nextStepAt, 2170);
 });
 
 test('gereedschapsupgrade weigert iedere ontbrekende vereiste afzonderlijk', () => {

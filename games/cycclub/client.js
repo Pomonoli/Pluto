@@ -1066,7 +1066,7 @@ function renderResult(room,game,me){
 }
 
 function renderOneDayResult(result){
-  const panel=E('div','panel cc-panel');
+  const panel=E('div','panel cc-panel cc-result-panel');
   panel.append(panelHeading(result.raceName));
   renderClassificationPanel(panel,result);
   panel.append(backToClubButton());
@@ -1076,7 +1076,7 @@ function renderOneDayResult(result){
 function renderStageResult(room,game,me){
   const result=game.lastResult;
   if(!result){els.gameStage.append(E('p','muted','Geen ritresultaat beschikbaar.'));return}
-  const panel=E('div','panel cc-panel');
+  const panel=E('div','panel cc-panel cc-result-panel');
   panel.append(panelHeading(`${result.raceName} · Rit ${result.stageNumber}/${result.totalStages}`));
   renderClassificationPanel(panel,result);
 
@@ -1100,7 +1100,7 @@ function renderStageResult(room,game,me){
 }
 
 function renderGrandTourFinalResult(room,game,result){
-  const panel=E('div','panel cc-panel');
+  const panel=E('div','panel cc-panel cc-result-panel');
   panel.append(panelHeading(`${result.raceName} · Eindklassement`));
 
   panel.append(renderClassificationTabs(result.classifications));

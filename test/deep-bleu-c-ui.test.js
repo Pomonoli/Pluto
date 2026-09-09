@@ -138,13 +138,15 @@ test('Deep Bleu C Bootbasis gebruikt op mobiel een vaste fullscreen werkruimte',
   assert.match(client, /dbc-sheet-mobile-title', `Bootbasis · \$\{you\.boat\.name\} \$\{you\.boat\.tier\}`/);
   assert.match(client, /role', 'tab'[\s\S]*?aria-selected[\s\S]*?activeToolKey = tool\.key[\s\S]*?classList\.toggle\('active'/);
   assert.doesNotMatch(client, /button\.onclick = \(\) => \{ activeToolKey = tool\.key; renderGame/);
-  assert.match(css, /\.dbc-sheet-overlay:has\(\.dbc-sheet-boat\)\{position:fixed;inset:0;z-index:20/);
-  assert.match(css, /\.dbc-sheet-boat\{[\s\S]*?height:100dvh;max-height:none[\s\S]*?overflow-y:auto;overscroll-behavior:contain/);
+  assert.match(css, /\.dbc-sheet-overlay:has\(\.dbc-sheet-boat\)\{position:fixed;inset:calc\(58px \+ env\(safe-area-inset-top\)\) 0 0;z-index:20/);
+  assert.match(css, /\.dbc-sheet-boat\{[^}]*height:100%;max-height:100%;[^}]*overflow:hidden/);
+  assert.match(css, /\.dbc-sheet-boat \.dbc-sheet-header\{[^}]*flex:0 0 auto/);
+  assert.match(css, /\.dbc-sheet-boat \.dbc-boat-base\{[^}]*min-height:0;overflow-y:auto;overscroll-behavior:contain/);
   assert.match(css, /\.dbc-sheet-boat \.dbc-sheet-header\{[\s\S]*?background:linear-gradient/);
   assert.match(css, /\.dbc-sheet-boat \.dbc-sheet-mobile-title\{[\s\S]*?display:block/);
   assert.match(css, /\.dbc-sheet-boat \.dbc-station-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   assert.match(css, /\.dbc-sheet-boat \.dbc-tool-grid\{grid-template-columns:1fr/);
-  assert.match(css, /\.dbc-sheet-boat \.dbc-tool-menu\{[\s\S]*?grid-template-columns:repeat\(5,minmax\(0,1fr\)\)/);
+  assert.match(css, /\.dbc-sheet-boat \.dbc-tool-menu\{[\s\S]*?grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
   assert.match(css, /\.dbc-sheet-boat \.dbc-tool-card\{display:none;[\s\S]*?\.dbc-sheet-boat \.dbc-tool-card\.active\{display:grid\}/);
   assert.match(css, /\.dbc-sheet-boat \.dbc-tool-card :is\(\.primary,\.secondary\)\{[^}]*width:auto;min-width:132px;min-height:38px/);
   assert.match(css, /\.dbc-sheet-boat \.dbc-create-loop :is\(\.primary,\.secondary\)\{[^}]*width:auto;min-width:150px;min-height:38px/);

@@ -405,4 +405,5 @@ body.cycclub-active #gameStage:has(.cc-racing-panel){overflow:hidden!important}
 body.cycclub-active #gameStage>.cc-racing-panel{flex:1!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:hidden!important}
 body.cycclub-active #gameStage>.cc-lineup-panel{flex:1!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:hidden!important}
 body.cycclub-active #gameStage>.cc-manager-shell{flex:1!important;height:auto!important;min-height:0!important}
+body.cycclub-active #gameStage>.cc-result-panel{flex:1!important;min-height:0!important;margin:0!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain;padding-bottom:max(14px,env(safe-area-inset-bottom))}
 @media(max-width:420px){body.cycclub-active #gameStage>.cc-manager-shell>.cc-club-tabs{grid-template-columns:repeat(4,minmax(0,1fr))!important}.cc-manager-shell,.cc-racing-panel,.cc-lineup-panel{width:100%!important;max-width:100vw!important}}

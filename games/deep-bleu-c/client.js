@@ -1,4 +1,6 @@
-import { hexToPixel, hexCorners, hexDistance } from './hex-client.js';
+import { hexToPixel, hexToViewport, hexCorners, hexDistance } from './hex-client.js';
+import { treeStatus, treeIconUrl } from './tree-visuals.js';
+import { wildlifeStatus, wildlifeIconUrl } from './wildlife-visuals.js';
 
 export const leaderboardConfig={columns:[
   {key:'rank',label:'#',short:'#',width:'rank'},
@@ -71,7 +73,6 @@ const GEAR_CATEGORY_META = {
 };
 const TOOL_FALLBACK_META = [
   { key: 'rod', icon: '🎣', label: 'Hengel' },
-  { key: 'bait', icon: '🪱', label: 'Aas' },
   { key: 'boat', icon: '⛵', label: 'Vaartuig' },
   { key: 'axe', icon: '🪓', label: 'Bijl' },
   { key: 'pickaxe', icon: '⛏️', label: 'Houweel' }
@@ -112,21 +113,29 @@ const SKILL_LABELS = {
 let state, els, E, action, logBox, renderGame;
 function bind(api) { ({ state, els, E, action, logBox, renderGame } = api); }
 
-// Bump whenever worldgen.js changes shape/size — the API response is served
-// with a long-lived immutable cache header, so without a version query a
-// browser that already loaded an older map would keep serving it from cache
-// for up to a day even after the server restarts with new world-gen code.
-const WORLD_VERSION = 8;
+// Keep in sync with worldgen.js; bypass older immutable map responses.
+const WORLD_VERSION = 9;
 
 let world = null;
 let worldPromise = null;
-function ensureWorld() {
+function ensureWorld(expected) {
+  // A running tab may retain the old atlas across a server restart. Never
+  // draw new player coordinates over terrain from a different world.
+  if (world && expected && (world.width !== expected.width || world.height !== expected.height
+    || (expected.version && world.version !== expected.version))) {
+    world = null;
+    minimapBase = null;
+    minimapWorldRef = null;
+  }
   if (world || worldPromise) return world;
-  worldPromise = fetch(`/api/deep-bleu-c/world?wv=${WORLD_VERSION}`)
+  worldPromise = fetch(`/api/deep-bleu-c/world?wv=${expected?.version || WORLD_VERSION}`, { cache: 'no-store' })
     .then((response) => response.json())
     .then((data) => {
       if (!data.ok) throw new Error(data.error || 'Kaart kon niet laden.');
+      if (expected && (data.width !== expected.width || data.height !== expected.height
+        || (expected.version && data.version !== expected.version))) throw new Error('De wereldkaart wordt bijgewerkt.');
       world = data;
+      worldPromise = null;
       if (state?.room) renderGame(state.room);
     })
     .catch((error) => { console.error('Big Blue C wereld laden mislukt:', error); worldPromise = null; });
@@ -189,7 +198,7 @@ function renderDeepBleuC(room, game) {
   els.gameStage.replaceChildren();
 
   const wrap = E('div', 'dbc-wrap');
-  const loadedWorld = ensureWorld();
+  const loadedWorld = ensureWorld(game.world);
   wrap.append(loadedWorld
     ? renderStage(you, loadedWorld, others, game.harbors || [], game.dayPhase || 'day')
     : E('div', 'dbc-loading', 'Kaart wordt geladen...'));
@@ -315,8 +324,8 @@ function handleTileClick(wx, wy, tile, you) {
   action('move', { x: wx, y: wy });
 }
 
-function hexPoints(localCol, localRow) {
-  const { x, y } = hexToPixel(localCol, localRow, HEX_SIZE);
+function hexPoints(worldCol, worldRow, camX, camY) {
+  const { x, y } = hexToViewport(worldCol, worldRow, camX, camY, HEX_SIZE);
   return { cx: x, cy: y };
 }
 
@@ -405,7 +414,7 @@ function toolFor(fishingPhase, gatheringKind, inCombat) {
 
 function renderOtherPlayerMarker(svg, p, camX, camY, colorIndex, viewport) {
   if (p.x < camX - 1 || p.x > camX + viewport.cols || p.y < camY - 1 || p.y > camY + viewport.rows) return;
-  const { cx, cy } = hexPoints(p.x - camX, p.y - camY);
+  const { cx, cy } = hexPoints(p.x, p.y, camX, camY);
   const facingLeft = facingLeftFor(p.id, p);
   const color = OTHER_PLAYER_COLORS[colorIndex % OTHER_PLAYER_COLORS.length];
   const g = svgEl('g', {
@@ -677,9 +686,32 @@ function appendBuildingArt(svg, cx, cy, { type }) {
   svg.append(g);
 }
 
-function appendTileDecor(svg, tile, cx, cy, wx, wy, worldData) {
+function appendTreeNode(svg, cx, cy, tree, you) {
+  const status = treeStatus(tree, you);
+  const g = svgEl('g', { class: `dbc-tree-node dbc-tree-${status.state}`, transform: `translate(${cx},${cy})`, 'pointer-events': 'none' });
+  g.append(svgEl('image', { href: treeIconUrl(tree.setId), x: -14, y: -24, width: 28, height: 36, class: 'dbc-tree-art' }));
+  appendResourceStatusMark(g, status.state);
+  svg.append(g);
+}
+
+function appendResourceStatusMark(g, state) {
+  const mark = svgEl('g', { class: 'dbc-tree-status-mark', transform: 'translate(-8,8) scale(0.65) translate(8,-8)' });
+  mark.append(svgEl('circle', { cx: -8, cy: 8, r: 5.5 }));
+  if (state === 'ready') mark.append(svgEl('path', { d: 'M-11 8l2 2 4-4' }));
+  else if (state === 'locked') {
+    mark.append(svgEl('rect', { x: -11, y: 7, width: 6, height: 4, rx: 1 }));
+    mark.append(svgEl('path', { d: 'M-10 7V5a2 2 0 0 1 4 0v2' }));
+  } else mark.append(svgEl('path', { d: 'M-11 5h6l-6 6h6Z' }));
+  g.append(mark);
+}
+
+function appendTileDecor(svg, tile, cx, cy, wx, wy, worldData, you) {
   const seed = tileHash(wx, wy);
-  if (tile === 'f') appendTreeDecor(svg, cx, cy, seed);
+  if (tile === 'f') {
+    const tree = worldData.trees?.[`${wx}:${wy}`];
+    if (tree) appendTreeNode(svg, cx, cy, tree, you);
+    else appendTreeDecor(svg, cx, cy, seed);
+  }
   else if (tile === 'h') appendHillDecor(svg, cx, cy, seed);
   else if (tile === 'p') appendPeakDecor(svg, cx, cy, seed);
   else if (tile === 'w') appendVoidDecor(svg, cx, cy, seed);
@@ -701,15 +733,19 @@ function appendTileDecor(svg, tile, cx, cy, wx, wy, worldData) {
   else if (tile === 'B') { if (seed < 0.4) appendSandDecor(svg, cx, cy, seed); }
 }
 
+function boatArtworkUrl(boat) {
+  const tier = Math.max(1, Math.min(10, Math.round(Number(boat.tier) || 1)));
+  return new URL(`./assets/boats/boat-${tier}.svg`, import.meta.url).href;
+}
+
 function appendBoatModel(svg, boat, cx, cy, { moving = false } = {}) {
   const g = svgEl('g', { class: `dbc-player-boat${moving ? ' moving' : ''}`, transform: `translate(${cx},${cy})` });
   if (moving) {
     g.append(svgEl('path', { d: 'M -4 7 Q -10 13 -18 14 M 4 7 Q 10 13 18 14', class: 'dbc-boat-wake' }));
   }
-  g.append(svgEl('ellipse', { cx: 0, cy: 6, rx: 12, ry: 3.5, class: 'dbc-boat-shadow' }));
-  g.append(svgEl('path', { d: 'M -13 0 Q 0 11 13 0 L 9 -5 L -9 -5 Z', class: 'dbc-boat-hull' }));
-  g.append(svgEl('line', { x1: 0, y1: -3, x2: 0, y2: -18, class: 'dbc-boat-mast' }));
-  g.append(svgEl('path', { d: 'M 1 -17 Q 11 -12 10 -5 L 1 -7 Z', class: 'dbc-boat-sail dbc-boat-sail-player' }));
+  const width = 30 + Math.min(10, boat.tier || 1) * 1.4;
+  const height = boat.tier <= 3 ? 22 : 34;
+  g.append(svgEl('image', { href: boatArtworkUrl(boat), x: -width / 2, y: 8 - height, width, height, preserveAspectRatio: 'xMidYMax meet' }));
   if (boat.stations.includes('workbench')) g.append(svgEl('rect', { x: -8, y: -7, width: 6, height: 4, rx: 1, class: 'dbc-boat-station' }));
   if (boat.stations.includes('cookingTable')) g.append(svgEl('circle', { cx: 6, cy: -5, r: 2.6, class: 'dbc-boat-cook' }));
   svg.append(g);
@@ -736,15 +772,32 @@ function renderMapWrap(you, worldData, camX, camY, others = [], harbors = [], da
   // pas zodat ze nooit onder een lateref gebuurtegel wegvallen wanneer ze
   // buiten hun eigen hex uitsteken.
   const decorQueue = [];
+  const wildlifeByTile = new Map((worldData.wildlife || []).map((spot) => [`${spot.x}:${spot.y}`, spot]));
   for (let row = -1; row <= rows; row += 1) {
     for (let col = -1; col <= cols; col += 1) {
       const wx = camX + col, wy = camY + row;
       if (wx < 0 || wx >= worldData.width || wy < 0 || wy >= worldData.height) continue;
       const tile = worldData.tiles[wy * worldData.width + wx] || 'L';
-      const { cx, cy } = hexPoints(col, row);
+      const { cx, cy } = hexPoints(wx, wy, camX, camY);
       const points = hexCorners(cx, cy, HEX_DRAW_SIZE).map(([px, py]) => `${px},${py}`).join(' ');
       const terrain = TILE_PALETTE[tile] ? tile : 'L';
       const hex = svgEl('polygon', { points, fill: `url(#dbc-terrain-${terrain})`, class: `dbc-tile dbc-tile-${terrain}` });
+      const tree = worldData.trees?.[`${wx}:${wy}`];
+      if (tree) {
+        const description = treeStatus(tree, you).description;
+        const title = svgEl('title');
+        title.textContent = description;
+        hex.append(title);
+        hex.setAttribute('aria-label', description);
+      }
+      const animal = wildlifeByTile.get(`${wx}:${wy}`);
+      if (animal) {
+        const description = wildlifeStatus(animal, you, dayPhase).description;
+        const title = svgEl('title');
+        title.textContent = description;
+        hex.append(title);
+        hex.setAttribute('aria-label', description);
+      }
       if (row >= 0 && row < rows && col >= 0 && col < cols) hex.onclick = () => handleTileClick(wx, wy, tile, you);
       svg.append(hex);
       decorQueue.push({ tile, cx, cy, wx, wy });
@@ -757,13 +810,13 @@ function renderMapWrap(you, worldData, camX, camY, others = [], harbors = [], da
     x: bounds.minX, y: bounds.minY, width: bounds.width, height: bounds.height,
     fill: 'url(#dbc-atmosphere)', 'pointer-events': 'none'
   }));
-  decorQueue.forEach(({ tile, cx, cy, wx, wy }) => appendTileDecor(svg, tile, cx, cy, wx, wy, worldData));
+  decorQueue.forEach(({ tile, cx, cy, wx, wy }) => appendTileDecor(svg, tile, cx, cy, wx, wy, worldData, you));
 
   // Decoratieve bootjes in de Haven — puur sfeer, de bootupgrade zelf koop je
   // op de Handelsmarkt en werkt overal op de kaart.
   (worldData.boats || []).forEach((boat) => {
     if (boat.x < camX - 1 || boat.x > camX + cols || boat.y < camY - 1 || boat.y > camY + rows) return;
-    const { cx, cy } = hexPoints(boat.x - camX, boat.y - camY);
+    const { cx, cy } = hexPoints(boat.x, boat.y, camX, camY);
     const g = svgEl('g', { class: 'dbc-boat', transform: `translate(${cx},${cy})` });
     g.append(svgEl('ellipse', { cx: 0, cy: 4, rx: 8, ry: 2.5, class: 'dbc-boat-shadow' }));
     g.append(svgEl('path', { d: 'M -8 2 Q 0 8 8 2 L 6 -1 L -6 -1 Z', class: 'dbc-boat-hull' }));
@@ -779,7 +832,7 @@ function renderMapWrap(you, worldData, camX, camY, others = [], harbors = [], da
     const occupied = (you.x === building.x && you.y === building.y)
       || others.some((other) => other.x === building.x && other.y === building.y);
     if (occupied) return;
-    const { cx, cy } = hexPoints(building.x - camX, building.y - camY);
+    const { cx, cy } = hexPoints(building.x, building.y, camX, camY);
     appendBuildingArt(svg, cx, cy, { type: building.type });
   });
 
@@ -789,7 +842,7 @@ function renderMapWrap(you, worldData, camX, camY, others = [], harbors = [], da
     if (harbor.x < camX || harbor.x >= camX + cols || harbor.y < camY || harbor.y >= camY + rows) return;
     const occupied = (you.x === harbor.x && you.y === harbor.y) || others.some((other) => other.x === harbor.x && other.y === harbor.y);
     if (occupied) return;
-    const { cx, cy } = hexPoints(harbor.x - camX, harbor.y - camY);
+    const { cx, cy } = hexPoints(harbor.x, harbor.y, camX, camY);
     appendBuildingArt(svg, cx, cy, { type: 'harbor' });
   });
 
@@ -800,22 +853,23 @@ function renderMapWrap(you, worldData, camX, camY, others = [], harbors = [], da
     if (spot.x < camX || spot.x >= camX + cols || spot.y < camY || spot.y >= camY + rows) return;
     const occupied = (you.x === spot.x && you.y === spot.y) || others.some((other) => other.x === spot.x && other.y === spot.y);
     if (occupied) return;
-    const { cx, cy } = hexPoints(spot.x - camX, spot.y - camY);
-    svg.append(svgEl('ellipse', { cx, cy: cy + 6, rx: 6, ry: 1.8, class: 'dbc-wildlife-shadow' }));
-    const icon = svgEl('text', { x: cx, y: cy + 4, class: 'dbc-wildlife-icon', 'text-anchor': 'middle' });
-    icon.textContent = '🐇';
-    svg.append(icon);
+    const { cx, cy } = hexPoints(spot.x, spot.y, camX, camY);
+    const status = wildlifeStatus(spot, you, dayPhase);
+    const g = svgEl('g', { class: `dbc-wildlife-node dbc-tree-${status.state}`, transform: `translate(${cx},${cy})`, 'pointer-events': 'none' });
+    g.append(svgEl('image', { href: wildlifeIconUrl(spot.setId || 'kleinwild'), x: -13, y: -20, width: 26, height: 32, class: 'dbc-tree-art' }));
+    appendResourceStatusMark(g, status.state);
+    svg.append(g);
   });
 
   others.forEach((other, index) => renderOtherPlayerMarker(svg, other, camX, camY, index, viewport));
 
   if (you.mode === 'land' && Number.isFinite(you.boat.x) && Number.isFinite(you.boat.y)
     && you.boat.x >= camX - 1 && you.boat.x <= camX + cols && you.boat.y >= camY - 1 && you.boat.y <= camY + rows) {
-    const docked = hexPoints(you.boat.x - camX, you.boat.y - camY);
+    const docked = hexPoints(you.boat.x, you.boat.y, camX, camY);
     appendBoatModel(svg, you.boat, docked.cx, docked.cy);
   }
 
-  const { cx: px, cy: py } = hexPoints(you.x - camX, you.y - camY);
+  const { cx: px, cy: py } = hexPoints(you.x, you.y, camX, camY);
   if (you.mode === 'sea') {
     appendBoatModel(svg, you.boat, px, py, { moving: Boolean(you.path.length) });
   } else {
@@ -968,13 +1022,7 @@ function renderBoatButton(you) {
   button.setAttribute('aria-label', 'Open bootbasis');
   const condition = Math.round((you.boat.hp / you.boat.maxHp) * 100);
   const boat = svgEl('svg', { viewBox: '0 0 96 56', class: 'dbc-boat-mini', 'aria-hidden': 'true' });
-  boat.append(
-    svgEl('ellipse', { cx: 48, cy: 47, rx: 34, ry: 5, class: 'dbc-boat-hud-shadow' }),
-    svgEl('path', { d: 'M11 31 Q48 49 85 29 Q77 48 49 52 Q20 49 11 31Z', class: 'dbc-boat-hud-hull' }),
-    svgEl('path', { d: 'M23 33 Q49 42 74 32', class: 'dbc-boat-hud-rim' }),
-    svgEl('path', { d: 'M43 35 L75 10', class: 'dbc-boat-hud-oar' }),
-    svgEl('path', { d: 'M72 8 Q80 6 84 11 Q80 15 75 12Z', class: 'dbc-boat-hud-oar-blade' })
-  );
+  boat.append(svgEl('image', { href: boatArtworkUrl(you.boat), x: 0, y: 0, width: 96, height: 56, preserveAspectRatio: 'xMidYMid meet' }));
   button.append(boat);
   const copy = E('span', 'dbc-boat-button-copy');
   copy.append(E('strong', '', `${you.boat.name} · ${you.boat.tier}`), E('small', '', `${condition}% romp · ${you.boat.stations.length}/${you.boat.baseSlots} stations`));
@@ -999,11 +1047,11 @@ function formatUpgradeAmount(value) {
 }
 
 function visibleToolUpgrades(you) {
-  if (Array.isArray(you.toolUpgrades) && you.toolUpgrades.length) return you.toolUpgrades;
+  if (Array.isArray(you.toolUpgrades) && you.toolUpgrades.length) return you.toolUpgrades.filter((tool) => TOOL_FALLBACK_META.some((meta) => meta.key === tool.key));
   return TOOL_FALLBACK_META.map((tool) => ({
     ...tool,
     level: Number(you.gear?.[tool.key]) || 0,
-    maxLevel: 4,
+    maxLevel: 9,
     current: { name: tool.label, benefit: 'Herstart de Pluto-server om de upgradevereisten te laden.' },
     next: null,
     serverRestartRequired: true
@@ -1013,7 +1061,7 @@ function visibleToolUpgrades(you) {
 function renderToolUpgrades(you) {
   const section = E('section', 'dbc-tool-section');
   section.append(E('h5', '', 'Gereedschappen'));
-  const tools = visibleToolUpgrades(you);
+  const tools = visibleToolUpgrades(you).filter((tool) => tool.key !== 'boat');
   if (!tools.some((tool) => tool.key === activeToolKey)) activeToolKey = tools[0]?.key || 'rod';
   const menu = E('div', 'dbc-tool-menu');
   menu.setAttribute('role', 'tablist');
@@ -1046,12 +1094,21 @@ function renderToolUpgrades(you) {
     card.id = `dbc-tool-panel-${tool.key}`;
     card.dataset.toolKey = tool.key;
     card.setAttribute('role', 'tabpanel');
+    appendUpgradeDetails(card, tool, you);
+    grid.append(card);
+  });
+  section.append(grid);
+  return section;
+}
+
+function appendUpgradeDetails(card, tool, you) {
     const title = tool.serverRestartRequired
       ? tool.current.name
       : tool.next ? `${tool.current.name} → ${tool.next.name}` : `${tool.current.name} · voltooid`;
     card.append(E('h5', '', `${tool.icon} ${title}`));
-    card.append(E('div', 'dbc-tool-level', `Niveau ${tool.level}/${tool.maxLevel}`));
+    card.append(E('div', 'dbc-tool-level', `Niveau ${tool.level + 1}/${tool.maxLevel + 1}`));
     card.append(E('p', 'dbc-panel-copy', tool.next?.benefit || tool.current.benefit));
+    if (tool.unlockSets?.length) card.append(E('p', 'dbc-panel-copy', `Ontgrendelt: ${tool.unlockSets.join(', ')}.`));
     if (tool.serverRestartRequired) {
       const button = E('button', 'secondary', 'Serverherstart vereist');
       button.disabled = true;
@@ -1072,10 +1129,6 @@ function renderToolUpgrades(you) {
       button.onclick = () => action('buyUpgrade', { category: tool.key });
       card.append(button);
     }
-    grid.append(card);
-  });
-  section.append(grid);
-  return section;
 }
 
 function renderBoatBasePanel(you) {
@@ -1084,7 +1137,10 @@ function renderBoatBasePanel(you) {
   wrap.append(E('p', 'dbc-panel-copy', `Romp ${you.boat.hp}/${you.boat.maxHp} · ${you.mode === 'sea' ? 'op zee' : 'aangemeerd'} · ${you.boat.baseSlots} basisslots`));
 
   const diagram = E('div', 'dbc-boat-diagram');
-  diagram.append(E('div', 'dbc-boat-hull-shape', ''));
+  const artwork = E('img', 'dbc-boat-illustration');
+  artwork.src = boatArtworkUrl(you.boat);
+  artwork.alt = `${you.boat.name}, niveau ${you.boat.tier}`;
+  diagram.append(artwork);
   const slots = E('div', 'dbc-boat-slots');
   for (let index = 0; index < you.boat.baseSlots; index += 1) {
     const stationId = you.boat.stations[index];
@@ -1093,6 +1149,12 @@ function renderBoatBasePanel(you) {
   }
   diagram.append(slots);
   wrap.append(diagram);
+  const boatUpgrade = visibleToolUpgrades(you).find((tool) => tool.key === 'boat');
+  if (boatUpgrade) {
+    const card = E('div', 'dbc-upgrade-card dbc-boat-upgrade');
+    appendUpgradeDetails(card, boatUpgrade, you);
+    wrap.append(card);
+  }
 
   const stationSection = E('section', 'dbc-station-section');
   stationSection.append(E('h5', '', 'Bootstations'));
@@ -1144,7 +1206,7 @@ function renderActivePanel(you, others, harbors) {
 function renderMapPanel(you) {
   const wrap = E('div', 'dbc-panel dbc-v6-panel dbc-world-map-panel');
   wrap.append(renderV6PanelTitle('🗺️', 'Grote map'));
-  wrap.append(E('p', 'dbc-panel-copy', 'Een uitgezoomd overzicht van de volledige wereld. Je positie staat in het rood.'));
+  wrap.append(E('p', 'dbc-panel-copy', 'Het vertrouwde eiland ligt midden in een uitgestrekte archipel. Verken de eilandring, de noordelijke eilandjes en de verre zuidkusten. Je positie staat in het rood.'));
 
   if (!world) {
     wrap.append(E('p', 'dbc-empty', 'Kaart wordt geladen...'));
@@ -1156,11 +1218,27 @@ function renderMapPanel(you) {
   canvas.className = 'dbc-world-map';
   canvas.width = world.width;
   canvas.height = world.height;
+  canvas.setAttribute('role', 'img');
+  canvas.setAttribute('aria-label', `Wereldkaart van ${world.width} bij ${world.height} tegels. Je positie: ${you.x}, ${you.y}.`);
   const ctx = canvas.getContext('2d');
   ctx.drawImage(minimapBase, 0, 0);
+  ctx.strokeStyle = 'rgba(237,241,234,0.18)';
+  ctx.lineWidth = 0.2;
+  for (let i = 1; i < 5; i += 1) {
+    ctx.beginPath();
+    ctx.moveTo(i * world.width / 5, 0);
+    ctx.lineTo(i * world.width / 5, world.height);
+    ctx.moveTo(0, i * world.height / 5);
+    ctx.lineTo(world.width, i * world.height / 5);
+    ctx.stroke();
+  }
+  ctx.fillStyle = '#F6F2E7';
+  ctx.beginPath();
+  ctx.arc(you.x + 0.5, you.y + 0.5, 1.8, 0, Math.PI * 2);
+  ctx.fill();
   ctx.fillStyle = '#A34433';
   ctx.beginPath();
-  ctx.arc(you.x, you.y, 1.8, 0, Math.PI * 2);
+  ctx.arc(you.x + 0.5, you.y + 0.5, 1.2, 0, Math.PI * 2);
   ctx.fill();
   const frame = E('div', 'dbc-world-map-frame');
   frame.append(canvas);
@@ -1566,11 +1644,25 @@ function renderSets(you, kind = 'fish') {
   const sets = kind === 'fish' ? you.sets : kind === 'wood' ? you.woodSets : kind === 'rock' ? you.rockSets : you.meatSets;
   const entriesKey = kind === 'fish' ? 'fish' : 'items';
   const wrap = E('div', 'dbc-sets');
+  if (kind === 'wood') wrap.append(E('p', 'dbc-panel-copy', 'Op de kaart toont het boompictogram de houtset. Vinkje = kapbaar; slot = bijl of Kappen te laag; zandloper = herstelt. De vereiste niveaus staan hieronder bij de sets.'));
+  if (kind === 'meat') wrap.append(E('p', 'dbc-panel-copy', 'Het dierpictogram toont de set: kleinwild, grofwild of nachtdieren. Een klein vinkje betekent bejaagbaar; een slotje betekent nu niet beschikbaar. Nachtdieren zijn alleen in het donker actief.'));
   const grid = E('div', 'dbc-set-grid');
   sets.forEach((set) => {
     const card = E('div', 'dbc-set-card');
     const titleText = `${set.icon} ${set.name} (${set.caught}/${set.total})${set.bonusActive ? ' · +15% ✔' : ''}`;
-    card.append(E('div', 'dbc-set-title', titleText));
+    const title = E('div', 'dbc-set-title', titleText);
+    if (kind === 'wood' || kind === 'meat') {
+      title.textContent = '';
+      const icon = E('img', 'dbc-tree-set-icon');
+      icon.src = kind === 'wood' ? treeIconUrl(set.id) : wildlifeIconUrl(set.id);
+      icon.alt = set.name;
+      title.append(icon, E('span', '', `${set.name} (${set.caught}/${set.total})${set.bonusActive ? ' · +15% ✔' : ''}`));
+      title.classList.add('dbc-tree-set-title');
+    }
+    card.append(title);
+    if (set.requiredToolLevel) {
+      card.append(E('p', 'dbc-set-reward', `${set.unlocked ? 'Beschikbaar' : 'Vergrendeld'} · ${set.toolLabel} niveau ${set.requiredToolLevel} vereist (jij: ${set.toolLevel})`));
+    }
     if (!set.bonusActive && set.rewardGearLabel) {
       card.append(E('p', 'dbc-set-reward', `Beloning bij voltooien: gratis ${set.rewardGearLabel}-upgrade`));
     }
@@ -1578,9 +1670,21 @@ function renderSets(you, kind = 'fish') {
     set[entriesKey].forEach((entry) => {
       const chip = E('span', `dbc-fish-chip ${entry.discovered ? 'discovered' : 'unknown'}`,
         entry.discovered ? `${entry.icon} ${entry.name}` : '???');
+      if (entry.requiredToolLevel) {
+        const requirement = `${set.toolLabel} niveau ${entry.requiredToolLevel}${entry.requiredSkillLevel ? ` · Kappen ${entry.requiredSkillLevel}` : ''}`;
+        chip.title = requirement;
+        if (entry.requiredToolLevel > set.toolLevel || (kind === 'wood' && (you.skills?.woodcutting?.level || 1) < entry.requiredSkillLevel)) {
+          chip.classList.add('locked');
+          if (!entry.discovered) chip.textContent = `🔒 Niv. ${entry.requiredToolLevel}`;
+        }
+      }
       row.append(chip);
     });
     card.append(row);
+    if (kind === 'wood' && set.items.some((item) => item.requiredSkillLevel > 1)) {
+      const extra = set.items.filter((item) => item.requiredSkillLevel > 1).map((item) => `${item.name}: Bijl ${item.requiredToolLevel} en Kappen ${item.requiredSkillLevel}`);
+      card.append(E('p', 'dbc-set-reward', extra.join(' · ')));
+    }
     grid.append(card);
   });
   wrap.append(grid);

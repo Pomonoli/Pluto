@@ -28,6 +28,16 @@
 .dbc-tile-decor{pointer-events:none}
 .dbc-tile-tree-trunk{fill:#735238;stroke:#513B2B;stroke-width:.45}
 .dbc-tile-tree-shadow{fill:rgba(34,58,43,.26)}
+.dbc-tree-art{filter:drop-shadow(0 1px 1px rgba(23,65,79,.12))}
+.dbc-tree-locked .dbc-tree-art{opacity:.65;filter:saturate(.55)}
+.dbc-tree-recovering .dbc-tree-art{opacity:.38}
+.dbc-tree-status-mark{opacity:.68}
+.dbc-tree-status-mark circle{fill:#3F6247;stroke:#A6B49C;stroke-width:.6}
+.dbc-tree-status-mark path,.dbc-tree-status-mark rect{fill:none;stroke:#F6F2E7;stroke-width:1.15;stroke-linecap:round;stroke-linejoin:round}
+.dbc-tree-locked .dbc-tree-status-mark circle{fill:#76624C;stroke:#B9AD91}
+.dbc-tree-recovering .dbc-tree-status-mark circle{fill:#777964;stroke:#B7B49D}
+.dbc-tree-set-title{display:flex;align-items:center;gap:8px}
+.dbc-tree-set-icon{width:32px;height:38px;object-fit:contain;flex:none}
 .dbc-tile-tree-leaf{fill:#3F6C49;stroke:#284534;stroke-width:.65;stroke-linejoin:round}
 .dbc-tree-leaf-dark{fill:#31583D}.dbc-tree-leaf-mid{fill:#4C7B50}
 .dbc-tile-tree-highlight{fill:#82A862;opacity:.95}
@@ -198,7 +208,7 @@
 /* Onderaan i.p.v. schermvullend: de speler zelf (altijd centraal in beeld)
    blijft zo zichtbaar terwijl je vist, hakt, houwt of jaagt. */
 .dbc-fishing-overlay{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:5}
-.dbc-fishing-overlay .dbc-fishing{width:min(340px,calc(100vw - 28px));box-shadow:0 6px 18px rgba(36,51,44,.25)}
+.dbc-fishing-overlay .dbc-fishing{width:min(340px,calc(100vw - 28px))}
 
 .dbc-loading,.dbc-hint{padding:14px;text-align:center;color:var(--muted);background:var(--panel);border:1px solid var(--border);border-radius:6px}
 
@@ -430,14 +440,31 @@
 .dbc-leaderboard th,.dbc-leaderboard td{padding:6px 8px;text-align:left;border-bottom:1px solid var(--dbc-rule);color:var(--dbc-ink)}
 .dbc-leaderboard th{color:var(--dbc-ink-2);font-size:12px;text-transform:uppercase}
 
-.dbc-fishing{display:flex;flex-direction:column;gap:8px;align-items:center;padding:18px;background:var(--dbc-birch);border:1.5px solid var(--dbc-ember);border-radius:8px;text-align:center;color:var(--dbc-ink)}
-.dbc-fishing-text{font-weight:700;line-height:1.4;margin:0}
+.dbc-fishing{
+  box-sizing:border-box;position:relative;display:flex;flex-direction:column;gap:9px;align-items:center;padding:14px 16px;
+  background:radial-gradient(ellipse at 25% 0,rgba(255,255,255,.6),transparent 70%),linear-gradient(145deg,var(--dbc-parchment-hi),var(--dbc-parchment));
+  border:3px solid #8C5839;border-radius:12px;text-align:center;color:var(--dbc-wood-dark);
+  box-shadow:inset 0 0 0 1px #D8A06C,inset 0 0 0 4px rgba(255,250,240,.6),0 4px 0 #5C3524,0 8px 18px rgba(36,51,44,.24);
+}
+.dbc-fishing::before{content:"";position:absolute;inset:5px;border:1px solid rgba(169,111,67,.25);border-radius:6px;pointer-events:none}
+.dbc-fishing-text{font-family:'Grenze',serif;font-size:21px;font-weight:600;line-height:1.15;margin:0}
 .dbc-fishing-result{font-weight:600}
 .dbc-catch-icon{font-size:44px;line-height:1.2}
 .dbc-catch-detail{color:var(--dbc-ink-2);line-height:1.4;margin:0}
 .dbc-timer-track{width:100%;max-width:280px;height:10px;border-radius:3px;background:rgba(36,51,44,.14);overflow:hidden}
 .dbc-timer-fill{height:100%;background:var(--dbc-ember);transition-property:width;transition-timing-function:linear}
 .dbc-fishing-button{min-width:180px}
+.dbc-fishing .dbc-timer-track{box-sizing:border-box;width:100%;height:10px;padding:2px;border:1px solid #90714B;border-radius:6px;background:#D9C6A5;box-shadow:inset 0 1px 3px rgba(92,53,36,.22);overflow:hidden}
+.dbc-fishing .dbc-timer-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#A86A32,#DCA252);box-shadow:inset 0 1px rgba(255,239,191,.55)}
+.dbc-wrap .dbc-fishing .dbc-fishing-button{
+  min-width:150px;max-width:100%;min-height:44px;padding:8px 20px;border:2px solid #98603D;border-radius:9px;
+  background:linear-gradient(180deg,#DBA46E,#B67543);color:#FFF8E9;font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;
+  box-shadow:inset 0 0 0 1px rgba(255,240,212,.35),0 3px 0 #70452E;text-shadow:0 1px rgba(92,53,36,.35);
+}
+.dbc-wrap .dbc-fishing .dbc-fishing-button:hover{background:linear-gradient(180deg,#E4B47F,#C1844F)}
+.dbc-wrap .dbc-fishing .dbc-fishing-button:active{transform:translateY(2px);box-shadow:inset 0 1px 3px rgba(92,53,36,.2),0 1px 0 #70452E}
+.dbc-wrap .dbc-fishing .dbc-fishing-button:focus-visible{outline:3px solid var(--dbc-ember);outline-offset:3px}
+.dbc-fishing .dbc-catch-detail{font-size:13px;color:var(--dbc-ink-2)}
 
 .dbc-sets h4,.dbc-inventory h4{margin:0 0 8px;font-family:'Grenze',serif;color:var(--dbc-pine-dark)}
 .dbc-set-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
@@ -567,16 +594,16 @@ body.game-active #gameStage:has(.dbc-wrap) .dbc-boat-base-hud{top:calc(68px + en
   .dbc-skill-card{min-height:0}
   .dbc-world-map-frame{padding:8px}
 
-  /* Bootbasis bevat meer beheer dan de andere sheets en gebruikt daarom op
-     mobiel een eigen vaste viewport. Alleen deze sheet scrollt. */
-  .dbc-sheet-overlay:has(.dbc-sheet-boat){position:fixed;inset:0;z-index:20;align-items:stretch;background:#EDE1C8}
+  /* Keep the close row below Pluto's fixed 58px navigation. The header
+     never shrinks or scrolls away; only the boat controls scroll. */
+  .dbc-sheet-overlay:has(.dbc-sheet-boat){position:fixed;inset:calc(58px + env(safe-area-inset-top)) 0 0;z-index:20;align-items:stretch;background:#EDE1C8}
   .dbc-sheet-boat{
-    width:100%;height:100%;height:100dvh;max-height:none;margin:0;padding:0 12px calc(20px + env(safe-area-inset-bottom));
-    overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;border:0;border-radius:0;box-shadow:none;
+    box-sizing:border-box;width:100%;height:100%;max-height:100%;min-height:0;margin:0;padding:0 12px;
+    overflow:hidden;overscroll-behavior:contain;touch-action:pan-y;border:0;border-radius:0;box-shadow:none;
   }
-  .dbc-sheet-boat::after{position:fixed;inset:5px;border-radius:7px}
+  .dbc-sheet-boat::after{position:absolute;inset:5px;border-radius:7px}
   .dbc-sheet-boat .dbc-sheet-header{
-    min-height:54px;margin:0 -12px 4px;padding:calc(5px + env(safe-area-inset-top)) 12px 5px;
+    flex:0 0 auto;min-height:54px;margin:0 -12px;padding:5px 12px;
     background:linear-gradient(180deg,#F6EBD5,#EDE1C8);border-bottom:1px solid rgba(117,89,58,.28);
     box-shadow:0 4px 10px rgba(43,33,28,.1);
   }
@@ -584,8 +611,9 @@ body.game-active #gameStage:has(.dbc-wrap) .dbc-boat-base-hud{top:calc(68px + en
   .dbc-sheet-boat .dbc-sheet-mobile-title{
     display:block;width:100%;padding-right:52px;font-family:'Grenze',serif;font-size:24px;line-height:1.05;color:#201A16;
   }
-  .dbc-sheet-boat .dbc-sheet-close{top:calc(5px + env(safe-area-inset-top));right:12px}
-  .dbc-sheet-boat .dbc-boat-base{width:100%;max-width:720px;margin:0 auto;gap:10px;padding-bottom:8px}
+  .dbc-sheet-boat .dbc-sheet-close{top:5px;right:12px}
+  .dbc-sheet-boat .dbc-boat-base{flex:1 1 0;min-height:0;overflow-y:auto;overscroll-behavior:contain;width:100%;max-width:720px;margin:0 auto;gap:10px;padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+  .dbc-sheet-boat .dbc-boat-base>*{flex-shrink:0}
   .dbc-sheet-boat .dbc-boat-base>h4{display:none}
   .dbc-sheet-boat .dbc-boat-base>.dbc-panel-copy{margin-top:0;font-size:12px}
   .dbc-sheet-boat .dbc-boat-diagram{min-height:105px;padding:18px 6%}
@@ -600,7 +628,7 @@ body.game-active #gameStage:has(.dbc-wrap) .dbc-boat-base-hud{top:calc(68px + en
   .dbc-sheet-boat .dbc-station-grid .dbc-gear-help{font-size:12px;line-height:1.25}
   .dbc-sheet-boat .dbc-station-grid button{width:100%;min-height:40px;padding:7px 6px}
   .dbc-sheet-boat .dbc-tool-menu{
-    position:sticky;top:54px;z-index:3;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;
+    position:sticky;top:54px;z-index:3;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;
     margin:0 -2px;padding:5px 2px;background:rgba(237,225,200,.96);backdrop-filter:blur(5px);
   }
   .dbc-sheet-boat .dbc-tool-menu-btn{
@@ -630,3 +658,50 @@ body.game-active #gameStage:has(.dbc-wrap) .dbc-boat-base-hud{top:calc(68px + en
 @media(prefers-reduced-motion:reduce){.dbc-player-boat,.dbc-kelp-frond,.dbc-boat-wake,.dbc-fish-school{animation:none!important}}
 
 @media(min-width:761px){#gameStage:has(.dbc-wrap){width:100%;max-width:1180px}}
+
+.dbc-boat-upgrade{display:flex;flex-direction:column;gap:8px}
+.dbc-boat-upgrade :is(.primary,.secondary){align-self:flex-end;width:auto;min-height:44px}
+
+.dbc-boat-base .dbc-boat-diagram{display:flex;flex-direction:column;align-items:center;gap:8px;min-height:0;padding:10px 12px;background:linear-gradient(165deg,#DCE6D9,#A6C6C4 65%,#7BA6AE);border:1px solid #A0BAB1}
+.dbc-boat-illustration{display:block;width:100%;max-width:360px;height:150px;object-fit:contain;filter:drop-shadow(0 3px 2px rgba(28,58,55,.12))}
+.dbc-boat-base .dbc-boat-slots{width:100%;max-width:430px;gap:8px}
+.dbc-boat-base .dbc-boat-slot{min-height:30px;padding:5px 8px;border:1px solid rgba(91,109,84,.35);border-radius:5px;background:rgba(246,242,231,.65);color:#3F594B;font-size:12px}
+
+/* Compact mobile boat controls inside the fixed sheet. */
+@media(max-width:760px){
+  .dbc-sheet-boat{gap:6px}
+  .dbc-sheet-boat .dbc-sheet-header{min-height:48px}
+  .dbc-sheet-boat .dbc-sheet-mobile-title{font-size:21px}
+  .dbc-sheet-boat .dbc-boat-base{gap:8px}
+  .dbc-sheet-boat .dbc-boat-diagram{box-sizing:border-box;min-height:80px;padding:12px 6%}
+  .dbc-sheet-boat .dbc-boat-hull-shape{top:12px;height:52px}
+  .dbc-sheet-boat .dbc-boat-slot{box-sizing:border-box;min-height:42px;padding:4px;font-size:11px}
+  .dbc-sheet-boat :is(.dbc-station-section,.dbc-tool-section){gap:5px}
+  .dbc-sheet-boat :is(.dbc-station-section,.dbc-tool-section)>h5{font-size:19px;margin-top:2px}
+  .dbc-sheet-boat .dbc-station-grid .dbc-gear-card{padding:8px;gap:4px;background:#FFF9ED;border-color:#D5BE9D;border-radius:8px}
+  .dbc-sheet-boat .dbc-station-grid .dbc-gear-help{font-size:11px;line-height:1.3}
+  .dbc-sheet-boat .dbc-station-grid button{margin-top:auto;padding:5px;min-height:44px;font-size:12px}
+  .dbc-sheet-boat .dbc-tool-menu{position:static;padding:3px;gap:3px;border-radius:8px}
+  .dbc-sheet-boat .dbc-tool-menu-btn{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:5px;padding:5px;min-height:44px;border-radius:5px}
+  .dbc-sheet-boat .dbc-tool-menu-icon{font-size:17px}
+  .dbc-sheet-boat .dbc-tool-menu-label{font-size:11px}
+  .dbc-sheet-boat :is(.dbc-boat-upgrade,.dbc-tool-card){
+    grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:5px 8px;padding:9px;
+    background:linear-gradient(135deg,#FFFCF5,#F5E8D1);border:1px solid #CFB38B;border-radius:8px;
+    box-shadow:inset 0 1px rgba(255,255,255,.8),0 2px 5px rgba(92,53,36,.07);
+  }
+  .dbc-sheet-boat .dbc-boat-upgrade{display:grid}
+  .dbc-sheet-boat :is(.dbc-boat-upgrade,.dbc-tool-card) h5{font-size:17px;line-height:1.15;min-width:0}
+  .dbc-sheet-boat .dbc-tool-level{padding:3px 6px;border-radius:5px;background:#EBD8B9;color:#755334;font-size:11px;line-height:1.2}
+  .dbc-sheet-boat :is(.dbc-boat-upgrade,.dbc-tool-card) :is(.dbc-panel-copy,.dbc-requirement-list){grid-column:1/-1;font-size:11px;line-height:1.3}
+  .dbc-sheet-boat .dbc-requirement-list{gap:3px}
+  .dbc-sheet-boat .dbc-requirement-list span{padding:2px 5px;border-radius:5px;font-size:11px;font-weight:500;background:rgba(255,255,255,.4)}
+  .dbc-sheet-boat .dbc-requirement-list .missing{border-color:#D8B9A6;color:#8B4E38}
+  .dbc-sheet-boat :is(.dbc-boat-upgrade,.dbc-tool-card,.dbc-create-loop) :is(.primary,.secondary){grid-column:1/-1;justify-self:end;align-self:end;min-width:0;width:auto;min-height:44px;margin-top:0;padding:6px 12px;font-size:12px;border-radius:7px}
+  .dbc-sheet-boat .dbc-create-loop{gap:5px;padding:9px;background:#FFF9ED;border:1px solid #D5BE9D;border-radius:8px}
+  .dbc-sheet-boat .dbc-create-loop h5{font-size:17px}
+  .dbc-sheet-boat .dbc-create-loop .dbc-panel-copy{font-size:11px}
+  .dbc-sheet-boat .dbc-boat-diagram{min-height:0;padding:8px;gap:5px}
+  .dbc-sheet-boat .dbc-boat-illustration{height:106px;max-width:290px}
+  .dbc-sheet-boat .dbc-boat-slot{min-height:28px;padding:4px;font-size:11px}
+}

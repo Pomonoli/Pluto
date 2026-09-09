@@ -281,15 +281,17 @@ function buildIndex(sets) {
   return { byId, flat };
 }
 
+require('./progression').applySetLevels(WOOD_SETS, 'items');
+require('./progression').applySetLevels(ROCK_SETS, 'items');
 const INDEX = { wood: buildIndex(WOOD_SETS), rock: buildIndex(ROCK_SETS), meat: buildIndex(ANIMAL_SETS) };
 const SETS_BY_KIND = { wood: WOOD_SETS, rock: ROCK_SETS, meat: ANIMAL_SETS };
 
 function setsFor(kind) { return SETS_BY_KIND[kind] || []; }
 // `isNight` filtert nightOnly-soorten (enkel relevant voor 'meat'; hout/steen
 // hebben geen nachtsoorten, dus daar verandert de aanroep zonder opts niets).
-function poolFor(kind, { isNight = true } = {}) {
+function poolFor(kind, { isNight = true, toolLevel = 10 } = {}) {
   const flat = INDEX[kind] ? INDEX[kind].flat : [];
-  return isNight ? flat : flat.filter((item) => !item.nightOnly);
+  return flat.filter((item) => (isNight || !item.nightOnly) && (item.requiredToolLevel || 1) <= toolLevel);
 }
 function getItem(kind, id) { return INDEX[kind] ? INDEX[kind].byId.get(id) || null : null; }
 

@@ -52,7 +52,7 @@ const SETS = [
     name: 'Kustwateren',
     icon: '🏖️',
     description: 'Ondiepe zeewateren rond havens en stranden.',
-    rewardGear: 'bait',
+    rewardGear: 'rod',
     fish: [
       { id: 'haring', name: 'Haring', icon: '🐟', rarity: 'common', minKg: 0.1, maxKg: 0.4, basePrice: 3 },
       { id: 'makreel', name: 'Makreel', icon: '🐟', rarity: 'common', minKg: 0.2, maxKg: 0.9, basePrice: 5 },
@@ -72,7 +72,7 @@ const SETS = [
     name: 'Wadden & Diepere Kust',
     icon: '🌫️',
     description: 'Troebele wadwateren en de diepere randen van de kust.',
-    rewardGear: 'bait',
+    rewardGear: 'rod',
     fish: [
       { id: 'ansjovis', name: 'Ansjovis', icon: '🐟', rarity: 'common', minKg: 0.02, maxKg: 0.1, basePrice: 3 },
       { id: 'sprot', name: 'Sprot', icon: '🐟', rarity: 'common', minKg: 0.02, maxKg: 0.15, basePrice: 3 },
@@ -152,7 +152,7 @@ const SETS = [
     name: 'Exotische Wateren',
     icon: '🐠',
     description: 'Zeldzame gasten uit warmere en diepere Middellandse wateren.',
-    rewardGear: 'bait',
+    rewardGear: 'rod',
     fish: [
       { id: 'goudbaars', name: 'Goudbaars', icon: '🐠', rarity: 'common', minKg: 0.1, maxKg: 0.8, basePrice: 6 },
       { id: 'harder-zuid', name: 'Zuiderse Harder', icon: '🐟', rarity: 'common', minKg: 0.3, maxKg: 2, basePrice: 8 },
@@ -172,7 +172,7 @@ const SETS = [
     name: 'Nachtdiepte',
     icon: '🌑',
     description: 'Vissen die enkel in het donker naar de oppervlakte komen.',
-    rewardGear: 'bait',
+    rewardGear: 'rod',
     nightOnly: true,
     fish: [
       { id: 'lantaarnvis', name: 'Lantaarnvis', icon: '🐟', rarity: 'common', minKg: 0.05, maxKg: 0.4, basePrice: 9 },
@@ -187,6 +187,7 @@ const SETS = [
 const RARITY_LABEL = { common: 'Gewoon', uncommon: 'Ongewoon', rare: 'Zeldzaam', epic: 'Episch' };
 
 const FISH_BY_ID = new Map();
+require('./progression').applySetLevels(SETS, 'fish');
 const SETS_BY_BIOME = new Map();
 for (const set of SETS) {
   if (!SETS_BY_BIOME.has(set.biome)) SETS_BY_BIOME.set(set.biome, []);
@@ -197,10 +198,11 @@ for (const set of SETS) {
 // `isNight` bepaalt of nachtsoorten (nightOnly-sets) meedoen: overdag vallen
 // ze weg, 's nachts komen ze er gewoon bovenop — bestaande soorten blijven
 // dus altijd vangbaar, ongeacht tijdstip.
-function fishForBiome(biome, isNight = false) {
+function fishForBiome(biome, isNight = false, toolLevel = 10) {
   const sets = SETS_BY_BIOME.get(biome);
   if (!sets) return null;
-  return sets.filter((set) => isNight || !set.nightOnly).flatMap((set) => set.fish);
+  return sets.filter((set) => isNight || !set.nightOnly).flatMap((set) => set.fish)
+    .filter((fish) => fish.requiredToolLevel <= toolLevel);
 }
 
 function getFish(id) {

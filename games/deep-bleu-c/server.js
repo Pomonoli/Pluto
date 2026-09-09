@@ -1,6 +1,6 @@
 'use strict';
 
-const { getWorld, isWalkable, isWater, resourceAt, nearestWalkable, findPath, hexDistance, biomeAt, tileAt } = require('./worldgen');
+const { getWorld, isWalkable, isWater, resourceAt, nearestWalkable, findPath, hexDistance, biomeAt, tileAt, WORLD_VERSION, migrateSavedWorld } = require('./worldgen');
 const { SETS, fishForBiome, getFish, priceFor: fishPriceFor } = require('./fish');
 const resources = require('./resources');
 const gear = require('./gear');
@@ -20,17 +20,16 @@ const RESULT_DISPLAY_MS = 3500;
 const STARTING_CASH = 120;
 const RARITY_WEIGHT = { common: 60, uncommon: 27, rare: 11, epic: 2 };
 
-const GEAR_KEYS = ['rod', 'bait', 'boat', 'axe', 'pickaxe'];
+const GEAR_KEYS = ['rod', 'boat', 'axe', 'pickaxe'];
 const GEAR_MAX_LEVEL = Math.max(...GEAR_KEYS.map((key) => slice.tools[key].tiers.length - 1));
 const ROD_HOOK_BONUS_MS = 150;
 const TOOL_STRIKE_BONUS_MS = 150;
-const BAIT_RARE_MULTIPLIER = 1.3;
 // De kano is vanaf de start een echt vaartuig. Hogere tiers openen later de
 // donkerdere zee; VS1 blijft binnen kust- en Atlantisch water.
 const WATER_TIERS = [['r', 'k', 'a'], ['r', 'k', 'a'], ['r', 'k', 'a', 'm'], ['r', 'k', 'a', 'm']];
 const SET_COMPLETE_BONUS = 600;
 const SET_BONUS_MULTIPLIER = 1.15;
-const GEAR_LABEL = { rod: 'hengel', bait: 'aas', boat: 'boot', axe: 'bijl', pickaxe: 'houweel' };
+const GEAR_LABEL = { rod: 'hengel', boat: 'boot', axe: 'bijl', pickaxe: 'houweel' };
 
 // Gezondheid, energie en pantser: pantser komt uitsluitend van uitgeruste
 // kleding/schild (geen losse "stat", puur afgeleid), gezondheid daalt alleen
@@ -242,7 +241,7 @@ function boatWaterSet(player) {
   return new Set(WATER_TIERS[tier] || []);
 }
 
-function defaultGear() { return { rod: 0, bait: 0, boat: 0, axe: 0, pickaxe: 0 }; }
+function defaultGear() { return { rod: 0, boat: 0, axe: 0, pickaxe: 0 }; }
 function allSets() { return [...SETS, ...resources.WOOD_SETS, ...resources.ROCK_SETS, ...resources.ANIMAL_SETS]; }
 function defaultSetBonuses() { return Object.fromEntries(allSets().map((set) => [set.id, false])); }
 function defaultStats() { return { health: MAX_HEALTH, energy: MAX_ENERGY }; }
@@ -277,10 +276,45 @@ function sanitizeBoat(raw) {
 function nodeProfileAt(world, x, y) {
   const kind = resourceAt(world, x, y);
   if (kind === 'kelp') return slice.nodes.kelp;
-  if (kind !== 'wood') return null;
+  if (kind !== 'wood' && kind !== 'rock') return null;
   const roll = Math.abs((x * 31 + y * 17) % 7);
-  if (roll === 0) return slice.nodes.oak;
-  return roll % 2 ? slice.nodes.birch : slice.nodes.pine;
+  if (kind === 'wood' && roll === 0) return slice.nodes.oak;
+  if (kind === 'wood' && roll < 4) return roll % 2 ? slice.nodes.birch : slice.nodes.pine;
+  // A node has a stable species, so upgrading unlocks actual trees/rocks.
+  const pool = resources.poolFor(kind);
+  const hash = (Math.imul(x, 73856093) ^ Math.imul(y, 19349663)) >>> 0;
+  const item = pool[hash % pool.length];
+  const special = Object.values(slice.nodes).find((node) => node.id === item.id);
+  return special || { ...item, toolTier: item.requiredToolLevel, skill: 1, xp: RARITY_XP[item.rarity] };
+}
+
+function requireGatherLevel(player, kind, profile) {
+  if (!profile || kind === 'kelp') return;
+  const key = kind === 'wood' ? 'axe' : 'pickaxe';
+  const tool = slice.tools[key];
+  const toolLevel = player.gear[key] + 1;
+  const skillLevel = levelForXp(player.skills[tool.skill]);
+  if (toolLevel < profile.toolTier || skillLevel < profile.skill) {
+    const name = tool.tiers[profile.toolTier - 1].name;
+    throw new Error(`Deze ${profile.name.toLowerCase()} vraagt ${name} en ${tool.skillLabel} ${profile.skill}. Vereist gereedschapsniveau: ${profile.toolTier}.`);
+  }
+}
+
+const treeManifestCache = new WeakMap();
+function treeManifest(world) {
+  if (treeManifestCache.has(world)) return treeManifestCache.get(world);
+  const trees = {};
+  for (let y = 0; y < world.height; y += 1) {
+    for (let x = 0; x < world.width; x += 1) {
+      if (resourceAt(world, x, y) !== 'wood') continue;
+      const profile = nodeProfileAt(world, x, y);
+      const item = resources.getItem('wood', profile.id);
+      trees[`${x}:${y}`] = { x, y, name: profile.name, speciesId: profile.id, setId: item.setId,
+        requiredToolLevel: profile.toolTier, requiredSkillLevel: profile.skill };
+    }
+  }
+  treeManifestCache.set(world, trees);
+  return trees;
 }
 
 function nodeKey(kind, x, y) { return `${kind}:${x}:${y}`; }
@@ -415,6 +449,7 @@ function sanitizeSaved(saved) {
     setBonuses,
     skills,
     heaviestKg: Math.max(0, Number(saved?.heaviestKg) || 0),
+    worldVersion: Number(saved?.worldVersion) || 1,
     x: Number.isFinite(Number(saved?.x)) ? Math.round(Number(saved.x)) : null,
     y: Number.isFinite(Number(saved?.y)) ? Math.round(Number(saved.y)) : null,
     mode: saved?.mode === 'sea' ? 'sea' : 'land',
@@ -428,7 +463,7 @@ function sanitizeSaved(saved) {
 
 function weightedFish(list, player) {
   const buffMultiplier = hasBuff(player, 'lineStrength') ? 1.4 : 1;
-  const raretyMultiplier = BAIT_RARE_MULTIPLIER ** (player?.gear?.bait || 0) * buffMultiplier;
+  const raretyMultiplier = buffMultiplier;
   const weightFor = (fish) => {
     const base = RARITY_WEIGHT[fish.rarity] || 1;
     return fish.rarity === 'rare' || fish.rarity === 'epic' ? base * raretyMultiplier : base;
@@ -442,9 +477,9 @@ function weightedFish(list, player) {
   return list[list.length - 1];
 }
 
-function weightedItem(list) {
+function weightedItem(list, random = Math.random()) {
   const total = list.reduce((sum, item) => sum + (RARITY_WEIGHT[item.rarity] || 1), 0);
-  let roll = Math.random() * total;
+  let roll = random * total;
   for (const item of list) {
     roll -= RARITY_WEIGHT[item.rarity] || 1;
     if (roll <= 0) return item;
@@ -464,7 +499,7 @@ function preparePlayers(players, { db }) {
 function createGame(roomPlayers) {
   const world = getWorld();
   const players = roomPlayers.map((roomPlayer) => {
-    const saved = roomPlayer.dbcState ? sanitizeSaved(roomPlayer.dbcState) : null;
+    const saved = roomPlayer.dbcState ? migrateSavedWorld(sanitizeSaved(roomPlayer.dbcState)) : null;
     return {
       id: roomPlayer.id,
       name: roomPlayer.name,
@@ -521,6 +556,7 @@ function afterStateChange(room, { db }) {
     const roomPlayer = room.players.find((candidate) => candidate.id === player.id);
     if (!roomPlayer?.userId) continue;
     db.saveDeepBleuCPlayer(roomPlayer.userId, {
+      worldVersion: WORLD_VERSION,
       cash: player.cash,
       discovered: player.discovered,
       inventory: player.inventory,
@@ -581,6 +617,11 @@ function doCast(game, player, payload) {
   if (hexDistance(player.x, player.y, tx, ty) > 1) throw new Error('Dat water is te ver weg.');
   const biome = biomeAt(world, tx, ty);
   if (!isWater(world, tx, ty) || !biome) throw new Error('Daar kun je niet vissen.');
+  const available = fishForBiome(biome, dayPhaseFor(game) === 'night', player.gear.rod + 1);
+  if (!available?.length) {
+    const required = Math.min(...fishForBiome(biome, dayPhaseFor(game) === 'night').map((fish) => fish.requiredToolLevel));
+    throw new Error(`Vissen in dit water vraagt Hengel niveau ${required}.`);
+  }
   const now = Date.now();
   player.fishing = { phase: 'cast', biome, bitesAt: now + BITE_MIN_MS + Math.random() * (BITE_MAX_MS - BITE_MIN_MS) };
   game.log.unshift('Je werpt je lijn uit...');
@@ -593,7 +634,8 @@ function doHook(game, player) {
     player.fishing = null;
     throw new Error(fishing?.phase === 'cast' ? 'Nog geen beet, wacht even.' : 'Te laat! De vis is ontsnapt.');
   }
-  const species = fishForBiome(fishing.biome, dayPhaseFor(game) === 'night');
+  const species = fishForBiome(fishing.biome, dayPhaseFor(game) === 'night', player.gear.rod + 1);
+  if (!species?.length) { player.fishing = null; throw new Error('Je hengelniveau is te laag voor dit water.'); }
   const fish = weightedFish(species, player);
   const weightKg = rollWeight(fish);
   player.fishing = {
@@ -613,6 +655,7 @@ function doReel(game, player) {
     throw new Error('De lijn brak, de vis ontsnapte.');
   }
   const fish = getFish(fishing.speciesId);
+  if (fish.requiredToolLevel > player.gear.rod + 1) throw new Error(`Deze vis vraagt Hengel niveau ${fish.requiredToolLevel}.`);
   const isNew = !player.discovered.includes(fishing.speciesId);
   if (isNew) player.discovered.push(fishing.speciesId);
   if (fishing.weightKg > player.heaviestKg) player.heaviestKg = fishing.weightKg;
@@ -688,13 +731,7 @@ function doGatherStart(game, player, payload) {
   const depletedUntil = Number(player.personalNodes[key]?.depletedUntil) || 0;
   if (depletedUntil > Date.now()) throw new Error(`Deze persoonlijke bron herstelt over ${Math.ceil((depletedUntil - Date.now()) / 1000)} sec.`);
   const profile = nodeProfileAt(world, tx, ty);
-  if (profile) {
-    const toolTier = (player.gear.axe || 0) + 1;
-    const skillLevel = levelForXp(player.skills.woodcutting);
-    if (toolTier < profile.toolTier || skillLevel < profile.skill) {
-      throw new Error(`Deze ${profile.name.toLowerCase()} vraagt Bijl ${profile.toolTier === 2 ? 'II' : 'I'} en Kappen ${profile.skill}.`);
-    }
-  }
+  requireGatherLevel(player, kind, profile);
   const now = Date.now();
   player.gathering = { kind, x: tx, y: ty, nodeKey: key, profileId: profile?.id || null, phase: 'cast', bitesAt: now + BITE_MIN_MS + Math.random() * (BITE_MAX_MS - BITE_MIN_MS) };
   game.log.unshift(config.startLog);
@@ -709,10 +746,9 @@ function doGatherStrike(game, player) {
     const early = gathering?.phase === 'cast';
     throw new Error(early ? (config?.earlyMiss || 'Nog niet klaar.') : (config?.lateMiss || 'Te laat.'));
   }
-  const profile = gathering.profileId
-    ? Object.values(slice.nodes).find((node) => node.id === gathering.profileId)
-    : null;
-  const item = profile || weightedItem(resources.poolFor(gathering.kind));
+  const profile = nodeProfileAt(getWorld(), gathering.x, gathering.y);
+  requireGatherLevel(player, gathering.kind, profile);
+  const item = profile;
   const weightKg = rollWeight(item);
   player.gathering = {
     ...gathering,
@@ -735,6 +771,10 @@ function doGatherHaul(game, player) {
   const item = kind === 'kelp'
     ? slice.nodes.kelp
     : resources.getItem(kind, gathering.speciesId);
+  if (kind !== 'kelp') {
+    const special = Object.values(slice.nodes).find((node) => node.id === item.id);
+    requireGatherLevel(player, kind, special || { ...item, toolTier: item.requiredToolLevel, skill: 1 });
+  }
   if (kind === 'kelp') {
     const amount = Math.max(1, Math.round(gathering.weightKg));
     player.materials.kelpFiber += amount;
@@ -756,7 +796,7 @@ function doGatherHaul(game, player) {
     weightKg: gathering.weightKg,
     caughtAt: now
   });
-  player.personalNodes[gathering.nodeKey] = { depletedUntil: now + 45000, harvestCount: (player.personalNodes[gathering.nodeKey]?.harvestCount || 0) + 1 };
+  player.personalNodes[gathering.nodeKey] = { depletedUntil: now + 20000, harvestCount: (player.personalNodes[gathering.nodeKey]?.harvestCount || 0) + 1 };
   player.stats.energy = Math.max(0, player.stats.energy - ENERGY_COST_PER_ACTION);
   player.gathering = {
     ...gathering,
@@ -1029,7 +1069,9 @@ function doHuntStart(game, player, payload) {
   const ty = Math.round(Number(payload.y));
   if (hexDistance(player.x, player.y, tx, ty) > 1) throw new Error('Dat is te ver weg.');
   if (resourceAt(world, tx, ty) !== 'animal') throw new Error('Daar zit geen wild dier.');
-  const item = weightedItem(resources.poolFor('meat', { isNight: dayPhaseFor(game) === 'night' }));
+  const spot = wildlifeManifest(world).find((entry) => entry.x === tx && entry.y === ty);
+  const item = resources.getItem('meat', spot.speciesId);
+  if (item.nightOnly && dayPhaseFor(game) !== 'night') throw new Error(`${item.name} is alleen 's nachts bejaagbaar.`);
   player.combat = { speciesId: item.id, enemyHp: item.combat.hp, enemyMaxHp: item.combat.hp, log: [`Een ${item.name} valt aan!`] };
   game.log.unshift(`${player.name} begint een jacht op een ${item.name}.`);
 }
@@ -1255,7 +1297,7 @@ function tick(game, now = Date.now()) {
           game.log.unshift('Wierlicht ontdekt. De groene krans was geen weerspiegeling.');
         }
       }
-      player.nextStepAt = now + STEP_MS;
+      player.nextStepAt = now + STEP_MS - (player.mode === 'sea' ? Math.max(0, player.gear.boat - 4) * 10 : 0);
       changed = true;
     }
     const fishing = player.fishing;
@@ -1355,8 +1397,17 @@ function serializeGathering(gathering, now) {
   return null;
 }
 
-function serializeItemSets(kind, discoveredList) {
+function setAvailability(player, kind, set) {
+  const toolKey = { fish: 'rod', wood: 'axe', rock: 'pickaxe' }[kind];
+  if (!toolKey) return {};
+  const toolLevel = player.gear[toolKey] + 1;
+  return { requiredToolLevel: set.requiredToolLevel, toolLabel: slice.tools[toolKey].label,
+    toolLevel, unlocked: toolLevel >= set.requiredToolLevel };
+}
+
+function serializeItemSets(kind, discoveredList, player) {
   return resources.setsFor(kind).map((set) => ({
+    ...setAvailability(player, kind, set),
     id: set.id,
     name: set.name,
     icon: set.icon,
@@ -1365,7 +1416,8 @@ function serializeItemSets(kind, discoveredList) {
     caught: set.items.filter((item) => discoveredList.includes(item.id)).length,
     rewardGear: set.rewardGear,
     rewardGearLabel: GEAR_LABEL[set.rewardGear] || null,
-    items: set.items.map((item) => ({ ...item, discovered: discoveredList.includes(item.id) }))
+    items: set.items.map((item) => ({ ...item, discovered: discoveredList.includes(item.id),
+      ...(kind === 'wood' ? { requiredSkillLevel: Object.values(slice.nodes).find((node) => node.id === item.id)?.skill || 1 } : {}) }))
   }));
 }
 
@@ -1404,6 +1456,8 @@ function serializeToolUpgrade(player, category) {
     maxLevel: tool.tiers.length - 1,
     current,
     next,
+    unlockSets: next ? setsForKind({ rod: 'fish', axe: 'wood', pickaxe: 'rock' }[category])
+      .filter((set) => set.requiredToolLevel === next.tier).map((set) => set.name) : [],
     skillLabel: tool.skillLabel,
     skillLevel: levelForXp(player.skills[tool.skill]),
     hasWorkbench: hasStation(player, 'workbench'),
@@ -1443,7 +1497,7 @@ function serialize(game, requesterId) {
   return {
     kind: game.gameKey,
     gameOver: false,
-    world: { width: world.width, height: world.height, buildings: world.buildings, boats: world.boats, wildlife: world.wildlife },
+    world: { version: world.version, width: world.width, height: world.height, buildings: world.buildings, boats: world.boats, wildlife: world.wildlife },
     harbors: game.harbors,
     dayPhase: dayPhaseFor(game),
     players: game.players.map((p) => ({
@@ -1509,6 +1563,7 @@ function serialize(game, requesterId) {
       })),
       discovered: player.discovered,
       sets: SETS.map((set) => ({
+        ...setAvailability(player, 'fish', set),
         id: set.id,
         name: set.name,
         icon: set.icon,
@@ -1520,9 +1575,9 @@ function serialize(game, requesterId) {
         rewardGearLabel: GEAR_LABEL[set.rewardGear] || null,
         fish: set.fish.map((fish) => ({ ...fish, discovered: player.discovered.includes(fish.id) }))
       })),
-      woodSets: serializeItemSets('wood', player.woodDiscovered).map((set) => ({ ...set, bonusActive: Boolean(player.setBonuses[set.id]) })),
-      rockSets: serializeItemSets('rock', player.rockDiscovered).map((set) => ({ ...set, bonusActive: Boolean(player.setBonuses[set.id]) })),
-      meatSets: serializeItemSets('meat', player.meatDiscovered).map((set) => ({ ...set, bonusActive: Boolean(player.setBonuses[set.id]) })),
+      woodSets: serializeItemSets('wood', player.woodDiscovered, player).map((set) => ({ ...set, bonusActive: Boolean(player.setBonuses[set.id]) })),
+      rockSets: serializeItemSets('rock', player.rockDiscovered, player).map((set) => ({ ...set, bonusActive: Boolean(player.setBonuses[set.id]) })),
+      meatSets: serializeItemSets('meat', player.meatDiscovered, player).map((set) => ({ ...set, bonusActive: Boolean(player.setBonuses[set.id]) })),
       skills: Object.fromEntries(SKILL_KEYS.map((key) => {
         const xp = player.skills[key];
         const level = levelForXp(xp);
@@ -1561,19 +1616,36 @@ function serialize(game, requesterId) {
   };
 }
 
+const wildlifeManifestCache = new WeakMap();
+function wildlifeManifest(world) {
+  if (wildlifeManifestCache.has(world)) return wildlifeManifestCache.get(world);
+  const pool = resources.poolFor('meat');
+  const result = world.wildlife.map((spot, index) => {
+    const hash = (Math.imul(spot.x, 73856093) ^ Math.imul(spot.y, 19349663)) >>> 0;
+    // Keep the first starter encounter approachable; all other locations use
+    // the normal rarity weights, seeded so the preview matches the encounter.
+    const item = index === 0 ? resources.getItem('meat', 'konijn') : weightedItem(pool, hash / 4294967296);
+    return { ...spot, speciesId: item.id, name: item.name, setId: item.setId, nightOnly: item.nightOnly };
+  });
+  wildlifeManifestCache.set(world, result);
+  return result;
+}
+
 function configureHttp({ app }) {
   app.get('/api/deep-bleu-c/world', (_req, res) => {
     const world = getWorld();
-    res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
+    res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
     res.json({
       ok: true,
+      version: world.version,
       width: world.width,
       height: world.height,
       tiles: world.tileString,
       spawn: world.spawn,
       buildings: world.buildings,
       boats: world.boats,
-      wildlife: world.wildlife,
+      wildlife: wildlifeManifest(world),
+      trees: treeManifest(world),
       kelpIsland: world.kelpIsland
     });
   });

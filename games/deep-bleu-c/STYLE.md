@@ -43,7 +43,7 @@
 - Alle vaste menuacties (Inventaris, Marktplaats, Hall of Fame, Vaardigheden,
   Map) staan samen met de bootstatus in de compacte boat-base HUD rechtsboven;
   op mobiel vormt die HUD een compacte balk onderaan.
-- De bootbasis groepeert Hengel, Aas, Vaartuig, Bijl en Houweel met hun niveau,
+- De bootbasis toont de vaartuigupgrade direct onder de boot; Hengel, Bijl en Houweel hebben drie tabs met hun niveau (1-10),
   volgende upgrade en vereisten; Inventaris > Uitrusting bevat alleen kleding,
   wapens en schilden.
 - De bovenste HUD volgt twee duidelijke rijen in houten kaders: dag en geld,
@@ -58,13 +58,20 @@
 - Bootbasis is op mobiel de uitzondering: dit complexe beheerscherm gebruikt
   een vaste fullscreen sheet met een sticky sluitkop. Alleen de paneelinhoud
   scrollt; boot, stations, gereedschappen en creëren blijven aparte secties.
-- Gereedschappen gebruikt mobiel vijf kleine keuzetabs en toont slechts één
+- Gereedschappen gebruikt mobiel drie kleine keuzetabs en toont slechts één
   detailkaart tegelijk. De maakactie is compact en rechts uitgelijnd, nooit
   een overgrote schermbrede knop.
 - Houd alle belangrijke controls bereikbaar rond de rand van het scherm,
   zonder paginascroll op de kaart zelf.
 
 ## World and character style
+
+- Boten volgen tien geïllustreerde zijaanzichten: Vlot, Kano, Roeiboot,
+  Zeilboot, Kustboot, Langschip, Vrachtschip, Oorlogsschip, Drakkar en
+  Koningsschip. Gebruik dezelfde SVG per niveau in de wereld, HUD en Bootbasis.
+  Warm hout, crèmekleurig doek, gedempt groen en roestrode zeilstrepen;
+  hogere niveaus krijgen meer masten, roeispanen, schilden en boegversiering.
+  Bootbasisslots staan onder de illustratie zodat de romp en zeilen vrij blijven.
 
 - Top-down camera, licht "2.5D": de kaart blijft het bestaande gedeelde
   hex-coördinatensysteem (positie, camera, klikafhandeling ongewijzigd), maar
@@ -76,6 +83,15 @@
 - Terrein gebruikt per type drie nabije schildertonen: weide met grassprieten en
   bloemen, zand met fijne ribbels, gemengd loof-/naaldwoud, en gefacetteerde
   rotsen en sneeuwtoppen. De vormen blijven helder leesbaar op mobiel.
+- Bomen gebruiken een vast SVG-pictogram per houtset, gedeeld met Inventaris.
+  Geen cijferbadges op de kaart; niveaus staan bij de sets en in tooltips.
+  Vinkje, slot en zandloper tonen
+  respectievelijk kapbaar, te weinig bijlniveau/Kappen en bronherstel. Gebruik
+  dezelfde serververeisten voor status en tekst; eik behoudt Kappen 8.
+- Wildlife gebruikt vaste pictogrammen per set (kleinwild, grofwild,
+  nachtdieren) op de kaart en in Inventaris. Statusicoontjes blijven even klein
+  en gedempt als bij bomen, zonder cijfers. Een slotje volgt de werkelijke
+  jachtvoorwaarden, waaronder dag/nacht; het getoonde dier blijft vast per plek.
 - Kusten krijgen een lichte schuimrand. Water toont meerdere losse golfstreken;
   de vier dieptezones lopen van helder cyaan naar donker petrol, met sterker
   zichtbare glinstering en visscholen in open water.

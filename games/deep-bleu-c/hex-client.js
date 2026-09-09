@@ -19,6 +19,17 @@ export function hexToPixel(col, row, size) {
   };
 }
 
+// Keep odd/even row offsets anchored to the world, not the camera's row.
+// The camera moves on a rectangular pixel grid so vertical scrolling never
+// adds a half-hex horizontal shift to stationary terrain.
+export function hexToViewport(col, row, cameraCol, cameraRow, size) {
+  const point = hexToPixel(col, row, size);
+  return {
+    x: point.x - cameraCol * size * Math.sqrt(3),
+    y: point.y - cameraRow * size * 1.5
+  };
+}
+
 export function hexCorners(cx, cy, size) {
   const pts = [];
   for (let i = 0; i < 6; i += 1) {

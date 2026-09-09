@@ -190,6 +190,69 @@ test('buyIngredient weigert met te weinig geld', () => {
   assert.throws(() => bj.handleAction(game, 'p1', 'buyIngredient', { key: 'bloem' }), /geld/);
 });
 
+test('een recept kopen ontgrendelt het blijvend en maakt het bakbaar', () => {
+  const game = bj.createGame(players());
+  game.phase = 'supermarket';
+  game.day = 2;
+  game.money = 500;
+  assert.equal(game.unlockedRecipes.includes('brioche'), false);
+  bj.handleAction(game, 'p1', 'buyRecipe', { key: 'brioche' });
+  assert.equal(game.unlockedRecipes.includes('brioche'), true);
+  assert.equal(game.money, 415);
+  game.phase = 'prep';
+  bj.handleAction(game, 'p1', 'bake', { key: 'brioche' });
+  assert.equal(game.ovens[0].recipeKey, 'brioche');
+});
+
+test('een vergrendeld of te vroeg recept kan niet worden gebruikt of gekocht', () => {
+  const game = bj.createGame(players());
+  assert.throws(() => bj.handleAction(game, 'p1', 'bake', { key: 'muffin' }), /ontgrendeld/);
+  game.phase = 'supermarket';
+  game.money = 500;
+  assert.throws(() => bj.handleAction(game, 'p1', 'buyRecipe', { key: 'muffin' }), /dag 4/);
+});
+
+test('extra ovens en ovenupgrades vergroten de bakcapaciteit en batch', () => {
+  const game = bj.createGame(players());
+  game.phase = 'supermarket';
+  game.money = 500;
+  bj.handleAction(game, 'p1', 'buyEquipment', { key: 'extraOven' });
+  bj.handleAction(game, 'p1', 'buyEquipment', { key: 'ovenUpgrade' });
+  assert.equal(game.ovens.length, 4);
+  assert.equal(game.equipment.ovenLevel, 2);
+  game.phase = 'prep';
+  bj.handleAction(game, 'p1', 'bake', { key: 'stokbrood' });
+  assert.equal(game.ovens[0].endMin, 17);
+  bj.tick(game, game.lastTickAt + 2200);
+  assert.equal(game.shelf.stokbrood, 5);
+});
+
+test('een koelcel bewaart gekoelde producten tussen twee dagen', () => {
+  const game = bj.createGame(players());
+  game.phase = 'supermarket';
+  game.money = 500;
+  bj.handleAction(game, 'p1', 'buyEquipment', { key: 'cooling' });
+  game.shelf.taart = 5;
+  game.phase = 'dayEnd';
+  bj.handleAction(game, 'p1', 'nextDay');
+  assert.equal(game.shelf.taart, 4);
+  assert.equal(game.equipment.coolingLevel, 1);
+});
+
+test('een betere toonbank verhoogt wachtruimte en verkoopopbrengst', () => {
+  const game = bj.createGame(players());
+  game.phase = 'supermarket';
+  game.money = 500;
+  bj.handleAction(game, 'p1', 'buyEquipment', { key: 'counter' });
+  const afterPurchase = game.money;
+  game.phase = 'shop';
+  game.shelf.stokbrood = 2;
+  game.customerQueue = [{ id: 'c1', wants: { key: 'stokbrood', qty: 2 }, bornAt: game.clockMin, patience: 15 }];
+  bj.handleAction(game, 'p1', 'serveCustomer', { id: 'c1' });
+  assert.equal(game.equipment.counterLevel, 2);
+  assert.equal(game.money, afterPurchase + 2 * bj.RECIPES.stokbrood.prijs * 1.05);
+});
+
 test('de supermarkt sluit op tijd, verrekent vaste kosten en toont het dagoverzicht', () => {
   const game = bj.createGame(players());
   game.phase = 'supermarket';
@@ -201,20 +264,27 @@ test('de supermarkt sluit op tijd, verrekent vaste kosten en toont het dagoverzi
   assert.equal(game.paused, true);
   assert.equal(game.money, moneyBefore - bj.DAILY_COST);
   assert.equal(game.gameOver, false);
+  assert.equal(game.daysSurvived, 1);
 });
 
-test('failliet gaan aan het einde van de dag beëindigt het spel', () => {
+test('een onbetaalde dagkost schaadt reputatie en reputatie 0 beëindigt het spel', () => {
   const game = bj.createGame(players());
   game.phase = 'supermarket';
   game.clockMin = bj.SUPERMARKET_END - 1;
   game.money = 10;
+  game.reputation = 5;
+  game.orders = [];
+  game.event = null;
+  game.maxEventsToday = 0;
   bj.tick(game, game.lastTickAt + 300);
   assert.equal(game.gameOver, true);
-  assert.ok(game.resultText.includes('failliet'));
+  assert.equal(game.money, 0);
+  assert.equal(game.reputation, 0);
+  assert.ok(game.resultText.includes('reputatie'));
   const results = bj.results(game, 1000);
   assert.equal(results[0].placement, 1);
   assert.equal(results[0].won, false);
-  assert.equal(results[0].score, Math.round(game.money));
+  assert.equal(results[0].score, 0);
 });
 
 test('nextDay reset de dagstaat, telt de dag op en behoudt overgebleven voorraad', () => {
@@ -229,6 +299,40 @@ test('nextDay reset de dagstaat, telt de dag op en behoudt overgebleven voorraad
   assert.equal(game.shelf.stokbrood, 0);
   assert.equal(game.ingredients.bloem, 12);
   assert.equal(game.paused, false);
+  assert.ok(game.difficulty.customerPressure > 1);
+  assert.equal(game.daysSurvived, 0);
+});
+
+test('een incident pauzeert andere acties en de gekozen ingreep heeft gevolgen', () => {
+  const game = bj.createGame(players());
+  game.phase = 'shop';
+  game.paused = true;
+  game.pendingIncident = {
+    id: 'incident-1', type: 'klacht', title: 'Klacht', desc: 'Test', wasPaused: false,
+    choices: [{ id: 'terugbetalen', label: 'Betalen', detail: 'Test' }, { id: 'excuses', label: 'Excuses', detail: 'Test' }]
+  };
+  assert.throws(() => bj.handleAction(game, 'p1', 'togglePause'), /incident/);
+  const before = game.reputation;
+  bj.handleAction(game, 'p1', 'resolveIncident', { choiceId: 'excuses' });
+  assert.equal(game.pendingIncident, null);
+  assert.equal(game.paused, false);
+  assert.ok(game.reputation < before);
+});
+
+test('reputatie 0 tijdens een incident sluit de zaak meteen', () => {
+  const game = bj.createGame(players());
+  game.day = 7;
+  game.reputation = 2;
+  game.paused = true;
+  game.pendingIncident = {
+    id: 'incident-2', type: 'klacht', title: 'Klacht', desc: 'Test', wasPaused: false,
+    choices: [{ id: 'excuses', label: 'Excuses', detail: 'Test' }]
+  };
+  bj.handleAction(game, 'p1', 'resolveIncident', { choiceId: 'excuses' });
+  assert.equal(game.gameOver, true);
+  assert.equal(game.reputation, 0);
+  assert.equal(game.paused, true);
+  assert.match(game.resultText, /volledige dagen/);
 });
 
 test('nextDay weigert zolang de dag niet voorbij is', () => {
@@ -278,4 +382,11 @@ test('serialize geeft de fase en supermarktgegevens mee', () => {
   assert.equal(view.buyBatch, bj.BUY_BATCH);
   assert.equal(view.shopEnd, bj.SHOP_END);
   assert.equal(view.supermarketEnd, bj.SUPERMARKET_END);
+  assert.equal(view.daysSurvived, 0);
+  assert.equal(view.difficulty.level, 1);
+  assert.equal(view.dailyCost, bj.dailyCostFor(1));
+  assert.deepEqual(view.unlockedRecipes, game.unlockedRecipes);
+  assert.equal(view.equipment.ovenCount, 3);
+  assert.equal(view.equipmentShop.length, 4);
+  assert.equal(view.recipes.brioche.unlockDay, 2);
 });

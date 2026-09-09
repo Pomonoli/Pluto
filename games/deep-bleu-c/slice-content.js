@@ -15,16 +15,6 @@ const SLICE_CONTENT = {
         { tier: 5, name: 'Hengel V', requires: { softWoodKg: 60, cash: 1800, skill: 35, station: 'workbench' }, benefit: 'Het ruimste tijdvenster om aan te slaan.' }
       ]
     },
-    bait: {
-      label: 'Aas', icon: '🪱', skill: 'fishing', skillLabel: 'Vissen',
-      tiers: [
-        { tier: 1, name: 'Aas I', benefit: 'Eenvoudig aas voor gewone vangsten.' },
-        { tier: 2, name: 'Aas II', requires: { kelpFiber: 1, cash: 150, skill: 3, station: 'workbench' }, benefit: 'Trekt vaker zeldzame en epische vis aan.' },
-        { tier: 3, name: 'Aas III', requires: { kelpFiber: 3, cash: 400, skill: 8, station: 'workbench' }, benefit: 'Verhoogt de kans op bijzondere vis verder.' },
-        { tier: 4, name: 'Aas IV', requires: { kelpFiber: 6, cash: 900, skill: 18, station: 'workbench' }, benefit: 'Sterk wiermengsel voor zeldzame vangsten.' },
-        { tier: 5, name: 'Aas V', requires: { kelpFiber: 10, cash: 1800, skill: 35, station: 'workbench' }, benefit: 'De grootste kans op zeldzame en epische vis.' }
-      ]
-    },
     boat: {
       label: 'Vaartuig', icon: '⛵', skill: 'collecting', skillLabel: 'Verzamelen',
       tiers: [
@@ -86,13 +76,40 @@ const SLICE_CONTENT = {
   }
 };
 
+// Levels 6–10 extend the existing paths without changing saved tier indices.
+const UPPER_TIERS = ['VI', 'VII', 'VIII', 'IX', 'X'];
+for (const [key, tool] of Object.entries(SLICE_CONTENT.tools)) {
+  for (let index = 0; index < UPPER_TIERS.length; index += 1) {
+    const tier = index + 6;
+    const previous = tool.tiers[tool.tiers.length - 1];
+    tool.tiers.push({
+      ...previous, tier,
+      name: key === 'boat' ? 'Langschip ' + UPPER_TIERS[index] : tool.label + ' ' + UPPER_TIERS[index],
+      requires: {
+        ...previous.requires,
+        cash: [3000, 4800, 7200, 10500, 15000][index],
+        skill: [60, 68, 76, 84, 92][index],
+        [key === 'pickaxe' ? 'rockKg' : 'softWoodKg']: Math.ceil(tool.tiers[4].requires[key === 'pickaxe' ? 'rockKg' : 'softWoodKg'] * (1.5 + index * 0.5))
+      },
+      benefit: key === 'boat' ? 'Vaart op alle zeeën en reist sneller dan het vorige niveau.'
+        : 'Geeft nog meer tijd om ' + (key === 'rod' ? 'bij een beet aan te slaan.' : key === 'axe' ? 'raak te hakken.' : 'raak te houwen.')
+    });
+  }
+}
+
+// Hull names and artwork follow the visual progression; saved levels and
+// upgrade requirements stay unchanged.
+const { BOAT_DESIGNS } = require('./boat-designs');
+SLICE_CONTENT.tools.boat.tiers.forEach((tier, index) => Object.assign(tier, BOAT_DESIGNS[index]));
+Object.assign(SLICE_CONTENT.boat, BOAT_DESIGNS[0]);
+
 function validateSliceContent(content = SLICE_CONTENT) {
   const fail = (message) => { throw new Error(`Ongeldige Big Blue C-content: ${message}`); };
   const stationIds = new Set(Object.values(content.stations || {}).map((station) => station.id));
-  const toolKeys = ['rod', 'bait', 'boat', 'axe', 'pickaxe'];
+  const toolKeys = ['rod', 'boat', 'axe', 'pickaxe'];
   for (const key of toolKeys) {
     const tool = content?.tools?.[key];
-    if (!tool?.label || !tool.icon || !tool.skill || !tool.skillLabel || !Array.isArray(tool.tiers) || tool.tiers.length !== 5) fail(`ongeldig gereedschap ${key}.`);
+    if (!tool?.label || !tool.icon || !tool.skill || !tool.skillLabel || !Array.isArray(tool.tiers) || tool.tiers.length !== 10) fail(`ongeldig gereedschap ${key}.`);
     if (tool.tiers.some((tier, index) => tier.tier !== index + 1 || !tier.name || !tier.benefit)) fail(`ongeldig upgradepad ${key}.`);
     for (const tier of tool.tiers.slice(1)) {
       const requirements = tier.requires;

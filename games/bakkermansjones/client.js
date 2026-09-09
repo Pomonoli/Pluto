@@ -1,11 +1,20 @@
-const RECIPE_ORDER = ['stokbrood', 'pistolet', 'croissant', 'koffiekoek', 'taart'];
+const RECIPE_ORDER = ['stokbrood', 'pistolet', 'croissant', 'koffiekoek', 'taart', 'brioche', 'muffin', 'slagroomtaart'];
 
 const ICONS = {
   stokbrood: `<svg viewBox="0 0 100 100"><rect x="10" y="40" width="80" height="22" rx="11" fill="#F5B942" stroke="#3A2417" stroke-width="6"/><line x1="28" y1="40" x2="22" y2="62" stroke="#3A2417" stroke-width="5"/><line x1="46" y1="40" x2="40" y2="62" stroke="#3A2417" stroke-width="5"/><line x1="64" y1="40" x2="58" y2="62" stroke="#3A2417" stroke-width="5"/></svg>`,
   pistolet: `<svg viewBox="0 0 100 100"><circle cx="50" cy="52" r="30" fill="#F5B942" stroke="#3A2417" stroke-width="6"/><line x1="38" y1="40" x2="62" y2="64" stroke="#3A2417" stroke-width="5"/><line x1="62" y1="40" x2="38" y2="64" stroke="#3A2417" stroke-width="5"/></svg>`,
   croissant: `<svg viewBox="0 0 100 100"><path d="M14 58C22 30 46 20 70 26c14 3 20 14 16 22-10-6-20-4-26 4-8-10-20-11-30-4-6 4-10 8-16 10z" fill="#F5B942" stroke="#3A2417" stroke-width="6" stroke-linejoin="round"/></svg>`,
   koffiekoek: `<svg viewBox="0 0 100 100"><circle cx="50" cy="54" r="30" fill="#E8B87C" stroke="#3A2417" stroke-width="6"/><path d="M50 34c11 0 18 8 18 18s-9 16-16 12" fill="none" stroke="#3A2417" stroke-width="4" stroke-linecap="round"/><path d="M28 66c6 6 10-6 16 0" fill="none" stroke="#E14B3C" stroke-width="4" stroke-linecap="round"/></svg>`,
-  taart: `<svg viewBox="0 0 100 100"><rect x="18" y="52" width="64" height="32" rx="6" fill="#8B5A34" stroke="#3A2417" stroke-width="6"/><path d="M18 52c0-11 9-18 32-18s32 7 32 18" fill="#FBF0DC" stroke="#3A2417" stroke-width="6"/><path d="M22 50c7-9 13 7 20-2s13 9 20-1s13 6 18-2" fill="none" stroke="#E14B3C" stroke-width="4"/><circle cx="50" cy="30" r="6" fill="#E14B3C" stroke="#3A2417" stroke-width="4"/></svg>`
+  taart: `<svg viewBox="0 0 100 100"><rect x="18" y="52" width="64" height="32" rx="6" fill="#8B5A34" stroke="#3A2417" stroke-width="6"/><path d="M18 52c0-11 9-18 32-18s32 7 32 18" fill="#FBF0DC" stroke="#3A2417" stroke-width="6"/><path d="M22 50c7-9 13 7 20-2s13 9 20-1s13 6 18-2" fill="none" stroke="#E14B3C" stroke-width="4"/><circle cx="50" cy="30" r="6" fill="#E14B3C" stroke="#3A2417" stroke-width="4"/></svg>`,
+  brioche: `<svg viewBox="0 0 100 100"><path d="M18 65c0-15 10-25 23-25 4-12 22-12 27 0 10 2 16 11 16 25 0 12-9 19-21 19H38c-12 0-20-7-20-19z" fill="#F5B942" stroke="#3A2417" stroke-width="6"/><path d="M41 41v42M67 42l-4 41" fill="none" stroke="#3A2417" stroke-width="4"/></svg>`,
+  muffin: `<svg viewBox="0 0 100 100"><path d="M27 46h46l-6 37H33z" fill="#E14B3C" stroke="#3A2417" stroke-width="6"/><path d="M24 47c0-17 12-29 26-29s26 12 26 29z" fill="#F5B942" stroke="#3A2417" stroke-width="6"/><circle cx="42" cy="35" r="4" fill="#8B5A34"/><circle cx="59" cy="30" r="4" fill="#8B5A34"/></svg>`,
+  slagroomtaart: `<svg viewBox="0 0 100 100"><rect x="15" y="48" width="70" height="36" rx="7" fill="#F7D7D2" stroke="#3A2417" stroke-width="6"/><path d="M16 50c5-18 18-25 34-25s29 7 34 25" fill="#FFF8EA" stroke="#3A2417" stroke-width="6"/><circle cx="35" cy="27" r="6" fill="#E14B3C" stroke="#3A2417" stroke-width="3"/><circle cx="65" cy="27" r="6" fill="#E14B3C" stroke="#3A2417" stroke-width="3"/></svg>`
+};
+const EQUIPMENT_ICONS = {
+  extraOven: `<svg viewBox="0 0 100 100"><rect x="14" y="10" width="72" height="80" rx="10" fill="#E14B3C" stroke="#3A2417" stroke-width="6"/><circle cx="50" cy="57" r="23" fill="#2B1A10" stroke="#3A2417" stroke-width="6"/><circle cx="33" cy="25" r="5" fill="#F5B942"/><circle cx="50" cy="25" r="5" fill="#F5B942"/></svg>`,
+  ovenUpgrade: `<svg viewBox="0 0 100 100"><path d="M50 8 62 34 90 38 70 58 75 87 50 73 25 87 30 58 10 38 38 34z" fill="#F5B942" stroke="#3A2417" stroke-width="6" stroke-linejoin="round"/></svg>`,
+  cooling: `<svg viewBox="0 0 100 100"><rect x="20" y="8" width="60" height="84" rx="8" fill="#DCEFF0" stroke="#3A2417" stroke-width="6"/><path d="M20 42h60M68 23v9M68 55v12" stroke="#3A2417" stroke-width="6" stroke-linecap="round"/><path d="m39 54 22 22M61 54 39 76M50 49v32" stroke="#2E9E8C" stroke-width="4"/></svg>`,
+  counter: `<svg viewBox="0 0 100 100"><path d="M12 35h76v18H12zM20 53h60v36H20z" fill="#C9915B" stroke="#3A2417" stroke-width="6"/><path d="M31 64h38" stroke="#FBF0DC" stroke-width="5"/></svg>`
 };
 const WARN_SVG = `<svg viewBox="0 0 100 100"><path d="M50 8 92 84H8Z" fill="#3A2417"/><path d="M50 18 84 78H16Z" fill="#fff"/><rect x="45" y="38" width="10" height="24" rx="4" fill="#3A2417"/><circle cx="50" cy="70" r="5.5" fill="#3A2417"/></svg>`;
 
@@ -72,6 +81,22 @@ function fmtClock(min) {
 }
 function clampNum(v, a, b) { return Math.max(a, Math.min(b, v)); }
 
+function normalizeGameView(game) {
+  const day = Number(game.day || 1);
+  if (!game.difficulty) {
+    game.difficulty = {
+      level: day,
+      label: day < 3 ? 'Rustig' : day < 6 ? 'Druk' : day < 9 ? 'Heftig' : 'Meedogenloos'
+    };
+  }
+  if (!Array.isArray(game.unlockedRecipes)) {
+    game.unlockedRecipes = RECIPE_ORDER.filter((key) => Boolean(game.recipes?.[key]));
+  }
+  if (!game.equipment) game.equipment = { ovenLevel: 1, coolingLevel: 0, counterLevel: 1, ovenCount: game.ovens?.length || 3 };
+  if (!Array.isArray(game.equipmentShop)) game.equipmentShop = [];
+  if (!Number.isFinite(game.daysSurvived)) game.daysSurvived = Math.max(0, day - 1);
+}
+
 function svgSpan(E, className, markup) {
   const span = E('span', className);
   span.innerHTML = markup;
@@ -79,6 +104,7 @@ function svgSpan(E, className, markup) {
 }
 
 export function render({ game, els, E, action, titlebar, sound }) {
+  normalizeGameView(game);
   const status = game.gameOver
     ? (game.resultText || 'Bakkermans Jones is gesloten.')
     : `Dag ${game.day} · ${fmtClock(game.clockMin)} · ${PHASE_LABEL[game.phase] || ''}`;
@@ -95,6 +121,9 @@ export function render({ game, els, E, action, titlebar, sound }) {
 function renderTopbar({ game, E, action }) {
   const bar = E('div', 'bj-topbar');
   bar.append(E('span', 'bj-daylabel', `Dag ${game.day}`));
+  const pressure = E('span', 'bj-pressure', `Drukniveau ${game.difficulty.level} · ${game.difficulty.label}`);
+  pressure.title = `Klanten worden talrijker en ongeduldiger. Dagkosten: €${fmtMoney(game.dailyCost)}.`;
+  bar.append(pressure);
 
   const clockBlock = E('div', 'bj-clockblock');
   clockBlock.append(E('span', 'bj-clock tabular', fmtClock(game.clockMin)));
@@ -105,7 +134,7 @@ function renderTopbar({ game, E, action }) {
   const controls = E('div', 'bj-controls');
   const pauseBtn = E('button', 'bj-btn bj-ghost bj-round', game.paused ? '▶' : '⏸');
   pauseBtn.type = 'button';
-  pauseBtn.disabled = game.gameOver || promptPhase;
+  pauseBtn.disabled = game.gameOver || promptPhase || Boolean(game.pendingIncident);
   pauseBtn.onclick = () => action('togglePause');
   controls.append(pauseBtn);
 
@@ -113,7 +142,7 @@ function renderTopbar({ game, E, action }) {
   [1, 2, 4].forEach((n) => {
     const btn = E('button', `bj-speedbtn ${game.speed === n ? 'active' : ''}`, `${n}×`);
     btn.type = 'button';
-    btn.disabled = game.gameOver;
+    btn.disabled = game.gameOver || Boolean(game.pendingIncident);
     btn.onclick = () => action('setSpeed', { value: n });
     speedGroup.append(btn);
   });
@@ -156,6 +185,8 @@ function renderKoelingAlert({ game, E, action }) {
 }
 
 function renderPhaseBody({ game, E, action, sound }) {
+  if (game.gameOver) return renderGameOverPopup({ game, E });
+  if (game.pendingIncident) return renderIncidentPopup({ game, E, action });
   if (game.phase === 'shopPrompt') return renderShopPromptPopup({ game, E, action });
   if (game.phase === 'shop') return renderShopScreen({ game, E, action, sound });
   if (game.phase === 'closePrompt') return renderClosePromptPopup({ game, E, action });
@@ -205,7 +236,7 @@ function renderShopScene({ game, E }) {
   const room = scene(E, 'shop');
 
   const shelf = E('div', 'bj-scene-back-shelf');
-  RECIPE_ORDER.forEach((key) => shelf.append(svgSpan(E, 'bj-scene-shelf-item', ICONS[key] || '')));
+  RECIPE_ORDER.filter((key) => game.unlockedRecipes.includes(key)).forEach((key) => shelf.append(svgSpan(E, 'bj-scene-shelf-item', ICONS[key] || '')));
   room.append(shelf);
 
   room.append(E('div', 'bj-scene-door'));
@@ -271,7 +302,7 @@ function renderRecipePanel({ game, E, action }) {
   const panel = E('div', 'bj-panel');
   panel.append(E('h2', '', 'Recepten'));
   const list = E('div', 'bj-recipe-list');
-  RECIPE_ORDER.forEach((key) => {
+  RECIPE_ORDER.filter((key) => game.unlockedRecipes.includes(key)).forEach((key) => {
     const r = game.recipes[key];
     const hasOven = game.ovens.some((o) => o === null);
     const hasIng = Object.entries(r.kost).every(([ing, amt]) => (game.ingredients[ing] || 0) >= amt);
@@ -312,7 +343,7 @@ function renderCustomerPanel({ game, E, action, sound }) {
   const panel = E('div', 'bj-panel');
   panel.append(E('h2', '', 'Op de plank'));
   const strip = E('div', 'bj-ing-strip');
-  RECIPE_ORDER.forEach((key) => {
+  RECIPE_ORDER.filter((key) => game.unlockedRecipes.includes(key)).forEach((key) => {
     const chip = E('div', 'bj-ing-chip');
     chip.append(svgSpan(E, 'bj-icon-small', ICONS[key] || ''), E('span', 'tabular', String(game.shelf[key] || 0)));
     strip.append(chip);
@@ -408,9 +439,29 @@ function renderOrdersPanel({ game, E, action, sound }) {
 function renderSupermarketScreen({ game, E, action }) {
   const wrap = E('div', 'bj-phase-wrap');
   wrap.append(renderStorageScene({ game, E }));
-  const panel = E('div', 'bj-panel bj-market-panel');
-  panel.append(E('h2', '', 'Supermarkt'));
-  panel.append(E('p', 'bj-muted', `Koop ingrediënten voor morgen — sluit om ${fmtClock(game.supermarketEnd)}.`));
+  const intro = E('div', 'bj-market-intro');
+  intro.append(
+    E('div', 'bj-kicker', 'Supermarkt'),
+    E('h2', '', 'Investeer in morgen'),
+    E('p', 'bj-muted', `Ingrediënten, blijvende upgrades en nieuwe recepten — sluit om ${fmtClock(game.supermarketEnd)}.`)
+  );
+  wrap.append(intro);
+  wrap.append(renderIngredientMarket({ game, E, action }));
+  wrap.append(renderEquipmentMarket({ game, E, action }));
+  wrap.append(renderRecipeMarket({ game, E, action }));
+  return wrap;
+}
+
+function marketSection(E, kicker, title, copy) {
+  const panel = E('section', 'bj-panel bj-market-panel');
+  panel.append(E('div', 'bj-market-heading'));
+  panel.firstChild.append(E('div', 'bj-kicker', kicker), E('h2', '', title));
+  panel.append(E('p', 'bj-muted', copy));
+  return panel;
+}
+
+function renderIngredientMarket({ game, E, action }) {
+  const panel = marketSection(E, 'Dagelijkse voorraad', 'Ingrediënten', 'Vul je voorraad aan voor de volgende bakdag.');
   const grid = E('div', 'bj-market-grid');
   Object.entries(game.ingredientMeta).forEach(([key, label]) => {
     const price = game.ingredientPrices[key];
@@ -432,8 +483,58 @@ function renderSupermarketScreen({ game, E, action }) {
     grid.append(card);
   });
   panel.append(grid);
-  wrap.append(panel);
-  return wrap;
+  return panel;
+}
+
+function renderEquipmentMarket({ game, E, action }) {
+  const panel = marketSection(E, 'Blijvende verbeteringen', 'Bakkerij & materiaal', 'Investeer slim: alle upgrades blijven behouden tijdens deze survival-run.');
+  const grid = E('div', 'bj-upgrade-grid');
+  game.equipmentShop.forEach((offer) => {
+    const maxed = offer.level >= offer.maxLevel;
+    const card = E('div', `bj-upgrade-card${maxed ? ' is-maxed' : ''}`);
+    card.append(svgSpan(E, 'bj-upgrade-icon', EQUIPMENT_ICONS[offer.key] || ''));
+    const info = E('div', 'bj-upgrade-info');
+    info.append(
+      E('div', 'bj-upgrade-title', offer.name),
+      E('div', 'bj-level-dots', Array.from({ length: offer.maxLevel }, (_, i) => i < offer.level ? '●' : '○').join(' ')),
+      E('p', '', offer.description)
+    );
+    card.append(info);
+    const label = maxed ? 'Maximum bereikt' : `Verbeter · €${fmtMoney(offer.cost)}`;
+    const btn = E('button', 'bj-btn bj-small', label);
+    btn.type = 'button';
+    btn.disabled = maxed || game.money < offer.cost;
+    btn.onclick = () => action('buyEquipment', { key: offer.key });
+    card.append(btn);
+    grid.append(card);
+  });
+  panel.append(grid);
+  return panel;
+}
+
+function renderRecipeMarket({ game, E, action }) {
+  const panel = marketSection(E, 'Nieuwe mogelijkheden', 'Receptenboek', 'Ontgrendel winstgevendere gerechten en bouw je assortiment uit. Een nieuw recept geeft ook +3 reputatie.');
+  const grid = E('div', 'bj-recipe-market-grid');
+  RECIPE_ORDER.filter((key) => game.recipes[key]?.unlockPrice).forEach((key) => {
+    const recipe = game.recipes[key];
+    const owned = game.unlockedRecipes.includes(key);
+    const dayLocked = game.day < recipe.unlockDay;
+    const card = E('div', `bj-recipe-shop-card${owned ? ' is-owned' : ''}${dayLocked ? ' is-locked' : ''}`);
+    card.append(svgSpan(E, 'bj-upgrade-icon', ICONS[key] || ''));
+    card.append(
+      E('div', 'bj-upgrade-title', recipe.naam),
+      E('div', 'bj-recipe-yield', `${recipe.batch}× per bakbeurt · €${fmtMoney(recipe.prijs)}/stuk`),
+      E('div', 'bj-recipe-unlock', owned ? 'Ontgrendeld' : dayLocked ? `Beschikbaar vanaf dag ${recipe.unlockDay}` : `Nieuw recept · €${fmtMoney(recipe.unlockPrice)}`)
+    );
+    const btn = E('button', 'bj-btn bj-primary bj-small', owned ? 'Gekocht' : dayLocked ? `Dag ${recipe.unlockDay}` : 'Recept kopen');
+    btn.type = 'button';
+    btn.disabled = owned || dayLocked || game.money < recipe.unlockPrice;
+    btn.onclick = () => action('buyRecipe', { key });
+    card.append(btn);
+    grid.append(card);
+  });
+  panel.append(grid);
+  return panel;
 }
 
 /* ---------------- pop-ups ---------------- */
@@ -443,6 +544,38 @@ function popupCard(E, className) {
   const card = E('div', `bj-popup-card ${className || ''}`);
   overlay.append(card);
   return { overlay, card };
+}
+
+function renderIncidentPopup({ game, E, action }) {
+  const incident = game.pendingIncident;
+  const { overlay, card } = popupCard(E, 'bj-incident');
+  card.append(svgSpan(E, 'bj-incident-icon', WARN_SVG));
+  card.append(E('div', 'bj-kicker', 'Ingrijpen nodig'));
+  card.append(E('h3', '', incident.title), E('p', '', incident.desc));
+  const choices = E('div', 'bj-incident-choices');
+  incident.choices.forEach((choice) => {
+    const btn = E('button', 'bj-choice-btn');
+    btn.type = 'button';
+    btn.append(E('strong', '', choice.label), E('span', '', choice.detail));
+    btn.onclick = () => action('resolveIncident', { choiceId: choice.id });
+    choices.append(btn);
+  });
+  card.append(choices);
+  return overlay;
+}
+
+function renderGameOverPopup({ game, E }) {
+  const { overlay, card } = popupCard(E, 'bj-dayend bj-gameover');
+  card.append(renderHomeScene(E));
+  card.append(
+    E('div', 'bj-kicker', 'Zaak gesloten'),
+    E('h3', '', 'Reputatie 0'),
+    E('p', '', game.resultText || `Je overleefde ${game.daysSurvived} volledige dagen.`)
+  );
+  const row = E('div', 'bj-modal-row');
+  row.append(E('span', '', 'Volledige dagen overleefd'), E('span', 'tabular', String(game.daysSurvived)));
+  card.append(row);
+  return overlay;
 }
 
 function renderShopPromptPopup({ game, E, action }) {
@@ -470,13 +603,6 @@ function renderClosePromptPopup({ game, E, action }) {
 function renderDayEndPopup({ game, E, action }) {
   const { overlay, card } = popupCard(E, 'bj-dayend');
   card.append(renderHomeScene(E));
-  if (game.gameOver) {
-    card.append(
-      E('h3', '', 'Failliet…'),
-      E('p', '', `Bakkermans Jones moet helaas de deuren sluiten. Eindstand: €${fmtMoney(game.money)} op dag ${game.day}.`)
-    );
-    return overlay;
-  }
   card.append(E('h3', '', `Dag ${game.day} afgesloten`));
   const rows = [
     ['Omzet klanten', `+€${fmtMoney(game.stats.revenueToday)}`],
@@ -499,7 +625,7 @@ function renderDayEndPopup({ game, E, action }) {
 }
 
 export function metric({ game }) {
-  return { text: `€${fmtMoney(game.money)} · dag ${game.day}`, score: Math.round(game.money) };
+  return { text: `${game.daysSurvived} dagen · rep ${Math.round(game.reputation)}`, score: game.daysSurvived };
 }
 
 export function isWinner() { return false; }
@@ -508,6 +634,6 @@ export function presentResult({ room, game }) {
   const me = room.players.find((p) => p.id === room.meId);
   return {
     title: me?.name || 'Bakkermans Jones',
-    copy: game.resultText || `Failliet na dag ${game.day}.`
+    copy: game.resultText || `${game.daysSurvived} dagen overleefd.`
   };
 }
