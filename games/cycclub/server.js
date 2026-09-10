@@ -444,7 +444,43 @@ function describeShopEffects(shop){
     medical:shop.medical?`-${injuryReduction} races uitvaltijd · ${crashChancePct}% valkans · ${illnessChancePct}% ziektekans`:'Geen bonus'
   };
 }
-function defaultCareer(){return {victories:0,podiums:0,monumentsWon:0,grandToursWon:0,stageRacesWon:0,gtStagesWon:0,prizeMoney:0,racesEntered:0}}
+const JERSEY_KEYS = ['gc','green','polka','youth','team'];
+function defaultJerseys(){return Object.fromEntries(JERSEY_KEYS.map((key) => [key,0]))}
+function defaultCareer(){return {victories:0,podiums:0,monumentsWon:0,grandToursWon:0,stageRacesWon:0,gtStagesWon:0,prizeMoney:0,racesEntered:0,raceWins:{},jerseys:defaultJerseys()}}
+
+// Erelijst per koers: één teller per koers-id, zodat het clubleaderboard kan tonen
+// wie welke koers hoe vaak won. Meerdaagse koersen tellen op de eindwinnaar.
+function recordRaceWin(career,raceId){
+  if(!raceId)return;
+  if(!career.raceWins||typeof career.raceWins!=='object')career.raceWins={};
+  career.raceWins[raceId]=(Number(career.raceWins[raceId])||0)+1;
+}
+
+function recordJersey(career,jerseyKey){
+  if(!JERSEY_KEYS.includes(jerseyKey))return;
+  if(!career.jerseys||typeof career.jerseys!=='object')career.jerseys=defaultJerseys();
+  career.jerseys[jerseyKey]=(Number(career.jerseys[jerseyKey])||0)+1;
+}
+
+// Oude opslag kent raceWins/jerseys nog niet, en een handmatig aangepaste save mag
+// de erelijst niet kunnen breken: alles wordt hier naar getallen teruggebracht.
+function sanitizeCareer(saved){
+  const career={...defaultCareer(),...(saved||{})};
+  const rawWins=saved?.raceWins;
+  career.raceWins={};
+  if(rawWins&&typeof rawWins==='object'){
+    for(const [raceId,count] of Object.entries(rawWins)){
+      const wins=Math.max(0,Math.floor(Number(count)||0));
+      if(wins)career.raceWins[String(raceId)]=wins;
+    }
+  }
+  const rawJerseys=saved?.jerseys;
+  career.jerseys=defaultJerseys();
+  if(rawJerseys&&typeof rawJerseys==='object'){
+    for(const key of JERSEY_KEYS)career.jerseys[key]=Math.max(0,Math.floor(Number(rawJerseys[key])||0));
+  }
+  return career;
+}
 
 function sanitizeRider(rider){
   const catalog=RIDER_BY_ID.get(String(rider?.id))||RIDER_CATALOG.find((entry) => entry.name===rider?.name);
@@ -467,7 +503,7 @@ function hydrateTeam(saved){
     wallet:Math.max(0,Number(saved?.wallet??STARTING_WALLET)),
     riders,
     shop:{...defaultShop(),...(saved?.shop||{})},
-    career:{...defaultCareer(),...(saved?.career||{})},
+    career:sanitizeCareer(saved?.career),
     raceCount:Math.max(0,Number(saved?.raceCount)||0)
   };
 }
@@ -797,6 +833,7 @@ function finalizeStandaloneRace(game,race,catalogRace,finishers,dnfs){
     if(best&&best.place===1){
       player.team.career.victories+=1;
       if(catalogRace.category==='monument')player.team.career.monumentsWon+=1;
+      recordRaceWin(player.team.career,race.raceId);
     }
     if(best&&best.place<=3)player.team.career.podiums+=1;
     if((race.lineups[player.id]||[]).length)player.team.career.racesEntered+=1;
@@ -916,9 +953,22 @@ function finalizeGrandTourStage(game,race,catalogRace,finishers,dnfs){
   game.race=null;
 }
 
+// Kent de vijf truien toe aan wie elk klassement wint. Renners uit het NPC-veld
+// horen bij geen enkele speler, dus die leveren geen trui op.
+function awardJerseys(game,classifications){
+  const byId=new Map(game.players.map((player) => [player.id,player]));
+  for(const key of JERSEY_KEYS){
+    const winner=(classifications[key]||[]).find((entry) => entry.place===1);
+    const player=winner&&byId.get(winner.playerId);
+    if(player)recordJersey(player.team.career,key);
+  }
+}
+
 function finalizeGrandTourOverall(game,tour){
   const gcEntries=Object.values(game.grandTour.gc).sort((a,b) => a.timeAccumulated-b.timeAccumulated);
   gcEntries.forEach((entry,index) => {entry.gcPlace=index+1});
+  const classifications=classificationStandings(game.grandTour.gc);
+  awardJerseys(game,classifications);
 
   const payouts=[];
   for(const player of game.players){
@@ -936,6 +986,7 @@ function finalizeGrandTourOverall(game,tour){
       player.team.career.victories+=1;
       if(tour.category==='grand_tour')player.team.career.grandToursWon+=1;
       else player.team.career.stageRacesWon+=1;
+      recordRaceWin(player.team.career,tour.id);
     }
     if(best&&best.gcPlace<=3)player.team.career.podiums+=1;
     if(gcEntries.some((entry) => entry.playerId===player.id))player.team.career.racesEntered+=1;
@@ -946,7 +997,7 @@ function finalizeGrandTourOverall(game,tour){
     type:'grand_tour_final', tourId:tour.id, raceName:tour.name, totalStages:tour.stages,
     stages:game.grandTour.stageLog,
     gc:gcEntries.slice(0,10).map((entry) => ({place:entry.gcPlace, playerId:entry.playerId, playerName:entry.playerName, riderId:entry.riderId, riderName:entry.riderName, stageWins:entry.stageWins})),
-    classifications:classificationStandings(game.grandTour.gc),
+    classifications,
     payouts
   };
 
@@ -1188,6 +1239,8 @@ function serialize(game,requesterId,connected){
     race:game.race?serializeRace(game,requesterId,catalogRace):null,
     grandTour:game.grandTour?serializeGrandTour(game):null,
     lastResult:game.lastResult,
+    honours:game.phase==='club'?buildHonours(game):null,
+    jerseyKeys:JERSEY_KEYS,
     log:game.log.slice(0,20),
     myScoutMarket:(game.scoutMarkets[requesterId]||[]).map(serializeRider),
     players:game.players.map((player) => ({
@@ -1253,6 +1306,50 @@ function serializeRider(rider){
   };
 }
 
+// De erelijst leest alle opgeslagen ploegen, dus die db-verwijzing wordt hier
+// eenmalig bij het opstarten vastgelegd (zie server.js: game.configure).
+let database=null;
+let honoursCache=null;
+const HONOURS_CACHE_MS=2000;
+
+function configure({db}){database=db||null}
+function invalidateHonours(){honoursCache=null}
+
+function persistedHonours(){
+  if(!database?.cycclubRaceRecords)return [];
+  if(honoursCache&&Date.now()-honoursCache.at<HONOURS_CACHE_MS)return honoursCache.rows;
+  let rows=[];
+  try{rows=database.cycclubRaceRecords()}catch{rows=[]}
+  honoursCache={at:Date.now(), rows};
+  return rows;
+}
+
+// Combineert de opgeslagen erelijsten met de spelers in deze room. Spelers zonder
+// account staan niet in de database, en wie nu meespeelt heeft de verste stand —
+// die overschrijft dus de opgeslagen rij met dezelfde naam.
+function buildHonours(game){
+  const byName=new Map();
+  for(const row of persistedHonours()){
+    byName.set(row.username,{name:row.username, raceWins:{...row.raceWins}, jerseys:{...row.jerseys}, inRoom:false});
+  }
+  for(const player of game.players){
+    const career=player.team.career;
+    byName.set(player.name,{
+      name:player.name,
+      raceWins:{...(career.raceWins||{})},
+      jerseys:{...defaultJerseys(),...(career.jerseys||{})},
+      inRoom:true
+    });
+  }
+  return [...byName.values()]
+    .map((entry) => ({
+      ...entry,
+      totalWins:Object.values(entry.raceWins).reduce((sum,count) => sum+count,0),
+      totalJerseys:JERSEY_KEYS.reduce((sum,key) => sum+(entry.jerseys[key]||0),0)
+    }))
+    .sort((a,b) => b.totalWins-a.totalWins||b.totalJerseys-a.totalJerseys||a.name.localeCompare(b.name,'nl-BE',{sensitivity:'base'}));
+}
+
 function preparePlayers(players,{db}){
   return players.map((player) => ({...player, cycclubTeam:player.userId?db.getCycClubTeam(player.userId):null}));
 }
@@ -1265,6 +1362,7 @@ function afterStateChange(room,{db}){
     if(!roomPlayer?.userId)continue;
     db.saveCycClubTeam(roomPlayer.userId,player.team);
   }
+  invalidateHonours();
   const round=game.pendingRoundRecord;
   if(!round)return;
   game.pendingRoundRecord=null;
@@ -1284,7 +1382,7 @@ function afterStateChange(room,{db}){
 }
 
 module.exports={
-  meta, createGame, handleAction, serialize, tick, preparePlayers, afterStateChange,
+  meta, configure, createGame, handleAction, serialize, tick, preparePlayers, afterStateChange,
   RACE_CATALOG, GRAND_TOUR_CATALOG, STAGE_RACE_CATALOG, RACE_POOLS, RIDER_CATALOG, RIDER_BY_ID, SHOP_COSTS, STAT_KEYS, SQUAD_SIZE, MAX_RIDERS, RACE_FIELD_SIZE, MIN_RIDER_PRICE, MAX_RIDER_PRICE, RESET_STARTER_COUNT, RESET_STARTER_MIN_SPECIALISMS, RESET_STARTER_POOL_FRACTION, marketValueFor, TEAMS, REAL_RIDERS:RIDER_CATALOG,
   STAGES_PER_GRAND_TOUR, SEGMENTS_PER_RACE, RIDER_TACTICS, TACTIC_LABELS, TACTIC_EFFECTS, GELS_PER_RACE,
   calculateSegmentStep, buildSegmentPlan, raceGroupForGap, buildRaceSituation

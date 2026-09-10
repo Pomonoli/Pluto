@@ -36,6 +36,8 @@ const CLASSIFICATION_TABS=[
   {key:'youth', label:'Jongeren (Wit)', valueLabel:'Tijd', formatValue:(v) => `${v>0?'+':''}${v}s`},
   {key:'team', label:'Ploegen', valueLabel:'Tijd', formatValue:(v) => `${v>0?'+':''}${v}s`}
 ];
+const JERSEY_LABELS={gc:'Geel',green:'Groen',polka:'Bolletjes',youth:'Wit',team:'Ploegen'};
+const JERSEY_SHORT={gc:'GEE',green:'GRN',polka:'BOL',youth:'WIT',team:'PLG'};
 const TACTIC_STORAGE_KEY='pluto.cycclub.riderTactics';
 
 function loadRememberedTactics(){
@@ -116,7 +118,8 @@ function navIcon(type){
     roster:'<circle cx="12" cy="8" r="3"/><path d="M5.5 19c.5-4 2.7-6 6.5-6s6 2 6.5 6"/>',
     races:'<path d="M5 18 10 6l4 7 2-4 3 9Z"/><path d="M4 18h16"/>',
     scout:'<circle cx="10.5" cy="10.5" r="5.5"/><path d="m15 15 4.5 4.5"/>',
-    shop:'<path d="M12 3v18M7 8l5-5 5 5M7 16l5 5 5-5"/>'
+    shop:'<path d="M12 3v18M7 8l5-5 5 5M7 16l5 5 5-5"/>',
+    honours:'<path d="M7 4h10v5a5 5 0 0 1-10 0Z"/><path d="M7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3"/><path d="M12 14v3M9 20h6"/>'
   };
   icon.innerHTML=`<svg viewBox="0 0 24 24" aria-hidden="true">${paths[type]}</svg>`;
   return icon;
@@ -357,6 +360,80 @@ function renderRaceCatalogPanel(room,game,me){
   return panel;
 }
 
+// Erelijst: vergelijkt alle CycClub-spelers op koerszeges en truien. De data komt
+// uit de opgeslagen ploegen van alle spelers (game.honours), aangevuld met de
+// actuele stand van wie nu in deze room zit.
+function renderHonoursPanel(game,me){
+  const panel=E('div','panel cc-panel');
+  panel.append(panelHeading('Erelijst'));
+  const honours=game.honours||[];
+  if(!honours.length){
+    panel.append(E('p','muted','Nog geen zeges geboekt. Win een koers en je verschijnt hier.'));
+    return panel;
+  }
+
+  const jerseyKeys=game.jerseyKeys||Object.keys(JERSEY_LABELS);
+  panel.append(E('h4','cc-category-title','Truien'));
+  panel.append(E('p','muted','Truien worden verdeeld aan het eind van elke rittenkoers en Grote Ronde.'));
+  const jerseyHead=E('div','cc-honours-row cc-honours-head');
+  jerseyHead.append(E('span','cc-honours-name','Speler'));
+  const jerseyCells=E('div','cc-honours-cells');
+  for(const key of jerseyKeys){
+    const cell=E('span','cc-honours-cell');
+    cell.textContent=JERSEY_SHORT[key]||key;
+    cell.title=JERSEY_LABELS[key]||key;
+    jerseyCells.append(cell);
+  }
+  jerseyHead.append(jerseyCells);
+  panel.append(jerseyHead);
+  honours.forEach((entry) => {
+    const row=E('div','cc-honours-row');
+    if(entry.name===me.name)row.classList.add('cc-honours-me');
+    row.append(E('span','cc-honours-name',entry.name));
+    const cells=E('div','cc-honours-cells');
+    for(const key of jerseyKeys){
+      const count=entry.jerseys?.[key]||0;
+      const cell=E('span',count?'cc-honours-cell cc-honours-count':'cc-honours-cell cc-honours-zero',String(count));
+      cell.title=`${JERSEY_LABELS[key]||key}: ${count}`;
+      cells.append(cell);
+    }
+    row.append(cells);
+    panel.append(row);
+  });
+
+  const groups=new Map();
+  for(const race of game.raceCatalog){
+    if(!groups.has(race.category))groups.set(race.category,[]);
+    groups.get(race.category).push(race);
+  }
+  for(const category of CATEGORY_ORDER){
+    const races=groups.get(category);
+    if(!races||!races.length)continue;
+    panel.append(E('h4','cc-category-title',CATEGORY_LABELS[category]||category));
+    const list=E('div','cc-honours-races');
+    races.forEach((race) => {
+      const row=E('div','cc-honours-race');
+      row.append(E('span','cc-honours-race-name',race.name));
+      const winners=honours.filter((entry) => (entry.raceWins?.[race.id]||0)>0)
+        .sort((a,b) => b.raceWins[race.id]-a.raceWins[race.id]||a.name.localeCompare(b.name,'nl-BE',{sensitivity:'base'}));
+      if(!winners.length){
+        row.append(E('span','muted','Nog niet gewonnen'));
+      } else {
+        const chips=E('div','cc-ready-list');
+        winners.forEach((entry) => {
+          const chip=E('span','cc-ready-chip',`${entry.name} ×${entry.raceWins[race.id]}`);
+          if(entry.name===me.name)chip.classList.add('cc-honours-me-chip');
+          chips.append(chip);
+        });
+        row.append(chips);
+      }
+      list.append(row);
+    });
+    panel.append(list);
+  }
+  return panel;
+}
+
 function renderShopStatusBar(me,onOpen){
   const bar=E('div','cc-shop-status-bar');
   for(const category of Object.keys(SHOP_LABELS)){
@@ -405,7 +482,10 @@ function renderClub(room,game,me){
   const racesSection=E('div','cc-tab-section');
   racesSection.append(renderRaceCatalogPanel(room,game,me));
 
-  const sections={roster:rosterSection,scout:scoutSection,shop:shopSection,races:racesSection};
+  const honoursSection=E('div','cc-tab-section');
+  honoursSection.append(renderHonoursPanel(game,me));
+
+  const sections={roster:rosterSection,scout:scoutSection,shop:shopSection,races:racesSection,honours:honoursSection};
   const tabButtons={};
   const applyTab=(tab) => {
     clubTab=tab;
@@ -443,7 +523,12 @@ function renderClub(room,game,me){
   racesOpenBtn.type='button';
   racesOpenBtn.onclick=() => applyTab('races');
   tabButtons.races=racesOpenBtn;
-  topBar.append(rosterTab,racesOpenBtn,scoutOpenBtn,shopTab);
+  const honoursTab=E('button','cc-club-tab','Erelijst');
+  addNavIcon(honoursTab,'honours');
+  honoursTab.type='button';
+  honoursTab.onclick=() => applyTab('honours');
+  tabButtons.honours=honoursTab;
+  topBar.append(rosterTab,racesOpenBtn,scoutOpenBtn,shopTab,honoursTab);
   for(const button of Object.values(tabButtons))button.setAttribute('role','tab');
 
   const resetBtn=E('button','cc-danger-btn','Opnieuw beginnen');
@@ -455,7 +540,7 @@ function renderClub(room,game,me){
     }
   };
   rosterSection.append(resetBtn);
-  content.append(rosterSection,scoutSection,shopSection,racesSection);
+  content.append(rosterSection,scoutSection,shopSection,racesSection,honoursSection);
   manager.append(content,topBar);
   els.gameStage.append(manager);
   applyTab(clubTab);

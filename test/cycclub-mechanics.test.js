@@ -360,3 +360,93 @@ test('a stage race runs to a final classification and counts as a stage-race win
     assert.equal(player1.team.career.grandToursWon, 0);
   }
 });
+
+test('the honours board compares every player on race wins and jerseys', () => {
+  const {game, player1} = buildGame();
+  player1.team.career.raceWins = {'parijs-roubaix': 2, 'parijs-nice': 1};
+  player1.team.career.jerseys = {gc: 3, green: 1, polka: 0, youth: 2, team: 1};
+  const state = cc.serialize(game, 'p1', new Map());
+  assert.deepEqual(state.jerseyKeys, ['gc', 'green', 'polka', 'youth', 'team']);
+  const alice = state.honours.find((entry) => entry.name === 'Alice');
+  assert.equal(alice.raceWins['parijs-roubaix'], 2);
+  assert.equal(alice.totalWins, 3);
+  assert.equal(alice.totalJerseys, 7);
+  // Elke speler in de room staat erop, ook wie nog niets won.
+  const bot = state.honours.find((entry) => entry.name === 'Bot');
+  assert.equal(bot.totalWins, 0);
+  assert.deepEqual(bot.jerseys, {gc: 0, green: 0, polka: 0, youth: 0, team: 0});
+  // De erelijst hoort bij de clubfase; tijdens een koers hoeft ze niet mee.
+  cc.handleAction(game, 'p1', 'selectRace', {raceId: cc.RACE_CATALOG[0].id});
+  assert.equal(cc.serialize(game, 'p1', new Map()).honours, null);
+});
+
+test('a career saved before the honours board existed hydrates without wins or jerseys', () => {
+  const roomPlayers = [{
+    id: 'p1', name: 'Alice', isNpc: false, userId: 7,
+    cycclubTeam: savedTeam(cc.REAL_RIDERS.slice(0, 3))
+  }];
+  const game = cc.createGame(roomPlayers);
+  const career = game.players[0].team.career;
+  assert.deepEqual(career.raceWins, {});
+  assert.deepEqual(career.jerseys, {gc: 0, green: 0, polka: 0, youth: 0, team: 0});
+  const alice = cc.serialize(game, 'p1', new Map()).honours.find((entry) => entry.name === 'Alice');
+  assert.equal(alice.totalWins, 0);
+});
+
+test('finishing a stage race records the win per race and hands out the five jerseys', () => {
+  const {game, player1} = buildGame();
+  const race = cc.STAGE_RACE_CATALOG.find((entry) => entry.stages === 5);
+  cc.handleAction(game, 'p1', 'selectRace', {raceId: race.id});
+  let fakeNow = Date.now();
+  let guard = 0;
+  while (game.phase !== 'result' && guard < 5000) {
+    guard += 1;
+    fakeNow += 1000;
+    if (game.phase === 'lineup' && game.race.lineups.p1 === undefined) {
+      const riderIds = player1.team.riders.filter((rider) => rider.status === 'active').slice(0, 3).map((rider) => rider.id);
+      cc.handleAction(game, 'p1', 'submitLineup', {riderIds});
+    } else if (game.phase === 'racing') {
+      const prog = game.race.progress.p1;
+      if (prog && !prog.confirmed) {
+        const activeIds = Object.keys(prog.riders).filter((id) => !prog.riders[id].dnf);
+        if (activeIds.length) {
+          const tactics = {};
+          for (const id of activeIds) tactics[id] = 'follow';
+          cc.handleAction(game, 'p1', 'rollSegment', {tactics, gels: {}});
+        }
+      }
+    } else if (game.phase === 'stageResult') {
+      cc.handleAction(game, 'p1', 'nextStage', {});
+    }
+    cc.tick(game, fakeNow);
+  }
+  assert.equal(game.phase, 'result');
+
+  const classifications = game.lastResult.classifications;
+  const byId = new Map(game.players.map((player) => [player.id, player]));
+  // Elke trui die naar een echte speler ging, staat exact één keer in zijn erelijst.
+  for (const key of ['gc', 'green', 'polka', 'youth', 'team']) {
+    const winner = (classifications[key] || []).find((entry) => entry.place === 1);
+    const owner = winner && byId.get(winner.playerId);
+    if (owner) assert.equal(owner.team.career.jerseys[key], 1, `trui ${key}`);
+  }
+  // Niemand kan meer dan één exemplaar van dezelfde trui pakken in één ronde.
+  for (const player of game.players) {
+    for (const key of ['gc', 'green', 'polka', 'youth', 'team']) {
+      assert.ok(player.team.career.jerseys[key] <= 1, `trui ${key} dubbel toegekend`);
+    }
+  }
+
+  const gcWinner = game.lastResult.gc[0];
+  const champion = gcWinner && byId.get(gcWinner.playerId);
+  if (champion) {
+    assert.equal(champion.team.career.raceWins[race.id], 1);
+    assert.equal(champion.team.career.stageRacesWon, 1);
+  }
+  // Winst wordt op de ronde geboekt, niet op de losse ritten.
+  for (const player of game.players) {
+    for (const raceId of Object.keys(player.team.career.raceWins)) {
+      assert.ok(!raceId.includes('::stage:'), `ritwinst apart geboekt: ${raceId}`);
+    }
+  }
+});

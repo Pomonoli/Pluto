@@ -737,6 +737,14 @@ const RELEASES = [
     improvements:[
       "update deep blue - lutro - cycclub"
     ]
+  },
+  {
+    version:"1.31.0",
+    features:[
+      "CycClub: nieuw tabblad Erelijst vergelijkt alle spelers op koerszeges en verdiende truien.",
+      "CycClub: per koers zie je wie hem hoe vaak won; bij meerdaagse koersen telt de winnaar van het eindklassement.",
+      "CycClub: wie een klassement wint op het eind van een Rittenkoers of Grote Ronde, verdient de bijhorende trui (Geel, Groen, Bolletjes, Wit of Ploegen)."
+    ]
   }
 ];
 

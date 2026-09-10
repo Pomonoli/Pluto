@@ -14,12 +14,13 @@
 
 ### Clubfase
 
-Gebruik vier vaste primaire bestemmingen in een bottom navigation:
+Gebruik vijf vaste primaire bestemmingen in een bottom navigation:
 
 1. **Ploeg**
 2. **Koersen**
 3. **Markt**
 4. **Upgrades**
+5. **Erelijst**
 
 - `Ploeg` is het standaardlandingsscherm. Voeg geen extra dashboard/HQ-tussenlaag toe.
 - Budget blijft zichtbaar in de vaste header van de managerfase.

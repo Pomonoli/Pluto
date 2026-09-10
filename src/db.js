@@ -683,6 +683,44 @@ function cycclubLeaderboard(limit = 100) {
     .slice(0, safeLimit);
 }
 
+// Erelijst voor het CycClub-clubleaderboard: per speler hoe vaak hij elke koers won
+// en hoeveel truien hij pakte. Leest dezelfde opgeslagen ploegen als
+// cycclubLeaderboard, maar geeft de per-koers-tellers terug in plaats van totalen.
+function cycclubRaceRecords() {
+  const rows = db.prepare(`
+    SELECT u.username, t.state_json AS stateJson
+    FROM cycclub_teams t
+    JOIN users u ON u.id = t.user_id
+  `).all();
+
+  return rows
+    .map((row) => {
+      let state;
+      try { state = JSON.parse(row.stateJson); } catch { return null; }
+      const career = state?.career || {};
+      const rawWins = career.raceWins && typeof career.raceWins === 'object' ? career.raceWins : {};
+      const raceWins = {};
+      for (const [raceId, count] of Object.entries(rawWins)) {
+        const wins = Math.max(0, Math.floor(Number(count) || 0));
+        if (wins) raceWins[String(raceId)] = wins;
+      }
+      const rawJerseys = career.jerseys && typeof career.jerseys === 'object' ? career.jerseys : {};
+      const jerseys = {};
+      for (const key of ['gc', 'green', 'polka', 'youth', 'team']) {
+        jerseys[key] = Math.max(0, Math.floor(Number(rawJerseys[key]) || 0));
+      }
+      return {
+        username: row.username,
+        raceWins,
+        jerseys,
+        victories: Math.max(0, Math.floor(Number(career.victories) || 0)),
+        gtStagesWon: Math.max(0, Math.floor(Number(career.gtStagesWon) || 0))
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.username.localeCompare(b.username, 'nl-BE', { sensitivity: 'base' }));
+}
+
 function headToHead(viewerUserId, opponentUsername, gameKey = null) {
   const key = normalizeUsername(opponentUsername).toLocaleLowerCase('nl-BE');
   const opponent = db.prepare(
@@ -857,6 +895,7 @@ module.exports = {
   getCycClubTeam,
   saveCycClubTeam,
   cycclubLeaderboard,
+  cycclubRaceRecords,
   getDeepBleuCPlayer,
   saveDeepBleuCPlayer,
   deepBleuCLeaderboard,

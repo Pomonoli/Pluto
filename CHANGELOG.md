@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.31.0 — Erelijst in CycClub
+
+- Nieuw vijfde tabblad **Erelijst** in de clubfase van CycClub, naast Ploeg,
+  Koersen, Markt en Upgrades.
+- Bovenaan een truienoverzicht: per speler hoeveel keer hij Geel, Groen,
+  Bolletjes, Wit en Ploegen won. Truien worden toegekend aan wie het
+  klassement wint op het eind van een Rittenkoers of Grote Ronde.
+- Daaronder elke koers uit de kalender met wie hem hoe vaak won, gegroepeerd
+  per categorie. Bij meerdaagse koersen telt de winnaar van het
+  eindklassement, niet de losse ritzeges.
+- De erelijst vergelijkt alle CycClub-spelers, niet alleen wie in de room zit:
+  de standen komen uit de opgeslagen ploegen in de database, aangevuld met de
+  actuele stand van de spelers in de huidige room. Je eigen rij is gemarkeerd.
+- Carrières houden nu per koers een winstteller bij (`raceWins`) en een
+  truienteller (`jerseys`). Ploegen die voor deze release werden opgeslagen
+  starten netjes op nul in plaats van te breken.
+
 ## v1.30.2 — update deep blue - lutro - cycclub
 
 - update deep blue - lutro - cycclub
