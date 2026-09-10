@@ -698,6 +698,20 @@ const RELEASES = [
     improvements:[
       "iets minder witruimte"
     ]
+  },
+  {
+    version:"1.29.0",
+    features:[
+      "The Big Blue C: acht koopbare skins (€200) veranderen het uiterlijk van je personage. Kopen bij Inventaris > Uitrusting > Te koop, dragen bij Hero.",
+      "The Big Blue C: tien dorpsbewoners lopen rond het dorp. Tik ze aan om te praten.",
+      "The Big Blue C: elke dorpsbewoner geeft een opdracht met eigen doelen. Je voortgang loopt vanzelf mee en blijft bewaard; inleveren levert geld en xp op."
+    ],
+    improvements:[
+      "The Big Blue C: Inventaris en Marktplaats zijn één scherm geworden — verkopen zit nu bij Bezittingen, kopen bij Uitrusting > Te koop, en ruilen bij Bouwen & Handelen.",
+      "The Big Blue C: Hall of Fame heet nu Hero en toont je avatar, je stats, een vaardighedentabel en de ranglijst. Het aparte Vaardigheden-scherm is daarin opgegaan.",
+      "The Big Blue C: de kaart heeft echt hoogteverschil tussen water, land, heuvels en bergpieken, en een grotere boot.",
+      "The Big Blue C: scrollen in een paneel springt niet meer terug naar boven."
+    ]
   }
 ];
 

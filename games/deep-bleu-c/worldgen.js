@@ -114,7 +114,8 @@ function buildWorld() {
   return {
     width: WIDTH, height: HEIGHT, version: WORLD_VERSION, tiles, tileString: tiles.join(''),
     spawn: translate(old.spawn), kelpIsland: translate(old.kelpIsland),
-    buildings: old.buildings.map(translate), boats: old.boats.map(translate), wildlife
+    buildings: old.buildings.map(translate), boats: old.boats.map(translate), wildlife,
+    npcHomes: old.npcHomes.map(translate)
   };
 }
 

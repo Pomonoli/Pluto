@@ -15,6 +15,7 @@
 // dezelfde dichtheid aan bereikbaar water oplevert.
 
 const { hexNeighbors, hexDistance, hexRing } = require('./hexmath');
+const { NPCS } = require('./npcs');
 
 const WIDTH = 48;
 const HEIGHT = 48;
@@ -311,7 +312,7 @@ function buildWorld() {
     { id: 'vishandel', type: 'vishandel', name: 'De Vishandel', x: spawn.x, y: spawn.y },
     { id: 'aquarium', type: 'aquarium', name: 'Aquarium-Museum', x: aquarium.x, y: aquarium.y },
     { id: 'markt', type: 'markt', name: 'Handelsmarkt', x: markt.x, y: markt.y },
-    { id: 'monument', type: 'monument', name: 'Hall of Fame', x: monument.x, y: monument.y },
+    { id: 'monument', type: 'monument', name: 'Hero', x: monument.x, y: monument.y },
     { id: 'lumberyard', type: 'lumberyard', name: 'Houthakkerij', x: lumberyard.x, y: lumberyard.y },
     { id: 'quarry', type: 'quarry', name: 'Steengroeve', x: quarry.x, y: quarry.y },
     { id: 'haven', type: 'haven', name: 'De Haven', x: harborSpot.x, y: harborSpot.y }
@@ -331,7 +332,21 @@ function buildWorld() {
 
   buildings.push({ id: 'wierlicht', type: 'landmark', name: 'Wierlicht', x: kelpIsland.x, y: kelpIsland.y - 1 });
 
-  return { width: WIDTH, height: HEIGHT, tiles, buildings, boats, wildlife, spawn, kelpIsland, tileString: tiles.join('') };
+  // Dorpsbewoners: elke NPC uit npcs.js krijgt een vaste "thuis"-plek nabij
+  // het gebouw dat bij hem past (`anchor`), en dwaalt daar later server-side
+  // omheen. Ze kunnen niet varen, dus placeNear levert enkel WALKABLE land.
+  // Dit blok staat bewust ná de wildlife-lus: het verbruikt `used` en `rng`
+  // pas daarna, zodat de rest van de wereldgeneratie identiek blijft.
+  const npcAnchorPoints = {
+    vishandel: spawn, aquarium, markt, monument, lumberyard, quarry, haven: harborSpot
+  };
+  const npcHomes = NPCS.map((npc) => {
+    const anchor = npcAnchorPoints[npc.anchor] || spawn;
+    const home = placeNear(tiles, used, anchor.x, anchor.y, 1, 4, rng);
+    return { id: npc.id, x: home.x, y: home.y };
+  });
+
+  return { width: WIDTH, height: HEIGHT, tiles, buildings, boats, wildlife, npcHomes, spawn, kelpIsland, tileString: tiles.join('') };
 }
 
 let cached = null;

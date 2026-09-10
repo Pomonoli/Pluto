@@ -40,12 +40,16 @@
 
 ## HUD and layout
 
-- Alle vaste menuacties (Inventaris, Marktplaats, Hall of Fame, Vaardigheden,
-  Map) staan samen met de bootstatus in de compacte boat-base HUD rechtsboven;
-  op mobiel vormt die HUD een compacte balk onderaan.
+- Alle vaste menuacties (Inventaris, Hero, Map) staan samen met de bootstatus
+  in de compacte boat-base HUD rechtsboven; op mobiel vormt die HUD een
+  compacte balk onderaan.
 - De bootbasis toont de vaartuigupgrade direct onder de boot; Hengel, Bijl en Houweel hebben drie tabs met hun niveau (1-10),
-  volgende upgrade en vereisten; Inventaris > Uitrusting bevat alleen kleding,
-  wapens en schilden.
+  volgende upgrade en vereisten. Inventaris bundelt Bezittingen (bekijken +
+  verkopen), Sets, Uitrusting ("Mijn uitrusting": kleding/wapens/schilden
+  dragen; "Te koop": drankjes, skins en de volledige uitrustingscatalogus
+  kopen) en Bouwen & Handelen (aanlegsteiger bouwen + ruilen met spelers).
+  Hero bundelt je avatar/stats, een vaardighedentabel (naam, niveau,
+  verduidelijking, voortgangsbalk, xp) en de ranglijst.
 - De bovenste HUD volgt twee duidelijke rijen in houten kaders: dag en geld,
   ontdekte soorten en level bovenaan; brede gezondheid/energiebalken en een
   compacte edelsteenbadge voor pantser eronder. Iconen mogen het kader licht
@@ -53,8 +57,8 @@
 - Actieve buffs blijven kleine klok-badges onder of naast de statusmeters.
 - Dag/nacht toont zich als een ☀️/🌙-pil plus een koelere, donkerdere tint
   over de hele kaart 's nachts — geen aparte UI nodig.
-- Een geopend paneel (Inventaris, Marktplaats, ...) schuift als een sheet
-  over de kaart; de kaart blijft altijd zichtbaar.
+- Een geopend paneel (Inventaris, Hero, ...) schuift als een sheet over de
+  kaart; de kaart blijft altijd zichtbaar.
 - Bootbasis is op mobiel de uitzondering: dit complexe beheerscherm gebruikt
   een vaste fullscreen sheet met een sticky sluitkop. Alleen de paneelinhoud
   scrollt; boot, stations, gereedschappen en creëren blijven aparte secties.

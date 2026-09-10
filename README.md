@@ -2,13 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.28.26
+## Nieuw in versie 1.29.0
 
-iets minder witruimte
-
-## Nieuw in versie 1.28.0
-
-CycClub heeft een nieuw diepgaand tactieksysteem: elke renner kiest elk segment zelf een tactiek (Herstel, Volg, Kop, Val aan of Bidons) met een eigen effect op multiplier en vermoeidheid, renners hebben een individuele vermoeidheidsmeter en energiegels, en Grote Rondes bouwen nu vijf volwaardige klassementen op (Algemeen, Punten, Bergen, Jongeren en Ploegen).
+The Big Blue C kreeg skins, dorpsbewoners en opdrachten. Acht koopbare skins veranderen het uiterlijk van je personage, tien vaste dorpsbewoners lopen rond hun eigen gebouw en zijn aanspreekbaar, en elk van hen geeft een opdracht met concrete doelen die vanzelf meelopen terwijl je speelt en bij inleveren geld en xp opleveren. Inventaris en Marktplaats werden één scherm, Hall of Fame werd Hero met je avatar, stats, vaardighedentabel en ranglijst, en de kaart kreeg echt hoogteverschil tussen water, land, heuvels en bergpieken.
 
 ## Nieuw in versie 1.0.0
 

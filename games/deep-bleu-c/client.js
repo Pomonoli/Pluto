@@ -64,6 +64,25 @@ const MINIMAP_RGB = {
   r: [143, 198, 204], k: [78, 143, 160], a: [42, 90, 107], m: [23, 65, 79], w: [11, 29, 36]
 };
 const WATER_CHARS = new Set(['r', 'k', 'a', 'm']);
+// Reliëf per tegeltype, in pixels: hoeveel de tegel als een "puck" boven de
+// waterbasis uitsteekt. Water blijft het laagste vlak; land steekt licht uit;
+// heuvels duidelijk meer; onbeloopbare bergpieken torenen enorm boven de rest
+// uit. Elke tegel tekent een donkerdere kopie van zichzelf iets lager
+// (de "zijkant"), gevolgd door de echte tegel op zijn onveranderde positie —
+// zo blijft klikafhandeling en spelerspositie exact gelijk, maar oogt de
+// wereld als echt landschap i.p.v. een plat schaakbord.
+const TILE_ELEVATION = {
+  L: 3, B: 2, K: 3, q: 3, f: 5, h: 9, p: 19,
+  r: 0, k: 0, a: 0, m: 0, w: 0
+};
+function tileElevation(tile) { return TILE_ELEVATION[tile] || 0; }
+function darkenColor(hex, factor) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.round(((n >> 16) & 255) * factor);
+  const g = Math.round(((n >> 8) & 255) * factor);
+  const b = Math.round((n & 255) * factor);
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
 const WOOD_TILE = 'f';
 const ROCK_TILE = 'p';
 const KELP_TILE = 'q';
@@ -90,12 +109,12 @@ const QUALITY_LABEL = { raw: 'Rauw', roasted: 'Geroosterd', dish: 'Gerecht' };
 
 // De vaste menuacties horen bij de bootbasis: ze staan samen onder de
 // bootstatus in één compacte HUD, in plaats van als losse rail over de kaart.
+// `art` verwijst naar een geïllustreerd rond icoon in assets/ui — die brengen
+// hun eigen bronzen lijst mee, dus de knop eronder blijft zelf kaal.
 const BOAT_BASE_BUTTONS = [
-  { id: 'inventaris', icon: '🎒', label: 'Inventaris' },
-  { id: 'markt', icon: '🏪', label: 'Marktplaats' },
-  { id: 'monument', icon: '🏆', label: 'Hall of Fame', square: true },
-  { id: 'vaardigheden', icon: '⭐', label: 'Vaardigheden', square: true },
-  { id: 'world-map', icon: '🗺️', label: 'Map', square: true }
+  { id: 'inventaris', art: 'inventaris', label: 'Inventaris' },
+  { id: 'monument', art: 'hero', label: 'Hero' },
+  { id: 'world-map', art: 'map', label: 'Map' }
 ];
 const GATHER_UI = {
   wood: { verb: 'Hakken', icon: '🪓', bg: 'Je bijl staat klaar bij de stam...' },
@@ -144,6 +163,7 @@ function ensureWorld(expected) {
 }
 
 let activePanel = 'map';
+let activeNpcId = null;
 let activeToolKey = 'rod';
 let leaderboardData = null;
 let leaderboardPromise = null;
@@ -201,21 +221,21 @@ function renderDeepBleuC(room, game) {
   const wrap = E('div', 'dbc-wrap');
   const loadedWorld = ensureWorld(game.world);
   wrap.append(loadedWorld
-    ? renderStage(you, loadedWorld, others, game.harbors || [], game.dayPhase || 'day')
+    ? renderStage(you, loadedWorld, others, game.harbors || [], game.dayPhase || 'day', game.npcs || [])
     : E('div', 'dbc-loading', 'Kaart wordt geladen...'));
 
   els.gameStage.append(wrap, logBox(game.log));
 }
 
 // De kaart blijft altijd zichtbaar op de achtergrond, schermvullend; een open
-// paneel (Inventaris, Marktplaats, ...) schuift eroverheen als een los "sheet"
-// in plaats van de kaart te vervangen — zo blijft de wereld altijd in beeld.
-function renderStage(you, worldData, others, harbors, dayPhase) {
+// paneel (Inventaris, Hero, ...) schuift eroverheen als een los "sheet" in
+// plaats van de kaart te vervangen — zo blijft de wereld altijd in beeld.
+function renderStage(you, worldData, others, harbors, dayPhase, npcs = []) {
   const viewport = currentViewportPreset();
   const camX = clampInt(you.x - Math.floor(viewport.cols / 2), 0, worldData.width - viewport.cols);
   const camY = clampInt(you.y - Math.floor(viewport.rows / 2), 0, worldData.height - viewport.rows);
   const stage = E('div', 'dbc-stage');
-  stage.append(renderMapWrap(you, worldData, camX, camY, others, harbors, dayPhase, viewport));
+  stage.append(renderMapWrap(you, worldData, camX, camY, others, harbors, dayPhase, viewport, npcs));
   if (activePanel !== 'map') stage.append(renderPanelSheet(you, others, harbors));
   return stage;
 }
@@ -273,12 +293,24 @@ function renderStatBars(you) {
   return wrap;
 }
 
+function uiIconUrl(name) {
+  return new URL(`./assets/ui/${name}.png`, import.meta.url).href;
+}
+
+function uiIconImg(name, className) {
+  const img = E('img', className);
+  img.src = uiIconUrl(name);
+  img.alt = '';
+  return img;
+}
+
 function renderIconButton(b) {
   const col = E('div', 'dbc-icon-col');
-  const btn = E('button', `dbc-icon-btn${b.square ? ' square' : ''}`, b.icon);
+  const btn = E('button', `dbc-icon-btn${b.art ? ' art' : ''}`, b.art ? undefined : b.icon);
   btn.type = 'button';
   btn.title = b.label;
   btn.setAttribute('aria-label', b.label);
+  if (b.art) btn.append(uiIconImg(b.art, 'dbc-icon-art'));
   btn.onclick = () => {
     activePanel = b.id;
     if (b.id === 'monument') loadLeaderboard();
@@ -288,13 +320,38 @@ function renderIconButton(b) {
   return col;
 }
 
+// Deze twee elementen (de backdrop en het scrollbare paneel zelf) worden
+// maar één keer aangemaakt en daarna hergebruikt over alle renders heen —
+// alleen hun inhoud wordt elke keer vervangen. Zo blijft de browser zijn
+// eigen scrollpositie van het paneel vasthouden, ook al bouwt de rest van de
+// pagina (kaart, HUD) bij elke serverupdate volledig opnieuw op.
+let sheetOverlay = null;
+let sheetInner = null;
+let sheetInnerPanel = null;
+
 function renderPanelSheet(you, others, harbors) {
-  const overlay = E('div', 'dbc-sheet-overlay');
-  overlay.onclick = (event) => {
-    if (event.target === overlay) { activePanel = 'map'; renderGame(state.room); }
-  };
-  const usesV6Sheet = ['boat', 'inventaris', 'markt', 'monument', 'vaardigheden', 'world-map'].includes(activePanel);
-  const sheet = E('div', `dbc-sheet dbc-sheet-${activePanel}${usesV6Sheet ? ' dbc-sheet-v6' : ''}`);
+  if (!sheetOverlay) {
+    sheetOverlay = E('div', 'dbc-sheet-overlay');
+    sheetOverlay.onclick = (event) => {
+      if (event.target === sheetOverlay) { activePanel = 'map'; renderGame(state.room); }
+    };
+  }
+  const usesV6Sheet = ['boat', 'inventaris', 'monument', 'world-map', 'npc'].includes(activePanel);
+  const sheetClass = `dbc-sheet dbc-sheet-${activePanel}${usesV6Sheet ? ' dbc-sheet-v6' : ''}`;
+  if (!sheetInner) {
+    sheetInner = E('div', sheetClass);
+    sheetOverlay.append(sheetInner);
+  } else {
+    sheetInner.className = sheetClass;
+  }
+  // Alleen bij het wisselen van paneel of tabblad (niet bij elke content-
+  // ververshing binnen hetzelfde tabblad) terug naar boven scrollen — net
+  // als vroeger elk paneel/tabblad altijd bovenaan opende.
+  const panelKey = `${activePanel}:${activePanel === 'inventaris' ? inventarisTab : ''}:${inventarisTab === 'uitrusting' ? uitrustingTab : ''}:${activePanel === 'npc' ? activeNpcId : ''}`;
+  if (sheetInnerPanel !== panelKey) {
+    sheetInner.scrollTop = 0;
+    sheetInnerPanel = panelKey;
+  }
   const header = E('div', 'dbc-sheet-header');
   header.append(E('div', 'dbc-sheet-handle'));
   if (activePanel === 'boat') header.append(E('strong', 'dbc-sheet-mobile-title', `Bootbasis · ${you.boat.name} ${you.boat.tier}`));
@@ -303,13 +360,30 @@ function renderPanelSheet(you, others, harbors) {
   close.setAttribute('aria-label', 'Sluiten');
   close.onclick = () => { activePanel = 'map'; renderGame(state.room); };
   header.append(close);
-  sheet.append(header, renderActivePanel(you, others, harbors));
-  overlay.append(sheet);
-  return overlay;
+  sheetInner.replaceChildren(header, renderActivePanel(you, others, harbors));
+  return sheetOverlay;
 }
 
 function isWildlifeTile(wx, wy) {
   return Boolean(world && (world.wildlife || []).some((spot) => spot.x === wx && spot.y === wy));
+}
+
+// Naam, titel, dialoog en opdracht komen uit de statische wereldrespons
+// (npcs.js op de server); de spelstate stuurt enkel nog de positie mee.
+function npcProfile(id) {
+  return (world?.npcs || []).find((npc) => npc.id === id) || null;
+}
+
+// Praten kan van vlakbij; sta je verder weg, dan loop je er eerst naartoe.
+function handleNpcClick(npc, you) {
+  if (you.combat) return;
+  if (hexDistance(you.x, you.y, npc.x, npc.y) <= 1) {
+    activeNpcId = npc.id;
+    activePanel = 'npc';
+    renderGame(state.room);
+    return;
+  }
+  action('move', { x: npc.x, y: npc.y });
 }
 
 function handleTileClick(wx, wy, tile, you) {
@@ -349,6 +423,24 @@ function facingLeftFor(id, entity) {
 
 const OTHER_PLAYER_COLORS = ['#ff9f43', '#4dd0e1', '#c77dff', '#ffe066'];
 
+// Dorpsbewoners: puur decoratieve, niet-interactieve figuren die volgens
+// world.npcHomes rondlopen (zie server tick()). Uiterlijk per type, gebouwd
+// op dezelfde anglerrig als spelers/skins — zie appendHeadgear.
+// Per NPC-id (zie npcs.js) het kleurenpalet en hoofddeksel op dezelfde
+// chibi-rig als spelers en skins.
+const NPC_APPEARANCE = {
+  elara: { accent: '#8C8757', skin: '#E0B58C', hood: '#6E5A38', boots: '#6B563A', headgear: 'sunflowerhair' },
+  krelis: { accent: '#35607F', skin: '#EAD3B8', hood: '#22405A', boots: '#5C4630', headgear: 'ceremonyhat' },
+  joris: { accent: '#8A6A4A', skin: '#E3B58C', hood: '#6B4A32', boots: '#4A3728', headgear: 'glasses' },
+  valerius: { accent: '#5A6470', skin: '#DDB08A', hood: '#39424C', boots: '#2E3339', headgear: 'officercap' },
+  lars: { accent: '#EDE6D6', skin: '#E0B089', hood: '#6B4A32', boots: '#4A3728', headgear: 'shortbeard' },
+  anja: { accent: '#7FA8C4', skin: '#EFC6A6', hood: '#5E88A8', boots: '#4A5A66', headgear: 'winterhood' },
+  nikos: { accent: '#F2F0E8', skin: '#C98F63', hood: '#FBFAF6', boots: '#2E2E2C', headgear: 'chefhat' },
+  kilgore: { accent: '#2E4468', skin: '#E2BB95', hood: '#1C2A44', boots: '#3A2E22', headgear: 'captaincap' },
+  maria: { accent: '#5B7FA6', skin: '#C68A5E', hood: '#4A3728', boots: '#5C4630', headgear: 'ponytail' },
+  borri: { accent: '#8A7A4A', skin: '#DDA877', hood: '#7A4A28', boots: '#4A3728', headgear: 'dwarfbeard' }
+};
+
 // Werktuig in de voorste hand — enkel getekend zolang de bijhorende actie
 // bezig is: hengel bij vissen, bijl bij hakken, houweel bij delven, wapen bij
 // een dobbelgevecht. Anders hangt die hand net als de andere gewoon leeg
@@ -371,13 +463,169 @@ function appendTool(g, tool) {
   }
 }
 
+// Hoofddeksel per skin — een herkenbaar silhouet bovenop dezelfde kop/rig
+// i.p.v. enkel een herkleuring, zodat skins ook op afstand uit elkaar te
+// houden zijn. 'hood' (of onbekend) is de oorspronkelijke basiskap.
+function appendHeadgear(g, kind, { hood, accent }) {
+  if (kind === 'cap') {
+    // Matroos: platte matrozenmuts met opstaande rand.
+    g.append(svgEl('path', { d: 'M -6 -13 Q -6 -20.5 0 -20.5 Q 6 -20.5 6 -13 Z', fill: hood, stroke: '#fff', 'stroke-width': 0.8 }));
+    g.append(svgEl('ellipse', { cx: 0, cy: -13, rx: 6.6, ry: 1.5, fill: hood, stroke: '#fff', 'stroke-width': 0.8 }));
+    g.append(svgEl('circle', { cx: 0, cy: -20.2, r: 0.9, fill: '#fff' }));
+    return;
+  }
+  if (kind === 'tricorn') {
+    // Piraat / Spookpiraat: driekantige steek met een klein embleem.
+    g.append(svgEl('path', {
+      d: 'M -9.5 -15 Q -3 -23.5 0 -15.5 Q 3 -23.5 9.5 -15 Q 4.5 -11.5 0 -13.5 Q -4.5 -11.5 -9.5 -15 Z',
+      fill: hood, stroke: '#0d1117', 'stroke-width': 0.7
+    }));
+    g.append(svgEl('circle', { cx: 0, cy: -17.6, r: 1.2, fill: '#E7C87A' }));
+    return;
+  }
+  if (kind === 'horned') {
+    // Viking: leren kap met twee gebogen hoorns.
+    g.append(svgEl('path', { d: 'M -6.5 -13 Q -8 -21.5 -1 -20.5 Q 1 -21.5 6.5 -13 Q 3 -17 0 -17 Q -3 -17 -6.5 -13 Z', fill: hood, stroke: '#fff', 'stroke-width': 0.8 }));
+    g.append(svgEl('path', { d: 'M -5.8 -17.5 Q -10.5 -23.5 -7.5 -27 Q -3.5 -23 -3.6 -17', fill: '#EDE3D2', stroke: '#B9AC90', 'stroke-width': 0.6 }));
+    g.append(svgEl('path', { d: 'M 5.8 -17.5 Q 10.5 -23.5 7.5 -27 Q 3.5 -23 3.6 -17', fill: '#EDE3D2', stroke: '#B9AC90', 'stroke-width': 0.6 }));
+    return;
+  }
+  if (kind === 'helmet') {
+    // Duiker: ronde duikhelm met venster en kraagring.
+    g.append(svgEl('circle', { cx: 0, cy: -14.8, r: 7.2, fill: hood, stroke: '#fff', 'stroke-width': 0.8 }));
+    g.append(svgEl('circle', { cx: 0.6, cy: -14.8, r: 3.6, fill: '#BFE3EA', opacity: 0.88 }));
+    g.append(svgEl('rect', { x: -3.4, y: -8.2, width: 6.8, height: 2, rx: 1, fill: '#8B96A0' }));
+    return;
+  }
+  if (kind === 'leafcrown') {
+    // Zeenimf: kroon van afwisselende koraal-/bladpunten.
+    [-4.8, -1.7, 1.7, 4.8].forEach((x, i) => {
+      g.append(svgEl('path', {
+        d: `M ${x - 1.5} -13.5 Q ${x} -21 ${x + 1.5} -13.5 Z`,
+        fill: i % 2 ? accent : hood, stroke: '#254536', 'stroke-width': 0.5
+      }));
+    });
+    return;
+  }
+  if (kind === 'crown') {
+    // Zeekoning: gouden kroon met een edelsteen.
+    g.append(svgEl('path', {
+      d: 'M -6.5 -13 L -6.5 -19.5 L -3.5 -16 L 0 -21.5 L 3.5 -16 L 6.5 -19.5 L 6.5 -13 Z',
+      fill: hood, stroke: '#7A5A1E', 'stroke-width': 0.7
+    }));
+    g.append(svgEl('circle', { cx: 0, cy: -18, r: 1.1, fill: '#E86B6B' }));
+    return;
+  }
+  if (kind === 'capgoggles') {
+    // Monteur: platte pet met een veiligheidsbril op de rand.
+    g.append(svgEl('path', { d: 'M -6.5 -13 Q -6.5 -19.5 0 -19.5 Q 6.5 -19.5 6.5 -13 Z', fill: hood, stroke: '#fff', 'stroke-width': 0.8 }));
+    g.append(svgEl('rect', { x: -6.8, y: -14.3, width: 13.6, height: 1.8, rx: 0.6, fill: hood }));
+    g.append(svgEl('circle', { cx: -2.6, cy: -13.1, r: 1.6, fill: '#CDE0E6', stroke: '#5A5F5C', 'stroke-width': 0.5 }));
+    g.append(svgEl('circle', { cx: 2.6, cy: -13.1, r: 1.6, fill: '#CDE0E6', stroke: '#5A5F5C', 'stroke-width': 0.5 }));
+    return;
+  }
+  if (kind === 'sunflowerhair') {
+    // Elara: bruin haar met zonnebloemen en een takje lavendel.
+    g.append(svgEl('path', {
+      d: 'M -6.2 -13 Q -8 -21 0 -21.5 Q 8 -21 6.2 -13 Q 3 -17 0 -17 Q -3 -17 -6.2 -13 Z',
+      fill: hood, stroke: '#4A3B26', 'stroke-width': 0.6
+    }));
+    [[-4.4, -19], [4.4, -18.6]].forEach(([fx, fy]) => {
+      g.append(svgEl('circle', { cx: fx, cy: fy, r: 2.1, fill: '#E9C24A' }));
+      g.append(svgEl('circle', { cx: fx, cy: fy, r: 0.9, fill: '#6B4A22' }));
+    });
+    g.append(svgEl('path', { d: 'M -6.6 -17.4 Q -8.6 -20.4 -7.4 -22.6', fill: 'none', stroke: '#9B7BC4', 'stroke-width': 1.3, 'stroke-linecap': 'round' }));
+    return;
+  }
+  if (kind === 'ceremonyhat') {
+    // Oude Krelis: hoge ceremoniehoed met gouden band en wit haar eronder.
+    g.append(svgEl('path', { d: 'M -6.4 -13 Q -7.4 -16.6 -5.4 -17.6 L 5.4 -17.6 Q 7.4 -16.6 6.4 -13 Z', fill: '#EFEAE0' }));
+    g.append(svgEl('path', { d: 'M -6.8 -17.4 L 6.8 -17.4 L 5.2 -26.5 Q 0 -28.5 -5.2 -26.5 Z', fill: hood, stroke: '#1A2E42', 'stroke-width': 0.7 }));
+    g.append(svgEl('rect', { x: -6.6, y: -19.4, width: 13.2, height: 2.2, rx: 0.6, fill: '#C9A227' }));
+    g.append(svgEl('circle', { cx: 0, cy: -23.4, r: 1.4, fill: '#C9A227' }));
+    return;
+  }
+  if (kind === 'glasses') {
+    // Joris: kortgeknipt haar met een ronde bril.
+    g.append(svgEl('path', { d: 'M -6 -13.4 Q -6.8 -19.4 0 -19.6 Q 6.8 -19.4 6 -13.4 Q 3 -16.6 0 -16.6 Q -3 -16.6 -6 -13.4 Z', fill: hood, stroke: '#4A3320', 'stroke-width': 0.6 }));
+    g.append(svgEl('circle', { cx: -2.4, cy: -14.4, r: 1.9, fill: '#DCEAF0', stroke: '#4A3320', 'stroke-width': 0.6, opacity: 0.9 }));
+    g.append(svgEl('circle', { cx: 2.4, cy: -14.4, r: 1.9, fill: '#DCEAF0', stroke: '#4A3320', 'stroke-width': 0.6, opacity: 0.9 }));
+    g.append(svgEl('path', { d: 'M -0.5 -14.4 L 0.5 -14.4', stroke: '#4A3320', 'stroke-width': 0.6 }));
+    return;
+  }
+  if (kind === 'officercap') {
+    // Inspecteur Valerius: uniformpet met klep, gasmasker om de hals.
+    g.append(svgEl('path', { d: 'M -6.4 -14.6 Q -6.6 -21.4 0 -21.6 Q 6.6 -21.4 6.4 -14.6 Z', fill: hood, stroke: '#232A31', 'stroke-width': 0.7 }));
+    g.append(svgEl('rect', { x: -6.6, y: -16.4, width: 13.2, height: 2, rx: 0.5, fill: '#232A31' }));
+    g.append(svgEl('path', { d: 'M -6.6 -14.6 L 4.6 -14.6 L 6.8 -12.8 L -6.6 -12.8 Z', fill: '#232A31' }));
+    g.append(svgEl('circle', { cx: -4.6, cy: -8.6, r: 2.2, fill: '#9AA6B0', stroke: '#4A545E', 'stroke-width': 0.6 }));
+    return;
+  }
+  if (kind === 'shortbeard') {
+    // Lars: kort bruin haar met een volle baard.
+    g.append(svgEl('path', { d: 'M -6 -13.6 Q -6.8 -19.6 0 -19.8 Q 6.8 -19.6 6 -13.6 Q 3 -16.8 0 -16.8 Q -3 -16.8 -6 -13.6 Z', fill: hood, stroke: '#4A3320', 'stroke-width': 0.6 }));
+    g.append(svgEl('path', { d: 'M -5.4 -12.4 Q -5 -6 0 -5.6 Q 5 -6 5.4 -12.4 Q 2.6 -10.4 0 -10.4 Q -2.6 -10.4 -5.4 -12.4 Z', fill: hood, stroke: '#4A3320', 'stroke-width': 0.5 }));
+    return;
+  }
+  if (kind === 'winterhood') {
+    // Anja: gevoerde wintermuts met een kat op de schouder.
+    g.append(svgEl('path', { d: 'M -6.6 -13 Q -8 -22.4 0 -22.6 Q 8 -22.4 6.6 -13 Q 3 -17.4 0 -17.4 Q -3 -17.4 -6.6 -13 Z', fill: hood, stroke: '#3C5E76', 'stroke-width': 0.7 }));
+    g.append(svgEl('path', { d: 'M -6.8 -14.6 Q 0 -12.4 6.8 -14.6 L 6.8 -12.4 Q 0 -10.2 -6.8 -12.4 Z', fill: '#E7EEF2' }));
+    const cat = svgEl('g', { transform: 'translate(-8.4,-8.6)' });
+    cat.append(svgEl('ellipse', { cx: 0, cy: 1.4, rx: 3.1, ry: 2.2, fill: '#E4CDB2' }));
+    cat.append(svgEl('circle', { cx: -0.4, cy: -1.6, r: 2.1, fill: '#E4CDB2' }));
+    cat.append(svgEl('path', { d: 'M -2.2 -3 L -1.4 -0.9 L -2.9 -1.1 Z M 1.4 -3 L 0.6 -0.9 L 2.1 -1.1 Z', fill: '#C9A98A' }));
+    cat.append(svgEl('circle', { cx: -1.2, cy: -1.8, r: 0.4, fill: '#3A2E22' }));
+    cat.append(svgEl('circle', { cx: 0.4, cy: -1.8, r: 0.4, fill: '#3A2E22' }));
+    g.append(cat);
+    return;
+  }
+  if (kind === 'chefhat') {
+    // Chef Nikos: hoge koksmuts met een donkere snor.
+    g.append(svgEl('rect', { x: -5.4, y: -17.2, width: 10.8, height: 2.6, rx: 0.6, fill: '#FBFAF6', stroke: '#C9C4B6', 'stroke-width': 0.5 }));
+    g.append(svgEl('path', { d: 'M -5.6 -17 Q -7.4 -25.4 0 -25.8 Q 7.4 -25.4 5.6 -17 Z', fill: '#FBFAF6', stroke: '#C9C4B6', 'stroke-width': 0.6 }));
+    g.append(svgEl('path', { d: 'M -3 -10.6 Q 0 -9.2 3 -10.6 Q 0 -11.8 -3 -10.6 Z', fill: '#3A2A1E' }));
+    return;
+  }
+  if (kind === 'captaincap') {
+    // Kapitein Kilgore: kapiteinspet met goggles en een pijp.
+    g.append(svgEl('path', { d: 'M -6.4 -15.2 Q -6.6 -21.8 0 -22 Q 6.6 -21.8 6.4 -15.2 Z', fill: '#F2F0E8', stroke: '#1C2A44', 'stroke-width': 0.7 }));
+    g.append(svgEl('rect', { x: -6.6, y: -17.2, width: 13.2, height: 2.2, rx: 0.5, fill: hood }));
+    g.append(svgEl('path', { d: 'M -6.6 -15.2 L 4.6 -15.2 L 6.8 -13.4 L -6.6 -13.4 Z', fill: hood }));
+    g.append(svgEl('circle', { cx: 0, cy: -19.2, r: 1.2, fill: '#C9A227' }));
+    g.append(svgEl('circle', { cx: -3.2, cy: -12.6, r: 1.7, fill: '#C9B27A', stroke: '#5C4630', 'stroke-width': 0.5, opacity: 0.85 }));
+    g.append(svgEl('circle', { cx: 3.2, cy: -12.6, r: 1.7, fill: '#C9B27A', stroke: '#5C4630', 'stroke-width': 0.5, opacity: 0.85 }));
+    return;
+  }
+  if (kind === 'ponytail') {
+    // Maria: naar achteren gebonden haar in een staart.
+    g.append(svgEl('path', { d: 'M -6.2 -13.4 Q -7 -20 0 -20.2 Q 7 -20 6.2 -13.4 Q 3 -16.8 0 -16.8 Q -3 -16.8 -6.2 -13.4 Z', fill: hood, stroke: '#33241A', 'stroke-width': 0.6 }));
+    g.append(svgEl('path', { d: 'M -5.8 -17.4 Q -10.4 -15.4 -9.4 -9.4 Q -7.2 -11.6 -6.4 -15.4 Z', fill: hood, stroke: '#33241A', 'stroke-width': 0.5 }));
+    return;
+  }
+  if (kind === 'dwarfbeard') {
+    // Borri: gedrongen dwerg met een imposante baard en ijzeren helmrand.
+    g.append(svgEl('path', { d: 'M -6.6 -13.6 Q -7.2 -19.8 0 -20.2 Q 7.2 -19.8 6.6 -13.6 Z', fill: '#8B939A', stroke: '#4C5359', 'stroke-width': 0.7 }));
+    g.append(svgEl('rect', { x: -6.8, y: -15, width: 13.6, height: 1.8, rx: 0.5, fill: '#B08A3E' }));
+    g.append(svgEl('path', { d: 'M -6 -12.4 Q -6.4 -3.4 0 -2.8 Q 6.4 -3.4 6 -12.4 Q 3 -9.8 0 -9.8 Q -3 -9.8 -6 -12.4 Z', fill: hood, stroke: '#5A3418', 'stroke-width': 0.6 }));
+    return;
+  }
+  // Basiskap — ongewijzigd t.o.v. het originele silhouet.
+  g.append(svgEl('path', {
+    d: 'M -6.5 -13 Q -8.5 -25 0 -25 Q 8.5 -25 6.5 -13 Q 3 -18.5 0 -18.5 Q -3 -18.5 -6.5 -13 Z',
+    fill: hood, stroke: '#fff', 'stroke-width': 0.8
+  }));
+  g.append(svgEl('path', { d: 'M -1.6 -25 L 1.6 -25 L 0 -29.5 Z', class: 'dbc-angler-hood-trim' }));
+}
+
 // RPG-avonturier (kap, cape, gereedschap) i.p.v. het vorige platte
 // visser-silhouet — de voorste arm (en het werktuig erin) wijst standaard
 // naar rechts/voren; facingLeftFor spiegelt de hele groep bij het naar links
 // lopen. Kap en cape blijven vaste, neutrale tinten (net als de mantel in de
 // art-styleguide) zodat het "accent" de speler blijft onderscheiden via de
 // tuniek, ook met meerdere spelers tegelijk in beeld.
-function appendAnglerFigure(g, { accent = 'var(--accent)', skin = '#e8b98a', hood = '#2e5c4a', boots = '#3c2f22', tool = null } = {}) {
+function appendAnglerFigure(g, { accent = 'var(--accent)', skin = '#e8b98a', hood = '#2e5c4a', boots = '#3c2f22', tool = null, headgear = null, ghost = false } = {}) {
+  if (ghost) g.classList.add('dbc-angler-ghost');
   g.append(svgEl('ellipse', { cx: 0, cy: 10, rx: 9, ry: 3, class: 'dbc-angler-shadow' }));
   // cape, achter de tuniek, waaiert uit naar de rugzijde
   g.append(svgEl('path', { d: 'M -6 -8 Q -15 -1 -10 9 Q -6 6 -4 -2 Z', class: 'dbc-angler-cape' }));
@@ -396,12 +644,7 @@ function appendAnglerFigure(g, { accent = 'var(--accent)', skin = '#e8b98a', hoo
     g.append(svgEl('path', { d: 'M 5 -6 Q 9 -3 8 2', fill: 'none', stroke: skin, 'stroke-width': 3, 'stroke-linecap': 'round' }));
   }
   g.append(svgEl('circle', { cx: 0, cy: -13, r: 5.5, fill: skin, stroke: '#0d1117', 'stroke-width': 0.6 }));
-  // kap
-  g.append(svgEl('path', {
-    d: 'M -6.5 -13 Q -8.5 -25 0 -25 Q 8.5 -25 6.5 -13 Q 3 -18.5 0 -18.5 Q -3 -18.5 -6.5 -13 Z',
-    fill: hood, stroke: '#fff', 'stroke-width': 0.8
-  }));
-  g.append(svgEl('path', { d: 'M -1.6 -25 L 1.6 -25 L 0 -29.5 Z', class: 'dbc-angler-hood-trim' }));
+  appendHeadgear(g, headgear, { hood, accent });
   g.append(svgEl('circle', { cx: 0, cy: -15.5, r: 1.3, fill: '#fff' }));
 }
 
@@ -422,7 +665,7 @@ function renderOtherPlayerMarker(svg, p, camX, camY, colorIndex, viewport) {
     class: 'dbc-player dbc-player-other',
     transform: `translate(${cx},${cy}) scale(${facingLeft ? -1 : 1},1)`
   });
-  appendAnglerFigure(g, { accent: color, tool: toolFor(p.fishingPhase, p.gatheringKind, p.inCombat) });
+  appendAnglerFigure(g, { accent: color, tool: toolFor(p.fishingPhase, p.gatheringKind, p.inCombat), ...p.skinVisual });
   svg.append(g);
   if (p.fishingPhase || p.gatheringKind || p.inCombat) {
     const icon = svgEl('text', { x: cx, y: cy - 38, class: 'dbc-player-fishing', 'text-anchor': 'middle' });
@@ -432,6 +675,38 @@ function renderOtherPlayerMarker(svg, p, camX, camY, colorIndex, viewport) {
   const label = svgEl('text', { x: cx, y: cy - 31, class: 'dbc-player-label', 'text-anchor': 'middle' });
   label.textContent = p.name;
   svg.append(label);
+}
+
+// Dorpsbewoner: net als een medespeler getekend, maar niet-klikbaar (puur
+// sfeer) en zonder naamlabel of activiteitsicoon.
+function renderNpcMarker(svg, npc, camX, camY, viewport, you) {
+  if (npc.x < camX - 1 || npc.x > camX + viewport.cols || npc.y < camY - 1 || npc.y > camY + viewport.rows) return;
+  const { cx, cy } = hexPoints(npc.x, npc.y, camX, camY);
+  const profile = npcProfile(npc.id);
+  const g = svgEl('g', {
+    class: 'dbc-player dbc-npc',
+    transform: `translate(${cx},${cy}) scale(${npc.facingLeft ? -1 : 1},1)`
+  });
+  appendAnglerFigure(g, NPC_APPEARANCE[npc.id] || {});
+  if (profile) {
+    const title = svgEl('title');
+    title.textContent = `${profile.name} — ${profile.title}. Tik om te praten.`;
+    g.append(title);
+  }
+  g.onclick = () => handleNpcClick(npc, you);
+  svg.append(g);
+  // Naam en het statussymbool staan buiten de gespiegelde groep, anders lopen
+  // ze achterstevoren mee als de NPC naar links kijkt. Het symbool verklapt
+  // meteen of hier werk ligt: ❗ nieuw, ⏳ bezig, ✅ klaar om in te leveren.
+  const quest = questForNpc(you, npc.id);
+  const marker = svgEl('text', { x: cx, y: cy - 30, class: 'dbc-npc-marker', 'text-anchor': 'middle' });
+  marker.textContent = quest ? (QUEST_STATUS_META[quest.status] || QUEST_STATUS_META.available).icon : '💬';
+  svg.append(marker);
+  if (profile) {
+    const label = svgEl('text', { x: cx, y: cy - 21, class: 'dbc-player-label dbc-npc-label', 'text-anchor': 'middle' });
+    label.textContent = profile.name;
+    svg.append(label);
+  }
 }
 
 // Stabiele pseudo-random waarde per tegelcoördinaat (0..1) — bepaalt welke
@@ -455,6 +730,13 @@ function buildTileDefs(bounds) {
     terrain.append(svgEl('stop', { offset: '55%', 'stop-color': colors[1] }));
     terrain.append(svgEl('stop', { offset: '100%', 'stop-color': colors[2] }));
     defs.append(terrain);
+    // Donkerdere "zijkant"-variant — de rotswand/graszode die zichtbaar wordt
+    // onder een verhoogde tegel (zie TILE_ELEVATION), puur een getemperde
+    // kopie van dezelfde tegelkleuren.
+    const wall = svgEl('linearGradient', { id: `dbc-terrain-wall-${tile}`, x1: '0', y1: '0', x2: '1', y2: '1' });
+    wall.append(svgEl('stop', { offset: '0%', 'stop-color': darkenColor(colors[0], 0.6) }));
+    wall.append(svgEl('stop', { offset: '100%', 'stop-color': darkenColor(colors[2], 0.52) }));
+    defs.append(wall);
   });
   const grad = svgEl('linearGradient', {
     id: 'dbc-atmosphere', gradientUnits: 'userSpaceOnUse',
@@ -464,6 +746,25 @@ function buildTileDefs(bounds) {
   grad.append(svgEl('stop', { offset: '55%', 'stop-color': '#fff', 'stop-opacity': '0' }));
   grad.append(svgEl('stop', { offset: '100%', 'stop-color': '#000', 'stop-opacity': '0.16' }));
   defs.append(grad);
+
+  // Volumetrische shading voor rotsvlakken (heuvels/pieken) — top-lit
+  // gradient i.p.v. platte kleur, zodat de tegel meer als een echte helling
+  // oogt in plaats van een silhouet.
+  const hillGrad = svgEl('linearGradient', { id: 'dbc-hill-face-grad', x1: '0', y1: '0', x2: '0.3', y2: '1' });
+  hillGrad.append(svgEl('stop', { offset: '0%', 'stop-color': '#AEB5AF' }));
+  hillGrad.append(svgEl('stop', { offset: '100%', 'stop-color': '#656E69' }));
+  defs.append(hillGrad);
+  const peakGrad = svgEl('linearGradient', { id: 'dbc-peak-face-grad', x1: '0', y1: '0', x2: '0.35', y2: '1' });
+  peakGrad.append(svgEl('stop', { offset: '0%', 'stop-color': '#A2A8A4' }));
+  peakGrad.append(svgEl('stop', { offset: '100%', 'stop-color': '#5D6461' }));
+  defs.append(peakGrad);
+
+  // Zachte "optil"-schaduw voor reliëfdecors (bomen, heuvels, pieken): tilt
+  // de vorm visueel los van zijn grondschaduw-ellips voor een sterker
+  // hoogte/dieptegevoel, zonder een echte 3D-camera te gebruiken.
+  const lift = svgEl('filter', { id: 'dbc-relief-lift', x: '-60%', y: '-80%', width: '220%', height: '260%' });
+  lift.append(svgEl('feDropShadow', { dx: '0', dy: '1.6', stdDeviation: '1.1', 'flood-color': '#1C2B22', 'flood-opacity': '0.32' }));
+  defs.append(lift);
   return defs;
 }
 
@@ -474,19 +775,23 @@ function appendTreeDecor(svg, cx, cy, seed) {
   const broadleaf = (ox, oy, scale) => {
     const tg = svgEl('g', { transform: `translate(${ox},${oy}) scale(${scale})` });
     tg.append(svgEl('ellipse', { cx: 1, cy: 7, rx: 8.5, ry: 2.3, class: 'dbc-tile-tree-shadow' }));
-    tg.append(svgEl('path', { d: 'M -1 6 L -1 -1 L 2 -1 L 3 6 Z', class: 'dbc-tile-tree-trunk' }));
-    tg.append(svgEl('circle', { cx: -4.2, cy: -2, r: 5.7, class: 'dbc-tile-tree-leaf dbc-tree-leaf-dark' }));
-    tg.append(svgEl('circle', { cx: 4, cy: -1, r: 5.8, class: 'dbc-tile-tree-leaf' }));
-    tg.append(svgEl('circle', { cx: 0, cy: -7, r: 6.3, class: 'dbc-tile-tree-leaf dbc-tree-leaf-mid' }));
-    tg.append(svgEl('path', { d: 'M -4 -8 Q -1 -12 3 -9 Q 0 -7 -3 -5 Z', class: 'dbc-tile-tree-highlight' }));
+    const relief = svgEl('g', { transform: 'translate(0,6) scale(1,1.2) translate(0,-6)', filter: 'url(#dbc-relief-lift)' });
+    relief.append(svgEl('path', { d: 'M -1 6 L -1 -1 L 2 -1 L 3 6 Z', class: 'dbc-tile-tree-trunk' }));
+    relief.append(svgEl('circle', { cx: -4.2, cy: -2, r: 5.7, class: 'dbc-tile-tree-leaf dbc-tree-leaf-dark' }));
+    relief.append(svgEl('circle', { cx: 4, cy: -1, r: 5.8, class: 'dbc-tile-tree-leaf' }));
+    relief.append(svgEl('circle', { cx: 0, cy: -7, r: 6.3, class: 'dbc-tile-tree-leaf dbc-tree-leaf-mid' }));
+    relief.append(svgEl('path', { d: 'M -4 -8 Q -1 -12 3 -9 Q 0 -7 -3 -5 Z', class: 'dbc-tile-tree-highlight' }));
+    tg.append(relief);
     return tg;
   };
   const conifer = (ox, oy, scale) => {
     const tg = svgEl('g', { transform: `translate(${ox},${oy}) scale(${scale})` });
     tg.append(svgEl('ellipse', { cx: 1, cy: 8, rx: 7.5, ry: 2.1, class: 'dbc-tile-tree-shadow' }));
-    tg.append(svgEl('rect', { x: -1.2, y: 3, width: 2.4, height: 6, rx: 0.8, class: 'dbc-tile-tree-trunk' }));
-    tg.append(svgEl('path', { d: 'M 0 -13 L -7 -2 L -4 -2 L -9 5 L 9 5 L 4 -2 L 7 -2 Z', class: 'dbc-conifer-crown' }));
-    tg.append(svgEl('path', { d: 'M 0 -12 L -1 -2 L -5 4 L -8 4 L -4 -2 L -7 -2 Z', class: 'dbc-conifer-light' }));
+    const relief = svgEl('g', { transform: 'translate(0,5) scale(1,1.22) translate(0,-5)', filter: 'url(#dbc-relief-lift)' });
+    relief.append(svgEl('rect', { x: -1.2, y: 3, width: 2.4, height: 6, rx: 0.8, class: 'dbc-tile-tree-trunk' }));
+    relief.append(svgEl('path', { d: 'M 0 -13 L -7 -2 L -4 -2 L -9 5 L 9 5 L 4 -2 L 7 -2 Z', class: 'dbc-conifer-crown' }));
+    relief.append(svgEl('path', { d: 'M 0 -12 L -1 -2 L -5 4 L -8 4 L -4 -2 L -7 -2 Z', class: 'dbc-conifer-light' }));
+    tg.append(relief);
     return tg;
   };
   if (seed < 0.43) g.append(conifer(0, -1, 1));
@@ -499,9 +804,11 @@ function appendHillDecor(svg, cx, cy, seed) {
   const g = svgEl('g', { transform: `translate(${cx},${cy})`, class: 'dbc-tile-decor' });
   const flip = seed > 0.5 ? -1 : 1;
   g.append(svgEl('ellipse', { cx: 1, cy: 7, rx: 11.5, ry: 3, class: 'dbc-tile-hill-shadow' }));
-  g.append(svgEl('path', { d: 'M -10 6 L -7 -3 L -1 -8 L 7 -4 L 10 5 L 5 8 L -6 8 Z', class: 'dbc-tile-hill-face' }));
-  g.append(svgEl('path', { d: flip > 0 ? 'M -7 -3 L -1 -8 L 0 5 L -6 8 Z' : 'M 7 -4 L -1 -8 L 0 5 L 5 8 Z', class: 'dbc-tile-hill-light' }));
-  g.append(svgEl('path', { d: 'M -1 -8 L 7 -4 L 3 1 L 0 5 Z', class: 'dbc-tile-hill-shade' }));
+  const relief = svgEl('g', { transform: 'translate(0,8) scale(1,1.3) translate(0,-8)', filter: 'url(#dbc-relief-lift)' });
+  relief.append(svgEl('path', { d: 'M -10 6 L -7 -3 L -1 -8 L 7 -4 L 10 5 L 5 8 L -6 8 Z', class: 'dbc-tile-hill-face' }));
+  relief.append(svgEl('path', { d: flip > 0 ? 'M -7 -3 L -1 -8 L 0 5 L -6 8 Z' : 'M 7 -4 L -1 -8 L 0 5 L 5 8 Z', class: 'dbc-tile-hill-light' }));
+  relief.append(svgEl('path', { d: 'M -1 -8 L 7 -4 L 3 1 L 0 5 Z', class: 'dbc-tile-hill-shade' }));
+  g.append(relief);
   g.append(svgEl('circle', { cx: -9, cy: 7, r: 1.6, class: 'dbc-tile-scree' }));
   g.append(svgEl('circle', { cx: 9, cy: 7, r: 1.1, class: 'dbc-tile-scree' }));
   svg.append(g);
@@ -511,10 +818,12 @@ function appendPeakDecor(svg, cx, cy, seed) {
   const g = svgEl('g', { transform: `translate(${cx},${cy})`, class: 'dbc-tile-decor' });
   const shoulder = seed > 0.5 ? 5 : -5;
   g.append(svgEl('ellipse', { cx: 1, cy: 8, rx: 13, ry: 3.2, class: 'dbc-tile-hill-shadow' }));
-  g.append(svgEl('polygon', { points: '-12,8 -4,-12 1,-6 5,-14 13,8', class: 'dbc-tile-peak-face' }));
-  g.append(svgEl('polygon', { points: '5,-14 13,8 4,8 1,-5', class: 'dbc-tile-peak-shadow' }));
-  g.append(svgEl('polygon', { points: '-4,-12 0,-7 -2,-5 -5,-7 -7,-5', class: 'dbc-tile-peak-snow' }));
-  g.append(svgEl('polygon', { points: '5,-14 9,-7 6,-8 4,-5 2,-8', class: 'dbc-tile-peak-snow' }));
+  const relief = svgEl('g', { transform: 'translate(0,8) scale(1,1.32) translate(0,-8)', filter: 'url(#dbc-relief-lift)' });
+  relief.append(svgEl('polygon', { points: '-12,8 -4,-12 1,-6 5,-14 13,8', class: 'dbc-tile-peak-face' }));
+  relief.append(svgEl('polygon', { points: '5,-14 13,8 4,8 1,-5', class: 'dbc-tile-peak-shadow' }));
+  relief.append(svgEl('polygon', { points: '-4,-12 0,-7 -2,-5 -5,-7 -7,-5', class: 'dbc-tile-peak-snow' }));
+  relief.append(svgEl('polygon', { points: '5,-14 9,-7 6,-8 4,-5 2,-8', class: 'dbc-tile-peak-snow' }));
+  g.append(relief);
   g.append(svgEl('circle', { cx: shoulder, cy: 8, r: 1.5, class: 'dbc-tile-scree' }));
   svg.append(g);
 }
@@ -617,8 +926,8 @@ function appendCottage(g, variant) {
   }
 }
 
-// Hall of Fame krijgt een obelisk i.p.v. een huisje — thematisch een monument,
-// geen winkel.
+// Het Hero-monument krijgt een obelisk i.p.v. een huisje — thematisch een
+// monument, geen winkel.
 function appendTemple(g) {
   g.append(svgEl('ellipse', { cx: 0, cy: 18, rx: 25, ry: 4.5, class: 'dbc-bldg-shadow' }));
   g.append(svgEl('path', { d: 'M -23 13 H 23 L 20 18 H -20 Z', class: 'dbc-bldg-plaza' }));
@@ -741,18 +1050,22 @@ function boatArtworkUrl(boat) {
 
 function appendBoatModel(svg, boat, cx, cy, { moving = false } = {}) {
   const g = svgEl('g', { class: `dbc-player-boat${moving ? ' moving' : ''}`, transform: `translate(${cx},${cy})` });
+  // Boot 2x vergroot t.o.v. het origineel, verankerd op de waterlijn (y=8)
+  // zodat hij nog altijd op zijn eigen tegel drijft i.p.v. te verschuiven.
+  const scaled = svgEl('g', { transform: 'translate(0,8) scale(2) translate(0,-8)' });
   if (moving) {
-    g.append(svgEl('path', { d: 'M -4 7 Q -10 13 -18 14 M 4 7 Q 10 13 18 14', class: 'dbc-boat-wake' }));
+    scaled.append(svgEl('path', { d: 'M -4 7 Q -10 13 -18 14 M 4 7 Q 10 13 18 14', class: 'dbc-boat-wake' }));
   }
   const width = 30 + Math.min(10, boat.tier || 1) * 1.4;
   const height = boat.tier <= 3 ? 22 : 34;
-  g.append(svgEl('image', { href: boatArtworkUrl(boat), x: -width / 2, y: 8 - height, width, height, preserveAspectRatio: 'xMidYMax meet' }));
-  if (boat.stations.includes('workbench')) g.append(svgEl('rect', { x: -8, y: -7, width: 6, height: 4, rx: 1, class: 'dbc-boat-station' }));
-  if (boat.stations.includes('cookingTable')) g.append(svgEl('circle', { cx: 6, cy: -5, r: 2.6, class: 'dbc-boat-cook' }));
+  scaled.append(svgEl('image', { href: boatArtworkUrl(boat), x: -width / 2, y: 8 - height, width, height, preserveAspectRatio: 'xMidYMax meet' }));
+  if (boat.stations.includes('workbench')) scaled.append(svgEl('rect', { x: -8, y: -7, width: 6, height: 4, rx: 1, class: 'dbc-boat-station' }));
+  if (boat.stations.includes('cookingTable')) scaled.append(svgEl('circle', { cx: 6, cy: -5, r: 2.6, class: 'dbc-boat-cook' }));
+  g.append(scaled);
   svg.append(g);
 }
 
-function renderMapWrap(you, worldData, camX, camY, others = [], harbors = [], dayPhase = 'day', viewport = VIEWPORT_PRESETS.desktop) {
+function renderMapWrap(you, worldData, camX, camY, others = [], harbors = [], dayPhase = 'day', viewport = VIEWPORT_PRESETS.desktop, npcs = []) {
   const { cols, rows, bounds } = viewport;
   const svg = svgEl('svg', {
     viewBox: `${bounds.minX} ${bounds.minY} ${bounds.width} ${bounds.height}`,
@@ -782,6 +1095,20 @@ function renderMapWrap(you, worldData, camX, camY, others = [], harbors = [], da
       const { cx, cy } = hexPoints(wx, wy, camX, camY);
       const points = hexCorners(cx, cy, HEX_DRAW_SIZE).map(([px, py]) => `${px},${py}`).join(' ');
       const terrain = TILE_PALETTE[tile] ? tile : 'L';
+      const rise = tileElevation(terrain);
+      if (rise > 0) {
+        // Elke tegel met reliëf tekent een donkerdere kopie van zichzelf iets
+        // lager als "zijkant"; de echte tegel (hieronder, onveranderde
+        // positie) dekt het bovenste deel af, zodat alleen de rand als een
+        // stukje rotswand/graszode zichtbaar blijft. Latere (lagere/verdere)
+        // tegels in de rastervolgorde overschilderen dit vanzelf weer waar ze
+        // overlappen, dus geen aparte occlusieberekening nodig.
+        const wallPoints = hexCorners(cx, cy + rise, HEX_DRAW_SIZE).map(([px, py]) => `${px},${py}`).join(' ');
+        svg.append(svgEl('polygon', {
+          points: wallPoints, fill: `url(#dbc-terrain-wall-${terrain})`,
+          class: 'dbc-tile-wall', 'pointer-events': 'none'
+        }));
+      }
       const hex = svgEl('polygon', { points, fill: `url(#dbc-terrain-${terrain})`, class: `dbc-tile dbc-tile-${terrain}` });
       const tree = worldData.trees?.[`${wx}:${wy}`];
       if (tree) {
@@ -863,6 +1190,7 @@ function renderMapWrap(you, worldData, camX, camY, others = [], harbors = [], da
   });
 
   others.forEach((other, index) => renderOtherPlayerMarker(svg, other, camX, camY, index, viewport));
+  npcs.forEach((npc) => renderNpcMarker(svg, npc, camX, camY, viewport, you));
 
   if (you.mode === 'land' && Number.isFinite(you.boat.x) && Number.isFinite(you.boat.y)
     && you.boat.x >= camX - 1 && you.boat.x <= camX + cols && you.boat.y >= camY - 1 && you.boat.y <= camY + rows) {
@@ -879,7 +1207,7 @@ function renderMapWrap(you, worldData, camX, camY, others = [], harbors = [], da
       class: 'dbc-player',
       transform: `translate(${px},${py}) scale(${facingLeft ? -1 : 1},1)`
     });
-    appendAnglerFigure(player, { tool: toolFor(you.fishing, you.gathering?.kind, Boolean(you.combat)) });
+    appendAnglerFigure(player, { tool: toolFor(you.fishing, you.gathering?.kind, Boolean(you.combat)), ...you.skinVisual });
     svg.append(player);
   }
 
@@ -1196,17 +1524,105 @@ function renderBoatBasePanel(you) {
 
 function renderActivePanel(you, others, harbors) {
   if (activePanel === 'boat') return renderBoatBasePanel(you);
-  if (activePanel === 'inventaris') return renderInventarisPanel(you, harbors);
-  if (activePanel === 'markt') return renderMarktplaatsPanel(you, others);
-  if (activePanel === 'vaardigheden') return renderVaardighedenPanel(you);
+  if (activePanel === 'inventaris') return renderInventarisPanel(you, others, harbors);
   if (activePanel === 'monument') return renderMonumentPanel(you);
   if (activePanel === 'world-map') return renderMapPanel(you);
+  if (activePanel === 'npc') return renderNpcPanel(you);
   return E('div', 'dbc-hint', 'Tik op de kaart om te wandelen, op water vlak naast je om te vissen, op een boom/rots vlak naast je om te hakken/houwen, of op een dier om te jagen.');
+}
+
+function questForNpc(you, npcId) {
+  return (you.quests || []).find((quest) => quest.npcId === npcId) || null;
+}
+
+const QUEST_STATUS_META = {
+  available: { icon: '❗', label: 'Nieuw' },
+  active: { icon: '⏳', label: 'Bezig' },
+  ready: { icon: '✅', label: 'Klaar om in te leveren' },
+  done: { icon: '🏅', label: 'Afgerond' }
+};
+
+// Concrete beloning naast de verhalende tekst, zodat je weet wat je krijgt.
+function rewardSummary(quest) {
+  const parts = [];
+  if (quest.rewards?.cash) parts.push(`€${quest.rewards.cash}`);
+  Object.entries(quest.rewards?.xp || {}).forEach(([skill, amount]) => {
+    parts.push(`+${amount} ${SKILL_LABELS[skill]?.label || skill}-xp`);
+  });
+  return parts.join(' · ');
+}
+
+function renderQuestGoals(quest) {
+  const list = E('div', 'dbc-quest-goals');
+  quest.goals.forEach((goal) => {
+    const row = E('div', 'dbc-quest-goal');
+    const done = goal.value >= goal.target;
+    row.append(E('span', `dbc-quest-goal-check${done ? ' met' : ''}`, done ? '✔' : '•'));
+    row.append(E('span', 'dbc-quest-goal-label', goal.label));
+    const track = E('div', 'dbc-timer-track dbc-quest-track');
+    const fill = E('div', 'dbc-timer-fill dbc-quest-fill');
+    fill.style.width = `${Math.min(100, Math.round((goal.value / goal.target) * 100))}%`;
+    track.append(fill);
+    row.append(track);
+    row.append(E('span', 'dbc-quest-goal-count', `${Math.min(goal.value, goal.target)}/${goal.target}`));
+    list.append(row);
+  });
+  return list;
+}
+
+// Gesprek met een dorpsbewoner: portret, karaktertekst en zijn opdracht —
+// aannemen, voortgang volgen en inleveren gebeurt hier.
+function renderNpcPanel(you) {
+  const wrap = E('div', 'dbc-panel dbc-v6-panel dbc-npc-panel');
+  const profile = npcProfile(activeNpcId);
+  if (!profile) {
+    wrap.append(renderV6PanelTitle('💬', 'Gesprek'));
+    wrap.append(E('p', 'dbc-panel-copy', 'Deze dorpsbewoner is niet meer in de buurt.'));
+    return wrap;
+  }
+  wrap.append(renderV6PanelTitle('', profile.name));
+  wrap.append(E('p', 'dbc-panel-copy', profile.title));
+
+  const talk = E('div', 'dbc-npc-talk');
+  talk.append(renderSkinAvatar(NPC_APPEARANCE[profile.id], 78));
+  talk.append(E('p', 'dbc-npc-quote', `“${profile.dialogue}”`));
+  wrap.append(talk);
+
+  const quest = questForNpc(you, profile.id);
+  if (quest) {
+    const meta = QUEST_STATUS_META[quest.status] || QUEST_STATUS_META.available;
+    const card = E('div', `dbc-npc-quest dbc-quest-${quest.status}`);
+    const head = E('div', 'dbc-npc-quest-head');
+    head.append(E('div', 'dbc-gear-title', quest.title));
+    head.append(E('span', 'dbc-npc-quest-type', `${meta.icon} ${meta.label}`));
+    card.append(head);
+    card.append(E('p', 'dbc-gear-help', quest.context));
+    const rows = E('dl', 'dbc-npc-quest-rows');
+    rows.append(E('dt', '', 'Doel'), E('dd', '', quest.objective));
+    rows.append(E('dt', '', 'Beloning'), E('dd', '', `${quest.reward} (${rewardSummary(quest)})`));
+    card.append(rows);
+
+    if (quest.status !== 'available') card.append(renderQuestGoals(quest));
+
+    if (quest.status === 'available') {
+      const accept = E('button', 'primary', 'Opdracht aannemen');
+      accept.onclick = () => action('questAccept', { id: quest.id });
+      card.append(accept);
+    } else if (quest.status === 'ready') {
+      const hand = E('button', 'primary', 'Inleveren');
+      hand.onclick = () => action('questComplete', { id: quest.id });
+      card.append(hand);
+    } else if (quest.status === 'done') {
+      card.append(E('p', 'dbc-gear-help', 'Deze opdracht heb je al voor hem afgerond.'));
+    }
+    wrap.append(card);
+  }
+  return wrap;
 }
 
 function renderMapPanel(you) {
   const wrap = E('div', 'dbc-panel dbc-v6-panel dbc-world-map-panel');
-  wrap.append(renderV6PanelTitle('🗺️', 'Grote map'));
+  wrap.append(renderV6PanelTitle(uiIconImg('map', 'dbc-title-art'), 'Grote map'));
   wrap.append(E('p', 'dbc-panel-copy', 'Het vertrouwde eiland ligt midden in een uitgestrekte archipel. Verken de eilandring, de noordelijke eilandjes en de verre zuidkusten. Je positie staat in het rood.'));
 
   if (!world) {
@@ -1247,9 +1663,13 @@ function renderMapPanel(you) {
   return wrap;
 }
 
+// `icon` mag een emoji zijn of een klaargezet <img> (zie uiIconImg) voor de
+// geïllustreerde ronde iconen.
 function renderV6PanelTitle(icon, label, className = '') {
   const title = E('h4', `dbc-v6-title${className ? ` ${className}` : ''}`);
-  title.append(E('span', 'dbc-v6-title-icon', icon), E('span', '', label));
+  const iconWrap = E('span', 'dbc-v6-title-icon');
+  if (icon instanceof Node) iconWrap.append(icon); else iconWrap.textContent = icon;
+  title.append(iconWrap, E('span', '', label));
   return title;
 }
 
@@ -1264,19 +1684,18 @@ function renderSubtabs(tabs, activeId, onSelect) {
   return row;
 }
 
-// Uitrusting: per categorie de eigen items als aan/uit-knoppen (actief item
-// gemarkeerd), met een slijtagebalk en een Herstellen-knop zodra een stuk
-// niet meer volledig intact is. Kopen gebeurt op de Marktplaats.
+// Mijn uitrusting: per categorie de eigen items als aan/uit-knoppen (actief
+// item gemarkeerd), met een slijtagebalk en een Herstellen-knop zodra een
+// stuk niet meer volledig intact is. Kopen gebeurt bij Te koop.
 function renderEquipSection(you) {
   const wrap = E('div', 'dbc-equip-section');
-  wrap.append(E('h5', '', 'Uitrusting'));
   Object.keys(GEAR_CATEGORY_META).forEach((category) => {
     const meta = GEAR_CATEGORY_META[category];
     const slot = you.gearShop[category];
     const card = E('div', 'dbc-gear-card');
     card.append(E('div', 'dbc-gear-title', `${meta.icon} ${meta.label}`));
     if (!slot.owned.length) {
-      card.append(E('p', 'dbc-gear-help', 'Nog niets gekocht — bezoek de Marktplaats.'));
+      card.append(E('p', 'dbc-gear-help', 'Nog niets gekocht — bekijk Te koop.'));
     } else {
       slot.owned.forEach((ownedEntry) => {
         const item = slot.catalog.find((entry) => entry.id === ownedEntry.id);
@@ -1306,8 +1725,26 @@ const INVENTARIS_TABS = [
   { id: 'bezit', icon: '🎒', label: 'Bezittingen' },
   { id: 'sets', icon: '📖', label: 'Sets' },
   { id: 'uitrusting', icon: '⭐', label: 'Uitrusting' },
-  { id: 'bouwen', icon: '🔨', label: 'Bouwen' }
+  { id: 'bouwen', icon: '🔨', label: 'Bouwen & Handelen' }
 ];
+
+let uitrustingTab = 'mijn';
+const UITRUSTING_TABS = [
+  { id: 'mijn', icon: '⭐', label: 'Mijn uitrusting' },
+  { id: 'te-koop', icon: '🛒', label: 'Te koop' }
+];
+
+// Uitrusting combineert wat je al bezit ("Mijn uitrusting": kleding, wapens
+// en schilden om uit te rusten) met de winkel ("Te koop": drankjes, skins en
+// de volledige kledingcatalogus) — voorheen respectievelijk in Inventaris en
+// Marktplaats.
+function renderUitrustingSection(you) {
+  const wrap = E('div', 'dbc-uitrusting-section');
+  wrap.append(renderSubtabs(UITRUSTING_TABS, uitrustingTab, (id) => { uitrustingTab = id; renderGame(state.room); }));
+  if (uitrustingTab === 'mijn') wrap.append(renderEquipSection(you));
+  else wrap.append(renderShopSection(you));
+  return wrap;
+}
 
 function renderBouwenSection(you, harbors) {
   const wrap = E('div', 'dbc-panel');
@@ -1330,7 +1767,17 @@ function renderBouwenSection(you, harbors) {
   return wrap;
 }
 
-function renderInventarisPanel(you, harbors) {
+// Bouwen & Handelen combineert de aanlegsteiger met ruilen tussen spelers —
+// voorheen respectievelijk in Inventaris en Marktplaats.
+function renderBouwenHandelenSection(you, others, harbors) {
+  const wrap = E('div', 'dbc-panel');
+  wrap.append(renderBouwenSection(you, harbors));
+  wrap.append(E('h5', '', '🤝 Handelen'));
+  wrap.append(renderRuilenBody(you, others));
+  return wrap;
+}
+
+function renderInventarisPanel(you, others, harbors) {
   const wrap = E('div', 'dbc-panel dbc-inventory-panel');
   const title = E('h4', 'dbc-inventory-title');
   const icon = svgEl('svg', { viewBox: '0 0 48 48', class: 'dbc-inventory-title-icon', 'aria-hidden': 'true' });
@@ -1342,13 +1789,13 @@ function renderInventarisPanel(you, harbors) {
   );
   title.append(icon, E('span', '', 'Inventaris'));
   wrap.append(title);
-  wrap.append(E('p', 'dbc-panel-copy', 'Al je bezittingen, je setvoortgang en je uitrusting op één plek.'));
+  wrap.append(E('p', 'dbc-panel-copy', 'Al je bezittingen, je setvoortgang, uitrusting en handel op één plek.'));
   wrap.append(renderSubtabs(INVENTARIS_TABS, inventarisTab, (id) => { inventarisTab = id; renderGame(state.room); }));
 
   if (inventarisTab === 'bezit') {
-    wrap.append(renderInventory(you, 'fish', { mode: 'readOnly' }));
-    wrap.append(renderInventory(you, 'wood', { mode: 'readOnly' }));
-    wrap.append(renderInventory(you, 'rock', { mode: 'readOnly' }));
+    wrap.append(renderInventory(you, 'fish'));
+    wrap.append(renderInventory(you, 'wood'));
+    wrap.append(renderInventory(you, 'rock'));
     wrap.append(renderInventory(you, 'meat', { mode: 'eat' }));
   } else if (inventarisTab === 'sets') {
     wrap.append(renderSets(you, 'fish'));
@@ -1356,9 +1803,9 @@ function renderInventarisPanel(you, harbors) {
     wrap.append(renderSets(you, 'rock'));
     wrap.append(renderSets(you, 'meat'));
   } else if (inventarisTab === 'uitrusting') {
-    wrap.append(renderEquipSection(you));
+    wrap.append(renderUitrustingSection(you));
   } else if (inventarisTab === 'bouwen') {
-    wrap.append(renderBouwenSection(you, harbors));
+    wrap.append(renderBouwenHandelenSection(you, others, harbors));
   }
   return wrap;
 }
@@ -1383,10 +1830,29 @@ function renderConsumableShop(you) {
 
 // Winkel: per categorie de volledige catalogus, met "In bezit" i.p.v. een
 // koopknop zodra je het al hebt.
+function renderSkinShop(you) {
+  const wrap = E('div', 'dbc-gear-grid');
+  (you.skinShop || []).forEach((item) => {
+    const owned = (you.skinsOwned || []).includes(item.id);
+    const card = E('div', 'dbc-gear-card');
+    card.append(renderSkinAvatar(item));
+    card.append(E('div', 'dbc-gear-title', `${item.icon} ${item.name}`));
+    card.append(E('p', 'dbc-gear-help', item.description));
+    const button = E('button', 'secondary', owned ? 'In bezit' : `Kopen (€${item.price})`);
+    button.disabled = owned || you.cash < item.price;
+    button.onclick = () => action('buySkin', { id: item.id });
+    card.append(button);
+    wrap.append(card);
+  });
+  return wrap;
+}
+
 function renderShopSection(you) {
   const wrap = E('div', 'dbc-shop-section');
   wrap.append(E('h5', '', '⚡ Drankjes'));
   wrap.append(renderConsumableShop(you));
+  wrap.append(E('h5', '', '🧑‍🎤 Skins'));
+  wrap.append(renderSkinShop(you));
   Object.keys(GEAR_CATEGORY_META).forEach((category) => {
     const meta = GEAR_CATEGORY_META[category];
     const slot = you.gearShop[category];
@@ -1409,56 +1875,35 @@ function renderShopSection(you) {
   return wrap;
 }
 
-let marktTab = 'verkopen';
-const MARKT_TABS = [
-  { id: 'verkopen', icon: '🐟', label: 'Verkopen' },
-  { id: 'winkel', icon: '🧥', label: 'Winkel' },
-  { id: 'ruilen', icon: '🤝', label: 'Ruilen' }
-];
 
-function renderMarktplaatsPanel(you, others) {
-  const wrap = E('div', 'dbc-panel dbc-v6-panel dbc-market-panel');
-  wrap.append(renderV6PanelTitle('🏪', 'Marktplaats'));
-  wrap.append(E('p', 'dbc-panel-copy', 'Verkoop je vangst, koop uitrusting of ruil met andere spelers in deze wereld.'));
-  wrap.append(renderSubtabs(MARKT_TABS, marktTab, (id) => { marktTab = id; renderGame(state.room); }));
-
-  if (marktTab === 'verkopen') {
-    wrap.append(renderInventory(you, 'fish'));
-    wrap.append(renderInventory(you, 'wood'));
-    wrap.append(renderInventory(you, 'rock'));
-    wrap.append(renderInventory(you, 'meat'));
-  } else if (marktTab === 'winkel') {
-    wrap.append(renderShopSection(you));
-  } else if (marktTab === 'ruilen') {
-    wrap.append(renderRuilenBody(you, others));
-  }
-  return wrap;
-}
-
-function renderVaardighedenPanel(you) {
-  const wrap = E('div', 'dbc-panel dbc-v6-panel dbc-skills-panel');
-  const heading = E('div', 'dbc-skills-heading');
-  heading.append(E('span', 'dbc-skills-sun', '☀️'), renderV6PanelTitle('', `Vaardigheden · totaalniveau ${you.totalLevel}`, 'dbc-skills-title'));
-  wrap.append(heading);
-  wrap.append(E('p', 'dbc-panel-copy', 'Elke vangst, kap, delving, jacht, nieuwe ontdekking en ruil levert xp op. Niveau 1 tot en met 99 per vaardigheid.'));
-  const grid = E('div', 'dbc-gear-grid');
+// Vaardigheden-tabel op de Hero-pagina, boven de ranglijst: vijf kolommen
+// (naam, niveau, verduidelijking, progressiebalk, xp) i.p.v. de vroegere
+// aparte kaarten-grid, zodat alle zes vaardigheden compact naast elkaar
+// vergelijkbaar zijn.
+function renderSkillsTable(you) {
+  const wrap = E('div', 'dbc-skills-table-wrap');
+  const table = E('table', 'dbc-skills-table');
+  const head = E('tr');
+  ['Vaardigheid', 'Niveau', 'Verduidelijking', 'Voortgang', 'Xp'].forEach((label) => head.append(E('th', '', label)));
+  table.append(head);
   Object.keys(SKILL_LABELS).forEach((key) => {
     const info = SKILL_LABELS[key];
     const skill = you.skills[key];
-    const card = E('div', `dbc-gear-card dbc-skill-card dbc-skill-${key}`);
-    card.append(E('div', 'dbc-gear-title', `${info.icon} ${info.label} · niveau ${skill.level}/99`));
-    card.append(E('p', 'dbc-gear-help', info.help));
+    const row = E('tr', `dbc-skill-row dbc-skill-${key}`);
+    row.append(E('td', 'dbc-skill-name', `${info.icon} ${info.label}`));
+    row.append(E('td', 'dbc-skill-level', `${skill.level}/99`));
+    row.append(E('td', 'dbc-skill-help', info.help));
+    const progressCell = E('td', 'dbc-skill-progress-cell');
     const track = E('div', 'dbc-timer-track dbc-skill-track');
     const fill = E('div', 'dbc-timer-fill dbc-skill-fill');
     fill.style.width = `${skill.maxed ? 100 : Math.round((skill.xpIntoLevel / skill.xpForNextLevel) * 100)}%`;
     track.append(fill);
-    card.append(track);
-    card.append(E('p', 'dbc-gear-help', skill.maxed
-      ? `${skill.xp} xp · maximumniveau bereikt`
-      : `${skill.xpIntoLevel}/${skill.xpForNextLevel} xp naar niveau ${skill.level + 1}`));
-    grid.append(card);
+    progressCell.append(track);
+    row.append(progressCell);
+    row.append(E('td', 'dbc-skill-xp', skill.maxed ? `${skill.xp} xp · max` : `${skill.xpIntoLevel}/${skill.xpForNextLevel} xp`));
+    table.append(row);
   });
-  wrap.append(grid);
+  wrap.append(table);
   return wrap;
 }
 
@@ -1613,9 +2058,79 @@ function renderTradeList(you) {
   return wrap;
 }
 
-function renderMonumentPanel() {
+// Kleine SVG-preview van de anglerrig met een skin-kleurenpalet erop — zowel
+// in de Winkel (koopkaart) als op de Hero-pagina (huidige/eigen skins).
+function renderSkinAvatar(palette, size = 48) {
+  const svg = svgEl('svg', { viewBox: '-20 -34 40 50', width: size, height: Math.round(size * 1.25), class: 'dbc-skin-avatar' });
+  const g = svgEl('g', { transform: 'translate(0,3)' });
+  appendAnglerFigure(g, palette || {});
+  svg.append(g);
+  return svg;
+}
+
+function renderMonumentPanel(you) {
   const wrap = E('div', 'dbc-panel dbc-v6-panel dbc-monument-panel');
-  wrap.append(renderV6PanelTitle('🏆', 'Hall of Fame'));
+  wrap.append(renderV6PanelTitle(uiIconImg('hero', 'dbc-title-art'), 'Hero'));
+
+  const currentSkin = (you.skinShop || []).find((s) => s.id === you.skin);
+  const hero = E('div', 'dbc-hero-card');
+  hero.append(renderSkinAvatar(you.skinVisual, 64));
+  const heroInfo = E('div', 'dbc-hero-info');
+  heroInfo.append(E('div', 'dbc-gear-title', currentSkin ? `${currentSkin.icon} ${currentSkin.name}` : '🎣 Basis'));
+  const statsRow = E('div', 'dbc-hero-stats');
+  statsRow.append(E('span', '', `💰 €${you.cash}`));
+  statsRow.append(E('span', '', `📖 ${you.discovered.length} soorten`));
+  statsRow.append(E('span', '', `⭐ Totaalniveau ${you.totalLevel}`));
+  heroInfo.append(statsRow);
+  hero.append(heroInfo);
+  wrap.append(hero);
+
+  const owned = ['default', ...(you.skinsOwned || []).filter((id) => id !== 'default')];
+  if (owned.length > 1) {
+    wrap.append(E('h5', '', '🧑‍🎤 Jouw skins'));
+    const grid = E('div', 'dbc-gear-grid');
+    owned.forEach((id) => {
+      const item = id === 'default' ? { id: 'default', name: 'Basis', icon: '🎣' } : you.skinShop.find((s) => s.id === id);
+      if (!item) return;
+      const isEquipped = you.skin === id;
+      const card = E('div', 'dbc-gear-card');
+      card.append(renderSkinAvatar(id === 'default' ? null : item));
+      card.append(E('div', 'dbc-gear-title', `${item.icon} ${item.name}`));
+      const btn = E('button', `dbc-subtab-btn${isEquipped ? ' active' : ''}`, isEquipped ? 'Actief' : 'Dragen');
+      btn.type = 'button';
+      btn.disabled = isEquipped;
+      btn.onclick = () => action('equipSkin', { id });
+      card.append(btn);
+      grid.append(card);
+    });
+    wrap.append(grid);
+  }
+
+  const running = (you.quests || []).filter((quest) => quest.status !== 'available');
+  wrap.append(E('h5', '', `📜 Opdrachten · ${running.filter((q) => q.status === 'done').length}/${(you.quests || []).length} afgerond`));
+  if (!running.length) {
+    wrap.append(E('p', 'dbc-panel-copy', 'Nog geen opdrachten aangenomen. Loop naar een dorpsbewoner met een ❗ boven zijn hoofd en praat met hem.'));
+  } else {
+    const list = E('div', 'dbc-quest-list');
+    running.forEach((quest) => {
+      const meta = QUEST_STATUS_META[quest.status] || QUEST_STATUS_META.active;
+      const card = E('div', `dbc-quest-card dbc-quest-${quest.status}`);
+      const head = E('div', 'dbc-npc-quest-head');
+      head.append(E('div', 'dbc-gear-title', quest.title));
+      head.append(E('span', 'dbc-npc-quest-type', `${meta.icon} ${meta.label}`));
+      card.append(head);
+      card.append(E('p', 'dbc-gear-help', `${quest.npcName} · ${quest.objective}`));
+      if (quest.status !== 'done') card.append(renderQuestGoals(quest));
+      list.append(card);
+    });
+    wrap.append(list);
+  }
+
+  wrap.append(E('h5', '', `⭐ Vaardigheden · totaalniveau ${you.totalLevel}`));
+  wrap.append(E('p', 'dbc-panel-copy', 'Elke vangst, kap, delving, jacht, nieuwe ontdekking en ruil levert xp op. Niveau 1 tot en met 99 per vaardigheid.'));
+  wrap.append(renderSkillsTable(you));
+
+  wrap.append(E('h5', '', '🏆 Ranglijst'));
   if (leaderboardData === null) {
     wrap.append(E('p', 'dbc-panel-copy', 'Leaderboard wordt geladen...'));
     if (!leaderboardPromise) loadLeaderboard();
@@ -1725,9 +2240,10 @@ function renderCookSection(you) {
   return wrap;
 }
 
-// `mode` bepaalt de actie per rij: 'sell' (Marktplaats, standaard) toont
-// selectie + verkoopknoppen, 'readOnly' (Inventaris: vis/hout/steen) toont
-// enkel de lijst, 'eat' (Inventaris: vlees) toont kwaliteit + Roosteren/Eet.
+// `mode` bepaalt de extra's per rij: 'sell' (standaard: vis/hout/steen) toont
+// selectie + verkoopknoppen, 'eat' (vlees) toont daarnaast ook kwaliteit en
+// Roosteren/Eet — verkopen blijft ook bij vlees altijd mogelijk, want
+// Bezittingen combineert nu bekijken én verkopen op één plek.
 function renderInventory(you, kind = 'fish', { mode = 'sell' } = {}) {
   const list = kind === 'fish' ? you.inventory : kind === 'wood' ? you.woodInventory : kind === 'rock' ? you.rockInventory : you.meatInventory;
   const labels = INVENTORY_LABELS[kind];
@@ -1743,35 +2259,32 @@ function renderInventory(you, kind = 'fish', { mode = 'sell' } = {}) {
   const validUids = new Set(list.map((item) => item.uid));
   for (const uid of selectedUids) if (!validUids.has(uid)) selectedUids.delete(uid);
 
-  if (mode === 'sell') {
-    const actionsRow = E('div', 'dbc-inventory-actions');
-    const sellSelected = E('button', 'primary', `Verkoop geselecteerde (${selectedUids.size})`);
-    sellSelected.disabled = !selectedUids.size;
-    sellSelected.onclick = () => { action('sell', { kind, uids: [...selectedUids] }); selectedUids.clear(); };
-    const sellAll = E('button', 'secondary', 'Verkoop alles');
-    sellAll.onclick = () => { action('sell', { kind, uid: 'all' }); selectedUids.clear(); };
-    actionsRow.append(sellSelected, sellAll);
-    wrap.append(actionsRow);
-  } else if (mode === 'eat') {
-    const eatAll = E('button', 'primary', 'Eet alles op');
+  const actionsRow = E('div', 'dbc-inventory-actions');
+  const sellSelected = E('button', 'primary', `Verkoop geselecteerde (${selectedUids.size})`);
+  sellSelected.disabled = !selectedUids.size;
+  sellSelected.onclick = () => { action('sell', { kind, uids: [...selectedUids] }); selectedUids.clear(); };
+  const sellAll = E('button', 'secondary', 'Verkoop alles');
+  sellAll.onclick = () => { action('sell', { kind, uid: 'all' }); selectedUids.clear(); };
+  actionsRow.append(sellSelected, sellAll);
+  if (mode === 'eat') {
+    const eatAll = E('button', 'secondary', 'Eet alles op');
     eatAll.onclick = () => action('eat', { uid: 'all' });
-    wrap.append(eatAll);
+    actionsRow.append(eatAll);
   }
+  wrap.append(actionsRow);
 
   const listWrap = E('div', 'dbc-inventory-list');
   list.forEach((item) => {
     const entry = item[labels.itemKey];
     const row = E('div', 'dbc-inventory-row');
-    if (mode === 'sell') {
-      const checkbox = E('input', 'dbc-inventory-check');
-      checkbox.type = 'checkbox';
-      checkbox.checked = selectedUids.has(item.uid);
-      checkbox.onchange = () => {
-        if (checkbox.checked) selectedUids.add(item.uid); else selectedUids.delete(item.uid);
-        renderGame(state.room);
-      };
-      row.append(checkbox);
-    }
+    const checkbox = E('input', 'dbc-inventory-check');
+    checkbox.type = 'checkbox';
+    checkbox.checked = selectedUids.has(item.uid);
+    checkbox.onchange = () => {
+      if (checkbox.checked) selectedUids.add(item.uid); else selectedUids.delete(item.uid);
+      renderGame(state.room);
+    };
+    row.append(checkbox);
     row.append(E('span', 'dbc-inventory-label', `${entry.icon} ${entry.name} · ${item.weightKg.toFixed(1)} kg`));
     if (mode === 'eat') {
       const qualityChip = E('span', `dbc-inventory-quality ${item.quality}`, QUALITY_LABEL[item.quality] || 'Rauw');
@@ -1786,14 +2299,11 @@ function renderInventory(you, kind = 'fish', { mode = 'sell' } = {}) {
       const eatButton = E('button', 'secondary', 'Eet');
       eatButton.onclick = () => action('eat', { uid: item.uid });
       row.append(eatButton);
-    } else {
-      row.append(E('span', 'dbc-inventory-price', `€${item.price}`));
-      if (mode === 'sell') {
-        const sellButton = E('button', 'secondary', 'Verkoop');
-        sellButton.onclick = () => { action('sell', { kind, uid: item.uid }); selectedUids.delete(item.uid); };
-        row.append(sellButton);
-      }
     }
+    row.append(E('span', 'dbc-inventory-price', `€${item.price}`));
+    const sellButton = E('button', 'secondary', 'Verkoop');
+    sellButton.onclick = () => { action('sell', { kind, uid: item.uid }); selectedUids.delete(item.uid); };
+    row.append(sellButton);
     listWrap.append(row);
   });
   wrap.append(listWrap);

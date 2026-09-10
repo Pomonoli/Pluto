@@ -1,14 +1,30 @@
 'use strict';
 
 const { getWorld, isWalkable, isWater, resourceAt, nearestWalkable, findPath, hexDistance, biomeAt, tileAt, WORLD_VERSION, migrateSavedWorld } = require('./worldgen');
+const { hexRing } = require('./hexmath');
 const { SETS, fishForBiome, getFish, priceFor: fishPriceFor } = require('./fish');
 const resources = require('./resources');
 const gear = require('./gear');
+const skins = require('./skins');
+const npcs = require('./npcs');
+const quests = require('./quests');
 const recipes = require('./recipes');
 const slice = require('./slice-content');
 const { SKILL_KEYS, MAX_SKILL_LEVEL, LEVEL_XP, levelForXp, totalLevel } = require('./skill-levels');
 
 const STEP_MS = 170;
+// Dorpsbewoners lopen bewust trager en pauzeren veel langer tussen twee
+// wandelbesluiten dan spelers — puur sfeer, geen haast, en het voorkomt dat
+// de kaart (die bij elke state-wijziging volledig herbouwt) onnodig vaak
+// ververst terwijl niemand actief speelt.
+const NPC_STEP_MS = 550;
+const NPC_WANDER_RADIUS = 4;
+const NPC_DECISION_MIN_MS = 4000;
+const NPC_DECISION_MAX_MS = 9000;
+// Straal (in hexen) waarbinnen een NPC stilstaat zodra een speler dichtbij
+// is — voorkomt onnodige verversingen tijdens spelen, en zet de NPC alvast
+// stil klaar voor een toekomstig gesprek.
+const NPC_PAUSE_RADIUS = 5;
 const HOOK_WINDOW_MS = 900;
 const REEL_WINDOW_MIN_MS = 700;
 const REEL_WINDOW_MAX_MS = 1300;
@@ -233,6 +249,7 @@ function defaultStats() { return { health: MAX_HEALTH, energy: MAX_ENERGY }; }
 function defaultGearOwned() { return Object.fromEntries(gear.CATEGORIES.map((category) => [category, []])); }
 function defaultEquipped() { return Object.fromEntries(gear.CATEGORIES.map((category) => [category, null])); }
 function defaultGearDurability() { return Object.fromEntries(gear.CATEGORIES.map((category) => [category, {}])); }
+function defaultSkinsOwned() { return ['default']; }
 function defaultBoat() {
   return {
     hull: slice.boat.hull,
@@ -416,6 +433,10 @@ function sanitizeSaved(saved) {
   if (Number.isFinite(health)) stats.health = Math.max(0, Math.min(MAX_HEALTH, Math.round(health)));
   const energy = Number(saved?.stats?.energy);
   if (Number.isFinite(energy)) stats.energy = Math.max(0, Math.min(MAX_ENERGY, Math.round(energy)));
+  const playerQuests = quests.sanitizeQuests(saved?.quests);
+  const savedSkinsOwned = Array.isArray(saved?.skinsOwned) ? saved.skinsOwned : [];
+  const skinsOwned = [...new Set(['default', ...savedSkinsOwned.filter((id) => skins.getSkin(id))])];
+  const skin = saved?.skin && skinsOwned.includes(saved.skin) ? saved.skin : 'default';
   return {
     cash: Math.max(0, Number(saved?.cash) || 0),
     discovered,
@@ -433,6 +454,9 @@ function sanitizeSaved(saved) {
     stats,
     setBonuses,
     skills,
+    skinsOwned,
+    skin,
+    quests: playerQuests,
     heaviestKg: Math.max(0, Number(saved?.heaviestKg) || 0),
     worldVersion: Number(saved?.worldVersion) || 1,
     x: Number.isFinite(Number(saved?.x)) ? Math.round(Number(saved.x)) : null,
@@ -481,6 +505,36 @@ function preparePlayers(players, { db }) {
   return players.map((player) => ({ ...player, dbcState: player.userId ? db.getDeepBleuCPlayer(player.userId) : null }));
 }
 
+// Dorpsbewoners: puur decoratieve figuren die rustig rondlopen nabij hun
+// vaste thuisplek (zie world.npcHomes). Ze varen nooit — pathfinding en
+// walkability-checks gebruiken bewust geen `extra` waterset, net als een
+// speler zonder boot.
+function defaultNpcs(world) {
+  return (world.npcHomes || []).map((home) => ({
+    id: home.id,
+    x: home.x,
+    y: home.y,
+    homeX: home.x,
+    homeY: home.y,
+    path: [],
+    nextStepAt: 0,
+    nextDecisionAt: Math.round(Math.random() * NPC_DECISION_MAX_MS),
+    facingLeft: false
+  }));
+}
+
+function pickNpcWanderTarget(world, npc) {
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const radius = 1 + Math.floor(Math.random() * NPC_WANDER_RADIUS);
+    const ring = hexRing(npc.homeX, npc.homeY, radius);
+    const [x, y] = ring[Math.floor(Math.random() * ring.length)] || [];
+    if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+    if (x < 0 || y < 0 || x >= world.width || y >= world.height) continue;
+    if (isWalkable(world, x, y)) return { x, y };
+  }
+  return null;
+}
+
 function createGame(roomPlayers) {
   const world = getWorld();
   const players = roomPlayers.map((roomPlayer) => {
@@ -509,6 +563,9 @@ function createGame(roomPlayers) {
       stats: saved ? saved.stats : defaultStats(),
       setBonuses: saved ? saved.setBonuses : defaultSetBonuses(),
       skills: saved ? saved.skills : defaultSkills(),
+      skinsOwned: saved ? saved.skinsOwned : defaultSkinsOwned(),
+      skin: saved ? saved.skin : 'default',
+      quests: saved ? saved.quests : quests.defaultQuests(),
       heaviestKg: saved ? saved.heaviestKg : 0,
       mode: saved && isWater(world, saved.x, saved.y) ? 'sea' : 'land',
       boat: saved ? saved.boat : { ...defaultBoat(), x: world.boats[0]?.x ?? world.spawn.x, y: world.boats[0]?.y ?? world.spawn.y },
@@ -528,6 +585,7 @@ function createGame(roomPlayers) {
     resultText: '',
     log: ['Je staat klaar om uit te varen.'],
     players,
+    npcs: defaultNpcs(world),
     trades: [],
     harbors: [],
     clock: { startedAt: Date.now() }
@@ -558,6 +616,9 @@ function afterStateChange(room, { db }) {
       stats: player.stats,
       setBonuses: player.setBonuses,
       skills: player.skills,
+      skinsOwned: player.skinsOwned,
+      skin: player.skin,
+      quests: player.quests,
       heaviestKg: player.heaviestKg,
       x: player.x,
       y: player.y,
@@ -663,6 +724,7 @@ function doReel(game, player) {
 
   addXp(game, player, 'fishing', RARITY_XP[fish.rarity] || 0);
   if (isNew) { addXp(game, player, 'collecting', COLLECT_XP); applySetCompletionBonus(game, player, 'fish'); }
+  questEvent(game, player, { kind: 'fish', speciesId: fish.id, rarity: fish.rarity, setId: fish.setId, dayPhase: dayPhaseFor(game) });
 }
 
 // Generieke setbonus-check: gebruikt na elke nieuwe vis/hout/steen/vlees-ontdekking.
@@ -769,6 +831,7 @@ function doGatherHaul(game, player) {
     player.gathering = { ...gathering, phase: 'result', isNew: player.materials.kelpFiber === amount, resultUntil: now + RESULT_DISPLAY_MS };
     game.log.unshift(`Geoogst: ${amount} kelpvezel â€” Wierlicht ontdekt.`);
     addXp(game, player, 'collecting', slice.nodes.kelp.xp);
+    questEvent(game, player, { kind: 'gather', resource: 'kelp', amount });
     return;
   }
   const discoveredField = discoveredFieldFor(kind);
@@ -796,6 +859,7 @@ function doGatherHaul(game, player) {
   const xp = profile ? Math.max(25, Math.round(profile.xp * (previousHarvests === 0 ? 1 : 0.65))) : (RARITY_XP[item.rarity] || 0);
   addXp(game, player, skillKey, xp);
   if (isNew) { addXp(game, player, 'collecting', COLLECT_XP); applySetCompletionBonus(game, player, kind); }
+  questEvent(game, player, { kind: 'gather', resource: kind, speciesId: item.id, rarity: item.rarity, setId: item.setId });
 }
 
 function bonusFor(player, kind, item) {
@@ -949,6 +1013,7 @@ function doCook(game, player, payload) {
     candidate.quality = 'dish';
     candidate.buffId = dish.buff.id;
     game.log.unshift(`Je bereidt ${dish.name} — geeft ${dish.buff.label} bij het eten.`);
+    questEvent(game, player, { kind: 'cook', speciesId: dish.id });
     return;
   }
   throw new Error('Onbekend kookstation.');
@@ -965,6 +1030,60 @@ function doBuyGear(game, player, payload) {
   player.gearOwned[category].push(item.id);
   player.gearDurability[category][item.id] = { durability: item.maxDurability, maxDurability: item.maxDurability };
   game.log.unshift(`Gekocht: ${item.name} voor €${item.price}.`);
+}
+
+// Eén doorgeefluik voor questvoortgang: elke plek die al een beloning
+// uitdeelt (vangst, oogst, jachtbuit, gerecht) meldt hier wat er gebeurde.
+function questEvent(game, player, event) {
+  for (const quest of quests.advance(player, event)) {
+    game.log.unshift(`Opdracht klaar: ${quest.title} — ga terug naar ${quest.npcName}.`);
+  }
+}
+
+function requireNearNpc(game, player, npcId) {
+  const npc = (game.npcs || []).find((entry) => entry.id === npcId);
+  if (!npc) throw new Error('Die dorpsbewoner is hier niet.');
+  if (hexDistance(player.x, player.y, npc.x, npc.y) > 1) throw new Error('Loop eerst naar hem toe.');
+  return npc;
+}
+
+function doQuestAccept(game, player, payload) {
+  const quest = quests.getQuest(String(payload.id || ''));
+  if (!quest) throw new Error('Onbekende opdracht.');
+  requireNearNpc(game, player, quest.npcId);
+  quests.accept(player, quest.id);
+  game.log.unshift(`Opdracht aangenomen van ${quest.npcName}: ${quest.title}.`);
+}
+
+function doQuestComplete(game, player, payload) {
+  const quest = quests.getQuest(String(payload.id || ''));
+  if (!quest) throw new Error('Onbekende opdracht.');
+  requireNearNpc(game, player, quest.npcId);
+  quests.complete(player, quest.id);
+  const rewards = quest.rewards || {};
+  if (rewards.cash) player.cash += rewards.cash;
+  for (const [skill, amount] of Object.entries(rewards.xp || {})) {
+    if (SKILL_KEYS.includes(skill)) addXp(game, player, skill, amount);
+  }
+  game.log.unshift(`${quest.npcName} betaalt je uit voor ${quest.title}${rewards.cash ? ` — €${rewards.cash}` : ''}.`);
+}
+
+function doBuySkin(game, player, payload) {
+  const item = skins.getSkin(String(payload.id || ''));
+  if (!item) throw new Error('Onbekende skin.');
+  if (player.skinsOwned.includes(item.id)) throw new Error('Je hebt deze skin al.');
+  if (player.cash < item.price) throw new Error('Onvoldoende geld.');
+  player.cash -= item.price;
+  player.skinsOwned.push(item.id);
+  game.log.unshift(`Gekocht: ${item.name}-skin voor €${item.price}.`);
+}
+
+function doEquipSkin(game, player, payload) {
+  const id = payload.id ? String(payload.id) : 'default';
+  if (id !== 'default' && !player.skinsOwned.includes(id)) throw new Error('Dat bezit je niet.');
+  player.skin = id;
+  const item = skins.getSkin(id);
+  game.log.unshift(`Skin gewisseld naar ${item ? item.name : 'Basis'}.`);
 }
 
 function doBuyConsumable(game, player, payload) {
@@ -1100,6 +1219,7 @@ function resolveHuntVictory(game, player, item) {
   game.log.unshift(`Buit: ${item.name} (${weightKg.toFixed(1)} kg)${isNew ? ' — nieuw!' : ''}`);
   addXp(game, player, 'hunting', RARITY_XP[item.rarity] || 0);
   if (isNew) { addXp(game, player, 'collecting', COLLECT_XP); applySetCompletionBonus(game, player, 'meat'); }
+  questEvent(game, player, { kind: 'hunt', speciesId: item.id, rarity: item.rarity, setId: item.setId });
 }
 
 function doHuntAction(game, player, payload) {
@@ -1254,6 +1374,10 @@ function handleAction(game, playerId, action, payload = {}) {
   if (action === 'buyGear') return doBuyGear(game, player, payload);
   if (action === 'buyConsumable') return doBuyConsumable(game, player, payload);
   if (action === 'equipGear') return doEquipGear(game, player, payload);
+  if (action === 'questAccept') return doQuestAccept(game, player, payload);
+  if (action === 'questComplete') return doQuestComplete(game, player, payload);
+  if (action === 'buySkin') return doBuySkin(game, player, payload);
+  if (action === 'equipSkin') return doEquipSkin(game, player, payload);
   if (action === 'repairGear') return doRepairGear(game, player, payload);
   if (action === 'buildHarbor') return doBuildHarbor(game, player, payload);
   if (action === 'huntStart') return doHuntStart(game, player, payload);
@@ -1335,6 +1459,32 @@ function tick(game, now = Date.now()) {
       player.stats.energy = Math.min(MAX_ENERGY, player.stats.energy + 2);
       player.nextEnergyRegenAt = now + 5000;
       changed = true;
+    }
+  }
+  const world = getWorld();
+  for (const npc of game.npcs || []) {
+    // Staat een speler dichtbij, dan blijft de NPC stilstaan i.p.v. verder te
+    // dwalen: dat voorkomt onnodige verversingen terwijl je in de buurt bent
+    // (en dicht bij de speler staan is straks ook handig zodra je met NPC's
+    // kunt praten).
+    const playerNearby = game.players.some((player) => hexDistance(player.x, player.y, npc.x, npc.y) <= NPC_PAUSE_RADIUS);
+    if (playerNearby) {
+      if (npc.path.length) npc.path = [];
+      npc.nextDecisionAt = now + NPC_DECISION_MIN_MS;
+      continue;
+    }
+    if (npc.path.length && now >= npc.nextStepAt) {
+      const step = npc.path.shift();
+      npc.facingLeft = step.x < npc.x;
+      npc.x = step.x;
+      npc.y = step.y;
+      npc.nextStepAt = now + NPC_STEP_MS;
+      changed = true;
+    } else if (!npc.path.length && now >= (npc.nextDecisionAt || 0)) {
+      const target = pickNpcWanderTarget(world, npc);
+      const path = target ? findPath(world, npc.x, npc.y, target.x, target.y) : null;
+      if (path && path.length) { npc.path = path; npc.nextStepAt = now; }
+      npc.nextDecisionAt = now + NPC_DECISION_MIN_MS + Math.random() * (NPC_DECISION_MAX_MS - NPC_DECISION_MIN_MS);
     }
   }
   if (game.log.length > 30) game.log.length = 30;
@@ -1485,6 +1635,7 @@ function serialize(game, requesterId) {
     world: { version: world.version, width: world.width, height: world.height, buildings: world.buildings, boats: world.boats, wildlife: world.wildlife },
     harbors: game.harbors,
     dayPhase: dayPhaseFor(game),
+    npcs: (game.npcs || []).map((n) => ({ id: n.id, x: n.x, y: n.y, facingLeft: n.facingLeft })),
     players: game.players.map((p) => ({
       id: p.id,
       name: p.name,
@@ -1498,6 +1649,7 @@ function serialize(game, requesterId) {
       mode: p.mode,
       boat: serializeBoat(p),
       inCombat: Boolean(p.combat),
+      skinVisual: skins.visualFor(p.skin),
       inventory: p.inventory.map((item) => ({ uid: item.uid, speciesId: item.speciesId, weightKg: item.weightKg, fish: getFish(item.speciesId) }))
     })),
     you: {
@@ -1525,6 +1677,11 @@ function serialize(game, requesterId) {
       personalNodes: player.personalNodes,
       gearShop: Object.fromEntries(gear.CATEGORIES.map((category) => [category, serializeGearSlot(player, category)])),
       consumableShop: CONSUMABLE_SHOP,
+      quests: quests.serializeFor(player),
+      skin: player.skin,
+      skinsOwned: player.skinsOwned,
+      skinShop: skins.SKINS,
+      skinVisual: skins.visualFor(player.skin),
       inventory: player.inventory.map((item) => ({
         ...item,
         fish: getFish(item.speciesId),
@@ -1631,6 +1788,7 @@ function configureHttp({ app }) {
       boats: world.boats,
       wildlife: wildlifeManifest(world),
       trees: treeManifest(world),
+      npcs: npcs.profiles(),
       kelpIsland: world.kelpIsland
     });
   });

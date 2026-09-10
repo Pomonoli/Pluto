@@ -24,10 +24,11 @@
 .dbc-map{width:100%;height:100%;display:block;touch-action:manipulation}
 /* De hex is een lage-contrast kaarttaal, geen stap-voor-stapbesturing. */
 .dbc-tile{cursor:pointer;stroke:rgba(43,33,28,.07);stroke-width:.4;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.dbc-tile-wall{stroke:none}
 .dbc-tile:hover{filter:brightness(1.03)}
 .dbc-tile-decor{pointer-events:none}
 .dbc-tile-tree-trunk{fill:#735238;stroke:#513B2B;stroke-width:.45}
-.dbc-tile-tree-shadow{fill:rgba(34,58,43,.26)}
+.dbc-tile-tree-shadow{fill:rgba(34,58,43,.34)}
 .dbc-tree-art{filter:drop-shadow(0 1px 1px rgba(23,65,79,.12))}
 .dbc-tree-locked .dbc-tree-art{opacity:.65;filter:saturate(.55)}
 .dbc-tree-recovering .dbc-tree-art{opacity:.38}
@@ -43,11 +44,11 @@
 .dbc-tile-tree-highlight{fill:#82A862;opacity:.95}
 .dbc-conifer-crown{fill:#315A42;stroke:#203E2F;stroke-width:.7;stroke-linejoin:round}
 .dbc-conifer-light{fill:#52794E;opacity:.9}
-.dbc-tile-hill-shadow{fill:rgba(43,51,47,.24)}
-.dbc-tile-hill-face{fill:#8A928D;stroke:#545D59;stroke-width:.7;stroke-linejoin:round}
-.dbc-tile-hill-light{fill:#B4BAB3}.dbc-tile-hill-shade{fill:#69726D}
-.dbc-tile-peak-face{fill:#858A86;stroke:#4F5552;stroke-width:.8;stroke-linejoin:round}
-.dbc-tile-peak-shadow{fill:#59605D}
+.dbc-tile-hill-shadow{fill:rgba(43,51,47,.34)}
+.dbc-tile-hill-face{fill:url(#dbc-hill-face-grad);stroke:#4A534F;stroke-width:.7;stroke-linejoin:round}
+.dbc-tile-hill-light{fill:#B4BAB3}.dbc-tile-hill-shade{fill:#5E6763}
+.dbc-tile-peak-face{fill:url(#dbc-peak-face-grad);stroke:#454B48;stroke-width:.8;stroke-linejoin:round}
+.dbc-tile-peak-shadow{fill:#4F5653}
 .dbc-tile-peak-snow{fill:#EEF1EA;opacity:.96}
 .dbc-tile-scree{fill:#69726D;stroke:#505854;stroke-width:.35}
 .dbc-tile-wave{fill:none;stroke:#E1F2EF;stroke-width:1.15;stroke-linecap:round;opacity:.76}
@@ -94,6 +95,10 @@
 .dbc-angler-cape{fill:var(--dbc-sea-deep);opacity:.92}
 .dbc-angler-belt{fill:var(--dbc-ink)}
 .dbc-angler-hood-trim{fill:var(--dbc-ember-lit)}
+.dbc-angler-ghost{opacity:.72;filter:drop-shadow(0 0 4px rgba(94,214,150,.65))}
+.dbc-npc{cursor:pointer}
+.dbc-npc-marker{font-size:9px;pointer-events:none;opacity:.85}
+.dbc-npc-label{font-size:8.5px}
 .dbc-boat-shadow{fill:rgba(23,65,79,.25)}
 .dbc-boat-hull{fill:var(--dbc-bark);stroke:var(--dbc-bark-2);stroke-width:.6}
 .dbc-boat-mast{stroke:var(--dbc-bark-2);stroke-width:1}
@@ -192,7 +197,7 @@
 .dbc-boat-button-copy{display:flex;flex-direction:column;line-height:1.15}
 .dbc-boat-button-copy strong{font-family:'Grenze',serif;font-size:18px;color:var(--dbc-parchment-hi);letter-spacing:.02em}
 .dbc-boat-button-copy small{font-size:11px;color:#F0DABD;font-variant-numeric:tabular-nums}
-.dbc-boat-base-actions{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;padding-top:9px;border-top:1px solid rgba(216,160,108,.55)}
+.dbc-boat-base-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding-top:9px;border-top:1px solid rgba(216,160,108,.55)}
 .dbc-icon-col{min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px}
 .dbc-icon-btn{
   width:44px;height:44px;border-radius:50%;border:2px solid var(--dbc-wood-hi);
@@ -201,7 +206,11 @@
 }
 .dbc-icon-btn:hover{background:#A96F43;border-color:var(--dbc-parchment)}
 .dbc-icon-btn:active{transform:translateY(1px)}
-.dbc-icon-btn.square{border-radius:50%;width:44px;height:44px;font-size:19px}
+/* Geïllustreerde iconen brengen hun eigen bronzen lijst mee: de houten knop
+   eronder blijft kaal, anders krijg je een dubbele rand. */
+.dbc-icon-btn.art{width:50px;height:50px;border:0;background:none;box-shadow:none}
+.dbc-icon-btn.art:hover{background:none;filter:brightness(1.08)}
+.dbc-icon-art{width:100%;height:100%;display:block;object-fit:contain;filter:drop-shadow(0 2px 3px rgba(36,25,18,.45))}
 .dbc-icon-label{max-width:52px;font-size:10px;font-weight:600;line-height:1.05;text-align:center;color:#F6E7D0;white-space:normal}
 .dbc-wrap :is(.dbc-boat-button,.dbc-icon-btn,.dbc-sheet-close):focus-visible{outline:3px solid var(--dbc-ember-lit);outline-offset:2px}
 
@@ -279,7 +288,7 @@
 .dbc-inventory-panel .dbc-empty{font-size:16px;color:#40342C}
 .dbc-inventory-panel .dbc-inventory-list{gap:8px}
 .dbc-inventory-panel .dbc-inventory-row{
-  min-height:44px;padding:8px 14px;border:1.5px solid #9B6847;border-radius:8px;
+  min-height:52px;padding:8px 14px;border:1.5px solid #9B6847;border-radius:8px;
   background:
     repeating-linear-gradient(1deg,rgba(92,53,36,.035) 0 1px,transparent 1px 5px),
     linear-gradient(180deg,#E7B986,#D9A06E);
@@ -289,7 +298,16 @@
 .dbc-inventory-panel .dbc-inventory-label{font-weight:500}
 .dbc-inventory-panel .dbc-inventory-price{color:#231B17;font-size:16px}
 .dbc-inventory-panel .dbc-inventory-quality{background:rgba(255,250,240,.48);border-color:#A97753;color:#4A3528}
+.dbc-inventory-panel .dbc-inventory-actions{gap:10px}
+.dbc-inventory-panel .dbc-inventory-check{width:30px;height:30px;appearance:none;border:2px solid #70452E;border-radius:6px;background:linear-gradient(145deg,#D9A06E,#B87347);box-shadow:inset 0 0 0 2px rgba(255,250,240,.22)}
+.dbc-inventory-panel .dbc-inventory-check:checked::after{content:"✓";display:grid;place-items:center;height:100%;color:#FFF7E9;font-weight:800}
+.dbc-inventory-panel :is(.dbc-inventory-actions button,.dbc-inventory-row .secondary,.dbc-gear-card .secondary,.dbc-trade-card-actions button){
+  background:linear-gradient(180deg,#B97D50,#8F5938);border:1.5px solid #6C402B;color:#FFF7E9;
+  box-shadow:inset 0 1px rgba(255,250,240,.28),0 2px 0 #603923;font-weight:700;
+}
 .dbc-inventory-panel .dbc-gear-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.dbc-inventory-panel :is(.dbc-shop-section,.dbc-uitrusting-section){display:flex;flex-direction:column;gap:9px}
+.dbc-inventory-panel .dbc-shop-section h5{margin:2px 0 0;color:#201A16;font-family:'Grenze',serif;font-size:clamp(20px,2.6vw,26px);line-height:1.05}
 .dbc-inventory-panel .dbc-gear-card,.dbc-inventory-panel .dbc-set-card{
   padding:14px;border:1.5px solid #98603D;border-radius:10px;
   background:
@@ -297,6 +315,12 @@
     linear-gradient(155deg,#D9A06E,#BC7B4E);
   color:#241A15;box-shadow:inset 0 1px rgba(255,250,240,.4),0 3px 0 rgba(92,53,36,.34);
 }
+.dbc-inventory-panel :is(.dbc-trade-builder,.dbc-trade-card){
+  background:rgba(255,250,240,.48);border:1.5px solid #A97955;border-radius:8px;padding:12px;color:#2B211C;
+}
+.dbc-inventory-panel .dbc-trade-player-btn{min-height:44px;background:linear-gradient(180deg,#E8BE8F,#D69A68);border-color:#9B6847;color:#2B211C}
+.dbc-inventory-panel .dbc-trade-player-btn.active{background:#B87347;color:#FFF7E9}
+.dbc-inventory-panel .dbc-trade-cash-input{min-height:40px;background:#FFF8E9;border-color:#9B6847;color:#2B211C}
 .dbc-inventory-panel .dbc-gear-title{font-family:'Grenze',serif;font-size:20px;color:#211915}
 .dbc-inventory-panel .dbc-gear-help{font-size:14px;color:#3F2E24}
 .dbc-inventory-panel .dbc-gear-card .secondary{
@@ -305,7 +329,7 @@
 }
 .dbc-inventory-panel .dbc-build-stub{background:rgba(255,250,240,.42);border-color:#A96F43}
 
-/* Gedeelde hiërarchie voor Marktplaats, Hall of Fame, Vaardigheden en Map. */
+/* Gedeelde hiërarchie voor Hero, Vaardigheden en Map. */
 .dbc-v6-panel{position:relative;z-index:1;gap:14px;color:#2B211C}
 .dbc-panel .dbc-v6-title{
   display:flex;align-items:center;gap:10px;margin:-3px 58px 0 0;
@@ -313,77 +337,82 @@
 }
 .dbc-v6-title-icon{display:grid;place-items:center;min-width:44px;font-size:38px;line-height:1;filter:drop-shadow(0 2px 1px rgba(92,53,36,.2))}
 .dbc-v6-title-icon:empty{display:none}
+.dbc-title-art{width:46px;height:46px;display:block;object-fit:contain}
 .dbc-v6-panel>.dbc-panel-copy{font-size:clamp(14px,1.5vw,17px);color:#40342C}
 
-/* Marktplaats: houten segmenttabs, perkamenten handelsregels en duidelijke
-   houten transacties zoals in de v6-referentie. */
-.dbc-market-panel .dbc-subtab-row{
-  align-self:flex-start;gap:0;margin:0 0 6px;padding:2px;border:1.5px solid #815035;border-radius:9px;
-  background:#A96F43;box-shadow:0 3px 0 rgba(92,53,36,.38);overflow:hidden;
-}
-.dbc-market-panel .dbc-subtab-btn{
-  min-height:44px;padding:8px 18px;border:0;border-right:1px solid rgba(92,53,36,.5);border-radius:0;
-  background:linear-gradient(180deg,#D69A68,#B87347);color:#FFF5E6;font-size:15px;font-weight:700;
-}
-.dbc-market-panel .dbc-subtab-btn:first-child{border-radius:6px 0 0 6px}
-.dbc-market-panel .dbc-subtab-btn:last-child{border-right:0;border-radius:0 6px 6px 0}
-.dbc-market-panel .dbc-subtab-btn.active{background:linear-gradient(180deg,#E4B17D,#CB8656);color:#FFF9EF;box-shadow:inset 0 0 12px rgba(255,250,240,.24)}
-.dbc-market-panel :is(.dbc-inventory,.dbc-shop-section){display:flex;flex-direction:column;gap:9px}
-.dbc-market-panel :is(.dbc-inventory h4,.dbc-shop-section h5){
-  position:relative;margin:2px 0 0;color:#201A16;font-family:'Grenze',serif;font-size:clamp(24px,3vw,32px);line-height:1.05;
-}
-.dbc-market-panel .dbc-inventory h4::after{
-  content:"";display:inline-block;width:min(28vw,310px);height:8px;margin-left:14px;vertical-align:middle;
-  background:linear-gradient(90deg,rgba(155,104,71,.22),#9B6847 47% 53%,rgba(155,104,71,.22));clip-path:polygon(0 44%,44% 44%,47% 0,50% 44%,53% 0,56% 44%,100% 44%,100% 56%,56% 56%,53% 100%,50% 56%,47% 100%,44% 56%,0 56%);
-}
-.dbc-market-panel .dbc-empty{font-size:16px;color:#40342C}
-.dbc-market-panel .dbc-inventory-actions{gap:10px}
-.dbc-market-panel :is(.dbc-inventory-actions button,.dbc-inventory-row .secondary,.dbc-gear-card .secondary,.dbc-trade-card-actions button){
-  background:linear-gradient(180deg,#B97D50,#8F5938);border:1.5px solid #6C402B;color:#FFF7E9;
-  box-shadow:inset 0 1px rgba(255,250,240,.28),0 2px 0 #603923;font-weight:700;
-}
-.dbc-market-panel .dbc-inventory-list{gap:8px}
-.dbc-market-panel .dbc-inventory-row{
-  min-height:56px;padding:8px 12px;border:1.5px solid #9B6847;border-radius:7px;
-  background:rgba(255,250,240,.45);color:#2B211C;font-size:15px;
-}
-.dbc-market-panel .dbc-inventory-check{width:30px;height:30px;appearance:none;border:2px solid #70452E;border-radius:6px;background:linear-gradient(145deg,#D9A06E,#B87347);box-shadow:inset 0 0 0 2px rgba(255,250,240,.22)}
-.dbc-market-panel .dbc-inventory-check:checked::after{content:"✓";display:grid;place-items:center;height:100%;color:#FFF7E9;font-weight:800}
-.dbc-market-panel .dbc-inventory-price{color:#70452E;font-size:16px}
-.dbc-market-panel .dbc-gear-card,.dbc-market-panel :is(.dbc-trade-builder,.dbc-trade-card){
-  background:rgba(255,250,240,.48);border:1.5px solid #A97955;border-radius:8px;padding:12px;color:#2B211C;
-}
-.dbc-market-panel .dbc-trade-player-btn{min-height:44px;background:linear-gradient(180deg,#E8BE8F,#D69A68);border-color:#9B6847;color:#2B211C}
-.dbc-market-panel .dbc-trade-player-btn.active{background:#B87347;color:#FFF7E9}
-.dbc-market-panel .dbc-trade-cash-input{min-height:40px;background:#FFF8E9;border-color:#9B6847;color:#2B211C}
 
-/* Vaardigheden: titelplaque en zes losse perkamentkaarten met een houten kop
-   en een eigen, gedempte XP-kleur per discipline. */
-.dbc-skills-heading{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:18px;margin-right:58px}
-.dbc-skills-sun{font-size:54px;line-height:1;filter:drop-shadow(0 2px 1px rgba(92,53,36,.25))}
-.dbc-panel .dbc-skills-title{
-  justify-self:center;margin:0;padding:8px 34px;border:1.5px solid #98603D;border-radius:8px;
-  background:linear-gradient(180deg,#E9C092,#D9A06E);box-shadow:inset 0 1px rgba(255,250,240,.45),0 3px 0 #855136;
-  font-size:clamp(28px,3.5vw,42px);text-align:center;
+/* Gesprek met een dorpsbewoner: portret naast zijn eigen woorden, met de
+   opdracht eronder als perkamenten kaart. */
+.dbc-npc-talk{display:flex;align-items:center;gap:14px;background:var(--dbc-paper);border:1px solid var(--dbc-rule);border-radius:8px;padding:12px 14px}
+.dbc-npc-quote{margin:0;font-family:'Grenze',serif;font-size:clamp(16px,2vw,20px);line-height:1.3;color:#2B211C}
+.dbc-npc-quest{
+  display:flex;flex-direction:column;gap:8px;padding:14px;border:1.5px solid #A97955;border-radius:9px;
+  background:linear-gradient(155deg,#FFF9EC,#EEDFC3);box-shadow:0 3px 0 rgba(92,53,36,.22);color:#2B211C;
 }
-.dbc-skills-panel>.dbc-panel-copy{font-weight:600;text-align:center}
-.dbc-skills-panel>.dbc-gear-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
-.dbc-skill-card{
-  min-height:205px;padding:0 16px 16px;border:1.5px solid #A97955;border-radius:9px;overflow:hidden;
-  background:linear-gradient(155deg,#FFF9EC,#EEDFC3);box-shadow:0 4px 0 rgba(92,53,36,.24);color:#2B211C;
+.dbc-npc-quest-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.dbc-npc-quest-type{
+  padding:3px 10px;border:1px solid #A97955;border-radius:999px;background:rgba(216,160,108,.28);
+  font-size:12px;font-weight:700;color:#5C4028;white-space:nowrap;
 }
-.dbc-skill-card .dbc-gear-title{
-  margin:0 -16px 8px;padding:10px 14px;border-bottom:1.5px solid #98603D;border-radius:7px 7px 2px 2px;
-  background:linear-gradient(180deg,#E8BE8F,#D69A68);font-family:'Grenze',serif;font-size:clamp(17px,1.7vw,22px);color:#211915;
+.dbc-npc-quest-rows{display:grid;grid-template-columns:auto minmax(0,1fr);gap:5px 12px;margin:0}
+.dbc-npc-quest-rows dt{font-weight:700;font-size:13px;color:#5C4028}
+.dbc-npc-quest-rows dd{margin:0;font-size:14px;line-height:1.35}
+.dbc-npc-quest .primary{align-self:flex-start;min-height:44px;padding-inline:18px}
+.dbc-quest-ready{border-color:#7A9B54;box-shadow:0 3px 0 rgba(78,104,50,.28)}
+.dbc-quest-done{opacity:.72}
+
+/* Doelen met een balkje per onderdeel — zowel in het gesprek als in het
+   opdrachtenoverzicht op de Hero-pagina. */
+.dbc-quest-goals{display:flex;flex-direction:column;gap:6px}
+.dbc-quest-goal{display:grid;grid-template-columns:auto minmax(0,1fr) 70px auto;align-items:center;gap:9px;font-size:13px}
+.dbc-quest-goal-check{width:14px;text-align:center;color:#8A7358;font-weight:800}
+.dbc-quest-goal-check.met{color:#5C8A3C}
+.dbc-quest-goal-label{overflow-wrap:anywhere}
+.dbc-quest-track{height:10px;max-width:none;border:1.5px solid #8A6A48;border-radius:999px;background:#DCC5A4}
+.dbc-quest-track .dbc-quest-fill{background:#C4611F}
+.dbc-quest-goal-count{font-variant-numeric:tabular-nums;font-weight:700;color:#5C4028;white-space:nowrap}
+.dbc-quest-list{display:flex;flex-direction:column;gap:10px}
+.dbc-quest-card{
+  display:flex;flex-direction:column;gap:8px;padding:12px 14px;border:1.5px solid #A97955;border-radius:9px;
+  background:rgba(255,250,240,.5);color:#2B211C;
 }
-.dbc-skill-card .dbc-gear-help{font-size:15px;color:#34271F}
+
+/* Vaardigheden: tabelvorm op de Hero-pagina, boven de ranglijst — vijf
+   kolommen met een eigen, gedempte XP-kleur per discipline. */
+.dbc-skills-table-wrap{overflow-x:auto}
+.dbc-monument-panel .dbc-skills-table{
+  width:100%;min-width:520px;border-collapse:collapse;table-layout:fixed;
+  border:1.5px solid #8C5839;border-radius:9px;overflow:hidden;
+  background:rgba(255,250,240,.5);box-shadow:0 3px 0 rgba(92,53,36,.24);
+}
+.dbc-monument-panel .dbc-skills-table th{
+  padding:11px 12px;background:linear-gradient(180deg,#B77A4E,#8A5537);color:#FFF7E9;
+  font-family:'Grenze',serif;font-size:16px;text-align:left;
+}
+.dbc-monument-panel .dbc-skills-table td{padding:10px 12px;border-bottom:1px solid rgba(155,104,71,.38);font-size:15px;color:#2B211C}
+.dbc-monument-panel .dbc-skills-table :is(th,td):nth-child(1){width:19%}
+.dbc-monument-panel .dbc-skills-table :is(th,td):nth-child(2){width:9%}
+.dbc-monument-panel .dbc-skills-table :is(th,td):nth-child(3){width:39%}
+.dbc-monument-panel .dbc-skills-table :is(th,td):nth-child(4){width:20%}
+.dbc-monument-panel .dbc-skills-table :is(th,td):nth-child(5){width:13%}
+.dbc-monument-panel .dbc-skills-table tr:nth-child(even) td{background:rgba(216,160,108,.16)}
+.dbc-skill-name{font-weight:600;white-space:nowrap}
+.dbc-skill-level{font-variant-numeric:tabular-nums;white-space:nowrap}
+.dbc-skill-help{font-size:13px;color:#5A4A3C}
+.dbc-skill-progress-cell{min-width:110px}
+.dbc-skill-xp{font-variant-numeric:tabular-nums;white-space:nowrap;font-size:13px}
 .dbc-skill-track{height:14px;max-width:none;border:2px solid #70452E;border-radius:999px;background:#CFA982;box-shadow:inset 0 1px 2px rgba(43,33,28,.25)}
 .dbc-skill-track .dbc-skill-fill{background:#70BFCA}
 .dbc-skill-woodcutting .dbc-skill-fill{background:#D27B6D}.dbc-skill-mining .dbc-skill-fill{background:#E79368}
 .dbc-skill-hunting .dbc-skill-fill{background:#A8C77C}.dbc-skill-collecting .dbc-skill-fill{background:#C29ED0}
 .dbc-skill-trading .dbc-skill-fill{background:#8FCB98}
 
-/* Hall of Fame en wereldkaart gebruiken dezelfde systeemmaterialen. */
+/* Hero-pagina (voorheen Hall of Fame) en wereldkaart gebruiken dezelfde
+   systeemmaterialen. */
+.dbc-hero-card{display:flex;align-items:center;gap:14px;background:var(--dbc-paper);border:1px solid var(--dbc-rule);border-radius:8px;padding:12px 14px}
+.dbc-hero-info{display:flex;flex-direction:column;gap:6px;min-width:0}
+.dbc-hero-stats{display:flex;flex-wrap:wrap;gap:10px;font-size:13px;color:var(--dbc-ink-2);font-variant-numeric:tabular-nums}
+.dbc-skin-avatar{flex:none;display:block}
 .dbc-monument-panel .dbc-leaderboard{table-layout:fixed;border:1.5px solid #8C5839;border-radius:9px;overflow:hidden;background:rgba(255,250,240,.5);box-shadow:0 3px 0 rgba(92,53,36,.24)}
 .dbc-monument-panel .dbc-leaderboard th{padding:11px 12px;background:linear-gradient(180deg,#B77A4E,#8A5537);color:#FFF7E9;font-family:'Grenze',serif;font-size:16px;text-transform:none}
 .dbc-monument-panel .dbc-leaderboard td{padding:11px 12px;border-color:rgba(155,104,71,.38);font-size:15px}
@@ -546,7 +575,7 @@ body.game-active #gameStage:has(.dbc-wrap) .dbc-boat-base-hud{top:calc(68px + en
   .dbc-trade-columns{grid-template-columns:1fr}
   .dbc-tool-grid{grid-template-columns:1fr}
   .dbc-icon-btn{width:44px;height:44px;font-size:18px}
-  .dbc-icon-btn.square{width:44px;height:44px;font-size:16px;border-radius:50%}
+  .dbc-icon-btn.art{width:46px;height:46px}
   .dbc-icon-label{font-size:9px}
   body.game-active #gameStage:has(.dbc-wrap) .dbc-stat-pills{
     top:calc(62px + env(safe-area-inset-top));left:10px;width:calc(100% - 20px);max-width:none;
@@ -582,19 +611,12 @@ body.game-active #gameStage:has(.dbc-wrap) .dbc-boat-base-hud{top:calc(68px + en
   .dbc-inventory-panel .dbc-gear-grid{grid-template-columns:1fr}
   .dbc-inventory-panel .dbc-inventory-row{padding-inline:10px;gap:7px}
   .dbc-inventory-panel .dbc-inventory-label{font-size:14px}
+  .dbc-inventory-panel .dbc-inventory-row .secondary{min-width:0;padding-inline:10px}
   .dbc-panel .dbc-v6-title{font-size:32px}
   .dbc-v6-title-icon{min-width:38px;font-size:32px}
-  .dbc-market-panel .dbc-subtab-row{align-self:stretch;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
-  .dbc-market-panel .dbc-subtab-btn{padding-inline:7px;font-size:13px;border-radius:0}
-  .dbc-market-panel .dbc-inventory h4::after{width:min(24vw,110px);margin-left:8px}
-  .dbc-market-panel .dbc-inventory-row{min-height:52px;padding-inline:8px;gap:7px}
-  .dbc-market-panel .dbc-inventory-label{font-size:13px}
-  .dbc-market-panel .dbc-inventory-row .secondary{min-width:0;padding-inline:10px}
-  .dbc-skills-heading{grid-template-columns:1fr;margin-right:58px;gap:8px}
-  .dbc-skills-sun{display:none}
-  .dbc-panel .dbc-skills-title{width:100%;padding:8px 12px;font-size:25px}
-  .dbc-skills-panel>.dbc-gear-grid{grid-template-columns:1fr}
-  .dbc-skill-card{min-height:0}
+  .dbc-title-art{width:38px;height:38px}
+  .dbc-monument-panel .dbc-skills-table :is(th,td){padding:8px 8px;font-size:13px}
+  .dbc-skill-help{font-size:12px}
   .dbc-world-map-frame{padding:8px}
   .dbc-monument-panel .dbc-leaderboard :is(th,td){padding:8px 4px;font-size:clamp(11px,3.25vw,14px);line-height:1.15}
   .dbc-monument-panel .dbc-leaderboard :is(th,td):first-child{width:7%;padding-inline:2px}

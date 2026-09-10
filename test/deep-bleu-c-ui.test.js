@@ -33,7 +33,7 @@ test('Deep Bleu C houdt de bootbasis vast in de HUD en toont vloeiende zee-detai
   assert.match(css, /\.dbc-tile\{[^}]*stroke:rgba\(43,33,28,\.07\)/);
   assert.match(css, /\.dbc-boat-base-hud\{[^}]*width:300px/);
   assert.match(css, /\.dbc-boat-base-hud\{[^}]*background:linear-gradient\(145deg,#895838,var\(--dbc-wood-dark\)\)/);
-  assert.match(css, /\.dbc-boat-base-actions\{[^}]*grid-template-columns:repeat\(5,minmax\(0,1fr\)\)/);
+  assert.match(css, /\.dbc-boat-base-actions\{[^}]*grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
   assert.match(css, /\.dbc-icon-btn\{[^}]*width:44px;height:44px/);
   assert.match(css, /@media\(prefers-reduced-motion:reduce\)/);
 });
@@ -42,7 +42,7 @@ test('Deep Bleu C inventaris volgt de v6 perkament- en houttaal', () => {
   const client = fs.readFileSync(path.join(root, 'games/deep-bleu-c/client.js'), 'utf8');
   const css = fs.readFileSync(path.join(root, 'games/deep-bleu-c/styles.css'), 'utf8');
 
-  assert.match(client, /usesV6Sheet = \['boat', 'inventaris', 'markt', 'monument', 'vaardigheden', 'world-map'\]/);
+  assert.match(client, /usesV6Sheet = \['boat', 'inventaris', 'monument', 'world-map', 'npc'\]/);
   assert.match(client, /dbc-panel dbc-inventory-panel/);
   assert.match(client, /class: 'dbc-inventory-title-icon'/);
   assert.match(css, /\.dbc-sheet-v6\{[\s\S]*?var\(--dbc-parchment-hi\),var\(--dbc-parchment\)/);
@@ -55,14 +55,11 @@ test('Deep Bleu C systeemschermen delen de v6-paneeltaal', () => {
   const client = fs.readFileSync(path.join(root, 'games/deep-bleu-c/client.js'), 'utf8');
   const css = fs.readFileSync(path.join(root, 'games/deep-bleu-c/styles.css'), 'utf8');
 
-  assert.match(client, /dbc-v6-panel dbc-market-panel/);
-  assert.match(client, /dbc-v6-panel dbc-skills-panel/);
   assert.match(client, /dbc-v6-panel dbc-monument-panel/);
   assert.match(client, /dbc-v6-panel dbc-world-map-panel/);
-  assert.match(client, /dbc-skill-card dbc-skill-\$\{key\}/);
+  assert.match(client, /dbc-skill-row dbc-skill-\$\{key\}/);
   assert.match(client, /dbc-world-map-frame/);
-  assert.match(css, /\.dbc-market-panel \.dbc-subtab-row\{[\s\S]*?background:#A96F43/);
-  assert.match(css, /\.dbc-skills-panel>\.dbc-gear-grid\{grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
+  assert.match(css, /\.dbc-monument-panel \.dbc-skills-table th\{[\s\S]*?background:linear-gradient\(180deg,#B77A4E,#8A5537\)/);
   assert.match(css, /\.dbc-monument-panel \.dbc-leaderboard th\{[\s\S]*?background:linear-gradient\(180deg,#B77A4E,#8A5537\)/);
   assert.match(css, /\.dbc-world-map-frame\{[\s\S]*?background:linear-gradient\(145deg,#B97D50,#70452E\)/);
 });
@@ -74,7 +71,7 @@ test('Deep Bleu C toont meer wereld en gebruikt een hoge mobiele uitsnede', () =
   assert.match(client, /desktop: \{ cols: 22, rows: 15 \}/);
   assert.match(client, /portrait: \{ cols: 9, rows: 20 \}/);
   assert.match(client, /window\.innerHeight > window\.innerWidth/);
-  assert.match(client, /renderMapWrap\(you, worldData, camX, camY, others, harbors, dayPhase, viewport\)/);
+  assert.match(client, /renderMapWrap\(you, worldData, camX, camY, others, harbors, dayPhase, viewport, npcs\)/);
   assert.doesNotMatch(client, /const COLS = 18|const ROWS = 12/);
   assert.match(css, /body\.game-active #gameStage:has\(\.dbc-wrap\) \.dbc-boat-base-hud\{[\s\S]*?top:auto;left:10px;right:10px;[^}]*box-sizing:border-box/);
 });

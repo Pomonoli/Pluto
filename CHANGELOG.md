@@ -1,5 +1,33 @@
 # Changelog
 
+## v1.29.0 — Skins, dorpsbewoners en opdrachten in The Big Blue C
+
+- Skins: acht koopbare uitrustingen (€200) voor je personage, met een eigen
+  hoofddeksel per skin. Kopen doe je bij Inventaris > Uitrusting > Te koop,
+  dragen bij Hero. Andere spelers zien je skin op de kaart.
+- Dorpsbewoners: tien vaste personages (Elara, Oude Krelis, Joris, Inspecteur
+  Valerius, Lars, Anja, Chef Nikos, Kapitein Kilgore, Maria en Borri) lopen
+  rond hun eigen dorpsgebouw. Ze varen niet en blijven stilstaan zodra je in
+  de buurt komt. Tik ze aan om te praten.
+- Opdrachten: elke dorpsbewoner geeft één opdracht met concrete doelen
+  (vissen, hakken, delven, oogsten, jagen, koken of een plek bereiken),
+  inclusief voorwaarden als alleen 's nachts, alleen eikenhout of minstens
+  Houweel II. Voortgang loopt vanzelf mee, blijft bewaard tussen sessies en
+  levert bij inleveren geld en xp op. Het symbool boven een NPC toont de
+  status; het volledige overzicht staat op de Hero-pagina.
+- Inventaris en Marktplaats samengevoegd tot één scherm: Bezittingen verkoopt
+  nu ook, Uitrusting splitst in "Mijn uitrusting" en "Te koop", en Bouwen werd
+  Bouwen & Handelen (inclusief ruilen met spelers).
+- Hall of Fame werd Hero: je avatar, je stats, een vaardighedentabel met
+  niveau, uitleg, voortgangsbalk en xp, en daaronder de ranglijst. Het aparte
+  Vaardigheden-scherm is daarin opgegaan.
+- De kaart kreeg echt reliëf: water ligt het laagst, land steekt licht uit,
+  heuvels duidelijk meer en bergpieken torenen erboven. Bomen en rotsen
+  hebben een sterker 2.5D-silhouet en de boot is twee keer zo groot.
+- Geïllustreerde ronde iconen voor Inventaris, Hero en Map in de boot-HUD.
+- Scrollen in een paneel springt niet meer terug naar boven bij
+  achtergrondupdates.
+
 ## v1.28.26 — iets minder witruimte
 
 - iets minder witruimte
