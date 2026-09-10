@@ -757,6 +757,12 @@ const RELEASES = [
     improvements:[
       "kleine leaderboard fixes"
     ]
+  },
+  {
+    version:"1.31.3",
+    improvements:[
+      "deep c: klikken op een boom/berg/dier laat je nu er naartoe lopen in plaats van erop. Dit gebeurt niet bij lege hexes of water."
+    ]
   }
 ];
 

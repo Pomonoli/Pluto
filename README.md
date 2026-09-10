@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.31.2
+## Nieuw in versie 1.31.3
 
-kleine leaderboard fixes
+deep c: klikken op een boom/berg/dier laat je nu er naartoe lopen in plaats van erop. Dit gebeurt niet bij lege hexes of water.
 
 ## Nieuw in versie 1.31.0
 

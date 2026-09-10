@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.31.3 — deep c: klikken op een boom/berg/dier laat je nu er naartoe lopen in plaats van erop. Dit gebeurt niet bij lege hexes of water.
+
+- deep c: klikken op een boom/berg/dier laat je nu er naartoe lopen in plaats van erop. Dit gebeurt niet bij lege hexes of water.
+
 ## v1.31.2 — kleine leaderboard fixes
 
 - kleine leaderboard fixes
