@@ -184,7 +184,7 @@ function buildBoard(game, movable, E, action, sound) {
 function buildShop(game, me, E, action, sound) {
   const shop = E('div', 'lutro-shop');
   me.pawns.forEach((pawn) => {
-    const available = pawn.zone === 'yard' && me.coins >= pawn.cost;
+    const available = pawn.zone === 'yard' && me.coins >= pawn.cost && !game.startOccupied;
     const button = E('button', `lutro-unit-card unit-${pawn.type}`);
     button.type = 'button';
     button.disabled = !available;
@@ -193,7 +193,7 @@ function buildShop(game, me, E, action, sound) {
       unitSprite(E, me, pawn, 'lutro-unit-card-icon'),
       E('strong', '', pawn.label),
       E('span', 'lutro-unit-card-stats', `${pawn.damage}⚔ ${pawn.maxHp}♥ +${pawn.movementBonus}➜`),
-      E('b', 'lutro-unit-card-cost', pawn.zone === 'yard' ? `${pawn.cost} coins` : 'Ingezet')
+      E('b', 'lutro-unit-card-cost', pawn.zone !== 'yard' ? 'Ingezet' : game.startOccupied ? 'Startvak bezet' : `${pawn.cost} coins`)
     );
     if (available) button.onclick = () => { sound('score'); action('buy', { type: pawn.type }); };
     shop.append(button);

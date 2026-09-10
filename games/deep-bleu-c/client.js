@@ -423,9 +423,6 @@ function facingLeftFor(id, entity) {
 
 const OTHER_PLAYER_COLORS = ['#ff9f43', '#4dd0e1', '#c77dff', '#ffe066'];
 
-// Dorpsbewoners: puur decoratieve, niet-interactieve figuren die volgens
-// world.npcHomes rondlopen (zie server tick()). Uiterlijk per type, gebouwd
-// op dezelfde anglerrig als spelers/skins — zie appendHeadgear.
 // Per NPC-id (zie npcs.js) het kleurenpalet en hoofddeksel op dezelfde
 // chibi-rig als spelers en skins.
 const NPC_APPEARANCE = {

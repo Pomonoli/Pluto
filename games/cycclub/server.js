@@ -237,10 +237,11 @@ const STAGE_TERRAIN = {
   flat:{flat:0.5,sprint:0.35,stamina:0.15},
   hilly:{mountain:0.35,flat:0.35,stamina:0.3},
   mountain:{mountain:0.65,stamina:0.35},
-  timeTrial:{timeTrial:0.8,stamina:0.2}
+  timeTrial:{timeTrial:0.8,stamina:0.2},
+  cobbled:{cobbles:0.5,flat:0.3,stamina:0.2}
 };
-const STAGE_TYPE_LABELS = {flat:'Vlak',hilly:'Heuvelachtig',mountain:'Bergrit',timeTrial:'Tijdrit'};
-const STAGE_DIFFICULTY = {flat:6,hilly:7,mountain:9,timeTrial:8};
+const STAGE_TYPE_LABELS = {flat:'Vlak',hilly:'Heuvelachtig',mountain:'Bergrit',timeTrial:'Tijdrit',cobbled:'Kasseirit'};
+const STAGE_DIFFICULTY = {flat:6,hilly:7,mountain:9,timeTrial:8,cobbled:8};
 
 function aggregateTerrain(route){
   const totals={};
@@ -254,8 +255,15 @@ function aggregateTerrain(route){
   return normalized;
 }
 
+// Elke meerdaagse koers (Grote Ronde of kortere rittenkoers) deelt dezelfde ritmotor:
+// een route van rittypes, een eindklassementsprijs en een geaggregeerd terreinprofiel.
+function stageRace(id,name,category,route,overallPrize){
+  return {id, name, category, stages:route.length, route, overallPrize, terrain:aggregateTerrain(route)};
+}
+
 function grandTour(id,name,route,overallPrize){
-  return {id, name, category:'grand_tour', stages:STAGES_PER_GRAND_TOUR, route, overallPrize, terrain:aggregateTerrain(route)};
+  if(route.length!==STAGES_PER_GRAND_TOUR)throw new Error(`Grote Ronde ${id} moet ${STAGES_PER_GRAND_TOUR} ritten tellen.`);
+  return stageRace(id,name,'grand_tour',route,overallPrize);
 }
 
 const GRAND_TOUR_CATALOG = [
@@ -269,8 +277,34 @@ const GRAND_TOUR_CATALOG = [
     ['flat','hilly','flat','mountain','flat','hilly','mountain','flat','mountain','hilly','timeTrial','mountain','flat','mountain','hilly','mountain','flat','mountain','hilly','timeTrial','flat'],
     140000)
 ];
-const GRAND_TOUR_BY_ID = new Map(GRAND_TOUR_CATALOG.map((tour) => [tour.id, tour]));
-const RACE_POOLS = new Map([...RACE_CATALOG,...GRAND_TOUR_CATALOG].map((race) => {
+// Rittenkoersen van 5 tot 8 dagen: de klassieke voorbereidingsrondes die tussen de
+// eendagskoersen en de Grote Rondes in zitten.
+const STAGE_RACE_CATALOG = [
+  stageRace('parijs-nice','Parijs-Nice','stage_race',
+    ['flat','flat','timeTrial','hilly','mountain','hilly','mountain','hilly'],70000),
+  stageRace('tirreno-adriatico','Tirreno-Adriatico','stage_race',
+    ['timeTrial','flat','hilly','mountain','mountain','hilly','flat'],65000),
+  stageRace('ronde-van-catalonie','Ronde van Catalonië','stage_race',
+    ['flat','hilly','mountain','mountain','hilly','mountain','hilly'],55000),
+  stageRace('ronde-van-het-baskenland','Ronde van het Baskenland','stage_race',
+    ['timeTrial','hilly','mountain','hilly','mountain','hilly'],50000),
+  stageRace('ronde-van-romandie','Ronde van Romandië','stage_race',
+    ['timeTrial','hilly','mountain','hilly','mountain','timeTrial'],45000),
+  stageRace('criterium-du-dauphine','Critérium du Dauphiné','stage_race',
+    ['flat','hilly','flat','timeTrial','mountain','mountain','hilly','mountain'],70000),
+  stageRace('ronde-van-zwitserland','Ronde van Zwitserland','stage_race',
+    ['flat','hilly','timeTrial','mountain','mountain','hilly','mountain','timeTrial'],65000),
+  stageRace('ronde-van-polen','Ronde van Polen','stage_race',
+    ['flat','flat','hilly','hilly','timeTrial','hilly','flat'],45000),
+  stageRace('renewi-tour','Renewi Tour','stage_race',
+    ['flat','cobbled','hilly','hilly','timeTrial'],35000),
+  stageRace('ronde-van-groot-brittannie','Ronde van Groot-Brittannië','stage_race',
+    ['flat','hilly','hilly','flat','hilly','hilly'],35000)
+];
+const STAGE_RACE_CATEGORIES = new Set(['grand_tour','stage_race']);
+const TOUR_CATALOG = [...GRAND_TOUR_CATALOG,...STAGE_RACE_CATALOG];
+const GRAND_TOUR_BY_ID = new Map(TOUR_CATALOG.map((tour) => [tour.id, tour]));
+const RACE_POOLS = new Map([...RACE_CATALOG,...TOUR_CATALOG].map((race) => {
   const data=require(`./data/races/${race.id}.json`);
   if(!Array.isArray(data.riderIds)||data.riderIds.length!==50||new Set(data.riderIds).size!==50){
     throw new Error(`CycClub-racepool ${race.id} moet exact 50 unieke riderIds bevatten.`);
@@ -294,7 +328,7 @@ function currentCatalogRace(raceId){
   const stageType=tour.route[parsed.stageNumber-1];
   return {
     id:raceId, name:`${tour.name} — Rit ${parsed.stageNumber}/${tour.stages} · ${STAGE_TYPE_LABELS[stageType]}`,
-    category:'grand_tour', terrain:STAGE_TERRAIN[stageType], stageType,
+    category:tour.category, terrain:STAGE_TERRAIN[stageType], stageType,
     basePrize:prizeForDifficulty(STAGE_DIFFICULTY[stageType]),
     tourId:tour.id, tourName:tour.name, stageNumber:parsed.stageNumber, totalStages:tour.stages
   };
@@ -410,7 +444,7 @@ function describeShopEffects(shop){
     medical:shop.medical?`-${injuryReduction} races uitvaltijd · ${crashChancePct}% valkans · ${illnessChancePct}% ziektekans`:'Geen bonus'
   };
 }
-function defaultCareer(){return {victories:0,podiums:0,monumentsWon:0,grandToursWon:0,gtStagesWon:0,prizeMoney:0,racesEntered:0}}
+function defaultCareer(){return {victories:0,podiums:0,monumentsWon:0,grandToursWon:0,stageRacesWon:0,gtStagesWon:0,prizeMoney:0,racesEntered:0}}
 
 function sanitizeRider(rider){
   const catalog=RIDER_BY_ID.get(String(rider?.id))||RIDER_CATALOG.find((entry) => entry.name===rider?.name);
@@ -738,7 +772,7 @@ function finalizeRace(game){
   finishers.forEach((entry,index) => {entry.place=index+1});
   const dnfs=entries.filter((entry) => entry.dnf);
 
-  if(game.grandTour&&catalogRace.category==='grand_tour'){
+  if(game.grandTour&&STAGE_RACE_CATEGORIES.has(catalogRace.category)){
     finalizeGrandTourStage(game,race,catalogRace,finishers,dnfs);
   } else {
     finalizeStandaloneRace(game,race,catalogRace,finishers,dnfs);
@@ -900,7 +934,8 @@ function finalizeGrandTourOverall(game,tour){
     player.team.career.prizeMoney+=gcPrize;
     if(best&&best.gcPlace===1){
       player.team.career.victories+=1;
-      player.team.career.grandToursWon+=1;
+      if(tour.category==='grand_tour')player.team.career.grandToursWon+=1;
+      else player.team.career.stageRacesWon+=1;
     }
     if(best&&best.gcPlace<=3)player.team.career.podiums+=1;
     if(gcEntries.some((entry) => entry.playerId===player.id))player.team.career.racesEntered+=1;
@@ -1148,7 +1183,7 @@ function serialize(game,requesterId,connected){
     kind:meta.key, gameOver:false, phase:game.phase, hostId:game.hostId, squadSize:SQUAD_SIZE, maxRiders:MAX_RIDERS,
     raceCatalog:[
       ...RACE_CATALOG.map((race) => ({id:race.id, name:race.name, category:race.category, difficulty:race.difficulty, basePrize:race.basePrize, terrain:race.terrain})),
-      ...GRAND_TOUR_CATALOG.map((tour) => ({id:tour.id, name:tour.name, category:tour.category, stages:tour.stages, overallPrize:tour.overallPrize, terrain:tour.terrain}))
+      ...TOUR_CATALOG.map((tour) => ({id:tour.id, name:tour.name, category:tour.category, stages:tour.stages, overallPrize:tour.overallPrize, terrain:tour.terrain}))
     ],
     race:game.race?serializeRace(game,requesterId,catalogRace):null,
     grandTour:game.grandTour?serializeGrandTour(game):null,
@@ -1166,7 +1201,7 @@ function serialize(game,requesterId,connected){
 function serializeGrandTour(game){
   const tour=GRAND_TOUR_BY_ID.get(game.grandTour.tourId);
   return {
-    tourId:tour?.id, tourName:tour?.name||'', stageNumber:game.grandTour.stageNumber,
+    tourId:tour?.id, tourName:tour?.name||'', category:tour?.category||'grand_tour', stageNumber:game.grandTour.stageNumber,
     totalStages:tour?.stages||STAGES_PER_GRAND_TOUR,
     classifications:classificationStandings(game.grandTour.gc)
   };
@@ -1250,7 +1285,7 @@ function afterStateChange(room,{db}){
 
 module.exports={
   meta, createGame, handleAction, serialize, tick, preparePlayers, afterStateChange,
-  RACE_CATALOG, GRAND_TOUR_CATALOG, RACE_POOLS, RIDER_CATALOG, RIDER_BY_ID, SHOP_COSTS, STAT_KEYS, SQUAD_SIZE, MAX_RIDERS, RACE_FIELD_SIZE, MIN_RIDER_PRICE, MAX_RIDER_PRICE, RESET_STARTER_COUNT, RESET_STARTER_MIN_SPECIALISMS, RESET_STARTER_POOL_FRACTION, marketValueFor, TEAMS, REAL_RIDERS:RIDER_CATALOG,
+  RACE_CATALOG, GRAND_TOUR_CATALOG, STAGE_RACE_CATALOG, RACE_POOLS, RIDER_CATALOG, RIDER_BY_ID, SHOP_COSTS, STAT_KEYS, SQUAD_SIZE, MAX_RIDERS, RACE_FIELD_SIZE, MIN_RIDER_PRICE, MAX_RIDER_PRICE, RESET_STARTER_COUNT, RESET_STARTER_MIN_SPECIALISMS, RESET_STARTER_POOL_FRACTION, marketValueFor, TEAMS, REAL_RIDERS:RIDER_CATALOG,
   STAGES_PER_GRAND_TOUR, SEGMENTS_PER_RACE, RIDER_TACTICS, TACTIC_LABELS, TACTIC_EFFECTS, GELS_PER_RACE,
   calculateSegmentStep, buildSegmentPlan, raceGroupForGap, buildRaceSituation
 };

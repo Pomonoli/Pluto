@@ -1,5 +1,34 @@
 # Changelog
 
+## v1.30.0 — Rittenkoersen in CycClub
+
+- Tien nieuwe meerdaagse koersen in CycClub, tussen de eendagskoersen en de
+  Grote Rondes in: Parijs-Nice (8), Tirreno-Adriatico (7), Ronde van Catalonië
+  (7), Ronde van het Baskenland (6), Ronde van Romandië (6), Critérium du
+  Dauphiné (8), Ronde van Zwitserland (8), Ronde van Polen (7), Renewi Tour (5)
+  en Ronde van Groot-Brittannië (6).
+- Elke ronde heeft een eigen route van rittypes die het echte parcours volgt,
+  van de proloog en slottijdrit in Romandië tot de vier bergritten in de
+  Dauphiné.
+- Nieuwe categorie "Rittenkoersen" in de koerskalender, met eigen filter.
+- Nieuw rittype Kasseirit (kasseien/vlak/uithouding), gebruikt in de Renewi
+  Tour.
+- Rittenkoersen delen de ritmotor van de Grote Rondes: klassementen voor
+  algemeen, punten, bergen, jongeren en ploegen lopen over alle ritten heen.
+- Elke ronde krijgt een eigen deelnemersveld van 50 renners, samengesteld naar
+  de rittypes in het parcours, zodat sprinters, klimmers, kasseispecialisten en
+  tijdrijders opduiken waar het parcours daarom vraagt.
+- Nieuwe erelijstteller "Rittenkoersen"; een rittenkoerszege telt niet meer mee
+  als Grote Ronde-zege en "Grote Ritten" heet nu "Ritzeges".
+- Lutro: twee eigen troepen kunnen niet langer op hetzelfde vak staan. Een zet
+  die op je eigen troep zou eindigen is geblokkeerd, en je startvak moet vrij
+  zijn om een nieuwe troep in te zetten. Alleen het middenvak blijft gedeeld.
+  De winkel toont "Startvak bezet" wanneer kopen daardoor niet kan, en de NPC
+  houdt er rekening mee.
+- The Big Blue C: de dorpsbewoners lopen niet meer rond maar staan op post bij
+  hun eigen gebouw. Elke stap dwong een volledige herbouw van de kaart af, wat
+  zichtbaar geflikker gaf.
+
 ## v1.29.0 — Skins, dorpsbewoners en opdrachten in The Big Blue C
 
 - Skins: acht koopbare uitrustingen (€200) voor je personage, met een eigen

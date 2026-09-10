@@ -2,7 +2,7 @@
 
 // De vaste cast van The Big Blue C. Elke NPC krijgt een eigen uiterlijk op
 // dezelfde chibi-rig (client-side, zie NPC_APPEARANCE in client.js), een vaste
-// thuisplek nabij een dorpsgebouw (`anchor`) waar hij rondloopt, en één
+// vaste plek nabij een dorpsgebouw (`anchor`) waar hij op post staat, en één
 // opdracht.
 //
 // `context`, `objective` en `reward` zijn de verhaaltekst in het gesprek;
@@ -193,7 +193,7 @@ const NPCS = [
 function getNpc(id) { return NPCS.find((npc) => npc.id === id) || null; }
 
 // Wat de client nodig heeft om een gesprek te tonen; posities komen apart mee
-// in de spelstate omdat NPC's rondlopen.
+// in de spelstate, omdat die per speelsessie in game.npcs staan.
 function profiles() {
   return NPCS.map(({ id, name, title, dialogue, quest }) => ({ id, name, title, dialogue, quest }));
 }

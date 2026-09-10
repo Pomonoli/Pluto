@@ -309,3 +309,46 @@ test('de client toont de thematische kasteelstrijd, shop en HP-balken fullscreen
   unitAtlases.forEach((atlas) => assert.ok(fs.statSync(atlas).size > 500000));
   assert.doesNotMatch(client, /isoX|turret/i);
 });
+
+test('eigen troepen kunnen nooit op hetzelfde vak landen', () => {
+  const game = lutro.createGame(players(2));
+  const player = game.players[0];
+  const blocker = readyPawn(player, 'normal', 5);
+  const mover = readyPawn(player, 'strong', 0); // +1 bonus
+  forceAction(game, player.id, 4); // 4 + 1 = vak 5
+  assert.equal(lutro.canMovePawn(player, mover, 4), false);
+  assert.equal(lutro.movablePawns(player, 4).includes(mover), false);
+  assert.throws(() => lutro.handleAction(game, player.id, 'move', { pawnId: mover.id }), /eigen troep/i);
+  assert.equal(mover.progress, 0);
+  assert.equal(blocker.progress, 5);
+  blocker.progress = 6;
+  assert.equal(lutro.canMovePawn(player, mover, 4), true);
+  lutro.handleAction(game, player.id, 'move', { pawnId: mover.id });
+  assert.equal(mover.progress, 5);
+});
+
+test('een bezet startvak blokkeert het inzetten van een nieuwe troep', () => {
+  const game = lutro.createGame(players(2));
+  const player = game.players[0];
+  readyPawn(player, 'normal', 0);
+  player.coins = 200;
+  forceAction(game, player.id, 3);
+  assert.throws(() => lutro.handleAction(game, player.id, 'buy', { type: 'strong' }), /startvak/i);
+  assert.equal(lutro.serialize(game, player.id).startOccupied, true);
+  readyPawn(player, 'normal', 4);
+  assert.equal(lutro.serialize(game, player.id).startOccupied, false);
+  lutro.handleAction(game, player.id, 'buy', { type: 'strong' });
+  assert.equal(player.pawns.find((pawn) => pawn.type === 'strong').progress, 0);
+});
+
+test('een vijandelijke troep op hetzelfde vak blijft gewoon een gevecht', () => {
+  const game = lutro.createGame(players(2));
+  const red = game.players[0], green = game.players[1];
+  const attacker = readyPawn(red, 'strong', 18);
+  const defender = readyPawn(green, 'normal', 7); // zelfde absolute routevak
+  forceAction(game, red.id, 1);
+  assert.equal(lutro.canMovePawn(red, attacker, 1), true);
+  lutro.handleAction(game, red.id, 'move', { pawnId: attacker.id });
+  assert.equal(defender.hp, 0);
+  assert.equal(attacker.progress, 20);
+});

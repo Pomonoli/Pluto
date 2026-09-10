@@ -712,6 +712,19 @@ const RELEASES = [
       "The Big Blue C: de kaart heeft echt hoogteverschil tussen water, land, heuvels en bergpieken, en een grotere boot.",
       "The Big Blue C: scrollen in een paneel springt niet meer terug naar boven."
     ]
+  },
+  {
+    version:"1.30.0",
+    features:[
+      "CycClub: tien nieuwe rittenkoersen van 5 tot 8 ritten — Parijs-Nice, Tirreno-Adriatico, Ronde van Catalonië, Ronde van het Baskenland, Ronde van Romandië, Critérium du Dauphiné, Ronde van Zwitserland, Ronde van Polen, Renewi Tour en Ronde van Groot-Brittannië.",
+      "CycClub: rittenkoersen rijden met dezelfde vijf klassementen als een Grote Ronde en tellen apart mee op je erelijst."
+    ],
+    improvements:[
+      "CycClub: nieuw rittype Kasseirit, onder meer in de Renewi Tour.",
+      "CycClub: elke rittenkoers heeft een eigen deelnemersveld dat past bij het parcours.",
+      "Lutro: twee eigen troepen kunnen niet meer op hetzelfde vak staan; je startvak moet vrij zijn om een troep in te zetten. Alleen in het midden komen je eigen troepen samen.",
+      "The Big Blue C: de dorpsbewoners staan nu op post bij hun eigen gebouw in plaats van rond te lopen — dat maakt de kaart een stuk rustiger."
+    ]
   }
 ];
 

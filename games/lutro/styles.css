@@ -68,3 +68,64 @@ body.game-active #gameStage:has(.lutro-root){background:radial-gradient(circle a
 /* The host selects the first realm from a four-card hero overview in the lobby. */
 .lutro-faction-picker{display:grid;gap:10px;margin-top:14px;padding:13px;border:2px solid #3a332b;border-radius:12px;background:linear-gradient(145deg,rgba(239,223,183,.97),rgba(190,166,120,.96));box-shadow:inset 0 0 0 2px rgba(255,239,194,.28),0 7px 20px rgba(27,20,13,.22);color:#2c2116;font-family:Georgia,"Times New Roman",serif}.lutro-faction-picker-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}.lutro-faction-picker-head strong{font-size:1rem}.lutro-faction-picker-head small{color:#675640;font:600 .72rem/1.3 system-ui,sans-serif;text-align:right}.lutro-faction-choices{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.lutro-faction-choice{--realm-position:center;position:relative;isolation:isolate;display:grid;grid-template-rows:auto auto auto auto 1fr;align-content:start;gap:3px;min-width:0;min-height:166px;padding:12px 9px 10px;overflow:hidden;border:2px solid color-mix(in srgb,var(--camp) 58%,#33281e);border-radius:9px;background-image:linear-gradient(180deg,rgba(18,15,12,.18),rgba(18,15,12,.9) 62%),url("./assets/four-realms-board.png");background-position:var(--realm-position);background-size:220%;color:#fff3d0;text-align:left;text-shadow:0 1px 2px #000;box-shadow:inset 0 0 18px rgba(0,0,0,.38);cursor:pointer}.lutro-faction-choice.camp-red{--realm-position:0% 0%}.lutro-faction-choice.camp-green{--realm-position:100% 0%}.lutro-faction-choice.camp-yellow{--realm-position:100% 100%}.lutro-faction-choice.camp-blue{--realm-position:0% 100%}.lutro-faction-choice::after{content:"";position:absolute;z-index:-1;inset:0;background:linear-gradient(135deg,color-mix(in srgb,var(--camp) 20%,transparent),transparent 55%)}.lutro-faction-choice.active{border-color:#ffd66c;box-shadow:0 0 0 3px color-mix(in srgb,var(--camp) 72%,#ffd66c),0 5px 15px rgba(0,0,0,.35),inset 0 0 22px rgba(255,205,83,.18);transform:translateY(-2px)}.lutro-faction-choice:disabled{opacity:1;cursor:default}.lutro-faction-glyph{font-size:1.5rem;line-height:1;color:#ffe196}.lutro-faction-realm{font:800 .62rem/1 system-ui,sans-serif;letter-spacing:.11em;text-transform:uppercase;color:#e7d4a9}.lutro-faction-hero{font-size:1.12rem}.lutro-faction-ability{font-size:.72rem;color:#ffd56d}.lutro-faction-copy{align-self:end;font:600 .66rem/1.3 system-ui,sans-serif;color:#eee3ca;text-shadow:0 1px 2px #000}
 @media(max-width:680px){.lutro-faction-choices{grid-template-columns:repeat(2,minmax(0,1fr))}.lutro-faction-choice{min-height:142px}.lutro-faction-picker-head{align-items:flex-start;flex-direction:column;gap:3px}.lutro-faction-picker-head small{text-align:left}}
+
+/* Compacte spelersbalk: vier smalle vakjes op één rij, zodat het bord de
+   verticale ruimte krijgt. */
+.lutro-players{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+.lutro-player{grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px 4px;padding:3px 5px;border-width:1px;border-radius:8px}
+.lutro-player-identity{grid-column:1;grid-row:1;gap:3px}
+.lutro-player-identity strong{font-size:.6rem;line-height:1.15}
+.lutro-camp-name{display:none}
+.lutro-player-marker{width:12px;height:12px;border-width:1px;font-size:8px}
+.lutro-economy{grid-column:2;grid-row:1;font-size:.56rem;line-height:1.15}
+.lutro-castle-hp{grid-column:1 / -1;grid-row:2;height:4px}
+.lutro-castle-hp-text{display:none}
+@media(max-width:560px){
+  .lutro-players{grid-template-columns:repeat(4,minmax(0,1fr));gap:3px}
+  .lutro-player{padding:3px 4px}
+  .lutro-player-identity strong{font-size:.56rem}
+  .lutro-player-marker{width:11px;height:11px}
+  .lutro-economy{font-size:.52rem}
+}
+
+/* Het bord is een vast venster: de actietray houdt altijd dezelfde hoogte,
+   zodat kopen of aanvallen het bord nooit laat krimpen. */
+body.game-active .lutro-controls{flex:0 0 auto;height:min(31dvh,212px);max-height:none;justify-content:center}
+@media(max-width:560px){
+  body.game-active .lutro-controls{height:min(33dvh,206px);max-height:none}
+}
+@media(orientation:landscape) and (max-height:650px){
+  body.game-active .lutro-players{grid-template-columns:1fr;gap:5px}
+  body.game-active .lutro-controls{height:100%;max-height:100%;justify-content:flex-start}
+}
+/* De statusregel boven het bord houdt een vaste hoogte van twee regels, zodat
+   een langere beurttekst het bord niet verkleint. */
+body.game-active #gameStage:has(.lutro-root)>.game-titlebar .game-status{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;height:2.7em;overflow:hidden;line-height:1.35}
+@media(orientation:landscape) and (max-height:650px){
+  body.game-active #gameStage:has(.lutro-root)>.game-titlebar .game-status{height:auto;-webkit-line-clamp:none}
+}
+
+/* Pionnen: groter en duidelijk in factiekleur, zodat je in één oogopslag ziet
+   welke troepen van wie zijn. */
+.lutro-pawn{width:92%;border:2px solid color-mix(in srgb,var(--camp) 40%,#fff3cf);background:radial-gradient(circle at 38% 26%,color-mix(in srgb,var(--camp) 22%,#fff) 0 12%,color-mix(in srgb,var(--camp) 95%,#fff) 48%,color-mix(in srgb,var(--camp) 58%,#0d0906) 100%);box-shadow:0 3px 7px rgba(0,0,0,.6),inset 0 0 0 2px color-mix(in srgb,var(--camp) 72%,#160f0a),inset 0 0 9px color-mix(in srgb,var(--camp) 45%,#ffe7ab)}
+.lutro-pawn-glyph.lutro-unit-sprite{width:145%;height:145%;margin:-22.5%}
+.lutro-unit-sprite{filter:drop-shadow(0 0 2px color-mix(in srgb,var(--camp) 88%,#fff)) drop-shadow(0 2px 2px rgba(0,0,0,.72))}
+.lutro-pawn-number{right:-16%;bottom:-15%;width:46%;border-color:color-mix(in srgb,var(--camp) 45%,#f0dcb0);background:color-mix(in srgb,var(--camp) 62%,#241b14)}
+.lutro-pawn.mine{transform:translate(calc(-50% + var(--stack-x,0%)),calc(-50% + var(--stack-y,0%))) scale(1.28);border-color:#fff4d4}
+.lutro-pawn.mine::before{inset:-24%;background:radial-gradient(circle,color-mix(in srgb,var(--camp) 85%,#fff3cf) 0%,transparent 68%);opacity:1}
+@media(max-width:560px){
+  .lutro-pawn{width:100%;border-width:1.5px}
+  .lutro-pawn-number{width:44%}
+}
+
+/* Het bord mag de volledige schermbreedte innemen; alleen de tray en de
+   statusregel houden de zijmarges van de gamestage. */
+body.game-active .lutro-board-wrap{width:100dvw;max-width:none;margin-inline:calc(50% - 50dvw)}
+body.game-active .lutro-board{width:min(100%,100cqh);max-width:none;border-radius:6px}
+@media(orientation:landscape) and (max-height:650px){
+  body.game-active .lutro-board-wrap{width:auto;margin-inline:0}
+}
+@media(max-width:560px){
+  body.game-active .lutro-unit-card{min-height:44px;padding:4px}
+  body.game-active .lutro-controls{gap:6px;padding:7px}
+}

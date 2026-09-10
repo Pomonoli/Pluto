@@ -304,3 +304,59 @@ test('a full grand tour produces all five classifications', () => {
   for (const key of ['gc', 'green', 'polka', 'youth', 'team']) assert.ok(Array.isArray(c[key]));
   assert.ok(c.gc.length > 0);
 });
+
+test('every stage race lasts between 5 and 8 stages and has its own 50-rider pool', () => {
+  assert.equal(cc.STAGE_RACE_CATALOG.length, 10);
+  for (const race of cc.STAGE_RACE_CATALOG) {
+    assert.equal(race.category, 'stage_race');
+    assert.ok(race.stages >= 5 && race.stages <= 8, `${race.id} heeft ${race.stages} ritten`);
+    assert.equal(race.route.length, race.stages);
+    assert.ok(race.overallPrize > 0);
+    const pool = cc.RACE_POOLS.get(race.id);
+    assert.equal(pool.length, 50);
+    assert.equal(new Set(pool).size, 50);
+    for (const riderId of pool) assert.ok(cc.RIDER_BY_ID.has(riderId), `onbekende renner ${riderId}`);
+  }
+});
+
+test('a stage race runs to a final classification and counts as a stage-race win', () => {
+  const {game, player1} = buildGame();
+  const race = cc.STAGE_RACE_CATALOG.find((entry) => entry.stages === 5);
+  cc.handleAction(game, 'p1', 'selectRace', {raceId: race.id});
+  let fakeNow = Date.now();
+  let guard = 0;
+  let stagesSeen = 0;
+  while (game.phase !== 'result' && guard < 5000) {
+    guard += 1;
+    fakeNow += 1000;
+    if (game.phase === 'lineup' && game.race.lineups.p1 === undefined) {
+      const riderIds = player1.team.riders.filter((rider) => rider.status === 'active').slice(0, 3).map((rider) => rider.id);
+      cc.handleAction(game, 'p1', 'submitLineup', {riderIds});
+    } else if (game.phase === 'racing') {
+      const prog = game.race.progress.p1;
+      if (prog && !prog.confirmed) {
+        const activeIds = Object.keys(prog.riders).filter((id) => !prog.riders[id].dnf);
+        if (activeIds.length) {
+          const tactics = {};
+          for (const id of activeIds) tactics[id] = 'follow';
+          cc.handleAction(game, 'p1', 'rollSegment', {tactics, gels: {}});
+        }
+      }
+    } else if (game.phase === 'stageResult') {
+      stagesSeen += 1;
+      cc.handleAction(game, 'p1', 'nextStage', {});
+    }
+    cc.tick(game, fakeNow);
+  }
+  assert.equal(game.phase, 'result');
+  assert.equal(game.lastResult.type, 'grand_tour_final');
+  assert.equal(game.lastResult.totalStages, race.stages);
+  assert.equal(stagesSeen, race.stages - 1);
+  assert.ok(game.lastResult.classifications.gc.length > 0);
+  // Een rittenkoerszege telt niet mee als Grote Ronde-zege.
+  const gcWinner = game.lastResult.gc[0];
+  if (gcWinner && gcWinner.playerId === 'p1') {
+    assert.equal(player1.team.career.stageRacesWon, 1);
+    assert.equal(player1.team.career.grandToursWon, 0);
+  }
+});

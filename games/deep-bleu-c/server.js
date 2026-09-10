@@ -1,7 +1,6 @@
 'use strict';
 
 const { getWorld, isWalkable, isWater, resourceAt, nearestWalkable, findPath, hexDistance, biomeAt, tileAt, WORLD_VERSION, migrateSavedWorld } = require('./worldgen');
-const { hexRing } = require('./hexmath');
 const { SETS, fishForBiome, getFish, priceFor: fishPriceFor } = require('./fish');
 const resources = require('./resources');
 const gear = require('./gear');
@@ -13,18 +12,6 @@ const slice = require('./slice-content');
 const { SKILL_KEYS, MAX_SKILL_LEVEL, LEVEL_XP, levelForXp, totalLevel } = require('./skill-levels');
 
 const STEP_MS = 170;
-// Dorpsbewoners lopen bewust trager en pauzeren veel langer tussen twee
-// wandelbesluiten dan spelers — puur sfeer, geen haast, en het voorkomt dat
-// de kaart (die bij elke state-wijziging volledig herbouwt) onnodig vaak
-// ververst terwijl niemand actief speelt.
-const NPC_STEP_MS = 550;
-const NPC_WANDER_RADIUS = 4;
-const NPC_DECISION_MIN_MS = 4000;
-const NPC_DECISION_MAX_MS = 9000;
-// Straal (in hexen) waarbinnen een NPC stilstaat zodra een speler dichtbij
-// is — voorkomt onnodige verversingen tijdens spelen, en zet de NPC alvast
-// stil klaar voor een toekomstig gesprek.
-const NPC_PAUSE_RADIUS = 5;
 const HOOK_WINDOW_MS = 900;
 const REEL_WINDOW_MIN_MS = 700;
 const REEL_WINDOW_MAX_MS = 1300;
@@ -505,34 +492,17 @@ function preparePlayers(players, { db }) {
   return players.map((player) => ({ ...player, dbcState: player.userId ? db.getDeepBleuCPlayer(player.userId) : null }));
 }
 
-// Dorpsbewoners: puur decoratieve figuren die rustig rondlopen nabij hun
-// vaste thuisplek (zie world.npcHomes). Ze varen nooit — pathfinding en
-// walkability-checks gebruiken bewust geen `extra` waterset, net als een
-// speler zonder boot.
+// Dorpsbewoners staan stil op hun vaste plek bij hun eigen dorpsgebouw (zie
+// world.npcHomes). Ze liepen eerder rond, maar elke stap dwong een volledige
+// herbouw van de kaart af en dat gaf zichtbaar geflikker; stilstaan houdt de
+// kaart rustig zolang er niets anders gebeurt.
 function defaultNpcs(world) {
   return (world.npcHomes || []).map((home) => ({
     id: home.id,
     x: home.x,
     y: home.y,
-    homeX: home.x,
-    homeY: home.y,
-    path: [],
-    nextStepAt: 0,
-    nextDecisionAt: Math.round(Math.random() * NPC_DECISION_MAX_MS),
     facingLeft: false
   }));
-}
-
-function pickNpcWanderTarget(world, npc) {
-  for (let attempt = 0; attempt < 10; attempt += 1) {
-    const radius = 1 + Math.floor(Math.random() * NPC_WANDER_RADIUS);
-    const ring = hexRing(npc.homeX, npc.homeY, radius);
-    const [x, y] = ring[Math.floor(Math.random() * ring.length)] || [];
-    if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
-    if (x < 0 || y < 0 || x >= world.width || y >= world.height) continue;
-    if (isWalkable(world, x, y)) return { x, y };
-  }
-  return null;
 }
 
 function createGame(roomPlayers) {
@@ -1459,32 +1429,6 @@ function tick(game, now = Date.now()) {
       player.stats.energy = Math.min(MAX_ENERGY, player.stats.energy + 2);
       player.nextEnergyRegenAt = now + 5000;
       changed = true;
-    }
-  }
-  const world = getWorld();
-  for (const npc of game.npcs || []) {
-    // Staat een speler dichtbij, dan blijft de NPC stilstaan i.p.v. verder te
-    // dwalen: dat voorkomt onnodige verversingen terwijl je in de buurt bent
-    // (en dicht bij de speler staan is straks ook handig zodra je met NPC's
-    // kunt praten).
-    const playerNearby = game.players.some((player) => hexDistance(player.x, player.y, npc.x, npc.y) <= NPC_PAUSE_RADIUS);
-    if (playerNearby) {
-      if (npc.path.length) npc.path = [];
-      npc.nextDecisionAt = now + NPC_DECISION_MIN_MS;
-      continue;
-    }
-    if (npc.path.length && now >= npc.nextStepAt) {
-      const step = npc.path.shift();
-      npc.facingLeft = step.x < npc.x;
-      npc.x = step.x;
-      npc.y = step.y;
-      npc.nextStepAt = now + NPC_STEP_MS;
-      changed = true;
-    } else if (!npc.path.length && now >= (npc.nextDecisionAt || 0)) {
-      const target = pickNpcWanderTarget(world, npc);
-      const path = target ? findPath(world, npc.x, npc.y, target.x, target.y) : null;
-      if (path && path.length) { npc.path = path; npc.nextStepAt = now; }
-      npc.nextDecisionAt = now + NPC_DECISION_MIN_MS + Math.random() * (NPC_DECISION_MAX_MS - NPC_DECISION_MIN_MS);
     }
   }
   if (game.log.length > 30) game.log.length = 30;

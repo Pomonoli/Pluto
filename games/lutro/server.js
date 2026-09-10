@@ -59,11 +59,19 @@ function pawnZone(pawn) {
   return 'finished';
 }
 function movementSteps(pawn, roll) { return roll + pawn.movementBonus; }
-function canMovePawn(pawn, roll) {
-  if (pawn.progress < 0 || pawn.progress === FINISH_PROGRESS) return false;
-  return pawn.progress + movementSteps(pawn, roll) <= FINISH_PROGRESS;
+// Twee eigen troepen delen nooit een vak: op de route en in de thuisgang komt
+// dat neer op eenzelfde progress. Alleen het middenvak blijft gedeeld.
+function blockedByOwnPawn(player, progress, movingPawn = null) {
+  if (progress < 0 || progress >= FINISH_PROGRESS) return false;
+  return player.pawns.some((pawn) => pawn !== movingPawn && pawn.progress === progress);
 }
-function movablePawns(player, roll) { return player.pawns.filter((pawn) => canMovePawn(pawn, roll)); }
+function canMovePawn(player, pawn, roll) {
+  if (pawn.progress < 0 || pawn.progress === FINISH_PROGRESS) return false;
+  const target = pawn.progress + movementSteps(pawn, roll);
+  if (target > FINISH_PROGRESS) return false;
+  return !blockedByOwnPawn(player, target, pawn);
+}
+function movablePawns(player, roll) { return player.pawns.filter((pawn) => canMovePawn(player, pawn, roll)); }
 function activePlayers(game) { return game.players.filter((player) => !player.eliminated); }
 function addLog(game, text) {
   game.log.unshift(text);
@@ -151,6 +159,7 @@ function applyBuy(game, player, type) {
   const pawn = player.pawns.find((item) => item.type === type && item.progress < 0);
   if (!pawn) throw new Error('Deze troep is al ingezet.');
   if (player.coins < stats.cost) throw new Error('Onvoldoende coins.');
+  if (blockedByOwnPawn(player, 0, pawn)) throw new Error('Op je startvak staat al een eigen troep.');
   player.coins -= stats.cost;
   pawn.progress = 0;
   pawn.hp = stats.maxHp;
@@ -244,7 +253,10 @@ function movePawn(game, player, pawn, steps, description) {
 function applyMove(game, player, pawnId) {
   if (game.phase !== 'action' || !game.lastRoll) throw new Error('Rol eerst de dobbelsteen.');
   const pawn = player.pawns.find((item) => item.id === pawnId);
-  if (!pawn || !canMovePawn(pawn, game.lastRoll)) throw new Error('Deze troep kan niet met de huidige worp bewegen.');
+  if (!pawn) throw new Error('Deze troep kan niet met de huidige worp bewegen.');
+  if (pawn.progress >= 0 && pawn.progress < FINISH_PROGRESS && pawn.progress + movementSteps(pawn, game.lastRoll) <= FINISH_PROGRESS
+    && blockedByOwnPawn(player, pawn.progress + movementSteps(pawn, game.lastRoll), pawn)) throw new Error('Op dat vak staat al een eigen troep.');
+  if (!canMovePawn(player, pawn, game.lastRoll)) throw new Error('Deze troep kan niet met de huidige worp bewegen.');
   const steps = movementSteps(pawn, game.lastRoll);
   movePawn(game, player, pawn, steps, `gebruikt de worp plus ${pawn.movementBonus} bonus en beweegt`);
   advanceTurn(game);
@@ -283,7 +295,7 @@ function applyCastleAttack(game, player, pawnId, targetPlayerId) {
 function hasAnyAction(game, player) {
   if (movablePawns(player, game.lastRoll).length) return true;
   if (attackOptions(game, player).length) return true;
-  return player.pawns.some((pawn) => pawn.progress < 0 && player.coins >= pawn.cost);
+  return !blockedByOwnPawn(player, 0) && player.pawns.some((pawn) => pawn.progress < 0 && player.coins >= pawn.cost);
 }
 
 function endGame(game, winnerId) {
@@ -320,12 +332,13 @@ function handleAction(game, playerId, action, payload = {}) {
 function chooseNpcAction(game, player) {
   const attacks = attackOptions(game, player);
   if (attacks.length) return { action: 'castleAttack', payload: attacks[0] };
+  const startFree = !blockedByOwnPawn(player, 0);
   const hero = player.pawns.find((pawn) => pawn.type === 'hero' && pawn.progress < 0);
-  if (hero && player.coins >= hero.cost) return { action: 'buy', payload: { type: 'hero' } };
+  if (startFree && hero && player.coins >= hero.cost) return { action: 'buy', payload: { type: 'hero' } };
   const movable = movablePawns(player, game.lastRoll);
   if (movable.length) return { action: 'move', payload: { pawnId: movable.slice().sort((a, b) => b.progress - a.progress)[0].id } };
   const affordable = UNIT_ORDER.map((type) => player.pawns.find((pawn) => pawn.type === type && pawn.progress < 0)).filter((pawn) => pawn && pawn.cost <= player.coins).sort((a, b) => b.cost - a.cost);
-  if (affordable.length) return { action: 'buy', payload: { type: affordable[0].type } };
+  if (startFree && affordable.length) return { action: 'buy', payload: { type: affordable[0].type } };
   return { action: 'pass', payload: {} };
 }
 
@@ -370,6 +383,7 @@ function serialize(game, requesterId, connected = new Map()) {
     canRoll: Boolean(!game.gameOver && mine && game.phase === 'roll'), canAct,
     canPass: canAct && !hasAnyAction(game, turn),
     movablePawnIds: canAct ? movablePawns(turn, game.lastRoll).map((pawn) => pawn.id) : [],
+    startOccupied: canAct ? blockedByOwnPawn(turn, 0) : false,
     attackOptions: canAct ? attackOptions(game, turn) : [],
     players: game.players.map((player) => ({
       id: player.id, name: player.name, isNpc: player.isNpc, isYou: player.id === requesterId,
@@ -395,5 +409,5 @@ module.exports = {
   createGame, handleAction, serialize, tick, results, normalizeRoomOptions,
   CAMPS, ATTACK_SITES, UNIT_TYPES, UNIT_ORDER, FACTION_UNITS, HEROES, PATH_LENGTH, TRACK_STEPS, HOME_STEPS,
   FINISH_PROGRESS, CASTLE_MAX_HP, COINS_PER_PIP, CENTER_DAMAGE,
-  absolutePathIndex, pawnZone, movementSteps, canMovePawn, movablePawns, attackOptions
+  absolutePathIndex, pawnZone, movementSteps, canMovePawn, movablePawns, blockedByOwnPawn, attackOptions
 };

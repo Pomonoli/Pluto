@@ -19,8 +19,8 @@ const STAT_LABELS={flat:'Vlak',mountain:'Berg',cobbles:'Kasseien',timeTrial:'Tij
 const STAT_SHORT={flat:'VLK',mountain:'BRG',cobbles:'KSW',timeTrial:'TT',sprint:'SPR',stamina:'UIT'};
 const SHOP_LABELS={bikes:'Fietsen & Materiaal',nutrition:'Voeding & Supplementen',trainers:'Trainers & Analyse',medical:'Medische Staf'};
 const SHOP_ICONS={bikes:'BIKE',nutrition:'FUEL',trainers:'DATA',medical:'MED'};
-const CATEGORY_ORDER=['monument','classic','grand_tour'];
-const CATEGORY_LABELS={monument:'Monumenten',classic:'Vlaamse Klassiekers',grand_tour:'Grote Rondes'};
+const CATEGORY_ORDER=['monument','classic','stage_race','grand_tour'];
+const CATEGORY_LABELS={monument:'Monumenten',classic:'Vlaamse Klassiekers',stage_race:'Rittenkoersen',grand_tour:'Grote Rondes'};
 const STATUS_LABELS={active:'Fit',injured:'Geblesseerd',sick:'Ziek'};
 const SPECIALISM_LABELS={sprinter:'Sprinter',climber:'Klimmer',classics:'Klassieker',allrounder:'Allrounder',puncheur:'Puncheur'};
 const ROLE_LABELS={climber:'Klimmer',sprinter:'Sprinter',allrounder:'Allrounder',domestique:'Meesterknecht'};
@@ -334,7 +334,7 @@ function renderRaceCatalogPanel(room,game,me){
     const grid=E('div','cc-race-grid');
     races.forEach((race) => {
       const card=E('div','cc-race-card');
-      if(race.category==='grand_tour'){
+      if(race.stages){
         card.append(E('strong','',race.name),E('span','muted',`${race.stages} ritten · ${euro(race.overallPrize)} eindklassement`));
       } else {
         card.append(E('strong','',race.name),E('span','muted',euro(race.basePrize)));
@@ -388,7 +388,8 @@ function renderClub(room,game,me){
   summary.append(summaryItem('Podiums',String(me.career.podiums)));
   summary.append(summaryItem('Monumenten',String(me.career.monumentsWon)));
   summary.append(summaryItem('Grote Rondes',String(me.career.grandToursWon)));
-  summary.append(summaryItem('Grote Ritten',String(me.career.gtStagesWon)));
+  summary.append(summaryItem('Rittenkoersen',String(me.career.stageRacesWon||0)));
+  summary.append(summaryItem('Ritzeges',String(me.career.gtStagesWon)));
   summary.append(summaryItem('Totaal prijzengeld',euro(me.career.prizeMoney)));
   content.append(summary);
 
