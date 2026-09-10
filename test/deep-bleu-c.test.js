@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const dbc = require('../games/deep-bleu-c/server');
 const worldgen = require('../games/deep-bleu-c/worldgen');
 const sliceContent = require('../games/deep-bleu-c/slice-content');
+const { hexNeighbors } = require('../games/deep-bleu-c/hexmath');
 
 function makeGame() {
   return dbc.createGame([
@@ -12,6 +13,30 @@ function makeGame() {
 }
 
 function playerOf(game, id) { return game.players.find((p) => p.id === id); }
+
+test('een bronklik op afstand stopt naast de bron zonder de actie te starten', () => {
+  const game = makeGame();
+  const player = playerOf(game, 'a');
+  const world = worldgen.getWorld();
+  const targets = [];
+  for (let y = 0; y < world.height; y += 1) {
+    for (let x = 0; x < world.width; x += 1) {
+      if (['wood', 'rock', 'animal'].includes(worldgen.resourceAt(world, x, y))) targets.push({ x, y });
+    }
+  }
+  const target = targets.find((spot) => worldgen.hexDistance(player.x, player.y, spot.x, spot.y) > 2
+    && hexNeighbors(spot.x, spot.y).some(([x, y]) => worldgen.findPath(world, player.x, player.y, x, y)));
+  assert.ok(target);
+
+  dbc.handleAction(game, 'a', 'move', { ...target, stopAdjacent: true });
+
+  assert.ok(player.path.length);
+  const destination = player.path.at(-1);
+  assert.equal(worldgen.hexDistance(destination.x, destination.y, target.x, target.y), 1);
+  assert.notDeepEqual(destination, target);
+  assert.equal(player.gathering, null);
+  assert.equal(player.combat, null);
+});
 
 function moveOntoWildlife(player) {
   const world = worldgen.getWorld();

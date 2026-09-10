@@ -1,7 +1,6 @@
 
-> minigames-platform@1.28.12 start
+> minigames-platform@1.31.2 start
 > node server.js
 
-Pluto v1.28.12 draait op poort 3000
-SQLite: C:\Users\seppe\Documents\GitHub\Pluto\data\minigames.db
-SQLite backup: minigames-2026-09-08T15-51-07-751Z.db
+Pluto v1.31.2 draait op poort 3000
+SQLite: C:\Users\Jasper\Desktop\Pluto\Pluto\data\minigames.db

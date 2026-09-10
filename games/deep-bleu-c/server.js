@@ -1,6 +1,7 @@
 'use strict';
 
 const { getWorld, isWalkable, isWater, resourceAt, nearestWalkable, findPath, hexDistance, biomeAt, tileAt, WORLD_VERSION, migrateSavedWorld } = require('./worldgen');
+const { hexNeighbors } = require('./hexmath');
 const { SETS, fishForBiome, getFish, priceFor: fishPriceFor } = require('./fish');
 const resources = require('./resources');
 const gear = require('./gear');
@@ -613,6 +614,21 @@ function doMove(game, player, payload) {
   if (player.fishing) player.fishing = null;
   if (player.gathering) player.gathering = null;
   const extra = boatWaterSet(player);
+  if (payload.stopAdjacent) {
+    if (!['wood', 'rock', 'animal'].includes(resourceAt(world, tx, ty))) {
+      throw new Error('Daar is geen bron om te benaderen.');
+    }
+    if (hexDistance(player.x, player.y, tx, ty) <= 1) { player.path = []; return; }
+    const approaches = hexNeighbors(tx, ty)
+      .filter(([x, y]) => x >= 0 && x < world.width && y >= 0 && y < world.height && isWalkable(world, x, y, extra))
+      .map(([x, y]) => ({ x, y, path: findPath(world, player.x, player.y, x, y, extra) }))
+      .filter((candidate) => candidate.path)
+      .sort((a, b) => a.path.length - b.path.length);
+    if (!approaches.length) throw new Error('Geen pad gevonden tot aan die plek.');
+    player.path = approaches[0].path;
+    player.nextStepAt = Date.now();
+    return;
+  }
   const target = isWalkable(world, tx, ty, extra) ? { x: tx, y: ty } : nearestWalkable(world, tx, ty, extra);
   if (!target) throw new Error('Daar kun je niet naartoe lopen.');
   if (target.x === player.x && target.y === player.y) { player.path = []; return; }
