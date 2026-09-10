@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.30.2 — update deep blue - lutro - cycclub
+
+- update deep blue - lutro - cycclub
+
 ## v1.30.1 — update deep blue - lutro - cycclub
 
 - update deep blue - lutro - cycclub

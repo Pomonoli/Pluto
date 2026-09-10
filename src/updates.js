@@ -731,6 +731,12 @@ const RELEASES = [
     improvements:[
       "update deep blue - lutro - cycclub"
     ]
+  },
+  {
+    version:"1.30.2",
+    improvements:[
+      "update deep blue - lutro - cycclub"
+    ]
   }
 ];
 

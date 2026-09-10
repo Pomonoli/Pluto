@@ -2,7 +2,7 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.30.1
+## Nieuw in versie 1.30.2
 
 update deep blue - lutro - cycclub
 
