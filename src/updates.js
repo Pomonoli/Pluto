@@ -745,6 +745,12 @@ const RELEASES = [
       "CycClub: per koers zie je wie hem hoe vaak won; bij meerdaagse koersen telt de winnaar van het eindklassement.",
       "CycClub: wie een klassement wint op het eind van een Rittenkoers of Grote Ronde, verdient de bijhorende trui (Geel, Groen, Bolletjes, Wit of Ploegen)."
     ]
+  },
+  {
+    version:"1.31.1",
+    improvements:[
+      "cycclub leaderboard"
+    ]
   }
 ];
 

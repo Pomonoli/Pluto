@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.31.1 — cycclub leaderboard
+
+- cycclub leaderboard
+
 ## v1.31.0 — Erelijst in CycClub
 
 - Nieuw vijfde tabblad **Erelijst** in de clubfase van CycClub, naast Ploeg,
