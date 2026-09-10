@@ -52,3 +52,22 @@ test('resultaatscherm houdt hostacties intact en geeft niet-hosts Rematch en Ver
   ui.renderGame({...room,gameState:{kind:'fixture',gameOver:false}});
   assert.equal(els.gameResult.children.length,0);assert.equal(els.gameResult.classList.contains('hidden'),true);
 });
+
+test('realtime rerender bewaart pagina- en interne scrollposities',async()=>{
+  const {captureScrollState,restoreScrollState}=await import(pathToFileURL(path.join(__dirname,'../public/js/game-ui.js')).href);
+  const node=(tag,classes='',children=[])=>({tag,children,scrollTop:0,scrollLeft:0,dataset:{},
+    classList:new Set(classes.split(' ').filter(Boolean)),querySelectorAll(){return this.children.flatMap(child=>[child,...child.querySelectorAll()])}});
+  const oldList=node('div','game-log');oldList.scrollTop=180;
+  const oldBoard=node('div','board-scroll');oldBoard.scrollLeft=42;
+  const root=node('main','game-stage',[oldList,oldBoard]);
+  const viewport={scrollX:0,scrollY:320,scrollTo(left,top){this.scrollX=left;this.scrollY=top}};
+  const saved=captureScrollState(root,viewport);
+
+  const newList=node('div','game-log'),newBoard=node('div','board-scroll');
+  root.children=[newList,newBoard];viewport.scrollY=0;
+  restoreScrollState(root,saved,viewport);
+
+  assert.equal(viewport.scrollY,320);
+  assert.equal(newList.scrollTop,180);
+  assert.equal(newBoard.scrollLeft,42);
+});

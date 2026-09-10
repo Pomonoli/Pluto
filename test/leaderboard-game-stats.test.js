@@ -27,6 +27,35 @@ test('Big Blue C rangschikt ontdekkingen zonder ze als algemene wins te tellen',
   assert.equal(db.getOwnStats(alice.id).wins, 0);
 });
 
+test('Solitaire-wins tellen niet mee op het algemene leaderboard', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pluto-solitaire-overall-leaderboard-'));
+  process.env.DATA_DIR = dir;
+  delete require.cache[require.resolve('../src/db')];
+  const db = require('../src/db');
+  const alice = db.register('SolitaireAlice', 'password123').user;
+  const bob = db.register('MultiplayerBob', 'password123').user;
+
+  db.recordMatch({
+    gameKey: 'solitaire', roomId: 'solitaire-1', players: [{
+      userId: alice.id, displayName: alice.username, placement: 1,
+      won: true, draw: false, moves: 100
+    }]
+  });
+  db.recordMatch({
+    gameKey: 'pesten', roomId: 'pesten-1', players: [{
+      userId: bob.id, displayName: bob.username, placement: 1,
+      won: true, draw: false
+    }]
+  });
+
+  assert.deepEqual(db.leaderboard().map((row) => [row.username, row.wins]), [
+    ['MultiplayerBob', 1],
+    ['SolitaireAlice', 0]
+  ]);
+  assert.equal(db.leaderboard('solitaire')[0].wins, 1);
+  assert.equal(db.getOwnStats(alice.id).wins, 1);
+});
+
 test('Bakkermans Jones rangschikt spelers op hun recordaantal overleefde dagen', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pluto-bakkermans-leaderboard-'));
   process.env.DATA_DIR = dir;

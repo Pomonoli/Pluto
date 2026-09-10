@@ -1,3 +1,34 @@
+function scrollNodes(root){return root?[root,...(root.querySelectorAll?.('*')||[])]:[]}
+function scrollNodeKey(node){
+  if(node.id)return `id:${node.id}`;
+  const explicit=node.dataset?.scrollKey;if(explicit)return `data:${explicit}`;
+  const classes=node.classList?.[Symbol.iterator]
+    ?[...node.classList].sort().join('.')
+    :String(node.className||'').trim().split(/\s+/).filter(Boolean).sort().join('.');
+  return `${String(node.tagName||node.tag||'node').toLowerCase()}.${classes}`;
+}
+export function captureScrollState(root,viewport=typeof window==='undefined'?null:window){
+  const occurrences=new Map(),positions=[];
+  for(const node of scrollNodes(root)){
+    const key=scrollNodeKey(node),index=occurrences.get(key)||0;occurrences.set(key,index+1);
+    const top=Number(node.scrollTop)||0,left=Number(node.scrollLeft)||0;
+    if(top||left)positions.push({key,index,top,left});
+  }
+  return{positions,viewport:{top:Number(viewport?.scrollY)||0,left:Number(viewport?.scrollX)||0}};
+}
+export function restoreScrollState(root,snapshot,viewport=typeof window==='undefined'?null:window){
+  if(!snapshot)return;
+  const buckets=new Map();
+  for(const node of scrollNodes(root)){
+    const key=scrollNodeKey(node);if(!buckets.has(key))buckets.set(key,[]);buckets.get(key).push(node);
+  }
+  for(const position of snapshot.positions||[]){
+    const node=buckets.get(position.key)?.[position.index];
+    if(node){node.scrollTop=position.top;node.scrollLeft=position.left}
+  }
+  viewport?.scrollTo?.(snapshot.viewport?.left||0,snapshot.viewport?.top||0);
+}
+
 export function createGameUi(ctx) {
   const { state, els, E, action, profileButton, sound, socket, handleAck, cardNode, valueLabel, requestRematch, requestReturnToLobby, requestLeaveFinishedRoom } = ctx;
   const pluginRenderers=new Map();
@@ -35,6 +66,7 @@ function renderGame(room) {
   const game=room.gameState;if(!game)return;state.selection=normalizeSelection(state.selection,game);
   const plugin=pluginRenderers.get(game.kind);
   if(plugin?.shouldSkipRender?.({room,game,state}))return;
+  const scrollState=captureScrollState(els.gameStage);
   const showGameResult=Boolean(game.gameOver&&plugin?.showResult!==false);
   const stageKey=JSON.stringify([room.id,game.kind]);
   if(!plugin?.preserveStage || renderedStageKey!==stageKey)els.gameStage.replaceChildren();
@@ -47,7 +79,7 @@ function renderGame(room) {
     resultCard.append(resultActions(room));els.gameResult.append(resultCard);els.gameResult.setAttribute('aria-hidden','false');
   }
   if(!plugin?.render){els.gameStage.append(pluginError(game.kind,'Renderer wordt geladen…'));return}
-  try{if(plugin.playerStrip)els.gameStage.append(renderGamePlayerStrip(room,game));plugin.render(pluginApi(room,game))}
+  try{if(plugin.playerStrip)els.gameStage.append(renderGamePlayerStrip(room,game));plugin.render(pluginApi(room,game));restoreScrollState(els.gameStage,scrollState)}
   catch(error){console.error(`Renderer van ${game.kind} faalde:`,error);els.gameStage.replaceChildren(pluginError(game.kind,'Deze game kon niet worden weergegeven.'))}
 }
 
@@ -58,6 +90,7 @@ function gameMetric(game,p) {
   const plugin=pluginRenderers.get(game.kind);if(plugin?.metric){const metric=plugin.metric({game,player:p});if(metric)return metric}
   return {text:'',score:null};
 }
+
 function renderGamePlayerStrip(room,game) {
   const wrap=E('div','game-player-strip');
   const roomById=new Map(room.players.map(p=>[p.id,p]));

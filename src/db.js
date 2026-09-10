@@ -436,9 +436,9 @@ function leaderboard(gameKey = null, limit = 100) {
     SELECT
       u.username,
       COUNT(*) AS games,
-      SUM(mp.won) AS wins,
+      SUM(CASE WHEN m.game_key = 'solitaire' THEN 0 ELSE mp.won END) AS wins,
       COALESCE(SUM(mp.drawn),0) AS draws,
-      ROUND(100.0 * SUM(mp.won) / COUNT(*), 1) AS winRate,
+      ROUND(100.0 * SUM(CASE WHEN m.game_key = 'solitaire' THEN 0 ELSE mp.won END) / COUNT(*), 1) AS winRate,
       MIN(CASE WHEN m.game_key = 'solitaire' AND mp.won = 1 THEN mp.duration_ms END) AS bestSolitaireMs,
       MIN(CASE WHEN m.game_key = 'solitaire' AND mp.won = 1 THEN mp.moves END) AS bestSolitaireMoves
     FROM match_players mp

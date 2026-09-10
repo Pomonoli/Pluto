@@ -392,7 +392,7 @@ const screenWakeLock = createScreenWakeLock({ navigator, document, window });
       if(column.key==='rank')return String(index+1);
       const value=row[column.key];
       if(column.format==='currency')return `€${Math.round(Number(value)||0).toLocaleString('nl-BE')}`;
-      if(column.format==='percent')return `${Number(value)||0}%`;
+      if(column.format==='percent')return `${(Number(value)||0).toFixed(1)}%`;
       if(column.format==='duration')return formatDuration(value);
       return value===null||value===undefined?'—':String(value);
     };

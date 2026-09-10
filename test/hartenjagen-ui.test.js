@@ -2,6 +2,15 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
+
+test('scorepopup blijft open bij een realtime rerender en sluit bewust',()=>{
+  const client=fs.readFileSync(path.join(__dirname,'../games/hartenjagen/client.js'),'utf8');
+  assert.match(client,/let scorePopupOpen=false/);
+  assert.match(client,/scorePopupOpen=true;renderGame\(state\.room\)/);
+  assert.match(client,/if\(scorePopupOpen\)openScorePopup\(game\)/);
+  assert.match(client,/scorePopupOpen=false;backdrop\.remove\(\)/);
+  assert.match(client,/export function onRoomReset\(\)\{scorePopupOpen=false\}/);
+});
 const root=path.join(__dirname,'..');
 
 test('Hartenjagen houdt het speelveld fixed en toont de score in een popup',()=>{

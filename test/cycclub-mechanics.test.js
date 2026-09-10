@@ -393,6 +393,41 @@ test('a career saved before the honours board existed hydrates without wins or j
   assert.equal(alice.totalWins, 0);
 });
 
+test('a CycClub race is only recorded with at least two human players', () => {
+  const recorded = [];
+  const db = {
+    saveCycClubTeam() {},
+    recordMatch(match) { recorded.push(match); }
+  };
+  const makeRoom = (players) => ({
+    id: 'cycclub-ranked-check',
+    players,
+    gameState: {
+      players: players.map((player) => ({id: player.id, team: {}})),
+      pendingRoundRecord: {
+        startedAt: 100,
+        endedAt: 200,
+        players: players.map((player, index) => ({
+          playerId: player.id, placement: index + 1, won: index === 0
+        }))
+      }
+    }
+  });
+
+  cc.afterStateChange(makeRoom([
+    {id: 'p1', name: 'Alice', userId: 1, isNpc: false},
+    {id: 'bot', name: 'Bot', userId: null, isNpc: true}
+  ]), {db});
+  assert.equal(recorded.length, 0);
+
+  cc.afterStateChange(makeRoom([
+    {id: 'p1', name: 'Alice', userId: 1, isNpc: false},
+    {id: 'p2', name: 'Bob', userId: 2, isNpc: false}
+  ]), {db});
+  assert.equal(recorded.length, 1);
+  assert.equal(recorded[0].players[0].won, true);
+});
+
 test('finishing a stage race records the win per race and hands out the five jerseys', () => {
   const {game, player1} = buildGame();
   const race = cc.STAGE_RACE_CATALOG.find((entry) => entry.stages === 5);

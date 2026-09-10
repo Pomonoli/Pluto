@@ -151,8 +151,13 @@ test('sound button is icon-only en app knop heet App',()=>{
 
 test('leaderboard toont wins en draws voor games',()=>{
   const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
+  const css=fs.readFileSync(path.join(root,'public/styles.css'),'utf8');
   assert.match(app,/key:'wins',label:'Wins'.*key:'draws',label:'Draw'.*key:'games',label:'Games'.*key:'winRate',label:'Winrate'/s);
   assert.match(app,/plugin\?\.leaderboardConfig\?\.columns/);
+  assert.match(app,/column\.format==='percent'.*\.toFixed\(1\).*%/);
+  assert.match(css,/\.profile-link\{[^}]*border-radius:0;[^}]*padding:0 2px;[^}]*line-height:1\.35/);
+  assert.match(css,/#leaderboardContent \.stats-table td\[data-column-width="player"\]\{[^}]*overflow:visible;[^}]*white-space:normal/);
+  assert.match(css,/#leaderboardContent \.profile-link\{[^}]*overflow-wrap:anywhere;[^}]*white-space:normal/);
 });
 
 test('game-specifieke leaderboards gebruiken gedeelde kolomconfiguratie',()=>{
