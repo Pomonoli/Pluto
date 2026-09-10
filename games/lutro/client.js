@@ -96,8 +96,15 @@ function turnStatus(game) {
   return `${turn?.name || 'De volgende speler'} is aan de beurt.`;
 }
 
-function buildPlayerCard(player, game, E) {
-  const card = E('div', `lutro-player camp-${player.camp}${player.id === game.turnPlayerId ? ' active' : ''}${player.eliminated ? ' eliminated' : ''}${player.connected === false ? ' offline' : ''}`);
+function buildPlayerCard(player, game, E, action) {
+  const canSkipNpc = game.npcCanSkip && player.id === game.turnPlayerId;
+  const card = E(canSkipNpc ? 'button' : 'div', `lutro-player camp-${player.camp}${player.id === game.turnPlayerId ? ' active' : ''}${player.eliminated ? ' eliminated' : ''}${player.connected === false ? ' offline' : ''}${canSkipNpc ? ' npc-skippable' : ''}`);
+  if (canSkipNpc) {
+    card.type = 'button';
+    card.title = 'Klik om de wachttijd van deze NPC-stap over te slaan';
+    card.setAttribute('aria-label', `Sla de wachttijd van ${player.name} over`);
+    card.onclick = () => action('skipNpc');
+  }
   const marker = E('span', 'lutro-player-marker', CAMPS[player.seat]?.glyph || '•');
   const identity = E('div', 'lutro-player-identity');
   identity.append(marker, E('strong', '', player.name), E('span', 'lutro-camp-name', CAMPS[player.seat]?.name || player.camp));
@@ -110,12 +117,30 @@ function buildPlayerCard(player, game, E) {
   return card;
 }
 
-function buildPawnToken(player, pawn, canMove, E, action, sound) {
-  const token = E(canMove ? 'button' : 'span', `lutro-pawn camp-${player.camp} unit-${pawn.type}${canMove ? ' movable' : ''}${pawn.zone === 'yard' ? ' inactive' : ''}${pawn.zone === 'finished' ? ' finished' : ''}${player.isYou ? ' mine' : ''}`);
+function buildPlayerAttacks(player, game, me, E, action, sound) {
+  const attacks = E('div', 'lutro-player-attacks');
+  (game.attackOptions || []).filter((option) => option.targetPlayerId === player.id).forEach((option) => {
+    const pawn = me?.pawns.find((item) => item.id === option.pawnId);
+    if (!pawn) return;
+    const attack = E('button', 'lutro-castle-attack', `⚔ ${pawn.label} valt aan (${pawn.damage})`);
+    attack.type = 'button';
+    attack.onclick = () => { sound('score'); action('castleAttack', option); };
+    attacks.append(attack);
+  });
+  return attacks;
+}
+
+function buildPawnToken(player, pawn, canMove, canAttack, E, action, sound) {
+  const interactive = canMove || canAttack;
+  const token = E(interactive ? 'button' : 'span', `lutro-pawn camp-${player.camp} unit-${pawn.type}${canMove ? ' movable' : ''}${canAttack ? ' attackable' : ''}${pawn.zone === 'yard' ? ' inactive' : ''}${pawn.zone === 'finished' ? ' finished' : ''}${player.isYou ? ' mine' : ''}`);
   if (canMove) {
     token.type = 'button';
     token.onclick = () => { sound('score'); action('move', { pawnId: pawn.id }); };
     token.setAttribute('aria-label', `Verplaats ${pawn.label}`);
+  } else if (canAttack) {
+    token.type = 'button';
+    token.onclick = () => { sound('score'); action('unitAttack', { targetPlayerId: player.id, targetPawnId: pawn.id }); };
+    token.setAttribute('aria-label', `Val ${player.name}s ${pawn.label} aan voor 50% damage`);
   } else token.setAttribute('aria-label', `${player.name}, ${pawn.label}`);
   token.title = `${pawn.label} · ${pawn.damage} damage · ${pawn.hp}/${pawn.maxHp} HP · +${pawn.movementBonus} beweging`;
   token.append(unitSprite(E, player, pawn, 'lutro-pawn-glyph'));
@@ -130,7 +155,7 @@ function buildPawnToken(player, pawn, canMove, E, action, sound) {
   return token;
 }
 
-function buildBoard(game, movable, E, action, sound) {
+function buildBoard(game, movable, attackable, E, action, sound) {
   const wrap = E('div', 'lutro-board-wrap');
   const board = E('div', 'lutro-board');
   board.setAttribute('role', 'grid');
@@ -169,7 +194,7 @@ function buildBoard(game, movable, E, action, sound) {
         cell.append(rune);
       }
       (occupants.get(id) || []).forEach(({ player, pawn }, index, list) => {
-        const token = buildPawnToken(player, pawn, movable.has(pawn.id), E, action, sound);
+        const token = buildPawnToken(player, pawn, movable.has(pawn.id), attackable.has(pawn.id), E, action, sound);
         token.style.setProperty('--stack-x', `${(index - (list.length - 1) / 2) * 22}%`);
         token.style.setProperty('--stack-y', `${(index % 2) * 13}%`);
         cell.append(token);
@@ -217,19 +242,10 @@ function buildControls(game, E, action, sound) {
     controls.append(roll);
   } else if (game.canAct && me) {
     controls.append(buildShop(game, me, E, action, sound));
-    const attacks = E('div', 'lutro-attack-actions');
-    (game.attackOptions || []).forEach((option) => {
-      const pawn = me.pawns.find((item) => item.id === option.pawnId);
-      const target = game.players.find((player) => player.id === option.targetPlayerId);
-      const attack = E('button', 'lutro-castle-attack', `⚔ ${pawn.label} valt ${target.name} aan (${pawn.damage})`);
-      attack.type = 'button';
-      attack.onclick = () => { sound('score'); action('castleAttack', option); };
-      attacks.append(attack);
-    });
-    if (attacks.childElementCount) controls.append(attacks);
     const footer = E('div', 'lutro-action-footer');
     let footerMsg = `Tik één oplichtende troep: worp ${game.lastRoll} + diens bonus.`;
     if (!game.movablePawnIds.length) footerMsg = game.canPass ? 'Geen troep kan de worp gebruiken.' : 'Koop een troep of val een kasteel aan om verder te gaan.';
+    if (game.unitAttackOptions?.length) footerMsg = 'Kies een rood omcirkelde vijandelijke troep voor 50% damage, of voer een andere actie uit.';
     footer.append(E('span', '', footerMsg));
     if (game.canPass) {
       const pass = E('button', 'lutro-pass', 'Pas');
@@ -276,11 +292,19 @@ export function render({ game, els, E, action, titlebar, logBox, sound }) {
   }
   const root = E('div', 'lutro-root');
   const players = E('div', 'lutro-players');
-  game.players.forEach((player) => players.append(buildPlayerCard(player, game, E)));
-  root.append(players, buildBoard(game, new Set(game.movablePawnIds || []), E, action, sound), buildControls(game, E, action, sound));
+  const me = game.players.find((player) => player.isYou);
+  game.players.forEach((player) => {
+    const slot = E('div', 'lutro-player-slot');
+    slot.append(buildPlayerCard(player, game, E, action));
+    const attacks = buildPlayerAttacks(player, game, me, E, action, sound);
+    if (attacks.childElementCount) slot.append(attacks);
+    players.append(slot);
+  });
+  const attackable = new Set((game.unitAttackOptions || []).map((option) => option.targetPawnId));
+  root.append(players, buildBoard(game, new Set(game.movablePawnIds || []), attackable, E, action, sound), buildControls(game, E, action, sound));
   const combatToast = buildCombatToast(game, E);
   if (combatToast) root.append(combatToast);
-  els.gameStage.append(titlebar('Lutro', turnStatus(game)), root, logBox(game.log || []));
+  els.gameStage.append(root, logBox(game.log || []));
 }
 
 export function metric({ game, player }) {

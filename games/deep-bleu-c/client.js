@@ -383,7 +383,7 @@ function handleNpcClick(npc, you) {
     renderGame(state.room);
     return;
   }
-  action('move', { x: npc.x, y: npc.y });
+  action('move', { x: npc.x, y: npc.y, stopAdjacent: true });
 }
 
 function handleTileClick(wx, wy, tile, you) {
@@ -396,7 +396,7 @@ function handleTileClick(wx, wy, tile, you) {
   if (adjacent && tile === ROCK_TILE) { action('gatherStart', { kind: 'rock', x: wx, y: wy }); return; }
   if (adjacent && tile === KELP_TILE) { action('gatherStart', { kind: 'kelp', x: wx, y: wy }); return; }
   if (adjacent && isWildlifeTile(wx, wy)) { action('huntStart', { x: wx, y: wy }); return; }
-  const approachResource = tile === WOOD_TILE || tile === ROCK_TILE || isWildlifeTile(wx, wy);
+  const approachResource = tile === WOOD_TILE || tile === ROCK_TILE || tile === KELP_TILE || isWildlifeTile(wx, wy);
   action('move', { x: wx, y: wy, stopAdjacent: approachResource });
 }
 

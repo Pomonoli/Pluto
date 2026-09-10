@@ -21,7 +21,7 @@ test('een bronklik op afstand stopt naast de bron zonder de actie te starten', (
   const targets = [];
   for (let y = 0; y < world.height; y += 1) {
     for (let x = 0; x < world.width; x += 1) {
-      if (['wood', 'rock', 'animal'].includes(worldgen.resourceAt(world, x, y))) targets.push({ x, y });
+      if (['wood', 'rock', 'kelp', 'animal'].includes(worldgen.resourceAt(world, x, y))) targets.push({ x, y });
     }
   }
   const target = targets.find((spot) => worldgen.hexDistance(player.x, player.y, spot.x, spot.y) > 2
@@ -36,6 +36,21 @@ test('een bronklik op afstand stopt naast de bron zonder de actie te starten', (
   assert.notDeepEqual(destination, target);
   assert.equal(player.gathering, null);
   assert.equal(player.combat, null);
+});
+
+test('een NPC-klik op afstand stopt naast de NPC zonder een gesprek te openen', () => {
+  const game = makeGame();
+  const player = playerOf(game, 'a');
+  const world = worldgen.getWorld();
+  const npc = game.npcs.find((candidate) => worldgen.hexDistance(player.x, player.y, candidate.x, candidate.y) > 1
+    && hexNeighbors(candidate.x, candidate.y).some(([x, y]) => worldgen.findPath(world, player.x, player.y, x, y)));
+  assert.ok(npc);
+
+  dbc.handleAction(game, 'a', 'move', { x: npc.x, y: npc.y, stopAdjacent: true });
+
+  const destination = player.path.at(-1);
+  assert.equal(worldgen.hexDistance(destination.x, destination.y, npc.x, npc.y), 1);
+  assert.notDeepEqual(destination, { x: npc.x, y: npc.y });
 });
 
 function moveOntoWildlife(player) {

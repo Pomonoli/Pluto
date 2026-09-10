@@ -615,8 +615,10 @@ function doMove(game, player, payload) {
   if (player.gathering) player.gathering = null;
   const extra = boatWaterSet(player);
   if (payload.stopAdjacent) {
-    if (!['wood', 'rock', 'animal'].includes(resourceAt(world, tx, ty))) {
-      throw new Error('Daar is geen bron om te benaderen.');
+    const isApproachableResource = ['wood', 'rock', 'kelp', 'animal'].includes(resourceAt(world, tx, ty));
+    const isNpc = (game.npcs || []).some((npc) => npc.x === tx && npc.y === ty);
+    if (!isApproachableResource && !isNpc) {
+      throw new Error('Daar is niets om te benaderen.');
     }
     if (hexDistance(player.x, player.y, tx, ty) <= 1) { player.path = []; return; }
     const approaches = hexNeighbors(tx, ty)

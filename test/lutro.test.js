@@ -101,6 +101,16 @@ test('iedere troepenklasse telt een vaste bonus bij de worp', () => {
   assert.deepEqual(player.pawns.map((pawn) => lutro.movementSteps(pawn, 3)), [5, 7, 4, 6]);
 });
 
+test('in de gekleurde thuisgang telt de bewegingsbonus niet meer', () => {
+  const game = lutro.createGame(players(2));
+  const player = game.players[0];
+  const pawn = readyPawn(player, 'fast', lutro.TRACK_STEPS);
+  assert.equal(lutro.movementSteps(pawn, 2), 2);
+  forceAction(game, player.id, 2);
+  lutro.handleAction(game, player.id, 'move', { pawnId: pawn.id });
+  assert.equal(pawn.progress, lutro.TRACK_STEPS + 2);
+});
+
 test('de worp geeft coins maar verplaatst geen troepen automatisch', () => {
   const game = lutro.createGame(players(2));
   const player = game.players[0];
@@ -136,7 +146,7 @@ test('landen op een vijand beschadigt de troep en een uitschakeling beschadigt h
   assert.equal(attacker.hp, 15);
 });
 
-test('een overlevende verdediger slaat terug en HP blijft bewaard', () => {
+test('een overlevende verdediger slaat terug zonder kasteelschade bij verlies van de aanvaller', () => {
   const game = lutro.createGame(players(2));
   const red = game.players[0], green = game.players[1];
   const attacker = readyPawn(red, 'fast', 14);
@@ -145,7 +155,8 @@ test('een overlevende verdediger slaat terug en HP blijft bewaard', () => {
   lutro.handleAction(game, red.id, 'move', { pawnId: attacker.id });
   assert.equal(defender.hp, 10, 'snelle soldaat doet 5 damage');
   assert.equal(attacker.progress, -1, 'de tegenaanval schakelt de snelle soldaat uit');
-  assert.equal(red.castleHp, 85, 'verlies van een snelle soldaat doet 15 kasteelschade');
+  assert.equal(red.castleHp, 100, 'een aanvallende troep die sneuvelt beschadigt zijn eigen kasteel niet');
+  assert.equal(game.lastCombat.attackerCastleDamage, 0);
 });
 
 test('een gevecht tussen troepen levert een lastCombat-samenvatting voor de pop-up', () => {
@@ -181,7 +192,7 @@ test('passen mag alleen als geen enkele troep kan bewegen, kopen of aanvallen', 
 test('het midden doet alle andere kastelen 25 damage', () => {
   const game = lutro.createGame(players(4));
   const red = game.players[0];
-  const pawn = readyPawn(red, 'normal', lutro.FINISH_PROGRESS - 3);
+  const pawn = readyPawn(red, 'normal', lutro.FINISH_PROGRESS - 1);
   forceAction(game, red.id, 1);
   lutro.handleAction(game, red.id, 'move', { pawnId: pawn.id });
   assert.equal(pawn.progress, lutro.FINISH_PROGRESS);
@@ -286,6 +297,45 @@ test('NPC verdient coins en voert koop- of bewegingsacties uit', () => {
   assert.ok(game.players.some((player) => player.coins > 0 || player.pawns.some((pawn) => pawn.progress >= 0)));
 });
 
+test('een 6 laat alleen vijandelijke route-units in het eigen kwadrant aanvallen voor 50% HP', () => {
+  const game = lutro.createGame(players(3));
+  const red = game.players[0], green = game.players[1], yellow = game.players[2];
+  const inside = readyPawn(green, 'strong', 44); // absoluut routevak 5, in rood kwadrant 50..10
+  const boundaryOutside = readyPawn(yellow, 'normal', 37); // absoluut routevak 11, begin volgend kwadrant
+  forceAction(game, red.id, 6);
+  const options = lutro.unitAttackOptions(game, red);
+  assert.deepEqual(options, [{ targetPlayerId: green.id, targetPawnId: inside.id }]);
+  lutro.handleAction(game, red.id, 'unitAttack', options[0]);
+  assert.equal(inside.hp, 7.5);
+  assert.equal(boundaryOutside.hp, 10);
+  assert.equal(game.turnIndex, 1);
+});
+
+test('zonder een 6 zijn vijandelijke units niet rechtstreeks aan te vallen', () => {
+  const game = lutro.createGame(players(2));
+  const red = game.players[0], green = game.players[1];
+  const target = readyPawn(green, 'normal', 44);
+  forceAction(game, red.id, 5);
+  assert.deepEqual(lutro.unitAttackOptions(game, red), []);
+  assert.throws(() => lutro.handleAction(game, red.id, 'unitAttack', { targetPlayerId: green.id, targetPawnId: target.id }), /6 gooien/i);
+});
+
+test('NPC-stappen wachten drie seconden en een speler kan die wachttijd overslaan', () => {
+  const game = lutro.createGame(players(2, 1));
+  game.turnIndex = 1;
+  game.phase = 'roll';
+  const now = Date.now();
+  game.nextNpcAt = now + lutro.NPC_DELAY_MS;
+  assert.equal(lutro.NPC_DELAY_MS, 3000);
+  assert.equal(lutro.tick(game, now + 2999), false);
+  lutro.handleAction(game, 'p0', 'skipNpc');
+  assert.equal(game.phase, 'action');
+  assert.ok(game.lastRoll >= 1 && game.lastRoll <= 6);
+  assert.equal(lutro.serialize(game, 'p0').npcCanSkip, true);
+  lutro.handleAction(game, 'p0', 'skipNpc');
+  assert.equal(game.turnIndex, 0);
+});
+
 test('de client toont de thematische kasteelstrijd, shop en HP-balken fullscreen', () => {
   const client = fs.readFileSync(path.join(__dirname, '../games/lutro/client.js'), 'utf8');
   const css = fs.readFileSync(path.join(__dirname, '../games/lutro/styles.css'), 'utf8');
@@ -297,6 +347,10 @@ test('de client toont de thematische kasteelstrijd, shop en HP-balken fullscreen
   assert.match(client, /Sauron.*Legolas.*Gimli.*Aragorn/s);
   assert.match(client, /unitSprite/);
   assert.match(client, /castleAttack/);
+  assert.match(client, /buildPlayerAttacks/);
+  assert.match(client, /skipNpc/);
+  assert.match(client, /attackable/);
+  assert.match(css, /lutro-pawn\.attackable/);
   assert.match(client, /ATTACK_SITES/);
   assert.match(client, /lutro-unit-hp/);
   assert.match(css, /four-realms-board\.png/);
@@ -308,6 +362,7 @@ test('de client toont de thematische kasteelstrijd, shop en HP-balken fullscreen
   assert.ok(fs.statSync(boardArt).size > 100000);
   unitAtlases.forEach((atlas) => assert.ok(fs.statSync(atlas).size > 500000));
   assert.doesNotMatch(client, /isoX|turret/i);
+  assert.doesNotMatch(client, /titlebar\('Lutro', turnStatus\(game\)\)/);
 });
 
 test('eigen troepen kunnen nooit op hetzelfde vak landen', () => {

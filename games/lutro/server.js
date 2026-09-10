@@ -9,7 +9,7 @@ const FINISH_PROGRESS = TRACK_STEPS + HOME_STEPS - 1;
 const CASTLE_MAX_HP = 100;
 const COINS_PER_PIP = 10;
 const CENTER_DAMAGE = 25;
-const NPC_DELAY_MS = 650;
+const NPC_DELAY_MS = 3000;
 
 const CAMPS = [
   { key: 'red', name: 'Sauron', color: '#b83a2f', startIndex: 0 },
@@ -49,6 +49,7 @@ function cyclicDistance(a, b, length = PATH_LENGTH) {
   const distance = Math.abs(a - b);
   return Math.min(distance, length - distance);
 }
+function forwardDistance(from, to, length = PATH_LENGTH) { return (to - from + length) % length; }
 function currentPlayer(game) { return game.players[game.turnIndex] || null; }
 function campFor(player) { return CAMPS[player.seat]; }
 function absolutePathIndex(player, progress) { return (campFor(player).startIndex + progress) % PATH_LENGTH; }
@@ -58,7 +59,9 @@ function pawnZone(pawn) {
   if (pawn.progress < FINISH_PROGRESS) return 'home';
   return 'finished';
 }
-function movementSteps(pawn, roll) { return roll + pawn.movementBonus; }
+function movementSteps(pawn, roll) {
+  return roll + (pawn.progress >= TRACK_STEPS ? 0 : pawn.movementBonus);
+}
 // Twee eigen troepen delen nooit een vak: op de route en in de thuisgang komt
 // dat neer op eenzelfde progress. Alleen het middenvak blijft gedeeld.
 function blockedByOwnPawn(player, progress, movingPawn = null) {
@@ -72,6 +75,17 @@ function canMovePawn(player, pawn, roll) {
   return !blockedByOwnPawn(player, target, pawn);
 }
 function movablePawns(player, roll) { return player.pawns.filter((pawn) => canMovePawn(player, pawn, roll)); }
+function quadrantStart(player) { return (campFor(player).startIndex + TRACK_STEPS - 1) % PATH_LENGTH; }
+function isInPlayerQuadrant(player, pathIndex) { return forwardDistance(quadrantStart(player), pathIndex) < PATH_LENGTH / 4; }
+function unitAttackOptions(game, player) {
+  if (game.phase !== 'action' || game.lastRoll !== 6) return [];
+  return game.players.flatMap((opponent) => {
+    if (opponent.id === player.id || opponent.eliminated) return [];
+    return opponent.pawns
+      .filter((pawn) => pawn.progress >= 0 && pawn.progress < TRACK_STEPS && isInPlayerQuadrant(player, absolutePathIndex(opponent, pawn.progress)))
+      .map((pawn) => ({ targetPlayerId: opponent.id, targetPawnId: pawn.id }));
+  });
+}
 function activePlayers(game) { return game.players.filter((player) => !player.eliminated); }
 function addLog(game, text) {
   game.log.unshift(text);
@@ -229,8 +243,6 @@ function resolveCombat(game, attackerPlayer, attacker) {
   if (counter.ringSaved) addLog(game, `${attacker.hero.name} wordt door De Ene Ring gered.`);
   if (counter.defeated) {
     combat.attackerDefeated = true;
-    combat.attackerCastleDamage = attacker.castleDamageOnDefeat;
-    damageCastle(game, attackerPlayer, attacker.castleDamageOnDefeat, `door het verlies van ${attackerLabel.toLowerCase()}`);
   } else if (attacker.type === 'hero' && attacker.hero?.ability === 'Athelas') attacker.hp = Math.min(attacker.maxHp, attacker.hp + 5);
 }
 
@@ -257,8 +269,9 @@ function applyMove(game, player, pawnId) {
   if (pawn.progress >= 0 && pawn.progress < FINISH_PROGRESS && pawn.progress + movementSteps(pawn, game.lastRoll) <= FINISH_PROGRESS
     && blockedByOwnPawn(player, pawn.progress + movementSteps(pawn, game.lastRoll), pawn)) throw new Error('Op dat vak staat al een eigen troep.');
   if (!canMovePawn(player, pawn, game.lastRoll)) throw new Error('Deze troep kan niet met de huidige worp bewegen.');
+  const usesBonus = pawn.progress < TRACK_STEPS;
   const steps = movementSteps(pawn, game.lastRoll);
-  movePawn(game, player, pawn, steps, `gebruikt de worp plus ${pawn.movementBonus} bonus en beweegt`);
+  movePawn(game, player, pawn, steps, usesBonus ? `gebruikt de worp plus ${pawn.movementBonus} bonus en beweegt` : 'gebruikt alleen de worp in de thuisgang en beweegt');
   advanceTurn(game);
 }
 
@@ -292,9 +305,25 @@ function applyCastleAttack(game, player, pawnId, targetPlayerId) {
   advanceTurn(game);
 }
 
+function applyUnitAttack(game, player, targetPlayerId, targetPawnId) {
+  if (game.phase !== 'action' || game.lastRoll !== 6) throw new Error('Je moet een 6 gooien om een vijandelijke troep aan te vallen.');
+  const legal = unitAttackOptions(game, player).find((option) => option.targetPlayerId === targetPlayerId && option.targetPawnId === targetPawnId);
+  if (!legal) throw new Error('Deze vijandelijke troep kan je niet aanvallen.');
+  const targetPlayer = game.players.find((item) => item.id === targetPlayerId);
+  const target = targetPlayer.pawns.find((pawn) => pawn.id === targetPawnId);
+  const targetLabel = target.type === 'hero' ? target.hero.name : target.label;
+  const hit = damageUnit(target, target.maxHp * 0.5);
+  addLog(game, `${player.name} gooit 6 en valt ${targetPlayer.name}s ${targetLabel} in het eigen kwadrant aan voor ${hit.damage} damage.`);
+  if (hit.ringSaved) addLog(game, `${target.hero.name} wordt door De Ene Ring gered.`);
+  if (hit.defeated) damageCastle(game, targetPlayer, target.castleDamageOnDefeat, `door het verlies van ${targetLabel.toLowerCase()}`);
+  checkWin(game);
+  advanceTurn(game);
+}
+
 function hasAnyAction(game, player) {
   if (movablePawns(player, game.lastRoll).length) return true;
   if (attackOptions(game, player).length) return true;
+  if (unitAttackOptions(game, player).length) return true;
   return !blockedByOwnPawn(player, 0) && player.pawns.some((pawn) => pawn.progress < 0 && player.coins >= pawn.cost);
 }
 
@@ -315,11 +344,19 @@ function checkWin(game) {
 function handleAction(game, playerId, action, payload = {}) {
   if (game.gameOver) throw new Error('Het spel is afgelopen.');
   const player = currentPlayer(game);
+  if (action === 'skipNpc') {
+    const requester = game.players.find((item) => item.id === playerId && !item.isNpc && !item.eliminated);
+    if (!requester || !player?.isNpc) throw new Error('Er is geen NPC-actie om over te slaan.');
+    applyNpcStep(game, player);
+    scheduleNpc(game);
+    return;
+  }
   if (!player || player.id !== playerId || player.isNpc || player.eliminated) throw new Error('Je bent niet aan de beurt.');
   if (action === 'roll') applyRoll(game, player);
   else if (action === 'buy') applyBuy(game, player, String(payload.type || ''));
   else if (action === 'move') applyMove(game, player, String(payload.pawnId || ''));
   else if (action === 'castleAttack') applyCastleAttack(game, player, String(payload.pawnId || ''), String(payload.targetPlayerId || ''));
+  else if (action === 'unitAttack') applyUnitAttack(game, player, String(payload.targetPlayerId || ''), String(payload.targetPawnId || ''));
   else if (action === 'pass') {
     if (game.phase !== 'action') throw new Error('Rol eerst de dobbelsteen.');
     if (hasAnyAction(game, player)) throw new Error('Je hebt nog een geldige actie: verzet een troep, koop een eenheid of val een kasteel aan.');
@@ -330,6 +367,8 @@ function handleAction(game, playerId, action, payload = {}) {
 }
 
 function chooseNpcAction(game, player) {
+  const unitAttacks = unitAttackOptions(game, player);
+  if (unitAttacks.length) return { action: 'unitAttack', payload: unitAttacks[0] };
   const attacks = attackOptions(game, player);
   if (attacks.length) return { action: 'castleAttack', payload: attacks[0] };
   const startFree = !blockedByOwnPawn(player, 0);
@@ -342,20 +381,25 @@ function chooseNpcAction(game, player) {
   return { action: 'pass', payload: {} };
 }
 
-function tick(game, now = Date.now()) {
-  if (game.gameOver) return false;
-  const player = currentPlayer(game);
-  if (!player?.isNpc) { game.nextNpcAt = 0; return false; }
-  if (!game.nextNpcAt) game.nextNpcAt = now + NPC_DELAY_MS;
-  if (now < game.nextNpcAt) return false;
+function applyNpcStep(game, player) {
   if (game.phase === 'roll') applyRoll(game, player);
   else {
     const choice = chooseNpcAction(game, player);
     if (choice.action === 'buy') applyBuy(game, player, choice.payload.type);
     else if (choice.action === 'move') applyMove(game, player, choice.payload.pawnId);
     else if (choice.action === 'castleAttack') applyCastleAttack(game, player, choice.payload.pawnId, choice.payload.targetPlayerId);
+    else if (choice.action === 'unitAttack') applyUnitAttack(game, player, choice.payload.targetPlayerId, choice.payload.targetPawnId);
     else { addLog(game, `${player.name} past.`); advanceTurn(game); }
   }
+}
+
+function tick(game, now = Date.now()) {
+  if (game.gameOver) return false;
+  const player = currentPlayer(game);
+  if (!player?.isNpc) { game.nextNpcAt = 0; return false; }
+  if (!game.nextNpcAt) game.nextNpcAt = now + NPC_DELAY_MS;
+  if (now < game.nextNpcAt) return false;
+  applyNpcStep(game, player);
   scheduleNpc(game);
   return true;
 }
@@ -381,10 +425,12 @@ function serialize(game, requesterId, connected = new Map()) {
     winnerId: game.winnerId, resultText: game.resultText, turnPlayerId: game.gameOver ? null : turn?.id,
     lastRoll: game.lastRoll, lastCoinGain: game.lastCoinGain, lastCombat: game.lastCombat || null,
     canRoll: Boolean(!game.gameOver && mine && game.phase === 'roll'), canAct,
+    npcCanSkip: Boolean(!game.gameOver && turn?.isNpc),
     canPass: canAct && !hasAnyAction(game, turn),
     movablePawnIds: canAct ? movablePawns(turn, game.lastRoll).map((pawn) => pawn.id) : [],
     startOccupied: canAct ? blockedByOwnPawn(turn, 0) : false,
     attackOptions: canAct ? attackOptions(game, turn) : [],
+    unitAttackOptions: canAct ? unitAttackOptions(game, turn) : [],
     players: game.players.map((player) => ({
       id: player.id, name: player.name, isNpc: player.isNpc, isYou: player.id === requesterId,
       connected: player.isNpc || Boolean(connected.get(player.id)), seat: player.seat, camp: player.camp,
@@ -408,6 +454,7 @@ function results(game, durationMs) {
 module.exports = {
   createGame, handleAction, serialize, tick, results, normalizeRoomOptions,
   CAMPS, ATTACK_SITES, UNIT_TYPES, UNIT_ORDER, FACTION_UNITS, HEROES, PATH_LENGTH, TRACK_STEPS, HOME_STEPS,
-  FINISH_PROGRESS, CASTLE_MAX_HP, COINS_PER_PIP, CENTER_DAMAGE,
-  absolutePathIndex, pawnZone, movementSteps, canMovePawn, movablePawns, blockedByOwnPawn, attackOptions
+  FINISH_PROGRESS, CASTLE_MAX_HP, COINS_PER_PIP, CENTER_DAMAGE, NPC_DELAY_MS,
+  absolutePathIndex, pawnZone, movementSteps, canMovePawn, movablePawns, blockedByOwnPawn, attackOptions,
+  quadrantStart, isInPlayerQuadrant, unitAttackOptions
 };

@@ -9,7 +9,8 @@ const root = path.join(__dirname, '..');
 test('bronklikken op afstand vragen de server om naast de bron te stoppen', () => {
   const client = fs.readFileSync(path.join(root, 'games/deep-bleu-c/client.js'), 'utf8');
   assert.match(client, /stopAdjacent:\s*approachResource/);
-  assert.match(client, /tile === WOOD_TILE \|\| tile === ROCK_TILE \|\| isWildlifeTile\(wx, wy\)/);
+  assert.match(client, /tile === WOOD_TILE \|\| tile === ROCK_TILE \|\| tile === KELP_TILE \|\| isWildlifeTile\(wx, wy\)/);
+  assert.match(client, /action\('move', \{ x: npc\.x, y: npc\.y, stopAdjacent: true \}\)/);
 });
 
 test('Deep Bleu C laat alleen secundaire schermen intern verticaal scrollen', () => {
