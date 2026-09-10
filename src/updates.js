@@ -725,6 +725,12 @@ const RELEASES = [
       "Lutro: twee eigen troepen kunnen niet meer op hetzelfde vak staan; je startvak moet vrij zijn om een troep in te zetten. Alleen in het midden komen je eigen troepen samen.",
       "The Big Blue C: de dorpsbewoners staan nu op post bij hun eigen gebouw in plaats van rond te lopen — dat maakt de kaart een stuk rustiger."
     ]
+  },
+  {
+    version:"1.30.1",
+    improvements:[
+      "update deep blue - lutro - cycclub"
+    ]
   }
 ];
 

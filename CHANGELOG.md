@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.30.1 — update deep blue - lutro - cycclub
+
+- update deep blue - lutro - cycclub
+
 ## v1.30.0 — Rittenkoersen in CycClub
 
 - Tien nieuwe meerdaagse koersen in CycClub, tussen de eendagskoersen en de

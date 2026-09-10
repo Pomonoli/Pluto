@@ -2,6 +2,10 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
+## Nieuw in versie 1.30.1
+
+update deep blue - lutro - cycclub
+
 ## Nieuw in versie 1.30.0
 
 CycClub kreeg tien meerdaagse koersen tussen de eendagskoersen en de Grote Rondes in: Parijs-Nice, Tirreno-Adriatico, Ronde van Catalonië, Ronde van het Baskenland, Ronde van Romandië, Critérium du Dauphiné, Ronde van Zwitserland, Ronde van Polen, Renewi Tour en Ronde van Groot-Brittannië, van 5 tot 8 ritten. Elke ronde volgt een eigen route van vlakke ritten, heuvelritten, bergritten, tijdritten en — nieuw — kasseiritten, heeft een deelnemersveld dat bij dat parcours past, en bouwt over alle ritten heen dezelfde vijf klassementen op als een Grote Ronde.
