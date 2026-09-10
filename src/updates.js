@@ -751,6 +751,12 @@ const RELEASES = [
     improvements:[
       "cycclub leaderboard"
     ]
+  },
+  {
+    version:"1.31.2",
+    improvements:[
+      "kleine leaderboard fixes"
+    ]
   }
 ];
 

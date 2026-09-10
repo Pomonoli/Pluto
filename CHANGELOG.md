@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.31.2 — kleine leaderboard fixes
+
+- kleine leaderboard fixes
+
 ## v1.31.1 — cycclub leaderboard
 
 - cycclub leaderboard
