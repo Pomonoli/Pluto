@@ -16,12 +16,16 @@
 - Obstakels zijn donkere, eenvoudige blokken zonder decoratieve ruis.
 - De speler tekent zelf de volledige paden. Pluto tekent of kiest geen route voor de speler.
 - Paden zijn dik, afgerond en krijgen de kleur van hun doelplaneet.
+- Elk pad beweegt alleen orthogonaal en elke stap moet de Manhattan-afstand tot de gekozen doelplaneet exact met één verkleinen. Geen omwegen of teruggaande segmenten.
+- Paden kruisen of delen geen routevak. Meerdere paden mogen alleen samenkomen op hun gezamenlijke doelplaneet.
 - Ongeldige kruisingen/conflicten subtiel rood markeren, zonder modals of storende foutmeldingen.
 
 ## Interactie
 
 - Drag/swipe is de primaire input voor tekenen.
+- Terugslepen over het vorige vak wist de laatste stap van de actieve lijn.
 - Undo en reset zijn altijd snel bereikbaar.
+- Een hint markeert alleen één asteroïde en zijn doelplaneet; hij tekent nooit een route.
 - Correcties moeten onmiddellijk en zonder bevestigingsdialogen kunnen.
 - Overgangen kort en rustig; geen overmatige animaties.
 
