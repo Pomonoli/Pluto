@@ -28,16 +28,12 @@
 @keyframes gravity-hint{0%,100%{filter:drop-shadow(0 0 0 rgba(59,130,246,0))}50%{filter:drop-shadow(0 0 8px rgba(59,130,246,.8));transform:scale(1.07)}}
 .gravity-board.gravity-draft-rejected{animation:gravity-reject .24s ease}
 @keyframes gravity-reject{0%,100%{transform:translateX(0)}30%{transform:translateX(-4px)}70%{transform:translateX(4px)}}
-.gravity-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;width:min(100%,620px);margin:12px auto 0;padding:0 3px;color:var(--gravity-muted);font-size:.78rem}
-.gravity-footer-status{font-weight:800;color:#4d627e}.gravity-footer-rule{text-align:right}
 @media(max-width:760px){
   .gravity-active #gameStage:has(.gravity-shell){padding-left:0;padding-right:0}
   .gravity-shell{max-width:none}
   .gravity-board{width:calc(100vw - 24px);max-width:620px;border-radius:18px;margin-top:4px}
   .gravity-controls{gap:5px}
   .gravity-control{padding:7px 9px;font-size:.74rem}
-  .gravity-footer{width:calc(100vw - 28px);max-width:620px;flex-direction:column;align-items:flex-start;gap:2px}
-  .gravity-footer-rule{text-align:left}
 }
 @media(max-width:420px){
   .gravity-planet,.gravity-asteroid{left:12%;top:12%;width:76%;height:76%}
