@@ -3,6 +3,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { DatabaseSync } = require('node:sqlite');
 const { totalLevel } = require('../games/deep-bleu-c/skill-levels');
+const { ERA_NAMES: KASTEEL_ERA_NAMES } = require('../games/kasteel-strijd/server');
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
 fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -388,6 +389,23 @@ function leaderboard(gameKey = null, limit = 100) {
   }
   if (gameKey === 'deep-bleu-c') {
     return deepBleuCLeaderboard(safeLimit);
+  }
+  if (gameKey === 'kasteel-strijd') {
+    return db.prepare(`
+      SELECT
+        u.username,
+        COUNT(*) AS games,
+        COALESCE(SUM(mp.won),0) AS wins,
+        MAX(mp.duration_ms) AS bestMs,
+        MAX(mp.moves) AS bestEra
+      FROM match_players mp
+      JOIN matches m ON m.id = mp.match_id
+      JOIN users u ON u.id = mp.user_id
+      WHERE m.game_key = 'kasteel-strijd'
+      GROUP BY u.id, u.username
+      ORDER BY bestEra DESC, bestMs DESC, wins DESC, u.username COLLATE NOCASE ASC
+      LIMIT ${safeLimit}
+    `).all().map((row) => ({ ...row, bestEraName: KASTEEL_ERA_NAMES[row.bestEra] || null }));
   }
   if (gameKey === 'bakkermansjones') {
     return db.prepare(`

@@ -27,6 +27,7 @@ Alle games zijn ondergebracht in zelfstandige modules onder `games/`. Iedere gam
 | Hartenjagen | 4 | Ja |
 | Hofslag | 2-4 | Ja |
 | Isle of Skye | 2-4 | Ja |
+| Kasteel Strijd | 1 | Niet van toepassing |
 | Kingdomino | 2-4 | Ja |
 | Lutro | 1-4 | Ja |
 | Minigolf | 1-4 | Ja |

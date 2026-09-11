@@ -1,0 +1,41 @@
+/* Kasteel Strijd — goud-op-donkerhout, speelgoedsoldaatjes op een canvasveld. */
+.ks-root{--ks-gold:#f0b429;--ks-edge:#8a6a2a;--ks-paper:#eee0c2;--ks-muted:#c9b183;--ks-good:#5fa85f;--ks-bad:#c14545;--ks-wood:linear-gradient(180deg,#3a2716,#241608);
+  display:flex;flex-direction:column;gap:8px;max-width:1000px;margin:0 auto;width:100%;color:var(--ks-paper)}
+.ks-restart{margin-left:auto}
+.ks-field{position:relative;width:100%;aspect-ratio:1400/584;border-radius:10px;overflow:hidden;border:3px solid var(--ks-edge);box-shadow:0 6px 18px rgba(0,0,0,.5);background:#8fd1e8}
+.ks-canvas{width:100%;height:100%;display:block}
+.ks-overlay{position:absolute;z-index:5;display:flex;flex-direction:column;gap:6px}
+.ks-top-left{top:8px;left:8px;flex-direction:row;flex-wrap:wrap}
+.ks-era{top:8px;left:50%;transform:translateX(-50%);max-width:56%}
+.ks-badge{background:var(--ks-wood);border:2px solid var(--ks-gold);border-radius:8px;padding:5px 10px;font-weight:700;font-size:14px;color:var(--ks-gold);display:flex;align-items:center;gap:4px;box-shadow:0 3px 6px rgba(0,0,0,.4);white-space:nowrap}
+.ks-era-badge{font-family:Georgia,'Times New Roman',serif;letter-spacing:.3px;justify-content:center;overflow:hidden;text-overflow:ellipsis}
+.ks-hp{position:absolute;top:50px;width:170px;max-width:34%;z-index:5}
+.ks-hp-left{left:8px}
+.ks-hp-right{right:8px;text-align:right}
+.ks-hp-label{font-family:Georgia,'Times New Roman',serif;font-size:11px;color:var(--ks-paper);text-shadow:0 1px 2px #000;margin-bottom:2px;font-weight:700;letter-spacing:.5px}
+.ks-hp-track{background:#1c1108;border:1px solid #000;border-radius:5px;height:12px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,.6)}
+.ks-hp-fill{height:100%;transition:width .25s ease;background:linear-gradient(180deg,#8fce6a,#4f7942)}
+.ks-hp-right .ks-hp-fill{background:linear-gradient(180deg,#9aa0a8,#6b6f76)}
+.ks-section{font-family:Georgia,'Times New Roman',serif;font-size:11px;color:var(--ks-muted);letter-spacing:.6px;margin:2px 2px 0}
+.ks-row{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.ks-btn{background:var(--ks-wood);border:2px solid var(--ks-gold);border-radius:9px;color:var(--ks-paper);padding:7px 5px;cursor:pointer;text-align:center;box-shadow:0 3px 6px rgba(0,0,0,.4);transition:transform .08s ease;font:inherit;min-width:0}
+.ks-btn:active{transform:translateY(2px)}
+.ks-btn:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.3)}
+.ks-btn-evolve{border-color:#ffd35c;background:linear-gradient(180deg,#5a3d17,#2e1c08)}
+.ks-btn-name{font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:12.5px;color:var(--ks-gold);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ks-btn-level{font-size:10.5px;color:var(--ks-muted);display:block;margin:2px 0 4px}
+.ks-btn-cost{font-size:12.5px;font-weight:700;color:var(--ks-good);display:block}
+.ks-btn-cost.cant{color:var(--ks-bad)}
+.ks-btn-cost.cd{color:#8fa0ac}
+.ks-finished .ks-btn{pointer-events:none}
+.ks-summary{align-items:center;text-align:center;padding:28px 16px;background:var(--ks-wood);border:3px solid var(--ks-gold);border-radius:12px}
+.ks-summary-title{font-family:Georgia,'Times New Roman',serif;color:var(--ks-gold);margin:0;font-size:22px}
+.ks-summary-copy{margin:0;color:var(--ks-muted);font-size:13px}
+.ks-result{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:6px}
+.ks-result-chip{background:#241608;border:1px solid #f0b429;border-radius:999px;padding:4px 12px;color:#f0b429;font-weight:700;font-size:13px;white-space:nowrap}
+@media(max-width:560px){
+  .ks-row{grid-template-columns:repeat(2,1fr)}
+  .ks-hp{width:110px}
+  .ks-badge{font-size:12px;padding:4px 8px}
+  .ks-btn-name{font-size:11px}
+}
