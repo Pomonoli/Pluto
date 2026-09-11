@@ -769,6 +769,15 @@ const RELEASES = [
     improvements:[
       "lutro update"
     ]
+  },
+  {
+    version:"1.32.0",
+    games:[
+      "De Slag om Waas"
+    ],
+    features:[
+      "De Slag om Waas: interactief bord met 45 provincies, vier facties rond het neutrale Sint-Niklaas, hoofdwegen, de Moervaart en de Schelde."
+    ]
   }
 ];
 

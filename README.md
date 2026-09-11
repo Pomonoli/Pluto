@@ -2,13 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.31.4
+## Nieuw in versie 1.32.0
 
-lutro update
-
-## Nieuw in versie 1.31.0
-
-CycClub kreeg een vijfde tabblad: de **Erelijst**. Die vergelijkt alle CycClub-spelers met elkaar — ook clubgenoten die nu niet meespelen, want de standen komen uit de opgeslagen ploegen. Bovenaan staat per speler hoeveel truien hij verzamelde (Geel, Groen, Bolletjes, Wit en Ploegen, toegekend op het eind van elke Rittenkoers en Grote Ronde), daaronder elke koers uit de kalender met wie hem hoe vaak won.
+**De Slag om Waas** is een nieuwe original: een strategische bordgame in het Land van Waas voor 2–4 spelers, in de geest van Rome: Total War. Vier facties omringen het neutrale Sint-Niklaas op een bord van 45 provincies met fictieve namen, hoofdwegen, de Moervaart en de Schelde. Deze eerste fase bevat het interactieve bord met provincies, verbindingen, eigenaarschap, rebellengarnizoenen en beurten; legers, veldslagen, economie en overwinning volgen.
 
 ## Nieuw in versie 1.0.0
 

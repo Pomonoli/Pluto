@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.32.0 — De Slag om Waas
+
+- Nieuwe original **De Slag om Waas**: een strategische bordgame in het Land van
+  Waas voor 2–4 spelers, in de geest van Rome: Total War. Vier facties — Zuid
+  (Temsewater & Durmeland), West (Lokerzand & Moerbeekvlakte), Noord
+  (Stekenwoud & Gillismark) en Oost (Beverpolder & Scheldekant) — omringen het
+  neutrale Sint-Niklaas.
+- Het bord telt 45 provincies met fictieve namen geënt op het echte Waasland,
+  verdeeld over vijf regio's (ook Sint-Niklaas heeft buitenwijken). Terrein,
+  hoofdwegen (N70, E17, E34, N403, N16, N41), de Moervaart met twee bruggen en
+  de Schelde langs de oostrand zijn zichtbaar én functioneel in het datamodel.
+- Fase 1: interactief SVG-bord met hover, selectie, buren-highlighting per
+  verbindingssoort, contextpaneel per provincie, spelerskaarten en beurten.
+  Niet-gekozen facties en de buitenwijken worden door rebellen bezet; de stad
+  Sint-Niklaas start met een neutraal garnizoen.
+- Bordmodel is data-driven (`board.js`, `config.js`) en losgekoppeld van de
+  UI; een test bewaakt dat elke verbinding een echte gedeelde grens is.
+  Beweging, veldslagen, economie, draagvlak, gebeurtenissen en overwinning
+  volgen in de volgende fases.
+
 ## v1.31.4 — lutro update
 
 - lutro update
