@@ -1,0 +1,47 @@
+.gravity-active #gameStage:has(.gravity-shell){max-width:760px}
+.gravity-shell{--gravity-ink:#11284d;--gravity-muted:#6d7d95;--gravity-line:#dfe7f1;--gravity-bg:#f6f8fb;width:100%;max-width:680px;margin:0 auto;color:var(--gravity-ink);font-family:Inter,ui-rounded,"SF Pro Rounded","Segoe UI",system-ui,sans-serif}
+.gravity-controls{display:flex;gap:7px;margin-left:auto;align-items:center}
+.gravity-control{min-height:36px;padding:7px 12px;border-radius:12px;font-size:.8rem;font-weight:800;white-space:nowrap}
+.gravity-control:disabled{opacity:.42;cursor:default}
+.gravity-board{position:relative;width:min(100%,620px);aspect-ratio:1;margin:10px auto 0;border:1px solid #d8e2ef;border-radius:24px;overflow:hidden;background:#fff;box-shadow:0 18px 42px rgba(28,52,86,.12);touch-action:none;user-select:none;-webkit-user-select:none}
+.gravity-cells{position:absolute;inset:0;display:grid;grid-template-columns:repeat(var(--gravity-size),1fr);grid-template-rows:repeat(var(--gravity-size),1fr);z-index:3}
+.gravity-cell{position:relative;min-width:0;min-height:0;border-right:1px solid #edf1f6;border-bottom:1px solid #edf1f6;background:transparent}
+.gravity-path-layer{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;overflow:visible}
+.gravity-path{fill:none;stroke-width:.17;stroke-linecap:round;stroke-linejoin:round;opacity:.92;filter:drop-shadow(0 .035px .06px rgba(17,40,77,.18));transition:opacity .12s ease,stroke .12s ease}
+.gravity-path.editing{opacity:.14}
+.gravity-path-draft{opacity:.88;stroke-dasharray:.03 .035;animation:gravity-dash .5s linear infinite}
+.gravity-path-draft.invalid{stroke:#ff6b6b!important;opacity:1}
+@keyframes gravity-dash{to{stroke-dashoffset:-.13}}
+.gravity-planet,.gravity-asteroid,.gravity-obstacle{position:absolute;z-index:4;left:14%;top:14%;width:72%;height:72%;display:grid;place-items:center}
+.gravity-planet{border-radius:50%;background:radial-gradient(circle at 30% 22%,rgba(255,255,255,.52),transparent 24%),linear-gradient(145deg,color-mix(in srgb,var(--planet-color) 74%,white),var(--planet-color));box-shadow:inset -7px -9px 14px rgba(12,33,64,.18),0 5px 11px rgba(17,40,77,.16);border:2px solid rgba(255,255,255,.88)}
+.gravity-planet::before,.gravity-planet::after{content:"";position:absolute;left:16%;right:16%;height:9%;border-radius:999px;background:rgba(255,255,255,.27);transform:rotate(-10deg)}
+.gravity-planet::before{top:29%}.gravity-planet::after{bottom:27%;transform:rotate(8deg);opacity:.6}
+.gravity-planet-band{position:absolute;width:116%;height:34%;border:3px solid color-mix(in srgb,var(--planet-color) 70%,#11284d);border-left-color:transparent;border-right-color:transparent;border-radius:50%;transform:rotate(-13deg);opacity:.33}
+.gravity-planet-badge{position:absolute;right:-10%;top:-10%;width:clamp(22px,5.4vw,30px);height:clamp(22px,5.4vw,30px);border-radius:50%;display:grid;place-items:center;background:#11284d;color:#fff;border:3px solid #fff;font-weight:900;font-size:clamp(11px,2.8vw,14px);box-shadow:0 3px 8px rgba(17,40,77,.2);z-index:2}
+.gravity-planet.complete{box-shadow:inset -7px -9px 14px rgba(12,33,64,.18),0 0 0 4px rgba(46,196,182,.16),0 6px 14px rgba(17,40,77,.14)}
+.gravity-asteroid{border-radius:47% 53% 50% 44%;background:radial-gradient(circle at 31% 26%,#9da7b6 0 7%,transparent 8%),linear-gradient(145deg,#7f8998,#4b5667);box-shadow:inset -7px -8px 12px rgba(13,24,42,.28),0 4px 10px rgba(17,40,77,.13);transform:rotate(-7deg);transition:transform .12s ease,opacity .12s ease}
+.gravity-asteroid.connected{opacity:.74;transform:rotate(-7deg) scale(.93)}
+.gravity-crater{position:absolute;border-radius:50%;background:rgba(43,54,70,.35);box-shadow:inset 1px 1px 2px rgba(14,22,34,.2)}
+.gravity-crater.crater-a{width:22%;height:22%;left:18%;top:22%}.gravity-crater.crater-b{width:15%;height:15%;right:20%;top:18%}.gravity-crater.crater-c{width:19%;height:19%;right:23%;bottom:19%}
+.gravity-obstacle{left:10%;top:10%;width:80%;height:80%;border-radius:15%;background:linear-gradient(145deg,#35445a,#202d40);border:2px solid #46566d;color:#7f91aa;font-size:clamp(20px,7vw,38px);font-weight:500;box-shadow:inset 0 0 0 2px rgba(255,255,255,.04),0 4px 9px rgba(17,40,77,.14)}
+.gravity-planet.hinted,.gravity-asteroid.hinted{animation:gravity-hint 1s ease-in-out infinite;z-index:5}
+@keyframes gravity-hint{0%,100%{filter:drop-shadow(0 0 0 rgba(59,130,246,0))}50%{filter:drop-shadow(0 0 8px rgba(59,130,246,.8));transform:scale(1.07)}}
+.gravity-board.gravity-draft-rejected{animation:gravity-reject .24s ease}
+@keyframes gravity-reject{0%,100%{transform:translateX(0)}30%{transform:translateX(-4px)}70%{transform:translateX(4px)}}
+.gravity-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;width:min(100%,620px);margin:12px auto 0;padding:0 3px;color:var(--gravity-muted);font-size:.78rem}
+.gravity-footer-status{font-weight:800;color:#4d627e}.gravity-footer-rule{text-align:right}
+@media(max-width:760px){
+  .gravity-active #gameStage:has(.gravity-shell){padding-left:0;padding-right:0}
+  .gravity-shell{max-width:none}
+  .gravity-board{width:calc(100vw - 24px);max-width:620px;border-radius:18px;margin-top:4px}
+  .gravity-controls{gap:5px}
+  .gravity-control{padding:7px 9px;font-size:.74rem}
+  .gravity-footer{width:calc(100vw - 28px);max-width:620px;flex-direction:column;align-items:flex-start;gap:2px}
+  .gravity-footer-rule{text-align:left}
+}
+@media(max-width:420px){
+  .gravity-planet,.gravity-asteroid{left:12%;top:12%;width:76%;height:76%}
+  .gravity-obstacle{left:8%;top:8%;width:84%;height:84%}
+  .gravity-planet-badge{right:-7%;top:-7%;border-width:2px}
+}
+@media(prefers-reduced-motion:reduce){.gravity-path-draft,.gravity-planet.hinted,.gravity-asteroid.hinted,.gravity-board.gravity-draft-rejected{animation:none}}
