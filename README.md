@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.32.0
+## Nieuw in versie 1.33.0
 
-**De Slag om Waas** is een nieuwe original: een strategische bordgame in het Land van Waas voor 2–4 spelers, in de geest van Rome: Total War. Vier facties omringen het neutrale Sint-Niklaas op een bord van 45 provincies met fictieve namen, hoofdwegen, de Moervaart en de Schelde. Deze eerste fase bevat het interactieve bord met provincies, verbindingen, eigenaarschap, rebellengarnizoenen en beurten; legers, veldslagen, economie en overwinning volgen.
+**Kasteel Strijd** is een nieuwe original: een solo castle-defense game waarin troepen automatisch spawnen en op elkaar afstormen terwijl jij met goud je Basis, Aanval en Verdediging opbouwt en vier vaardigheden inzet. Evolueer dwars door zeven tijdperken, van de Prehistorie tot de Hedendaagse Tijd, met per tijdperk een eigen kasteel en eigen speelgoedsoldaatjes. Je overlevingstijd, hoogste tijdperk en overwinningen tellen mee op het leaderboard.
 
 ## Nieuw in versie 1.0.0
 

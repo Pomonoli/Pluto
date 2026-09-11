@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.33.0 — Kasteel Strijd
+
+- Nieuwe original **Kasteel Strijd**: een solo castle-defense game waarin twee
+  basissen tegenover elkaar staan, troepen automatisch spawnen en op elkaar
+  afstormen, en je met goud je Basis, Aanval en Verdediging opbouwt.
+- Zeven tijdperken, van de Prehistorie tot de Hedendaagse Tijd: evolueren
+  reset je niveaus maar tilt alle basiswaarden hoger, en kasteel, helmen en
+  wapens van de speelgoedsoldaatjes veranderen mee.
+- Vier vaardigheden met kosten en cooldown: Oorlogskreet (sneller spawnen),
+  Furie (meer schade), Bonusaanval (directe klap op de vijandelijke basis) en
+  Versterking (instant extra troepen).
+- Het real-time canvasgevecht draait in de browser (`engine.js`); de server
+  bewaart start, tijdperk en eindresultaat en begrenst de overlevingstijd op
+  de werkelijk verstreken tijd. Eigen leaderboard met overwinningen, hoogste
+  tijdperk en langste potje, plus profielstatistiek.
+
 ## v1.32.0 — De Slag om Waas
 
 - Nieuwe original **De Slag om Waas**: een strategische bordgame in het Land van

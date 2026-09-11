@@ -778,6 +778,15 @@ const RELEASES = [
     features:[
       "De Slag om Waas: interactief bord met 45 provincies, vier facties rond het neutrale Sint-Niklaas, hoofdwegen, de Moervaart en de Schelde."
     ]
+  },
+  {
+    version:"1.33.0",
+    games:[
+      "Kasteel Strijd"
+    ],
+    features:[
+      "Kasteel Strijd: solo castle-defense door zeven tijdperken, met upgrades, vier vaardigheden en een eigen leaderboard voor overlevingstijd en hoogste tijdperk."
+    ]
   }
 ];
 
