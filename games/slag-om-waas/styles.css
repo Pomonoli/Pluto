@@ -1,0 +1,148 @@
+/* De Slag om Waas — volledig gescoped onder .sow-root. */
+
+.sow-root {
+  --sow-wood: #3a2216;
+  --sow-wood-2: #55321f;
+  --sow-parchment: #f3e7cf;
+  --sow-parchment-2: #e5d5b4;
+  --sow-ink: #2b2118;
+  --sow-ink-dim: #6d5c49;
+  --sow-gold: #c9a24b;
+  --sow-panel: var(--panel, #161f3f);
+  --sow-text: var(--text, #f7f7fb);
+  --sow-muted: var(--muted, #b7bfdc);
+  --sow-border: var(--border, rgba(173, 185, 240, .18));
+  --sow-accent: var(--accent, #68daf4);
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 14px;
+  align-items: start;
+  padding: 4px 0 12px;
+  color: var(--sow-text);
+}
+@media (max-width: 900px) {
+  .sow-root { grid-template-columns: 1fr; }
+}
+
+/* ---------- bord ---------- */
+.sow-board-wrap {
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(255, 255, 255, .08), transparent 60%),
+    linear-gradient(135deg, var(--sow-wood) 0%, var(--sow-wood-2) 50%, var(--sow-wood) 100%);
+  border: 6px solid #2a170f;
+  border-radius: 14px;
+  padding: 8px;
+  box-shadow: inset 0 0 0 2px rgba(201, 162, 75, .35), 0 14px 34px rgba(0, 0, 0, .35);
+}
+.sow-svg { display: block; width: 100%; height: auto; max-height: 82vh; font-family: Georgia, 'Times New Roman', serif; }
+
+.sow-board-shadow { fill: rgba(0, 0, 0, .45); transform: translate(10px, 14px); }
+.sow-board-base { fill: var(--sow-parchment-2); stroke: #6b4a2a; stroke-width: 6; stroke-linejoin: round; }
+
+.sow-sector { transition: filter .15s ease, opacity .15s ease; }
+.sow-cell-fill { stroke: none; }
+.sow-cell-pattern, .sow-cell-tint { pointer-events: none; }
+.sow-cell-outline { fill: none; stroke: rgba(43, 33, 24, .55); stroke-width: 1.4; stroke-linejoin: round; pointer-events: none; }
+.sow-faction-edge { stroke-width: 12; stroke-linecap: round; opacity: .85; }
+.sow-faction-edge.neutral { stroke-width: 8; opacity: .3; stroke-dasharray: 10 8; }
+.sow-sector.hover .sow-cell-fill { filter: brightness(1.12); }
+.sow-sector.dimmed { opacity: .55; }
+.sow-sector.neighbor .sow-cell-outline { stroke: #fff6d8; stroke-width: 3; }
+.sow-sector.selected .sow-cell-outline { stroke: #fff; stroke-width: 5; filter: drop-shadow(0 0 6px rgba(255, 255, 255, .8)); }
+.sow-sector.selected .sow-cell-fill { filter: brightness(1.18) saturate(1.1); }
+.sow-cell-hit { fill: transparent; cursor: pointer; }
+
+.sow-terrain .terrain-snow .sow-cell-fill { filter: brightness(1.02); }
+
+.sow-road-under { fill: none; stroke: rgba(43, 33, 24, .7); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.sow-road { fill: none; stroke: #f0dfb8; stroke-width: 3.5; stroke-dasharray: 14 9; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.sow-river-under { stroke: #17394a; stroke-width: 13; stroke-linecap: round; pointer-events: none; }
+.sow-river { stroke: #4aa3d6; stroke-width: 8; stroke-linecap: round; pointer-events: none; }
+.sow-river-label { font-size: 17px; font-style: italic; fill: #1e4d66; pointer-events: none; letter-spacing: .08em; }
+.sow-bridge { font-size: 22px; pointer-events: none; }
+.sow-schelde-under { fill: none; stroke: #17394a; stroke-width: 30; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.sow-schelde { fill: none; stroke: #3f8fbf; stroke-width: 22; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.sow-schelde-hi { fill: none; stroke: rgba(223, 243, 255, .55); stroke-width: 3; stroke-dasharray: 18 14; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.sow-schelde-label { font-size: 18px; font-style: italic; fill: #dff3ff; letter-spacing: .1em; pointer-events: none; }
+.sow-boat { font-size: 20px; pointer-events: none; }
+.sow-wall-under { fill: none; stroke: #2b2118; stroke-width: 9; opacity: .55; pointer-events: none; }
+.sow-wall { fill: none; stroke: #e9dcc0; stroke-width: 5; stroke-dasharray: 9 5; pointer-events: none; }
+
+.sow-labels { pointer-events: none; }
+.sow-name { font-size: 18px; fill: var(--sow-ink); paint-order: stroke; stroke: rgba(255, 250, 235, .85); stroke-width: 4px; stroke-linejoin: round; font-weight: 600; }
+.sow-name.capital { font-size: 23px; font-weight: 700; }
+.sow-name.center { font-size: 27px; font-weight: 700; letter-spacing: .04em; }
+.sow-glyph { font-size: 26px; }
+.sow-troops text { font-size: 15px; font-weight: 700; fill: #fff; font-family: system-ui, sans-serif; }
+.sow-troops circle { stroke: rgba(255, 255, 255, .85); stroke-width: 2; }
+.sow-troops.rebel circle { stroke: rgba(255, 255, 255, .5); stroke-dasharray: 3 2; }
+.sow-troops.rebel text { font-size: 13px; }
+
+.sow-highlights { pointer-events: none; }
+.sow-link { stroke-width: 4; stroke-linecap: round; opacity: .9; }
+.sow-link-land { stroke: #fff; stroke-dasharray: 6 8; }
+.sow-link-road { stroke: #ffd45e; }
+.sow-link-bridge { stroke: #ffb26b; stroke-dasharray: 12 6; }
+.sow-link-water { stroke: #6fd8ff; stroke-dasharray: 2 8; }
+
+.sow-external { font-size: 15px; fill: rgba(243, 231, 207, .8); letter-spacing: .12em; text-transform: uppercase; pointer-events: none; }
+.sow-compass circle { fill: rgba(243, 231, 207, .85); stroke: #6b4a2a; stroke-width: 2; }
+.sow-compass .needle { fill: #a33; }
+.sow-compass .needle.soft { fill: #6b4a2a; opacity: .7; }
+.sow-compass text { font-size: 13px; fill: #f3e7cf; font-weight: 700; }
+
+/* ---------- paneel ---------- */
+.sow-panel { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+
+.sow-turnbox {
+  background: var(--sow-panel); border: 1px solid var(--sow-border); border-radius: 10px; padding: 10px 12px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.sow-round { font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: var(--sow-muted); }
+.sow-turn-line { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.sow-dot { width: 12px; height: 12px; border-radius: 50%; flex: 0 0 auto; box-shadow: 0 0 0 2px rgba(255, 255, 255, .25); }
+.sow-endturn { margin-top: 4px; }
+.sow-hint { font-size: .78rem; color: var(--sow-muted); }
+
+.sow-players { display: flex; flex-direction: column; gap: 6px; }
+.sow-player {
+  background: var(--sow-panel); border: 1px solid var(--sow-border); border-left: 5px solid var(--faction);
+  border-radius: 9px; padding: 7px 10px; display: flex; flex-direction: column; gap: 5px;
+}
+.sow-player.active { box-shadow: 0 0 0 1px var(--faction); }
+.sow-player.me .sow-player-head strong::after { content: ' (jij)'; font-weight: 400; color: var(--sow-muted); }
+.sow-player-head { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; font-size: .85rem; min-width: 0; }
+.sow-player-head strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.sow-emblem { font-size: 1rem; }
+.sow-faction-name { font-size: .7rem; color: var(--sow-muted); flex-basis: 100%; }
+.sow-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+.sow-stat { display: flex; flex-direction: column; align-items: center; font-size: .8rem; line-height: 1.15; min-width: 0; }
+.sow-stat-icon { font-size: .8rem; }
+.sow-stat small { font-size: .52rem; text-transform: uppercase; letter-spacing: .03em; color: var(--sow-muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.sow-info {
+  background: var(--sow-parchment); color: var(--sow-ink); border: 1px solid #c9b58e; border-radius: 10px; padding: 10px 12px;
+  display: flex; flex-direction: column; gap: 8px; font-family: Georgia, 'Times New Roman', serif;
+}
+.sow-info-empty { color: var(--sow-ink-dim); font-size: .85rem; font-style: italic; }
+.sow-info-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border-bottom: 3px solid var(--faction); padding-bottom: 6px; font-size: 1.05rem; }
+.sow-tag { font-size: .62rem; text-transform: uppercase; letter-spacing: .06em; background: var(--sow-gold); color: #2b2118; padding: 2px 6px; border-radius: 4px; font-family: system-ui, sans-serif; }
+.sow-info-rows { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; margin: 0; font-size: .82rem; }
+.sow-info-rows dt { color: var(--sow-ink-dim); }
+.sow-info-rows dd { margin: 0; }
+.sow-info-sub { font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; color: var(--sow-ink-dim); margin-top: 2px; }
+.sow-connections { display: flex; flex-wrap: wrap; gap: 5px; }
+.sow-connection {
+  display: inline-flex; align-items: center; gap: 5px; font: inherit; font-size: .78rem; cursor: pointer;
+  background: #fff9ea; color: var(--sow-ink); border: 1px solid #c9b58e; border-left: 4px solid var(--faction); border-radius: 6px; padding: 3px 8px;
+}
+.sow-connection:hover { background: #fff; }
+.sow-connection-kinds { font-size: .8rem; letter-spacing: -2px; }
+
+.sow-legend { background: var(--sow-panel); border: 1px solid var(--sow-border); border-radius: 9px; padding: 6px 10px; font-size: .75rem; }
+.sow-legend summary { cursor: pointer; color: var(--sow-muted); text-transform: uppercase; letter-spacing: .06em; font-size: .68rem; }
+.sow-legend-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 8px; margin-top: 6px; }
+.sow-legend-item { display: flex; align-items: center; gap: 6px; }
+.sow-swatch { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0, 0, 0, .3); flex: 0 0 auto; }
+.sow-legend-icon { width: 14px; text-align: center; }

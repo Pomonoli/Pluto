@@ -1,0 +1,15 @@
+{
+  "key": "slag-om-waas",
+  "name": "De Slag om Waas",
+  "category": "original",
+  "version": "1",
+  "description": "Strijd, bouw en verover het Land van Waas. Vier facties rond het neutrale Sint-Niklaas — Fase 1: het interactieve bord.",
+  "icon": "🏰",
+  "badge": "2-4",
+  "actionLabel": "Nieuwe slag",
+  "minPlayers": 2,
+  "maxPlayers": 4,
+  "supportsNpc": true,
+  "realtime": false,
+  "solo": false
+}
