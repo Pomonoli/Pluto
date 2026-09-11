@@ -287,13 +287,6 @@ export function render(api) {
 
   const shell = E('section', 'gravity-shell');
   renderBoard(api, shell);
-
-  const footer = E('div', 'gravity-footer');
-  footer.append(
-    E('span', 'gravity-footer-status', `${connected} van ${total} asteroïden verbonden`),
-    E('span', 'gravity-footer-rule', 'Elke stap trekt dichter naar de planeet.')
-  );
-  shell.append(footer);
   els.gameStage.append(shell);
 }
 
