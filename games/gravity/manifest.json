@@ -1,0 +1,15 @@
+{
+  "key": "gravity",
+  "name": "Gravity",
+  "category": "original",
+  "version": "1",
+  "description": "Teken routes en breng elke asteroïde naar een planeet.",
+  "icon": "🪐",
+  "badge": "Solo",
+  "actionLabel": "Puzzelen",
+  "minPlayers": 1,
+  "maxPlayers": 1,
+  "supportsNpc": false,
+  "realtime": false,
+  "solo": true
+}
