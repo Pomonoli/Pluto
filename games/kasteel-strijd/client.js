@@ -3,8 +3,7 @@ import {
   castleMaxHp, costCastle, costAttack, costDefense, evolveCost, fmtNum, fmtTime
 } from './engine.js';
 
-// De canvas-simulatie leeft in de browser; het podium wordt daarom niet bij
-// iedere serverupdate opnieuw opgebouwd (zie game-ui.js: preserveStage).
+// Behoud het canvas tussen serverupdates (zie game-ui.js: preserveStage).
 export const preserveStage = true;
 
 export const leaderboardConfig = { columns: [
@@ -14,10 +13,6 @@ export const leaderboardConfig = { columns: [
   { key: 'bestEraName', label: 'Hoogste tijdperk', short: 'Tijdperk', width: 'wide' },
   { key: 'bestMs', label: 'Langste potje', short: 'Tijd', format: 'duration' }
 ] };
-
-// Een herladen pagina verliest de lokale simulatie; een potje dat serverzijde
-// al zo lang loopt wordt dan opnieuw gestart in plaats van "leeg" hervat.
-const STALE_MATCH_MS = 8000;
 
 const UPGRADES = [
   { key: 'castle', icon: '🏰', name: 'Basis', level: (p) => p.castleLevel, cost: (p) => costCastle(p.castleLevel, p.era) },
@@ -58,25 +53,16 @@ function hpBar(E, cls, label) {
   return { wrap, fill };
 }
 
-export function render({ game, els, E, action, titlebar, sound }) {
+export function render({ game, els, E, action, titlebar }) {
   if (live && live.root.isConnected && live.matchId === game.matchId) {
+    live.battle.setState(game.battle);
     if (game.gameOver) live.finish(game);
     return;
   }
   stopLive();
   els.gameStage.replaceChildren();
 
-  if (!game.gameOver && game.elapsedServerMs > STALE_MATCH_MS) {
-    action('restart');
-    els.gameStage.append(titlebar('Kasteel Strijd', 'Nieuw potje wordt klaargezet…'));
-    return;
-  }
-
-  const heading = titlebar('Kasteel Strijd', game.gameOver ? game.resultText : 'Verdedig je basis en evolueer door de tijdperken.');
-  const restart = E('button', 'secondary ks-restart', 'Opnieuw beginnen');
-  restart.type = 'button';
-  restart.onclick = () => { stopLive(); action('restart'); };
-  heading.append(restart);
+  const heading = titlebar('Kasteel Strijd', game.gameOver ? game.resultText : `Duel tegen ${game.opponentName}. Vernietig de vijandelijke basis.`);
   els.gameStage.append(heading);
 
   if (game.gameOver) {
@@ -85,7 +71,7 @@ export function render({ game, els, E, action, titlebar, sound }) {
     summary.append(
       E('h3', 'ks-summary-title', game.won ? 'Overwinning!' : 'Basis gevallen'),
       renderResultDetails({ game, E }),
-      E('p', 'ks-summary-copy', 'Klik op “Opnieuw beginnen” voor een nieuw potje.')
+      E('p', 'ks-summary-copy', 'Start via de kamer een nieuw duel.')
     );
     els.gameStage.append(summary);
     return;
@@ -110,31 +96,24 @@ export function render({ game, els, E, action, titlebar, sound }) {
   const eraWrap = E('div', 'ks-overlay ks-era');
   eraWrap.append(eraBadge);
   const playerHp = hpBar(E, 'ks-hp-left', 'JOUW LEGER');
-  const enemyHp = hpBar(E, 'ks-hp-right', 'VIJAND');
+  const enemyHp = hpBar(E, 'ks-hp-right', game.opponentName);
   field.append(topLeft, eraWrap, playerHp.wrap, enemyHp.wrap);
   root.append(field);
 
-  const battle = createBattle({
-    canvas,
-    onEvolve: (era) => { sound('score'); action('evolve', { era }); },
-    onEnd: (won) => {
-      sound(won ? 'win' : 'lose');
-      const s = battle.state;
-      action('finish', { won, era: s.player.era, elapsedMs: Math.round(s.elapsed * 1000) });
-    }
-  });
+  const battle = createBattle({ canvas });
+  battle.setState(game.battle);
 
   root.append(E('div', 'ks-section', 'UPGRADES'));
   const upgradeRow = E('div', 'ks-row');
-  const upgradeEls = UPGRADES.map((def) => ({ def, ...panelButton(E, def, () => battle.upgrade(def.key)) }));
+  const upgradeEls = UPGRADES.map((def) => ({ def, ...panelButton(E, def, () => action('upgrade', { key: def.key })) }));
   upgradeEls.forEach((u) => upgradeRow.append(u.btn));
-  const evolve = panelButton(E, { key: 'evolve', icon: '🌍', name: 'Evolueer' }, () => battle.evolve());
+  const evolve = panelButton(E, { key: 'evolve', icon: '🌍', name: 'Evolueer' }, () => action('evolve'));
   upgradeRow.append(evolve.btn);
   root.append(upgradeRow);
 
   root.append(E('div', 'ks-section', 'VAARDIGHEDEN'));
   const abilityRow = E('div', 'ks-row');
-  const abilityEls = ABILITIES.map((def) => ({ def, ...panelButton(E, def, () => battle.useAbility(def.key)) }));
+  const abilityEls = ABILITIES.map((def) => ({ def, ...panelButton(E, def, () => action('ability', { key: def.key })) }));
   abilityEls.forEach((a) => abilityRow.append(a.btn));
   root.append(abilityRow);
   els.gameStage.append(root);
@@ -143,7 +122,7 @@ export function render({ game, els, E, action, titlebar, sound }) {
     el.textContent = text;
     el.classList.toggle('cant', cant);
     el.classList.toggle('cd', cooldown);
-    btn.disabled = cant || cooldown;
+    btn.disabled = cant || cooldown || !game.canAct;
   };
 
   function sync(s) {
@@ -181,7 +160,8 @@ export function render({ game, els, E, action, titlebar, sound }) {
   live = {
     matchId: game.matchId, battle, root,
     finish(serverGame) {
-      heading.querySelector('.game-status').textContent = serverGame.resultText;
+      const status = heading.querySelector('.game-status');
+      if (status) status.textContent = serverGame.resultText;
       root.classList.add('ks-finished');
     }
   };

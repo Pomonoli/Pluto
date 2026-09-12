@@ -2,14 +2,14 @@
   "key": "kasteel-strijd",
   "name": "Kasteel Strijd",
   "category": "original",
-  "description": "Verdedig je basis, bouw je leger op en evolueer dwars door zeven tijdperken, van de Prehistorie tot vandaag.",
-  "version": "1",
+  "description": "Verdedig je basis en evolueer door zeven tijdperken in een duel tegen een speler of NPC.",
+  "version": "2",
   "icon": "🏰",
-  "badge": "Solo",
+  "badge": "1 tegen 1",
   "actionLabel": "Ten strijde",
-  "minPlayers": 1,
-  "maxPlayers": 1,
-  "supportsNpc": false,
+  "minPlayers": 2,
+  "maxPlayers": 2,
+  "supportsNpc": true,
   "realtime": false,
-  "solo": true
+  "solo": false
 }

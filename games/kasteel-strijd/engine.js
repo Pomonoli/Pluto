@@ -1,13 +1,3 @@
-/**
- * Kasteel Strijd — spelengine (simulatie + canvasrendering).
- *
- * Draait volledig in de browser. client.js bouwt de HUD rond deze engine en
- * meldt tijdperkwissels en het einde van het potje aan de Pluto-server.
- *
- * Secties: World constants · Formulas · Game state · Abilities · Update loop ·
- * Rendering (achtergrond, kastelen per tijdperk, speelgoedsoldaatjes) · Loop.
- */
-
 // ---------- World constants ----------
   // ---------- World constants ----------
 export const W = 1400, H = 584;
@@ -77,218 +67,10 @@ export function fmtTime(sec){
   return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
 }
 
-/**
- * Maakt één potje aan op het gegeven canvas.
- * onEvolve(era)  — speler bereikt een nieuw tijdperk.
- * onEnd(won)     — een van beide basissen is gevallen.
- */
-export function createBattle({ canvas, onEvolve, onEnd }){
-  const ctx = canvas.getContext("2d");
-  let stopped = false;
-
-  // ---------- Game state ----------
-  let state = null;
-  function freshState(){
-    return {
-      gold: 50,
-      elapsed: 0,
-      running: true,
-      unitSeq: 1,
-      units: [],
-      sparks: [],
-      player: {
-        era: 0,
-        castleHp: castleMaxHp(1,0), castleLevel:1,
-        attackLevel:1, defenseLevel:1,
-        attackTimer: 1.5, defenseTimer: 2.5,
-        spawnBoostUntil: 0, dmgBoostUntil: 0,
-        cooldowns: { spawnBoost:0, dmgBoost:0, burst:0, reinforce:0 }
-      },
-      enemy: {
-        castleHp: enemyCastleMaxHp(0), castleMaxHp: enemyCastleMaxHp(0),
-        attackTimer: 2.0, defenseTimer: 3.0
-      }
-    };
-  }
-
-  function spawnUnit(side, type){
-    const s = state;
-    const era = s.player.era;
-    const lane = (Math.random()-0.5)*26;
-    let hp,dmg,speed,x,guardX;
-    if(side==='player'){
-      if(type==='attack'){
-        hp = attackHp(s.player.attackLevel, era); dmg = attackDmg(s.player.attackLevel, era);
-        speed = attackSpeed(s.player.attackLevel, era); x = P_ATTACK_SPAWN_X;
-      } else {
-        hp = defenseHp(s.player.defenseLevel, era); dmg = defenseDmg(s.player.defenseLevel, era);
-        speed = 0; x = P_DEFENSE_GUARD_X; guardX = P_DEFENSE_GUARD_X;
-      }
-    } else {
-      const tm = tierMult(s.elapsed);
-      if(type==='attack'){
-        hp = Math.round(attackHp(1, era)*tm); dmg = round1(attackDmg(1, era)*tm);
-        speed = attackSpeed(1, era); x = E_ATTACK_SPAWN_X;
-      } else {
-        hp = Math.round(defenseHp(1, era)*tm); dmg = round1(defenseDmg(1, era)*tm);
-        speed = 0; x = E_DEFENSE_GUARD_X; guardX = E_DEFENSE_GUARD_X;
-      }
-    }
-    s.units.push({
-      id: s.unitSeq++, side, type, era,
-      x, y: GROUND_Y+lane, guardX,
-      hp, maxHp:hp, dmg, speed,
-      dir: side==='player' ? 1 : -1,
-      state:'move', target:null, atkCd:0, dead:false, deathT:0,
-      flash:0, phase:Math.random()*10
-    });
-  }
-
-  function addSpark(x,y,color){ state.sparks.push({x,y,t:0,color}); }
-
-  function killUnit(u, killerSide){
-    u.dead = true; u.deathT = 0;
-    if(killerSide==='player' && u.side==='enemy'){
-      state.gold += Math.round(5*eraMult(state.player.era));
-    }
-  }
-
-  function findNearestEnemy(u){
-    let best=null, bestD=Infinity;
-    for(const o of state.units){
-      if(o.side===u.side || o.dead) continue;
-      const d = Math.abs(o.x-u.x);
-      if(d<bestD){ bestD=d; best=o; }
-    }
-    return {unit:best, dist:bestD};
-  }
-
-  // ---------- Abilities ----------
-  function abilityDefs(){
-    const era = state.player.era, em = eraMult(era);
-    return {
-      spawnBoost: { cost: Math.round(50*em), cd: 20, run: ()=>{ state.player.spawnBoostUntil = state.elapsed+8; } },
-      dmgBoost:   { cost: Math.round(60*em), cd: 25, run: ()=>{ state.player.dmgBoostUntil = state.elapsed+8; } },
-      burst:      { cost: Math.round(80*em), cd: 30, run: ()=>{
-                      const dmg = state.enemy.castleMaxHp*0.08;
-                      state.enemy.castleHp = Math.max(0, state.enemy.castleHp-dmg);
-                      addSpark(E_CASTLE_X, GROUND_Y-140, '#ffb347');
-                    } },
-      reinforce:  { cost: Math.round(70*em), cd: 25, run: ()=>{
-                      for(let i=0;i<3;i++) spawnUnit('player','attack');
-                      for(let i=0;i<2;i++) spawnUnit('player','defense');
-                    } }
-    };
-  }
-  function useAbility(key){
-    const s = state;
-    if(!s.running) return;
-    const def = abilityDefs()[key];
-    if(!def) return;
-    if(s.player.cooldowns[key]>0) return;
-    if(s.gold<def.cost) return;
-    s.gold -= def.cost;
-    s.player.cooldowns[key] = def.cd;
-    def.run();
-  }
-
-  function evolveEra(){
-    const s = state;
-    if(s.player.era >= ERA_NAMES.length-1) return;
-    const cost = evolveCost(s.player.era);
-    if(s.gold<cost) return;
-    s.gold -= cost;
-    s.player.era++;
-    s.player.castleLevel=1; s.player.attackLevel=1; s.player.defenseLevel=1;
-    s.player.castleHp = castleMaxHp(1, s.player.era);
-    s.enemy.castleMaxHp = enemyCastleMaxHp(s.player.era);
-    s.enemy.castleHp = s.enemy.castleMaxHp;
-    onEvolve?.(s.player.era);
-  }
-
-  // ---------- Update loop ----------
-  function update(dt){
-    const s = state;
-    if(!s.running) return;
-    s.elapsed += dt;
-    s.gold += goldRate(s.player.castleLevel, s.player.era)*dt;
-
-    for(const k in s.player.cooldowns){
-      if(s.player.cooldowns[k]>0) s.player.cooldowns[k] = Math.max(0, s.player.cooldowns[k]-dt);
-    }
-    const spawnMul = s.elapsed < s.player.spawnBoostUntil ? 0.5 : 1;
-    const dmgMul = s.elapsed < s.player.dmgBoostUntil ? 1.6 : 1;
-
-    s.player.attackTimer -= dt;
-    if(s.player.attackTimer<=0){ spawnUnit('player','attack'); s.player.attackTimer = attackInterval(s.player.attackLevel)*spawnMul; }
-    s.player.defenseTimer -= dt;
-    if(s.player.defenseTimer<=0){ spawnUnit('player','defense'); s.player.defenseTimer = defenseInterval(s.player.defenseLevel)*spawnMul; }
-
-    s.enemy.attackTimer -= dt;
-    if(s.enemy.attackTimer<=0){ spawnUnit('enemy','attack'); s.enemy.attackTimer = attackInterval(1)*tierIntervalMult(s.elapsed); }
-    s.enemy.defenseTimer -= dt;
-    if(s.enemy.defenseTimer<=0){ spawnUnit('enemy','defense'); s.enemy.defenseTimer = defenseInterval(1)*tierIntervalMult(s.elapsed); }
-
-    for(const u of s.units){
-      if(u.dead){ u.deathT += dt; continue; }
-      u.phase += dt;
-      if(u.flash>0) u.flash -= dt;
-
-      if(u.type==='attack'){
-        const {unit:foe, dist} = findNearestEnemy(u);
-        if(foe && dist < ENGAGE_RANGE+40){ u.state='fight'; u.target=foe; }
-        else {
-          const nearCastle = u.side==='player' ? u.x>=CASTLE_HIT_E : u.x<=CASTLE_HIT_P;
-          u.state = nearCastle ? 'siege' : 'move';
-          if(!nearCastle) u.target=null;
-        }
-      } else {
-        const {unit:foe, dist} = findNearestEnemy(u);
-        if(foe && Math.abs(foe.x-u.guardX)<GUARD_DETECT_RANGE && dist<ENGAGE_RANGE+50){ u.state='fight'; u.target=foe; }
-        else { u.state='idle'; u.target=null; }
-      }
-
-      if(u.state==='move'){
-        u.x += u.dir*u.speed*dt;
-        u.x = Math.max(CLAMP_MIN_X, Math.min(CLAMP_MAX_X, u.x));
-      }
-
-      if(u.state==='fight' && u.target){
-        u.atkCd -= dt;
-        const d = u.target.x-u.x;
-        if(Math.abs(d)>ENGAGE_RANGE && u.type==='attack'){
-          u.x += Math.sign(d)*u.speed*dt;
-        }
-        if(Math.abs(u.target.x-u.x)<=ENGAGE_RANGE+6 && u.atkCd<=0){
-          u.atkCd = 0.85;
-          const dealt = u.dmg * (u.side==='player' ? dmgMul : 1);
-          u.target.hp -= dealt;
-          u.target.flash = 0.15;
-          addSpark((u.x+u.target.x)/2, u.y-40, u.side==='player'?'#bfe0ff':'#ffd0d0');
-          if(u.target.hp<=0 && !u.target.dead) killUnit(u.target, u.side);
-        }
-      } else if(u.state==='siege'){
-        u.atkCd -= dt;
-        if(u.atkCd<=0){
-          u.atkCd = 0.85;
-          const dealt = u.dmg*1.4*(u.side==='player' ? dmgMul : 1);
-          if(u.side==='player') s.enemy.castleHp -= dealt;
-          else s.player.castleHp -= dealt;
-          addSpark(u.x+u.dir*24, u.y-40, '#ffd35c');
-        }
-      }
-    }
-
-    s.units = s.units.filter(u => !(u.dead && u.deathT>0.55));
-    for(const sp of s.sparks) sp.t += dt;
-    s.sparks = s.sparks.filter(sp=>sp.t<0.28);
-
-    if(s.enemy.castleHp<0) s.enemy.castleHp=0;
-    if(s.player.castleHp<0) s.player.castleHp=0;
-    if(s.player.castleHp<=0) endGame(false);
-    else if(s.enemy.castleHp<=0) endGame(true);
-  }
-
+// Canvas renders authoritative server snapshots.
+export function createBattle({canvas}){
+  const ctx=canvas.getContext('2d');
+  let state=null, stopped=false, onFrame=null;
   // ---------- Rendering: background/trench/sparks ----------
   function drawBackground(){
     const g = ctx.createLinearGradient(0,0,0,GROUND_Y);
@@ -643,58 +425,24 @@ export function createBattle({ canvas, onEvolve, onEnd }){
     drawTrench(P_TRENCH_X);
     drawTrench(E_TRENCH_X);
     drawCastleByEra(P_CASTLE_X, state.player.castleHp/castleMaxHp(state.player.castleLevel, state.player.era), PLAYER_COLOR, state.player.era);
-    drawCastleByEra(E_CASTLE_X, state.enemy.castleHp/state.enemy.castleMaxHp, ENEMY_COLOR, state.player.era);
+    drawCastleByEra(E_CASTLE_X, state.enemy.castleHp/state.enemy.castleMaxHp, ENEMY_COLOR, state.enemy.era);
     const sorted = state.units.slice().sort((a,b)=>a.y-b.y);
     for(const u of sorted) drawStick(u);
     drawSparks();
   }
 
 
-  function endGame(won){
-    if(!state.running) return;
-    state.running = false;
-    onEnd?.(won);
-  }
 
-  function upgrade(kind){
-    const s = state;
-    if(!s.running) return;
-    const era = s.player.era;
-    if(kind==="castle"){
-      const lv=s.player.castleLevel; if(lv>=MAX_LEVEL) return;
-      const cost=costCastle(lv,era); if(s.gold<cost) return;
-      s.gold -= cost; s.player.castleLevel++;
-      s.player.castleHp = Math.min(castleMaxHp(s.player.castleLevel, era), s.player.castleHp + 150*eraMult(era));
-    } else if(kind==="attack"){
-      const lv=s.player.attackLevel; if(lv>=MAX_LEVEL) return;
-      const cost=costAttack(lv,era); if(s.gold<cost) return;
-      s.gold -= cost; s.player.attackLevel++;
-    } else if(kind==="defense"){
-      const lv=s.player.defenseLevel; if(lv>=MAX_LEVEL) return;
-      const cost=costDefense(lv,era); if(s.gold<cost) return;
-      s.gold -= cost; s.player.defenseLevel++;
-    }
-  }
-
-  // ---------- Main loop ----------
-  let lastT = null;
-  let onFrame = null;
-  function frame(t){
+  function frame(){
     if(stopped || !canvas.isConnected) return;
-    if(lastT===null) lastT = t;
-    let dt = (t-lastT)/1000; lastT = t;
-    dt = Math.min(dt, 0.05);
-    update(dt);
-    render();
-    onFrame?.(state);
+    if(state){render();onFrame?.(state);}
     requestAnimationFrame(frame);
   }
-
-  state = freshState();
   return {
-    get state(){ return state; },
-    start(cb){ onFrame = cb || null; lastT = null; requestAnimationFrame(frame); },
-    stop(){ stopped = true; },
-    upgrade, evolve: evolveEra, useAbility, abilityDefs
+    get state(){return state;},
+    setState(snapshot){state=snapshot;},
+    start(cb){onFrame=cb;requestAnimationFrame(frame);},
+    stop(){stopped=true;},
+    abilityDefs(){const em=eraMult(state.player.era);return Object.fromEntries(Object.entries({spawnBoost:50,dmgBoost:60,burst:80,reinforce:70}).map(([k,v])=>[k,{cost:Math.round(v*em)}]));}
   };
 }
