@@ -2,7 +2,7 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.35.2
+## Nieuw in versie 1.35.3
 
 Total Waas - Castle Def
 

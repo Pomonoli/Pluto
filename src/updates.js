@@ -821,6 +821,12 @@ const RELEASES = [
     improvements:[
       "Total Waas - Castle Def"
     ]
+  },
+  {
+    version:"1.35.3",
+    improvements:[
+      "Total Waas - Castle Def"
+    ]
   }
 ];
 
