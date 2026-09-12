@@ -5,7 +5,7 @@
   "description": "Train troepen, bouw torens en evolueer door zeven tijdperken in een duel tegen een speler of NPC.",
   "version": "3",
   "icon": "🏰",
-  "badge": "1 tegen 1",
+  "badge": "2",
   "actionLabel": "Ten strijde",
   "minPlayers": 2,
   "maxPlayers": 2,
