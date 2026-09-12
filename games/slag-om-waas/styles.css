@@ -1,13 +1,17 @@
-/* De Slag om Waas — volledig gescoped onder .sow-root. */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&display=swap');
+
+/* Total Waas — volledig gescoped onder .sow-root. */
 
 .sow-root {
-  --sow-wood: #3a2216;
-  --sow-wood-2: #55321f;
+  --sow-wood: #1e130c;
+  --sow-wood-2: #3a2515;
+  --sow-wood-3: #5a3a22;
   --sow-parchment: #f3e7cf;
-  --sow-parchment-2: #e5d5b4;
+  --sow-parchment-2: #e8dcc0;
   --sow-ink: #2b2118;
   --sow-ink-dim: #6d5c49;
   --sow-gold: #c9a24b;
+  --sow-serif: 'Cinzel', 'MedievalSharp', Georgia, 'Times New Roman', serif;
   --sow-panel: var(--panel, #161f3f);
   --sow-text: var(--text, #f7f7fb);
   --sow-muted: var(--muted, #b7bfdc);
@@ -25,59 +29,92 @@
   .sow-root { grid-template-columns: 1fr; }
 }
 
-/* ---------- bord ---------- */
+/* ---------- houten lijst ---------- */
 .sow-board-wrap {
+  position: relative;
   background:
-    radial-gradient(120% 90% at 50% 0%, rgba(255, 255, 255, .08), transparent 60%),
-    linear-gradient(135deg, var(--sow-wood) 0%, var(--sow-wood-2) 50%, var(--sow-wood) 100%);
-  border: 6px solid #2a170f;
-  border-radius: 14px;
-  padding: 8px;
-  box-shadow: inset 0 0 0 2px rgba(201, 162, 75, .35), 0 14px 34px rgba(0, 0, 0, .35);
+    repeating-linear-gradient(98deg, rgba(255, 255, 255, .025) 0 3px, rgba(0, 0, 0, .05) 3px 9px, rgba(255, 255, 255, .015) 9px 14px),
+    radial-gradient(120% 90% at 50% 0%, rgba(255, 220, 160, .07), transparent 60%),
+    linear-gradient(135deg, var(--sow-wood) 0%, #2a1a0f 45%, var(--sow-wood) 100%);
+  border: 10px solid transparent;
+  border-image: linear-gradient(135deg, #6b4526 0%, #3a2314 30%, #7a5230 50%, #2e1c10 75%, #5a3a22 100%) 1;
+  border-radius: 6px;
+  padding: 10px;
+  box-shadow:
+    inset 0 0 0 1px rgba(201, 162, 75, .35),
+    inset 0 0 40px rgba(0, 0, 0, .7),
+    0 2px 0 #0d0805,
+    0 18px 40px rgba(0, 0, 0, .55);
 }
-.sow-svg { display: block; width: 100%; height: auto; max-height: 82vh; font-family: Georgia, 'Times New Roman', serif; }
+.sow-svg { display: block; width: 100%; height: auto; max-height: 84vh; font-family: var(--sow-serif); }
 
-.sow-board-shadow { fill: rgba(0, 0, 0, .45); transform: translate(10px, 14px); }
-.sow-board-base { fill: var(--sow-parchment-2); stroke: #6b4a2a; stroke-width: 6; stroke-linejoin: round; }
+/* ---------- 2.5D bord ---------- */
+.sow-board-depth { fill: #0e0803; }
+.sow-board-depth.side { fill: #4a2e18; stroke: #6b4526; stroke-width: 2; }
+.sow-board-base { fill: url(#sow-parchment); stroke: #6b4a2a; stroke-width: 5; stroke-linejoin: round; filter: url(#sow-soft-shadow); }
 
+/* ---------- cellen ---------- */
 .sow-sector { transition: filter .15s ease, opacity .15s ease; }
-.sow-cell-fill { stroke: none; }
-.sow-cell-pattern, .sow-cell-tint { pointer-events: none; }
-.sow-cell-outline { fill: none; stroke: rgba(43, 33, 24, .55); stroke-width: 1.4; stroke-linejoin: round; pointer-events: none; }
-.sow-faction-edge { stroke-width: 12; stroke-linecap: round; opacity: .85; }
-.sow-faction-edge.neutral { stroke-width: 8; opacity: .3; stroke-dasharray: 10 8; }
-.sow-sector.hover .sow-cell-fill { filter: brightness(1.12); }
+.sow-cell-fill { stroke: none; transition: filter .15s ease; }
+.sow-cell-pattern, .sow-cell-tint, .sow-border-group { pointer-events: none; }
+.sow-cell-tint.rebel { fill: rgba(40, 30, 20, .16); }
+.sow-cell-outline { fill: none; stroke: rgba(70, 50, 30, .45); stroke-width: 1.2; stroke-linejoin: round; pointer-events: none; transition: stroke .15s ease, stroke-width .15s ease; }
+.sow-faction-edge { stroke-width: 11; stroke-linecap: round; opacity: .9; }
+.sow-faction-edge.neutral { stroke-width: 7; opacity: .45; stroke-dasharray: 12 8; }
+.sow-faction-edge-core { stroke: rgba(255, 255, 255, .85); stroke-width: 2.4; stroke-linecap: round; }
+.sow-faction-edge-core.neutral { stroke: rgba(255, 255, 255, .35); stroke-dasharray: 12 8; }
+.sow-sector.hover .sow-cell-fill { filter: brightness(1.14) saturate(1.08); }
+.sow-sector.hover .sow-cell-outline { stroke: #fff7dc; stroke-width: 2.4; }
 .sow-sector.dimmed { opacity: .55; }
 .sow-sector.neighbor .sow-cell-outline { stroke: #fff6d8; stroke-width: 3; }
-.sow-sector.selected .sow-cell-outline { stroke: #fff; stroke-width: 5; filter: drop-shadow(0 0 6px rgba(255, 255, 255, .8)); }
-.sow-sector.selected .sow-cell-fill { filter: brightness(1.18) saturate(1.1); }
+.sow-sector.selected .sow-cell-outline { stroke: #fff; stroke-width: 5; filter: drop-shadow(0 0 7px rgba(255, 250, 220, .95)); }
+.sow-sector.selected .sow-cell-fill { filter: brightness(1.2) saturate(1.12); }
 .sow-cell-hit { fill: transparent; cursor: pointer; }
 
-.sow-terrain .terrain-snow .sow-cell-fill { filter: brightness(1.02); }
+/* ---------- rivieren, wegen, muur ---------- */
+.sow-features > * { pointer-events: none; }
+.sow-schelde-bank { fill: none; stroke: #d9ecf7; stroke-width: 34; stroke-linecap: round; stroke-linejoin: round; opacity: .9; }
+.sow-schelde { fill: none; stroke: #2e86c1; stroke-width: 24; stroke-linecap: round; stroke-linejoin: round; }
+.sow-schelde-hi { fill: none; stroke: rgba(234, 246, 255, .55); stroke-width: 3; stroke-dasharray: 22 16; stroke-linecap: round; }
+.sow-schelde-label { font-size: 19px; font-style: italic; fill: #eaf6ff; letter-spacing: .12em; pointer-events: none; font-family: Georgia, serif; }
+.sow-river-bank { fill: none; stroke: #bfe0f2; stroke-width: 16; stroke-linecap: round; stroke-linejoin: round; }
+.sow-river { fill: none; stroke: #2e86c1; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
+.sow-river-label { font-size: 17px; font-style: italic; fill: #1e4d66; pointer-events: none; letter-spacing: .1em; font-family: Georgia, serif; }
+.sow-bridge .bridge-deck { fill: #8a5a2b; stroke: #3d2412; stroke-width: 1.5; }
+.sow-bridge .bridge-rail { stroke: #3d2412; stroke-width: 1.5; }
+.sow-road-under { fill: none; stroke: rgba(43, 33, 24, .75); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+.sow-road { fill: none; stroke: #f3e2b8; stroke-width: 3.2; stroke-dasharray: 6 4; stroke-linecap: round; stroke-linejoin: round; }
+.sow-wall-under { fill: none; stroke: #2b2118; stroke-width: 12; opacity: .6; }
+.sow-wall { fill: none; stroke: #d8cdb4; stroke-width: 7; }
+.sow-wall-merlons { fill: none; stroke: #5d4a33; stroke-width: 7; stroke-dasharray: 7 6; }
 
-.sow-road-under { fill: none; stroke: rgba(43, 33, 24, .7); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
-.sow-road { fill: none; stroke: #f0dfb8; stroke-width: 3.5; stroke-dasharray: 14 9; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
-.sow-river-under { stroke: #17394a; stroke-width: 13; stroke-linecap: round; pointer-events: none; }
-.sow-river { stroke: #4aa3d6; stroke-width: 8; stroke-linecap: round; pointer-events: none; }
-.sow-river-label { font-size: 17px; font-style: italic; fill: #1e4d66; pointer-events: none; letter-spacing: .08em; }
-.sow-bridge { font-size: 22px; pointer-events: none; }
-.sow-schelde-under { fill: none; stroke: #17394a; stroke-width: 30; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
-.sow-schelde { fill: none; stroke: #3f8fbf; stroke-width: 22; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
-.sow-schelde-hi { fill: none; stroke: rgba(223, 243, 255, .55); stroke-width: 3; stroke-dasharray: 18 14; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
-.sow-schelde-label { font-size: 18px; font-style: italic; fill: #dff3ff; letter-spacing: .1em; pointer-events: none; }
-.sow-boat { font-size: 20px; pointer-events: none; }
-.sow-wall-under { fill: none; stroke: #2b2118; stroke-width: 9; opacity: .55; pointer-events: none; }
-.sow-wall { fill: none; stroke: #e9dcc0; stroke-width: 5; stroke-dasharray: 9 5; pointer-events: none; }
-
+/* ---------- labels & iconen ---------- */
 .sow-labels { pointer-events: none; }
-.sow-name { font-size: 18px; fill: var(--sow-ink); paint-order: stroke; stroke: rgba(255, 250, 235, .85); stroke-width: 4px; stroke-linejoin: round; font-weight: 600; }
-.sow-name.capital { font-size: 23px; font-weight: 700; }
-.sow-name.center { font-size: 27px; font-weight: 700; letter-spacing: .04em; }
-.sow-glyph { font-size: 26px; }
+.sow-name { font-size: 17px; fill: var(--sow-ink); paint-order: stroke; stroke: rgba(255, 250, 235, .9); stroke-width: 4px; stroke-linejoin: round; font-weight: 600; letter-spacing: .02em; }
+.sow-name.capital { font-size: 21px; font-weight: 700; }
+.sow-name.center { font-size: 25px; font-weight: 700; letter-spacing: .05em; }
 .sow-troops text { font-size: 15px; font-weight: 700; fill: #fff; font-family: system-ui, sans-serif; }
 .sow-troops circle { stroke: rgba(255, 255, 255, .85); stroke-width: 2; }
 .sow-troops.rebel circle { stroke: rgba(255, 255, 255, .5); stroke-dasharray: 3 2; }
 .sow-troops.rebel text { font-size: 13px; }
+
+.sow-poi { pointer-events: none; }
+.sow-poi .poi-wall { fill: #b9ad98; stroke: #3d3126; stroke-width: 1.4; }
+.sow-poi .poi-keep { fill: #d5c9b1; stroke: #3d3126; stroke-width: 1.4; }
+.sow-poi .poi-roof { fill: #8e3b2c; stroke: #3d3126; stroke-width: 1.2; }
+.sow-poi .poi-line { stroke: #3d3126; stroke-width: 1.4; fill: none; }
+.sow-poi .poi-gate { fill: #3d3126; }
+.sow-poi .poi-window { fill: #3d3126; }
+.sow-poi .poi-dock { stroke: #5a3a22; stroke-width: 3; fill: none; }
+.sow-poi .poi-hull { fill: #6b4526; stroke: #2b1a0e; stroke-width: 1.2; }
+.sow-poi .poi-mast { stroke: #2b1a0e; stroke-width: 1.8; }
+.sow-poi .poi-sail { fill: #f4ead0; stroke: #2b1a0e; stroke-width: 1; }
+.sow-poi .poi-crane { stroke: #5a3a22; stroke-width: 2.4; fill: none; }
+.sow-poi .poi-pine { fill: #1e5f3a; stroke: #0f3a22; stroke-width: 1; }
+.sow-poi .poi-trunk { fill: #5a3a22; }
+.sow-poi .poi-sails { stroke: #3d3126; stroke-width: 1.8; fill: none; }
+.sow-boat { opacity: .95; }
+.sow-boat .poi-dock, .sow-boat .poi-crane { display: none; }
 
 .sow-highlights { pointer-events: none; }
 .sow-link { stroke-width: 4; stroke-linecap: round; opacity: .9; }
@@ -86,11 +123,16 @@
 .sow-link-bridge { stroke: #ffb26b; stroke-dasharray: 12 6; }
 .sow-link-water { stroke: #6fd8ff; stroke-dasharray: 2 8; }
 
-.sow-external { font-size: 15px; fill: rgba(243, 231, 207, .8); letter-spacing: .12em; text-transform: uppercase; pointer-events: none; }
-.sow-compass circle { fill: rgba(243, 231, 207, .85); stroke: #6b4a2a; stroke-width: 2; }
-.sow-compass .needle { fill: #a33; }
-.sow-compass .needle.soft { fill: #6b4a2a; opacity: .7; }
-.sow-compass text { font-size: 13px; fill: #f3e7cf; font-weight: 700; }
+.sow-external { font-size: 15px; fill: rgba(243, 231, 207, .75); letter-spacing: .14em; text-transform: uppercase; pointer-events: none; }
+.sow-compass .ring { fill: url(#sow-parchment); stroke: #6b4a2a; stroke-width: 2; }
+.sow-compass .ring.inner { fill: none; stroke: #6b4a2a; stroke-width: 1; opacity: .6; }
+.sow-compass .needle { fill: #a33; stroke: #3d1a12; stroke-width: .6; }
+.sow-compass .needle.soft { fill: #6b4a2a; opacity: .75; }
+.sow-compass .needle.dark { fill: #6b1f17; }
+.sow-compass text { font-size: 14px; fill: #f3e7cf; font-weight: 700; }
+.sow-banner .banner-paper { fill: url(#sow-parchment); stroke: #6b4a2a; stroke-width: 2; filter: url(#sow-soft-shadow); }
+.sow-banner .banner-title { font-size: 24px; font-weight: 700; fill: var(--sow-ink); letter-spacing: .04em; }
+.sow-banner .banner-sub { font-size: 9px; fill: var(--sow-ink-dim); letter-spacing: .3em; }
 
 /* ---------- paneel ---------- */
 .sow-panel { display: flex; flex-direction: column; gap: 10px; min-width: 0; }

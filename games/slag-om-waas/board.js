@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * De Slag om Waas — bordmodel (data-driven).
+ * Total Waas — bordmodel (data-driven).
  *
  * Dit bestand is de enige bron van waarheid voor facties, provincies en
  * verbindingen. De spelregels werken uitsluitend op de sector-id's en de

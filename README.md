@@ -35,11 +35,11 @@ Alle games zijn ondergebracht in zelfstandige modules onder `games/`. Iedere gam
 | Presidenten | 3-4 | Ja |
 | Quoridor | 2-4 | Ja |
 | Santorini | 2-4 | Ja |
-| De Slag om Waas | 2-4 | Ja |
 | Solitaire | 1 | Niet van toepassing |
 | Stratego | 2 | Ja |
 | The Blue | 1-4 | Niet van toepassing |
 | Ticket to Ride | 2-5 | Ja |
+| Total Waas | 2-4 | Ja |
 
 Minigolf bevat daarnaast een Map Editor voor eigen banen.
 

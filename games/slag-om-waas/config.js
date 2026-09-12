@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * De Slag om Waas — centrale spelconfiguratie.
+ * Total Waas — centrale spelconfiguratie.
  * Alle cijfers zijn voorlopig en horen hier, nooit verspreid in de code.
  * Waarden voor latere fases staan er al zodat balans op één plek gebeurt.
  */

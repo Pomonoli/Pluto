@@ -1,5 +1,7 @@
-# DE SLAG OM WAAS
+# TOTAL WAAS
 ## Game Design & Board Specification
+
+> De game heette tot v1.34 "De Slag om Waas"; de pluginmap blijft `games/slag-om-waas` zodat bestaande rooms en statistieken blijven werken.
 Version: 0.2 · Status: MVP foundation
 
 > **Pluto-implementatie.** De oorspronkelijke briefing gaat uit van React/TypeScript. Pluto heeft geen buildstap of frontendframework, dus de mapping is:

@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * De Slag om Waas — bordgeometrie.
+ * Total Waas — bordgeometrie.
  *
  * Elke sector heeft één seed-punt in een 1000×1000 coördinatenruimte. De
  * sectorvlakken zijn de Voronoi-cellen van die seeds, geknipt op de

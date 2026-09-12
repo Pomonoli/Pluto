@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * De Slag om Waas — server-authoritatieve spelstate (Fase 1: het bord).
+ * Total Waas — server-authoritatieve spelstate (Fase 1: het bord).
  *
  * Fase 1 bevat: facties, sectoren, eigenaarschap, adjacency en een
  * eenvoudige beurtstructuur. Beweging, gevechten, economie, draagvlak en
