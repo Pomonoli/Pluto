@@ -1,5 +1,43 @@
 # Changelog
 
+## v1.35.0 — Castle Defense
+
+- **Kasteel Strijd heet voortaan Castle Defense** (de pluginmap blijft
+  `kasteel-strijd`, bestaande rooms en leaderboards blijven werken) en kreeg
+  volledig nieuwe spelmechanics: troepen verschijnen niet meer vanzelf maar
+  worden per stuk gekocht en getraind in een wachtrij, met drie rollen per
+  tijdperk (infanterie, schutter met bereik, zwaar) in een
+  steen-papier-schaar-verhouding.
+- Torens (maximaal drie) verdedigen de basis automatisch, muren en economie
+  zijn losse upgrades, en evolueren gebeurt met XP uit gevechten in plaats van
+  goud. Kills van hogere tijdperken leveren extra XP op zodat een achterstand
+  inhaalbaar blijft.
+- Elk tijdperk heeft een eigen ultieme aanval (steenregen tot drone-aanval)
+  naast de Oorlogskreet.
+- Zeven tijdperken volgens de nieuwe referentie: Prehistorie, Klassieke
+  Oudheid, Middeleeuwen, Renaissance, Verlichting, Moderne Tijd (WO II) en
+  Huidige Tijd. Alles is met inktlijn getekend naar referentie-illustraties:
+  perkament en holbewoners, mozaïek met hoplieten tegen legionairs, burchten
+  en ridders, sterforten met piekeniers en kanonnen, driesteken en musketten,
+  bunkers met tanks, en een woestijnbasis met drones en pantservoertuigen.
+  Elke kant tekent haar eigen landschap; in het midden vloeien beide
+  tijdperken in elkaar over. Teamkleuren zijn groen tegen rood.
+- De statische achtergrond wordt per tijdperkcombinatie gecachet, zodat
+  mozaïek en perkamenttextuur niet elk frame opnieuw getekend worden.
+- Meer diepgang: een **Held** per leger (sterk, geen zwakte, één tegelijk),
+  **werkers** die aan een mijn in het veld ontginnen en aangevallen kunnen
+  worden, drie **torentypes** per plaats (nabij, ver/artillerie, banier met
+  bonus), zichtbare **muren** per niveau en tijdperk (palissade, ringmuur,
+  gracht, loopgraaf, tankgracht) waar aanvallers voor blijven staan, en
+  schutters die door infanterie, zwaar en held worden ingehaald zodat ze
+  vanop afstand blijven schieten. De HUD is herschikt in Troepen, Basis,
+  Torens en Tijdperk.
+- Mobiel: de vier secties klappen in achter hun titel (één open tegelijk,
+  met status in de kop), knoppen zijn compacter en het slagveld is groter en
+  horizontaal scrollbaar; staand verschijnt een hint om liggend te spelen.
+- De NPC spaart voor torens en economie, kiest troepen die de vijandelijke
+  samenstelling counteren en zet zijn ultieme aanval in bij een doorbraak.
+
 ## v1.34.0 — Gravity, Total Waas en Kasteel Strijd 1-tegen-1
 
 - Nieuwe original **Gravity**: een solo-puzzelgame waarin je routes tekent

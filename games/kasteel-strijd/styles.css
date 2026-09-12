@@ -1,41 +1,98 @@
-/* Kasteel Strijd — goud-op-donkerhout, speelgoedsoldaatjes op een canvasveld. */
-.ks-root{--ks-gold:#f0b429;--ks-edge:#8a6a2a;--ks-paper:#eee0c2;--ks-muted:#c9b183;--ks-good:#5fa85f;--ks-bad:#c14545;--ks-wood:linear-gradient(180deg,#3a2716,#241608);
+/* Castle Defense — goud-op-donkerhout, speelgoedsoldaatjes op een getekend canvasveld dat per tijdperk verandert. */
+.ks-root{--ks-gold:#f0b429;--ks-edge:#8a6a2a;--ks-paper:#eee0c2;--ks-muted:#c9b183;--ks-good:#5fa85f;--ks-bad:#c14545;--ks-xp:#7ec8e3;--ks-wood:linear-gradient(180deg,#3a2716,#241608);
   display:flex;flex-direction:column;gap:8px;max-width:1000px;margin:0 auto;width:100%;color:var(--ks-paper)}
-.ks-restart{margin-left:auto}
 .ks-field{position:relative;width:100%;aspect-ratio:1400/584;border-radius:10px;overflow:hidden;border:3px solid var(--ks-edge);box-shadow:0 6px 18px rgba(0,0,0,.5);background:#8fd1e8}
+.ks-scroll{width:100%;height:100%;overflow:hidden}
 .ks-canvas{width:100%;height:100%;display:block}
+.ks-rotate{display:none;position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:6;background:rgba(36,22,8,.85);border:1px solid var(--ks-gold);border-radius:999px;padding:4px 10px;font-size:10.5px;color:var(--ks-paper);white-space:nowrap;pointer-events:none}
 .ks-overlay{position:absolute;z-index:5;display:flex;flex-direction:column;gap:6px}
 .ks-top-left{top:8px;left:8px;flex-direction:row;flex-wrap:wrap}
-.ks-era{top:8px;left:50%;transform:translateX(-50%);max-width:56%}
+.ks-top-right{top:8px;right:8px;align-items:flex-end}
+.ks-era{top:8px;left:50%;transform:translateX(-50%);max-width:44%}
 .ks-badge{background:var(--ks-wood);border:2px solid var(--ks-gold);border-radius:8px;padding:5px 10px;font-weight:700;font-size:14px;color:var(--ks-gold);display:flex;align-items:center;gap:4px;box-shadow:0 3px 6px rgba(0,0,0,.4);white-space:nowrap}
+.ks-badge-sub{font-size:10px;color:var(--ks-muted);font-weight:600}
+.ks-badge-xp{color:var(--ks-xp);border-color:var(--ks-xp)}
+.ks-badge-small{font-size:11px;padding:3px 8px;color:var(--ks-muted);border-color:#9b3b35}
 .ks-era-badge{font-family:Georgia,'Times New Roman',serif;letter-spacing:.3px;justify-content:center;overflow:hidden;text-overflow:ellipsis}
-.ks-hp{position:absolute;top:50px;width:170px;max-width:34%;z-index:5}
+.ks-hp{position:absolute;top:50px;width:190px;max-width:34%;z-index:5}
 .ks-hp-left{left:8px}
 .ks-hp-right{right:8px;text-align:right}
-.ks-hp-label{font-family:Georgia,'Times New Roman',serif;font-size:11px;color:var(--ks-paper);text-shadow:0 1px 2px #000;margin-bottom:2px;font-weight:700;letter-spacing:.5px}
+.ks-hp-label{font-family:Georgia,'Times New Roman',serif;font-size:11px;color:var(--ks-paper);text-shadow:0 1px 2px #000;margin-bottom:2px;font-weight:700;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ks-hp-track{background:#1c1108;border:1px solid #000;border-radius:5px;height:12px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,.6)}
 .ks-hp-fill{height:100%;transition:width .25s ease;background:linear-gradient(180deg,#8fce6a,#4f7942)}
-.ks-hp-right .ks-hp-fill{background:linear-gradient(180deg,#9aa0a8,#6b6f76)}
-.ks-section{font-family:Georgia,'Times New Roman',serif;font-size:11px;color:var(--ks-muted);letter-spacing:.6px;margin:2px 2px 0}
+.ks-hp-right .ks-hp-fill{background:linear-gradient(180deg,#d2665c,#9b3b35)}
+/* Trainingswachtrij boven de eigen basis; het eerste chipje loopt vol met de trainingsvoortgang. */
+.ks-queue{left:8px;bottom:8px;flex-direction:row;gap:4px;min-height:26px}
+.ks-queue-chip{--ks-progress:0%;width:26px;height:26px;border-radius:6px;border:2px solid var(--ks-gold);background:linear-gradient(90deg,#8a6a2a var(--ks-progress),#241608 var(--ks-progress));display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 4px rgba(0,0,0,.4)}
+.ks-queue-full .ks-queue-chip{border-color:var(--ks-bad)}
+.ks-panels{display:flex;flex-direction:column;gap:8px}
+.ks-group{display:flex;flex-direction:column;gap:6px}
+.ks-section{display:flex;align-items:center;gap:8px;font-family:Georgia,'Times New Roman',serif;font-size:11px;color:var(--ks-muted);letter-spacing:.6px;margin:2px 2px 0;background:none;border:0;padding:0;text-align:left;cursor:default;font-weight:700}
+.ks-section-info{font-family:inherit;font-size:10px;letter-spacing:.2px;color:var(--ks-muted);opacity:.85;text-transform:none;margin-left:auto}
+.ks-section-chevron{display:none}
 .ks-row{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
-.ks-btn{background:var(--ks-wood);border:2px solid var(--ks-gold);border-radius:9px;color:var(--ks-paper);padding:7px 5px;cursor:pointer;text-align:center;box-shadow:0 3px 6px rgba(0,0,0,.4);transition:transform .08s ease;font:inherit;min-width:0}
+.ks-row-3{grid-template-columns:repeat(3,1fr)}
+.ks-row-2{grid-template-columns:1fr 1fr}
+.ks-btn-worker{border-color:#c9a24a}
+.ks-btn-hero .ks-btn-name{color:#ffd35c}
+.ks-btn-turret-bonus{border-color:#e0b83a}
+.ks-btn{position:relative;background:var(--ks-wood);border:2px solid var(--ks-gold);border-radius:9px;color:var(--ks-paper);padding:7px 5px;cursor:pointer;text-align:center;box-shadow:0 3px 6px rgba(0,0,0,.4);transition:transform .08s ease;font:inherit;min-width:0;overflow:hidden}
 .ks-btn:active{transform:translateY(2px)}
 .ks-btn:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.3)}
-.ks-btn-evolve{border-color:#ffd35c;background:linear-gradient(180deg,#5a3d17,#2e1c08)}
+.ks-btn-special{border-color:#e07a3f}
+.ks-btn-special .ks-btn-name{color:#ffb178}
+.ks-btn-evolve{border-color:#ffd35c;background:linear-gradient(180deg,#5a3d17,#2e1c08);padding-bottom:12px}
+.ks-btn-evolve:disabled{opacity:.75}
 .ks-btn-name{font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:12.5px;color:var(--ks-gold);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ks-btn-level{font-size:10.5px;color:var(--ks-muted);display:block;margin:2px 0 4px}
+.ks-btn-level{font-size:10.5px;color:var(--ks-muted);display:block;margin:2px 0 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ks-btn-cost{font-size:12.5px;font-weight:700;color:var(--ks-good);display:block}
 .ks-btn-cost.cant{color:var(--ks-bad)}
 .ks-btn-cost.cd{color:#8fa0ac}
+.ks-btn-evolve .ks-btn-cost{color:var(--ks-xp)}
+.ks-btn-evolve .ks-btn-cost.cant{color:var(--ks-muted)}
+.ks-xp-track{position:absolute;left:0;right:0;bottom:0;height:6px;background:#1c1108}
+.ks-xp-fill{height:100%;background:linear-gradient(90deg,#4f9fbd,#7ec8e3);transition:width .3s ease}
 .ks-finished .ks-btn{pointer-events:none}
 .ks-summary{align-items:center;text-align:center;padding:28px 16px;background:var(--ks-wood);border:3px solid var(--ks-gold);border-radius:12px}
 .ks-summary-title{font-family:Georgia,'Times New Roman',serif;color:var(--ks-gold);margin:0;font-size:22px}
 .ks-summary-copy{margin:0;color:var(--ks-muted);font-size:13px}
 .ks-result{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:6px}
 .ks-result-chip{background:#241608;border:1px solid #f0b429;border-radius:999px;padding:4px 12px;color:#f0b429;font-weight:700;font-size:13px;white-space:nowrap}
+/* Mobiel en tablet: groter, horizontaal scrollbaar slagveld en inklapbare secties met kleinere knoppen. */
+@media(max-width:820px){
+  .ks-field{aspect-ratio:auto;height:min(64vh,420px);min-height:230px}/* hoogte wordt door fitField() in client.js bijgesteld */
+  .ks-scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;touch-action:pan-x pan-y}
+  .ks-scroll::-webkit-scrollbar{display:none}
+  .ks-canvas{width:auto;height:100%;max-width:none}
+  .ks-hp{width:140px;max-width:30%}
+  .ks-badge{font-size:12px;padding:3px 7px}
+  .ks-badge-sub{display:none}
+  .ks-era{max-width:40%}
+  .ks-era-badge{font-size:12px}
+  .ks-section{cursor:pointer;padding:8px 10px;margin:0;border:2px solid var(--ks-edge);border-radius:9px;background:var(--ks-wood);color:var(--ks-gold);font-size:12px;min-height:40px;box-shadow:0 3px 6px rgba(0,0,0,.4)}
+  .ks-section-chevron{display:inline-block;transition:transform .15s ease;color:var(--ks-muted)}
+  .ks-open .ks-section-chevron{transform:rotate(180deg)}
+  .ks-open .ks-section{border-color:var(--ks-gold)}
+  .ks-group:not(.ks-open) .ks-row{display:none}
+  .ks-row{gap:5px}
+  .ks-btn{padding:5px 4px;border-radius:7px;border-width:1.5px}
+  .ks-btn-name{font-size:11px}
+  .ks-btn-level{font-size:9.5px;margin:1px 0 2px}
+  .ks-btn-cost{font-size:11.5px}
+  .ks-btn-evolve{padding-bottom:9px}
+  .ks-queue-chip{width:22px;height:22px;font-size:11px}
+  .ks-rotate{display:block}
+}
+@media(max-width:820px) and (orientation:landscape){
+  .ks-rotate{display:none}
+}
 @media(max-width:560px){
   .ks-row{grid-template-columns:repeat(2,1fr)}
-  .ks-hp{width:110px}
-  .ks-badge{font-size:12px;padding:4px 8px}
-  .ks-btn-name{font-size:11px}
+  .ks-row-3{grid-template-columns:repeat(3,1fr)}
+  .ks-row-2{grid-template-columns:1fr 1fr}
+  .ks-btn-level{display:none}
+  .ks-era{top:42px;max-width:60%}
+  .ks-hp{width:120px;top:76px}
+  .ks-top-right{display:none}
+  .ks-section-info{font-size:9.5px}
 }

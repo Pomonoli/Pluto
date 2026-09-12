@@ -24,7 +24,7 @@ test('game-plugin loader ontdekt een zelfstandige gamemap',()=>{
 
 test('gamecategorie is verplicht en wordt via pluginmetadata aangeboden',()=>{
   const expected={
-    original:['Age of Civilization','Bakkermans Jones','CycClub','Elements Arena','Gravity','Hofslag','Kasteel Strijd','Lutro','Minigolf','Ragnarok','The Big Blue C','Total Waas'],
+    original:['Age of Civilization','Bakkermans Jones','Castle Defense','CycClub','Elements Arena','Gravity','Hofslag','Lutro','Minigolf','Ragnarok','The Big Blue C','Total Waas'],
     classic:['7 Wonders Duel','Blackjack','Carcassonne','Cascadia','Cluedo','Hartenjagen','Isle of Skye','Kingdomino','Pesten','Presidenten','Quoridor','Santorini','Solitaire','Stratego','Ticket to Ride']
   };
   const grouped={original:[],classic:[]};

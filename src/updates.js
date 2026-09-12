@@ -797,6 +797,18 @@ const RELEASES = [
       "Kasteel Strijd is nu 1-tegen-1: speel tegen een andere speler of een NPC op een gedeeld slagveld.",
       "De Slag om Waas heet voortaan Total Waas en kreeg een volwaardige bordspelkaart met biomes, gloeiende grenzen, de Schelde en vector-iconen."
     ]
+  },
+  {
+    version:"1.35.0",
+    features:[
+      "Kasteel Strijd heet nu Castle Defense: koop en train infanterie, schutters en zware eenheden (steen-papier-schaar), bouw torens en evolueer met XP uit gevechten.",
+      "Castle Defense: zeven getekende tijdperken van Prehistorie tot Huidige Tijd, elk met een eigen landschap, basis, toren, troepen en ultieme aanval."
+    ],
+    improvements:[
+      "Castle Defense: held, werkers aan een mijn in het veld, drie torentypes (nabij, ver, banier), zichtbare muren en grachten, en schutters die achteraan blijven schieten.",
+      "Castle Defense: de NPC spaart voor torens en economie, zet werkers en een held in en countert jouw troepensamenstelling.",
+      "Castle Defense op mobiel: inklapbare secties, compactere knoppen en een groter, horizontaal scrollbaar slagveld (liggend spelen aanbevolen)."
+    ]
   }
 ];
 

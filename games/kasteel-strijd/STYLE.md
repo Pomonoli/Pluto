@@ -1,8 +1,19 @@
-# Kasteel Strijd — stijl
+# Castle Defense — stijl
 
-- **Thema**: speelgoedsoldaatjes op een toy-diorama. Canvasveld met lucht, heuvels, gras en aarde; groene legermannetjes (`#4f7942`) tegen grijze (`#6b6f76`).
-- **HUD**: donkerhout-panelen (`linear-gradient(#3a2716, #241608)`) met gouden rand (`#f0b429`), perkamenttekst (`#eee0c2`), gedempte labels (`#c9b183`).
+- **Thema**: geïllustreerd slagveld met inktlijn (`INK = #3a2418`), naar de referentie-illustraties per tijdperk. Alles (figuren, basissen, decor) wordt gevuld én omlijnd via de helpers `ink/rect/circle/poly/limb` in `engine.js`.
+- **Teamkleuren**: speler groen (`#4f7942`), tegenstander rood (`#9b3b35`); zichtbaar in wapenrok/jas/schild/vlag/patch, HP-balken en vaandels. Huid `#c98e64`, haar `#3b2a1e`.
+- **Tijdperken** (7), elk met eigen achtergrond (`ERA_THEME.kind`), basis, toren, kit en zwaar voertuig:
+  1. Prehistorie — perkament met vlekken; strohut (speler) vs huidentent; holbewoners met vacht, knots/slinger; mammoet.
+  2. Klassieke Oudheid — mozaïekwand en stenen plaveisel; tempels; hoplieten (rond schild, corinthische helm) vs legionairs (scutum, galea); strijdwagen.
+  3. Middeleeuwen — blauwe lucht, groene heuvels; burcht met torens en banieren; maliën + wapenrok, hellebaard/kruisboog; ridder te paard met lans.
+  4. Renaissance — sterfort in vogelperspectief; morion, borstplaat, piek/haakbus; kanon met kanonnier.
+  5. Verlichting — grijs (speler) vs rood (vijand) sterfort; jassen in teamkleur met kruisband en driesteek, musket; dragonder met sabel.
+  6. Moderne Tijd — bakstenen bunker met luchtafweer vs betonnen kazemat, zandzakken; olijfgroene infanterie met stalen helm; tank.
+  7. Huidige Tijd — woestijn met skyline, betonnen basis met antennes en patrouillerende drone; camo met vest, aanvalsgeweer; pantservoertuig.
+- **Achtergrond**: statische lagen (lucht/textuur, heuvels, grond, decor) worden per tijdperkcombinatie in een offscreen canvas gecachet (`drawBackground`); wolken, drone, radar en rook tekenen live. Het tijdperk van de tegenstander vloeit in het midden in via `drawBlendedLayer`.
+- **HUD**: donkerhout-panelen (`linear-gradient(#3a2716, #241608)`) met gouden rand (`#f0b429`), perkamenttekst (`#eee0c2`), gedempte labels (`#c9b183`). XP en de evolueerknop ijsblauw (`#7ec8e3`), ultieme aanval oranje (`#e07a3f`).
 - **Typografie**: koppen, tijdperkbadge en knopnamen in een serif (Georgia-stack, geen externe fonts); overige tekst in de Pluto-basisfont.
 - **Status-kleuren**: betaalbaar groen (`#5fa85f`), te duur rood (`#c14545`), cooldown grijsblauw (`#8fa0ac`).
-- **Layout**: veld 1400×584 (aspect-ratio), daaronder twee rijen van vier knoppen (upgrades, vaardigheden); onder 560 px twee kolommen.
-- **Per tijdperk** wisselen kasteel-, helm- en wapentekening in `engine.js`; nieuwe tijdperken volgen dat patroon (één tekenfunctie per gebouw, helmtype en wapen).
+- **Veld**: mijn met ertsglans op x=430 per kant (werkers met houweel), muren vóór de basis op x=266 (drie tiers per tijdperk: palissade/muur/gracht, wal/bastion/gracht, prikkeldraad/loopgraaf/tankgracht, barrières/Hesco/antitankgracht), torens op het dak in drie types (nabij, ver = groter en steiler, banier = stok met teamvaandel en gloed). Held (`drawHero`, 1.15×, gouden ster erboven) en werker (`drawWorker`) hebben per tijdperk een eigen silhouet: Stamhoofd met gewei-tooi/bottenketting/grote knots, Kampioen met bronzen kuras, Kruisridder in plaat met kruis, Condottiere met verenhoed, Veldmaarschalk met steek en epauletten, Commandant met officierspet en pistool, Operator in zwart met nachtkijker; werkers: holbewoner met stenen pik, steengroevewerker met hoofdband, boer met kaproen, mijnwerker met schort, arbeider met pet en schop, genist met veldpet, bouwvakker met fluohesje/helm/drilboor. Gouden vonkjes bij elke slag in de mijn.
+- **Layout**: veld 1400×584 (aspect-ratio) met trainingswachtrij linksonder; daaronder rijen Troepen (basis, schutter, zwaar, held), Basis (werker, economie, muren, oorlogskreet), Torens (nabij, ver, banier — 3 kolommen) en Tijdperk (speciale actie + evolueerknop met XP-balk — 2 kolommen).
+- **Mobiel (≤ 820 px)**: sectiekoppen worden houten accordeonknoppen met een korte status (wachtrij, werkers/muren, torenplaatsen, XP); één sectie tegelijk open, knoppen compacter (hints verdwijnen onder 560 px). Het canvas zit in `.ks-scroll` en scrolt horizontaal; `fitField()` in client.js zet de veldhoogte: staand ingezoomd (≈0.9× breedte, max 60vh) met draai-hint, liggend passend op de breedte. Overlays blijven op het veld staan.

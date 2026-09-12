@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.34.0
+## Nieuw in versie 1.35.0
 
-Drie games in één release. **Gravity** is een nieuwe solo-puzzelgame: teken routes en breng elke asteroïde naar een planeet. **De Slag om Waas heet nu Total Waas** en kreeg een volwaardige bordspelkaart: houten lijst met 2.5D-dikte, biomes met patronen per regio, gloeiende factiegrenzen, meanderende Schelde, stadsmuur, vector-iconen en Cinzel-typografie. **Kasteel Strijd** wordt een 1-tegen-1-game tegen een andere speler of NPC, met een gedeeld slagveld en eigen goud, upgrades en tijdperken.
+**Kasteel Strijd heet nu Castle Defense** en is herbouwd rond echte strategie: koop en train infanterie, schutters en zware eenheden (steen-papier-schaar), bouw torens, upgrade muren en economie en evolueer met XP uit gevechten door zeven getekende tijdperken — van Prehistorie tot Huidige Tijd — met per tijdperk een eigen landschap, basis, troepen en ultieme aanval.
 
 ## Nieuw in versie 1.0.0
 
@@ -20,6 +20,7 @@ Alle games zijn ondergebracht in zelfstandige modules onder `games/`. Iedere gam
 | The Big Blue C | 1-4 | Niet van toepassing |
 | Blackjack | 1-4 | Ja |
 | Carcassonne | 2-5 | Ja |
+| Castle Defense | 2 | Ja |
 | Cascadia | 2-4 | Ja |
 | Cluedo | 2-6 | Ja |
 | CycClub | 1-6 | Ja |
@@ -28,7 +29,6 @@ Alle games zijn ondergebracht in zelfstandige modules onder `games/`. Iedere gam
 | Hartenjagen | 4 | Ja |
 | Hofslag | 2-4 | Ja |
 | Isle of Skye | 2-4 | Ja |
-| Kasteel Strijd | 2 | Ja |
 | Kingdomino | 2-4 | Ja |
 | Lutro | 1-4 | Ja |
 | Minigolf | 1-4 | Ja |

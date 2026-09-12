@@ -1,19 +1,20 @@
 'use strict';
 
 const { randomUUID } = require('node:crypto');
-const { createState, simulation, ERA_NAMES } = require('./simulation');
+const sim = require('./simulation');
+const { createState, simulation, ERA_NAMES, ROLES, ROLE_DEFS, MAX_TURRETS, MAX_QUEUE, MAX_WORKERS, W } = sim;
 const meta = {
-  key: 'kasteel-strijd', name: 'Kasteel Strijd',
-  description: 'Verover de vijandelijke basis in een duel tegen een speler of NPC.',
+  key: 'kasteel-strijd', name: 'Castle Defense',
+  description: 'Train troepen, bouw torens en evolueer door zeven tijdperken in een duel tegen een speler of NPC.',
   minPlayers: 2, maxPlayers: 2, supportsNpc: true, realtime: false, solo: false
 };
 const SIDES = ['player', 'enemy'];
 function createGame(roomPlayers, now = Date.now()) {
-  if (roomPlayers.length !== 2 || roomPlayers[0].id === roomPlayers[1].id) throw new Error('Kasteel Strijd vereist precies twee spelers.');
+  if (roomPlayers.length !== 2 || roomPlayers[0].id === roomPlayers[1].id) throw new Error('Castle Defense vereist precies twee spelers.');
   return {
     gameKey: meta.key, matchId: randomUUID(),
     players: roomPlayers.map((p, i) => ({ id: p.id, name: p.name, isNpc: Boolean(p.isNpc), side: SIDES[i] })),
-    startedAt: now, lastTickAt: now, nextNpcAt: 2,
+    startedAt: now, lastTickAt: now, nextNpcAt: 1.5,
     battle: createState(), gameOver: false, winnerId: null, survivedMs: 0, resultText: ''
   };
 }
@@ -34,22 +35,43 @@ function handleAction(game, playerId, action, payload = {}) {
   simulation(game.battle).update(0);
   finish(game);
 }
-function npcTurn(game, sim) {
+const COUNTERED_BY = { melee: 'heavy', ranged: 'melee', heavy: 'ranged' };
+function npcTurn(game, engine) {
+  const b = game.battle;
   for (const player of game.players.filter(p => p.isNpc)) {
-    const p = game.battle[player.side];
-    const foe = game.battle[player.side === 'player' ? 'enemy' : 'player'];
+    const side = player.side, p = b[side];
+    const foeSide = side === 'player' ? 'enemy' : 'player';
+    const mine = b.units.filter(u => u.side === side && !u.dead && u.role !== 'worker');
+    const theirs = b.units.filter(u => u.side === foeSide && !u.dead && u.role !== 'worker');
+    const workers = b.units.filter(u => u.side === side && !u.dead && u.role === 'worker').length + p.queue.filter(r => r === 'worker').length;
+    const hasHero = p.queue.includes('hero') || b.units.some(u => u.side === side && !u.dead && u.role === 'hero');
+    const nextTurret = ['near', 'far', 'bonus'][p.turrets.length] || 'near';
+    const ownHalf = side === 'player' ? (u) => u.x < W / 2 : (u) => u.x > W / 2;
+    const nearBase = side === 'player' ? (u) => u.x < 420 : (u) => u.x > W - 420;
+    const pressure = theirs.filter(nearBase).length;
+    // Priority list; entries marked "save" make the NPC hold its gold instead of training when unaffordable.
     const choices = [];
-    if (foe.castleHp <= foe.castleMaxHp * 0.08) choices.push(['ability', 'burst']);
-    // Save for the next era once the army has a basic set of upgrades.
-    if (p.attackLevel >= 3 && p.castleLevel >= 2 && p.era < ERA_NAMES.length - 1) {
-      choices.push(['evolve']);
-    } else {
-      if (p.castleHp < p.castleMaxHp * 0.6) choices.push(['upgrade', 'castle']);
-      choices.push(['upgrade', p.attackLevel <= p.defenseLevel ? 'attack' : 'defense']);
-      choices.push(['upgrade', 'castle'], ['ability', 'reinforce'], ['ability', 'burst']);
-    }
-    for (const [action, key] of choices) {
-      try { sim.act(player.side, action, key); break; } catch { /* Save until an option is affordable. */ }
+    if (p.xp >= sim.evolveXp(p.era) && p.era < ERA_NAMES.length - 1) choices.push(['evolve']);
+    if (theirs.filter(ownHalf).length >= 3) choices.push(['ability', 'special']);
+    if (pressure >= 2 && p.turrets.length < MAX_TURRETS) choices.push(['turret', 'near']);
+    if (p.castleHp < p.castleMaxHp * 0.5) choices.push(['upgrade', 'walls', true]);
+    // Early workers pay for themselves quickly; keep a couple more once the base is safe.
+    if (workers < Math.min(MAX_WORKERS, b.elapsed < 60 ? 2 : 4) && pressure === 0) choices.push(['train', 'worker']);
+    if (pressure === 0 && p.economyLevel < 3 && b.elapsed < 90) choices.push(['upgrade', 'economy', true]);
+    if (p.turrets.length < Math.min(MAX_TURRETS, 1 + Math.floor(b.elapsed / 75)) && b.elapsed > 30) choices.push(['turret', nextTurret, true]);
+    if (!hasHero && b.elapsed > 45 && mine.length >= 3) choices.push(['train', 'hero', true]);
+    // Counter the opponent's most common role; otherwise keep a mixed army.
+    const counts = Object.fromEntries(ROLES.map(r => [r, theirs.filter(u => u.role === r).length]));
+    const dominant = ROLES.reduce((a, r) => (counts[r] > counts[a] ? r : a), 'melee');
+    const wanted = theirs.length ? COUNTERED_BY[dominant] : ROLES[mine.length % ROLES.length];
+    if (p.queue.length < 3) choices.push(['train', wanted]);
+    if (mine.length >= 5 && theirs.length >= 3) choices.push(['ability', 'rally']);
+    if (b.elapsed > 20 && p.economyLevel < 4 + p.era) choices.push(['upgrade', 'economy', true]);
+    if (p.queue.length < MAX_QUEUE) choices.push(['train', ROLES[(mine.length + 1) % ROLES.length]]);
+    for (const [action, key, save] of choices) {
+      try { engine.act(side, action, key); break; } catch {
+        if (save && mine.length + p.queue.length >= 3 && pressure < 2) break;
+      }
     }
   }
 }
@@ -58,13 +80,13 @@ function tick(game, now = Date.now()) {
   // Bound catch-up after a suspended room; do not simulate hours of missed combat.
   let remaining = Math.min((now - game.lastTickAt) / 1000, 1);
   game.lastTickAt = now;
-  const sim = simulation(game.battle);
+  const engine = simulation(game.battle);
   while (remaining > 0 && game.battle.running) {
     const dt = Math.min(remaining, 0.05);
-    sim.update(dt); remaining -= dt;
+    engine.update(dt); remaining -= dt;
     if (game.battle.running && game.battle.elapsed >= game.nextNpcAt) {
-      npcTurn(game, sim); game.nextNpcAt = game.battle.elapsed + 2;
-      sim.update(0);
+      npcTurn(game, engine); game.nextNpcAt = game.battle.elapsed + 1.5;
+      engine.update(0);
     }
   }
   finish(game);
@@ -75,12 +97,16 @@ function serialize(game, requesterId) {
   const side = me?.side || 'player', other = side === 'player' ? 'enemy' : 'player';
   const b = game.battle;
   const flip = side === 'enemy';
+  const fx = (x) => (flip ? W - x : x);
+  const relSide = (s) => (s === side ? 'player' : 'enemy');
   const battle = {
-    elapsed: b.elapsed, running: b.running, gold: b[side].gold,
+    elapsed: b.elapsed, running: b.running, gold: b[side].gold, xp: b[side].xp,
     player: structuredClone(b[side]), enemy: structuredClone(b[other]),
-    units: b.units.map(u => ({ ...u, target: null, side: u.side === side ? 'player' : 'enemy',
-      x: flip ? 1400 - u.x : u.x, guardX: flip && u.guardX != null ? 1400 - u.guardX : u.guardX, dir: flip ? -u.dir : u.dir })),
-    sparks: b.sparks.map(s => ({ ...s, x: flip ? 1400 - s.x : s.x }))
+    units: b.units.map(u => ({ ...u, target: null, side: relSide(u.side), x: fx(u.x), dir: flip ? -u.dir : u.dir })),
+    effects: b.effects.map(e => ({
+      ...e, side: e.side ? relSide(e.side) : undefined,
+      x: e.x != null ? fx(e.x) : undefined, x1: e.x1 != null ? fx(e.x1) : undefined, x2: e.x2 != null ? fx(e.x2) : undefined
+    }))
   };
   return {
     kind: meta.key, matchId: game.matchId, players: game.players,
@@ -99,4 +125,4 @@ function results(game) {
     outcome: game.resultText, durationMs: game.survivedMs, moves: game.battle[p.side].era
   }));
 }
-module.exports = { meta, createGame, handleAction, serialize, results, tick, ERA_NAMES };
+module.exports = { meta, createGame, handleAction, serialize, results, tick, ERA_NAMES, ROLE_DEFS };
