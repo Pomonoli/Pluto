@@ -54,10 +54,11 @@ function fitField(field) {
 function panelButton(E, cls, onClick) {
   const btn = E('button', `ks-btn${cls ? ` ${cls}` : ''}`);
   btn.type = 'button';
+  const glint = E('span', 'ks-btn-glint', '');
   const name = E('span', 'ks-btn-name', '');
   const hint = E('span', 'ks-btn-level', '');
   const cost = E('span', 'ks-btn-cost', '');
-  btn.append(name, hint, cost);
+  btn.append(glint, name, hint, cost);
   btn.onclick = onClick;
   return { btn, name, hint, cost };
 }
@@ -99,24 +100,26 @@ export function render({ game, els, E, action, titlebar }) {
 
   const root = E('div', 'ks-root');
   const field = E('div', 'ks-field');
+  const fieldFrame = E('div', 'ks-field-frame');
+  fieldFrame.append(E('span', 'ks-frame-corner ks-frame-tl'), E('span', 'ks-frame-corner ks-frame-tr'), E('span', 'ks-frame-corner ks-frame-bl'), E('span', 'ks-frame-corner ks-frame-br'));
   // Het canvas zit in een horizontaal scrollbare laag; de HUD-overlays blijven op het veld staan.
   const scroll = E('div', 'ks-scroll');
   const canvas = E('canvas', 'ks-canvas');
   canvas.width = W;
   canvas.height = H;
   scroll.append(canvas);
-  field.append(scroll);
+  field.append(scroll, fieldFrame);
 
   const goldVal = E('span', '', '0');
   const rateVal = E('span', 'ks-badge-sub', '');
   const xpVal = E('span', '', '0');
   const timeVal = E('span', '', '00:00');
-  const goldBadge = E('div', 'ks-badge');
-  goldBadge.append(E('span', '', '🪙 '), goldVal, rateVal);
-  const xpBadge = E('div', 'ks-badge ks-badge-xp');
-  xpBadge.append(E('span', '', '✨ '), xpVal);
-  const timeBadge = E('div', 'ks-badge');
-  timeBadge.append(E('span', '', '⏱ '), timeVal);
+  const goldBadge = E('div', 'ks-badge ks-resource ks-resource-gold');
+  goldBadge.append(E('span', 'ks-badge-icon', '🪙'), goldVal, rateVal);
+  const xpBadge = E('div', 'ks-badge ks-badge-xp ks-resource');
+  xpBadge.append(E('span', 'ks-badge-icon', '✦'), xpVal);
+  const timeBadge = E('div', 'ks-badge ks-resource ks-resource-time');
+  timeBadge.append(E('span', 'ks-badge-icon', '◷'), timeVal);
   const topLeft = E('div', 'ks-overlay ks-top-left');
   topLeft.append(goldBadge, xpBadge, timeBadge);
   const eraBadge = E('div', 'ks-badge ks-era-badge', `${ERA_ICON[0]} ${ERA_NAMES[0]}`);
@@ -128,6 +131,7 @@ export function render({ game, els, E, action, titlebar }) {
   const playerHp = hpBar(E, 'ks-hp-left', 'JOUW BASIS');
   const enemyHp = hpBar(E, 'ks-hp-right', game.opponentName);
   const queueWrap = E('div', 'ks-overlay ks-queue');
+  queueWrap.setAttribute('aria-label', 'Trainingswachtrij');
   const rotateHint = E('div', 'ks-rotate', '↻ Draai je toestel voor een breder slagveld · swipe om te scrollen');
   field.append(topLeft, topRight, eraWrap, playerHp.wrap, enemyHp.wrap, queueWrap, rotateHint);
   root.append(field);
@@ -182,8 +186,14 @@ export function render({ game, els, E, action, titlebar }) {
 
   function sync(s) {
     const p = s.player, e = s.enemy, era = p.era;
+    // Totaal inkomen: kasteel (economie-niveau) + werkers die effectief aan de mijn staan, versterkt door banieren.
+    const banners = p.turrets.filter((t) => t.type === 'bonus').length;
+    const miners = s.units.filter((u) => u.side === 'player' && !u.dead && u.role === 'worker' && u.state === 'mine').length;
+    const castleIncome = goldRate(p.economyLevel, era);
+    const mineIncome = miners * mineRate(era) * (1 + banners * 0.15);
     goldVal.textContent = fmtNum(s.gold);
-    rateVal.textContent = ` +${goldRate(p.economyLevel, era)}/s`;
+    rateVal.textContent = ` +${(castleIncome + mineIncome).toFixed(1)}/s`;
+    goldBadge.title = `Kasteel +${castleIncome}/s · ${miners} werker${miners === 1 ? '' : 's'} +${mineIncome.toFixed(1)}/s${banners ? ` (banier ×${(1 + banners * 0.15).toFixed(2)})` : ''}`;
     xpVal.textContent = fmtNum(s.xp);
     timeVal.textContent = fmtTime(s.elapsed);
     playerHp.fill.style.width = `${Math.max(0, 100 * p.castleHp / p.castleMaxHp)}%`;
@@ -214,7 +224,7 @@ export function render({ game, els, E, action, titlebar }) {
 
     const workerPrice = unitCost('worker', era);
     setLabel(worker.name, ROLE_ICON.worker, `Werker ${workers}/${MAX_WORKERS}`);
-    worker.hint.textContent = `+${mineRate(era)}g/s per werker in het veld`;
+    worker.hint.textContent = miners ? `${miners} aan het werk · +${mineIncome.toFixed(1)}g/s` : `+${mineRate(era)}g/s per werker in het veld`;
     if (workers >= MAX_WORKERS) setCost(worker.cost, worker.btn, 'VOL', true);
     else setCost(worker.cost, worker.btn, `${fmtNum(workerPrice)}g`, !s.running || s.gold < workerPrice || p.queue.length >= MAX_QUEUE);
 
@@ -241,7 +251,7 @@ export function render({ game, els, E, action, titlebar }) {
       const lv = p[key], maxed = lv >= MAX_LEVEL, price = costFn(lv, era);
       const wallName = lv >= 7 ? WALL_NAMES[era][2] : lv >= 4 ? WALL_NAMES[era][1] : lv >= 2 ? WALL_NAMES[era][0] : 'Geen verdediging';
       setLabel(def.name, icon, key === 'wallsLevel' ? (lv >= 2 ? wallName : 'Muren') : label);
-      def.hint.textContent = `Niv. ${lv}${maxed ? ' (MAX)' : key === 'wallsLevel' ? ' · +HP, herstel en verdediging' : ' · meer goud/s uit het kasteel'}`;
+      def.hint.textContent = `Niv. ${lv}${maxed ? ' (MAX)' : key === 'wallsLevel' ? ' · +HP, herstel en verdediging' : ` · kasteel +${castleIncome}/s → +${goldRate(lv + 1, era)}/s`}`;
       if (maxed) setCost(def.cost, def.btn, 'MAX', true);
       else setCost(def.cost, def.btn, `${fmtNum(price)}g`, !s.running || s.gold < price);
     }

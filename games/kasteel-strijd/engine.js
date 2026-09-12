@@ -496,9 +496,66 @@ export function createBattle({ canvas }) {
     circle(1, -70, 9, SKIN, 1.6);
     if (kit.hair) { ctx.beginPath(); ctx.moveTo(-9, -72); ctx.quadraticCurveTo(-2, -84, 8, -78); ctx.quadraticCurveTo(10, -74, 6, -70); ctx.quadraticCurveTo(-4, -76, -9, -66); ctx.closePath(); ink(HAIR, 1.2); }
     if (kit.beard) { ctx.beginPath(); ctx.moveTo(-4, -66); ctx.quadraticCurveTo(2, -58, 9, -66); ctx.lineTo(8, -70); ctx.lineTo(-4, -70); ctx.closePath(); ink(HAIR, 1.2); }
-    ctx.fillStyle = INK; ctx.fillRect(5, -71, 2, 2);
+    ctx.fillStyle = INK; ctx.fillRect(5, -72, 2, 2);
+    ctx.strokeStyle = 'rgba(90,45,28,.75)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(8, -69); ctx.lineTo(11, -67); ctx.lineTo(8, -66); ctx.stroke();
     drawHelmet(kit.helmet, kit.helmetColor || '#9aa0a6', kit.plume);
     return hand;
+  }
+
+  // Kleine uitrustingslagen maken de gewone troepen ook zonder hun wapen direct herkenbaar per tijdperk.
+  function drawEraDetails(u) {
+    const t = team(u.side), dark = teamShade(u.side);
+    ctx.save();
+    if (u.era === 0) {
+      // Ruwe huiden, schelpenketting, polsbanden en zichtbare bontvlekken.
+      ctx.fillStyle = '#d9c18f';
+      for (const [x, y, r] of [[-5, -31, 2], [5, -27, 1.7], [-2, -49, 1.6]]) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); }
+      ctx.strokeStyle = '#efe0b0'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(1, -56, 8, 0.15, Math.PI - 0.15); ctx.stroke();
+      circle(-13, -40, 3, '#6a4028', 1); circle(13, -43, 3, '#6a4028', 1);
+      if (u.role === 'ranged') { ctx.strokeStyle = '#6e4a30'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-9, -54); ctx.lineTo(-15, -24); ctx.stroke(); circle(-15, -25, 4, '#9b7650', 1); }
+    } else if (u.era === 1) {
+      // Gespen, metalen rokstroken en beenplaten voor hopliet/legionair.
+      ctx.fillStyle = '#d6b45f'; ctx.beginPath(); ctx.arc(0, -37, 3, 0, Math.PI * 2); ctx.fill();
+      for (let x = -8; x <= 8; x += 4) { ctx.fillStyle = x % 8 ? '#aa7b32' : '#d4b25a'; ctx.fillRect(x - 1.5, -33, 3, 13); }
+      ctx.strokeStyle = '#b68b48'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-6, -18); ctx.lineTo(-7, -4); ctx.moveTo(6, -18); ctx.lineTo(7, -4); ctx.stroke();
+      if (u.role === 'ranged') { ctx.fillStyle = '#6e4a30'; ctx.fillRect(-11, -55, 5, 26); ctx.fillStyle = '#efe6d4'; for (let y = -53; y < -32; y += 5) ctx.fillRect(-12, y, 7, 1); }
+    } else if (u.era === 2) {
+      // Maliëntextuur, schouderplaten en heraldisch teamembleem.
+      ctx.fillStyle = 'rgba(230,235,238,.45)';
+      for (let y = -56; y <= -34; y += 5) for (let x = -6; x <= 6; x += 6) { ctx.beginPath(); ctx.arc(x + (y % 10 ? 3 : 0), y, 2.2, 0, Math.PI); ctx.strokeStyle = '#555b60'; ctx.lineWidth = .8; ctx.stroke(); }
+      circle(-8, -56, 4, '#aeb4b8', 1); circle(8, -56, 4, '#aeb4b8', 1);
+      ctx.fillStyle = '#efe6d4'; ctx.fillRect(-1, -32, 2, 11); ctx.fillRect(-5, -29, 10, 2);
+      if (u.role === 'ranged') { poly([[-13, -56], [-8, -56], [-5, -25], [-11, -24]], '#6e4a30', 1); ctx.fillStyle = '#d2c4a2'; for (let y = -52; y < -30; y += 5) ctx.fillRect(-14, y, 7, 1); }
+    } else if (u.era === 3) {
+      // Gesegmenteerde borstplaat, gepofte mouwen en modieuze kleurinsnijdingen.
+      ctx.strokeStyle = '#666b70'; ctx.lineWidth = 1; for (let y = -55; y <= -39; y += 5) { ctx.beginPath(); ctx.moveTo(-7, y); ctx.lineTo(7, y); ctx.stroke(); }
+      circle(-10, -54, 5, t, 1.1); circle(10, -54, 5, t, 1.1);
+      ctx.fillStyle = '#e8d39e'; for (let y = -51; y <= -24; y += 7) { ctx.fillRect(-10, y, 3, 4); ctx.fillRect(7, y + 2, 3, 4); }
+      if (u.role === 'ranged') { rect(-11, -48, 5, 18, '#6e4a30', 1); rect(-10, -51, 3, 4, '#d9c18f', .8); }
+    } else if (u.era === 4) {
+      // Witte revers, dubbele knopenrij, manchetten en patroonstas.
+      poly([[-7, -58], [0, -47], [-2, -39], [-9, -54]], '#efe6d4', .9); poly([[7, -58], [0, -47], [2, -39], [9, -54]], '#efe6d4', .9);
+      ctx.fillStyle = '#e0b83a'; for (let y = -48; y <= -30; y += 6) { circle(-3, y, 1.2, '#e0b83a', .5); circle(3, y, 1.2, '#e0b83a', .5); }
+      rect(-14, -44, 7, 11, '#8a5a34', 1); ctx.strokeStyle = '#efe6d4'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-8, -57); ctx.lineTo(-14, -44); ctx.stroke();
+      rect(-14, -38, 6, 4, '#efe6d4', .8); rect(8, -41, 6, 4, '#efe6d4', .8);
+    } else if (u.era === 5) {
+      // Webbing, veldfles, munitietassen en helmriem.
+      ctx.strokeStyle = '#b6ab7c'; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.moveTo(-7, -57); ctx.lineTo(6, -38); ctx.moveTo(7, -57); ctx.lineTo(-6, -38); ctx.stroke();
+      rect(-9, -39, 7, 8, '#4f543c', 1); rect(2, -39, 7, 8, '#4f543c', 1); circle(-13, -30, 4, '#6f744f', 1);
+      ctx.strokeStyle = '#4a3a2a'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(-7, -68); ctx.quadraticCurveTo(2, -61, 9, -68); ctx.stroke();
+      if (u.role === 'ranged') rect(-10, -59, 4, 28, '#4a3a2a', 1);
+    } else {
+      // Plaatdrager met MOLLE, magazijnen, radioantenne, kniebeschermers en bril.
+      ctx.fillStyle = '#31382f'; for (let y = -54; y <= -43; y += 5) for (let x = -6; x <= 5; x += 5) ctx.fillRect(x, y, 3, 1);
+      rect(-7, -43, 6, 10, '#353b31', 1); rect(1, -43, 6, 10, '#353b31', 1);
+      rect(-13, -57, 5, 20, '#3e473a', 1); ctx.strokeStyle = '#252a25'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-11, -57); ctx.lineTo(-15, -80); ctx.stroke();
+      rect(-11, -19, 7, 6, '#4b5145', 1); rect(4, -19, 7, 6, '#4b5145', 1);
+      ctx.fillStyle = '#253b31'; ctx.fillRect(-6, -75, 14, 3); ctx.fillStyle = t; ctx.fillRect(-7, -55, 4, 4);
+      if (u.role === 'ranged') { rect(-3, -84, 14, 5, '#252a25', 1); circle(8, -82, 2, '#78a7a0', .7); }
+    }
+    // Een klein, consequent teamlint blijft zichtbaar tussen de historische details.
+    ctx.fillStyle = t; ctx.fillRect(-11, -61, 5, 3); ctx.fillStyle = dark; ctx.fillRect(-10, -60, 3, 1);
+    ctx.restore();
   }
   function drawShield(type, color, rim) {
     ctx.save(); ctx.translate(-6, -46);
@@ -672,6 +729,7 @@ export function createBattle({ canvas }) {
     const wpn = (u.role === 'ranged' ? RANGED_WEAPON : MELEE_WEAPON)[u.era];
     const mode = isGun(wpn) || wpn === 'crossbow' || wpn === 'bow' ? 'aim' : wpn === 'sling' ? 'hold' : 'strike';
     const hand = drawFigure(u, kitFor(u), step, swing, mode);
+    drawEraDetails(u);
     drawWeaponInk(wpn, hand, swing, t);
   }
 
@@ -748,7 +806,11 @@ export function createBattle({ canvas }) {
     const fighting = u.state === 'fight' || u.state === 'siege';
     const step = moving ? Math.sin(u.phase * 7) * 9 : 3;
     const swing = fighting ? Math.sin(u.phase * 14) * 0.5 + 0.5 : 0.2;
-    if (u.role === 'heavy') drawHeavy(u, swing); else drawInfantry(u, step, swing);
+    if (u.role === 'heavy') drawHeavy(u, swing);
+    else {
+      // Reguliere troepen waren op het brede slagveld te iel; groter zonder hun grondpositie te verschuiven.
+      ctx.save(); ctx.scale(u.role === 'hero' ? 1.06 : 1.18, u.role === 'hero' ? 1.06 : 1.18); drawInfantry(u, step, swing); ctx.restore();
+    }
     if (u.flash > 0) {
       ctx.globalAlpha = Math.min(1, u.flash * 6); ctx.fillStyle = '#fff';
       ctx.beginPath(); ctx.ellipse(6, -42, 24, 30, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;

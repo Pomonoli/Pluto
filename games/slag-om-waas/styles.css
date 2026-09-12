@@ -77,8 +77,8 @@
 .sow-schelde { fill: none; stroke: #2e86c1; stroke-width: 24; stroke-linecap: round; stroke-linejoin: round; }
 .sow-schelde-hi { fill: none; stroke: rgba(234, 246, 255, .55); stroke-width: 3; stroke-dasharray: 22 16; stroke-linecap: round; }
 .sow-schelde-label { font-size: 19px; font-style: italic; fill: #eaf6ff; letter-spacing: .12em; pointer-events: none; font-family: Georgia, serif; }
-.sow-river-bank { fill: none; stroke: #bfe0f2; stroke-width: 16; stroke-linecap: round; stroke-linejoin: round; }
-.sow-river { fill: none; stroke: #2e86c1; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
+.sow-river-bank { fill: none; stroke: #bfe0f2; stroke-width: 26; stroke-linecap: round; stroke-linejoin: round; }
+.sow-river { fill: none; stroke: #2e86c1; stroke-width: 18; stroke-linecap: round; stroke-linejoin: round; }
 .sow-river-label { font-size: 17px; font-style: italic; fill: #1e4d66; pointer-events: none; letter-spacing: .1em; font-family: Georgia, serif; }
 .sow-bridge .bridge-deck { fill: #8a5a2b; stroke: #3d2412; stroke-width: 1.5; }
 .sow-bridge .bridge-rail { stroke: #3d2412; stroke-width: 1.5; }
@@ -136,6 +136,22 @@
 
 /* ---------- paneel ---------- */
 .sow-panel { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.sow-root .sow-province-popup {
+  width: min(420px, calc(100vw - 24px)); max-height: calc(100dvh - 32px);
+  box-sizing: border-box; margin: auto; padding: 0; overflow: auto;
+  border: 1px solid #c9b58e; border-radius: 12px; background: #f3e7cf; color: #2b2118;
+  box-shadow: 0 18px 64px #0008; overscroll-behavior: contain;
+}
+.sow-root .sow-province-popup::backdrop { background: rgb(20 13 8 / 55%); }
+.sow-root .sow-province-popup .sow-info { border: 0; border-radius: 0; }
+.sow-root .sow-province-popup .sow-info-head { padding-right: 38px; min-height: 32px; }
+.sow-root .sow-popup-close {
+  position: absolute; top: 7px; right: 7px; width: 34px; height: 34px;
+  padding: 0; border: 1px solid #c9b58e; border-radius: 50%;
+  background: #fff9ea; color: #2b2118; font-size: 24px; line-height: 1; cursor: pointer;
+}
+.sow-root .sow-popup-close:focus-visible { outline: 2px solid #785326; outline-offset: 2px; }
+.sow-root .sow-cell-hit:focus-visible { stroke: white; stroke-width: 4px; outline: none; }
 
 .sow-turnbox {
   background: var(--sow-panel); border: 1px solid var(--sow-border); border-radius: 10px; padding: 10px 12px;
@@ -146,6 +162,8 @@
 .sow-dot { width: 12px; height: 12px; border-radius: 50%; flex: 0 0 auto; box-shadow: 0 0 0 2px rgba(255, 255, 255, .25); }
 .sow-endturn { margin-top: 4px; }
 .sow-hint { font-size: .78rem; color: var(--sow-muted); }
+.sow-tax-label { display: grid; gap: 3px; font-size: .68rem; color: var(--sow-muted); text-transform: uppercase; letter-spacing: .05em; }
+.sow-tax { width: 100%; padding: 6px 8px; border: 1px solid var(--sow-border); border-radius: 6px; background: var(--sow-panel); color: var(--sow-text); }
 
 .sow-players { display: flex; flex-direction: column; gap: 6px; }
 .sow-player {
@@ -162,6 +180,7 @@
 .sow-stat { display: flex; flex-direction: column; align-items: center; font-size: .8rem; line-height: 1.15; min-width: 0; }
 .sow-stat-icon { font-size: .8rem; }
 .sow-stat small { font-size: .52rem; text-transform: uppercase; letter-spacing: .03em; color: var(--sow-muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sow-balance { color: var(--sow-muted); font-size: .67rem; }
 
 .sow-info {
   background: var(--sow-parchment); color: var(--sow-ink); border: 1px solid #c9b58e; border-radius: 10px; padding: 10px 12px;
@@ -188,3 +207,11 @@
 .sow-legend-item { display: flex; align-items: center; gap: 6px; }
 .sow-swatch { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0, 0, 0, .3); flex: 0 0 auto; }
 .sow-legend-icon { width: 14px; text-align: center; }
+.sow-tax-label { display: grid; gap: 3px; font-size: .68rem; color: var(--sow-muted); text-transform: uppercase; }
+.sow-tax { width: 100%; padding: 6px 8px; border: 1px solid var(--sow-border); border-radius: 6px; background: var(--sow-panel); color: var(--sow-text); }
+.sow-balance { color: var(--sow-muted); font-size: .67rem; }
+.sow-actions button:disabled { opacity: .45; cursor: not-allowed; }
+.sow-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.sow-actions button { padding: 5px 7px; border: 1px solid #b79d70; border-radius: 6px; background: #fff9ea; color: var(--sow-ink); font: 700 .7rem system-ui, sans-serif; cursor: pointer; }
+.sow-actions button:hover { background: #fff; }
+.sow-actions button.danger { color: #7a241d; border-color: #a65347; }

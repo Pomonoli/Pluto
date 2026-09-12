@@ -1,7 +1,11 @@
 /* Castle Defense — goud-op-donkerhout, speelgoedsoldaatjes op een getekend canvasveld dat per tijdperk verandert. */
-.ks-root{--ks-gold:#f0b429;--ks-edge:#8a6a2a;--ks-paper:#eee0c2;--ks-muted:#c9b183;--ks-good:#5fa85f;--ks-bad:#c14545;--ks-xp:#7ec8e3;--ks-wood:linear-gradient(180deg,#3a2716,#241608);
-  display:flex;flex-direction:column;gap:8px;max-width:1000px;margin:0 auto;width:100%;color:var(--ks-paper)}
-.ks-field{position:relative;width:100%;aspect-ratio:1400/584;border-radius:10px;overflow:hidden;border:3px solid var(--ks-edge);box-shadow:0 6px 18px rgba(0,0,0,.5);background:#8fd1e8}
+.ks-root{--ks-gold:#f0b429;--ks-gold-light:#ffe09a;--ks-edge:#8a6a2a;--ks-paper:#f7edda;--ks-muted:#c9b183;--ks-good:#75c875;--ks-bad:#dd6464;--ks-xp:#7ec8e3;--ks-wood:linear-gradient(180deg,#3d2918,#211307);--ks-panel:linear-gradient(145deg,rgba(70,46,25,.98),rgba(28,17,9,.98));
+  display:flex;flex-direction:column;gap:12px;max-width:1080px;margin:0 auto;width:100%;color:var(--ks-paper);isolation:isolate}
+.ks-field{position:relative;width:100%;aspect-ratio:1400/584;border-radius:16px;overflow:hidden;border:1px solid #bc8d35;box-shadow:0 2px 0 #f7d47d inset,0 -3px 0 #3a210d inset,0 12px 32px rgba(0,0,0,.48),0 0 0 4px #2a190b,0 0 0 6px #8d6526;background:#8fd1e8}
+.ks-field::before{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;background:linear-gradient(90deg,rgba(27,15,7,.22),transparent 9%,transparent 91%,rgba(27,15,7,.22)),linear-gradient(180deg,rgba(255,244,205,.1),transparent 28%,rgba(30,16,7,.2));box-shadow:inset 0 0 42px rgba(36,19,7,.3)}
+.ks-field-frame{position:absolute;inset:7px;z-index:4;border:1px solid rgba(255,223,145,.35);border-radius:10px;pointer-events:none}
+.ks-frame-corner{position:absolute;width:28px;height:28px;border-color:#e5b955;border-style:solid;filter:drop-shadow(0 1px #3a210d)}
+.ks-frame-tl{left:-2px;top:-2px;border-width:3px 0 0 3px;border-radius:8px 0 0}.ks-frame-tr{right:-2px;top:-2px;border-width:3px 3px 0 0;border-radius:0 8px 0 0}.ks-frame-bl{left:-2px;bottom:-2px;border-width:0 0 3px 3px;border-radius:0 0 0 8px}.ks-frame-br{right:-2px;bottom:-2px;border-width:0 3px 3px 0;border-radius:0 0 8px}
 .ks-scroll{width:100%;height:100%;overflow:hidden}
 .ks-canvas{width:100%;height:100%;display:block}
 .ks-rotate{display:none;position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:6;background:rgba(36,22,8,.85);border:1px solid var(--ks-gold);border-radius:999px;padding:4px 10px;font-size:10.5px;color:var(--ks-paper);white-space:nowrap;pointer-events:none}
@@ -9,25 +13,27 @@
 .ks-top-left{top:8px;left:8px;flex-direction:row;flex-wrap:wrap}
 .ks-top-right{top:8px;right:8px;align-items:flex-end}
 .ks-era{top:8px;left:50%;transform:translateX(-50%);max-width:44%}
-.ks-badge{background:var(--ks-wood);border:2px solid var(--ks-gold);border-radius:8px;padding:5px 10px;font-weight:700;font-size:14px;color:var(--ks-gold);display:flex;align-items:center;gap:4px;box-shadow:0 3px 6px rgba(0,0,0,.4);white-space:nowrap}
+.ks-badge{background:linear-gradient(180deg,rgba(57,37,20,.96),rgba(25,15,8,.96));border:1px solid #bd8832;border-radius:999px;padding:5px 11px;font-weight:800;font-size:14px;color:var(--ks-gold-light);display:flex;align-items:center;gap:5px;box-shadow:0 2px 0 rgba(255,222,142,.13) inset,0 4px 12px rgba(0,0,0,.45);white-space:nowrap;backdrop-filter:blur(5px)}
+.ks-badge-icon{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:rgba(240,180,41,.15);color:#ffe59b;font-size:13px}
 .ks-badge-sub{font-size:10px;color:var(--ks-muted);font-weight:600}
 .ks-badge-xp{color:var(--ks-xp);border-color:var(--ks-xp)}
 .ks-badge-small{font-size:11px;padding:3px 8px;color:var(--ks-muted);border-color:#9b3b35}
-.ks-era-badge{font-family:Georgia,'Times New Roman',serif;letter-spacing:.3px;justify-content:center;overflow:hidden;text-overflow:ellipsis}
+.ks-era-badge{font-family:Georgia,'Times New Roman',serif;letter-spacing:1.1px;text-transform:uppercase;justify-content:center;overflow:hidden;text-overflow:ellipsis;border-radius:5px;padding-inline:18px;background:linear-gradient(180deg,rgba(64,42,23,.97),rgba(27,16,8,.97));box-shadow:0 0 0 1px rgba(255,226,154,.18) inset,0 5px 14px rgba(0,0,0,.45)}
 .ks-hp{position:absolute;top:50px;width:190px;max-width:34%;z-index:5}
 .ks-hp-left{left:8px}
 .ks-hp-right{right:8px;text-align:right}
 .ks-hp-label{font-family:Georgia,'Times New Roman',serif;font-size:11px;color:var(--ks-paper);text-shadow:0 1px 2px #000;margin-bottom:2px;font-weight:700;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ks-hp-track{background:#1c1108;border:1px solid #000;border-radius:5px;height:12px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,.6)}
-.ks-hp-fill{height:100%;transition:width .25s ease;background:linear-gradient(180deg,#8fce6a,#4f7942)}
+.ks-hp-track{background:#1c1108;border:1px solid #050301;border-radius:999px;height:13px;padding:2px;overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,.8),0 1px rgba(255,230,170,.25)}
+.ks-hp-fill{height:100%;border-radius:999px;transition:width .25s ease;background:linear-gradient(180deg,#a9e582 0,#63a94c 48%,#39672e 52%,#4f8b3d 100%);box-shadow:0 0 8px rgba(120,220,90,.45)}
 .ks-hp-right .ks-hp-fill{background:linear-gradient(180deg,#d2665c,#9b3b35)}
 /* Trainingswachtrij boven de eigen basis; het eerste chipje loopt vol met de trainingsvoortgang. */
 .ks-queue{left:8px;bottom:8px;flex-direction:row;gap:4px;min-height:26px}
 .ks-queue-chip{--ks-progress:0%;width:26px;height:26px;border-radius:6px;border:2px solid var(--ks-gold);background:linear-gradient(90deg,#8a6a2a var(--ks-progress),#241608 var(--ks-progress));display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 4px rgba(0,0,0,.4)}
 .ks-queue-full .ks-queue-chip{border-color:var(--ks-bad)}
-.ks-panels{display:flex;flex-direction:column;gap:8px}
-.ks-group{display:flex;flex-direction:column;gap:6px}
-.ks-section{display:flex;align-items:center;gap:8px;font-family:Georgia,'Times New Roman',serif;font-size:11px;color:var(--ks-muted);letter-spacing:.6px;margin:2px 2px 0;background:none;border:0;padding:0;text-align:left;cursor:default;font-weight:700}
+.ks-panels{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px;border:1px solid #6e4c25;border-radius:14px;background:radial-gradient(circle at 50% 0,rgba(125,82,35,.18),transparent 50%),linear-gradient(180deg,#20140b,#130c07);box-shadow:0 8px 22px rgba(0,0,0,.3),inset 0 1px rgba(255,224,163,.08)}
+.ks-group{display:flex;flex-direction:column;gap:6px;padding:9px;border:1px solid rgba(193,143,62,.3);border-radius:10px;background:linear-gradient(145deg,rgba(86,55,28,.32),rgba(36,22,12,.46));box-shadow:inset 0 1px rgba(255,232,184,.05)}
+.ks-section{display:flex;align-items:center;gap:8px;font-family:Georgia,'Times New Roman',serif;font-size:10px;color:var(--ks-gold-light);letter-spacing:1.4px;margin:0 2px 2px;background:none;border:0;padding:0;text-align:left;cursor:default;font-weight:800}
+.ks-section-label::before{content:"";display:inline-block;width:13px;height:1px;margin:0 7px 3px 0;background:var(--ks-gold);box-shadow:0 0 5px rgba(240,180,41,.7)}
 .ks-section-info{font-family:inherit;font-size:10px;letter-spacing:.2px;color:var(--ks-muted);opacity:.85;text-transform:none;margin-left:auto}
 .ks-section-chevron{display:none}
 .ks-row{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
@@ -36,14 +42,18 @@
 .ks-btn-worker{border-color:#c9a24a}
 .ks-btn-hero .ks-btn-name{color:#ffd35c}
 .ks-btn-turret-bonus{border-color:#e0b83a}
-.ks-btn{position:relative;background:var(--ks-wood);border:2px solid var(--ks-gold);border-radius:9px;color:var(--ks-paper);padding:7px 5px;cursor:pointer;text-align:center;box-shadow:0 3px 6px rgba(0,0,0,.4);transition:transform .08s ease;font:inherit;min-width:0;overflow:hidden}
+.ks-btn{position:relative;background:var(--ks-panel);border:1px solid #8d682e;border-radius:8px;color:var(--ks-paper);padding:9px 6px 8px;cursor:pointer;text-align:center;box-shadow:0 1px 0 rgba(255,222,157,.12) inset,0 4px 8px rgba(0,0,0,.28);transition:transform .1s ease,border-color .15s ease,filter .15s ease;font:inherit;min-width:0;overflow:hidden}
+.ks-btn::after{content:"";position:absolute;inset:auto 8px 0;height:2px;background:linear-gradient(90deg,transparent,var(--ks-gold),transparent);opacity:.5}
+.ks-btn-glint{position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 20%,rgba(255,235,187,.1) 45%,transparent 65%);transform:translateX(-110%);transition:transform .45s ease}
+.ks-btn:not(:disabled):hover{border-color:#f0b429;filter:brightness(1.13)}
+.ks-btn:not(:disabled):hover .ks-btn-glint{transform:translateX(110%)}
 .ks-btn:active{transform:translateY(2px)}
-.ks-btn:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.3)}
+.ks-btn:disabled{opacity:.48;cursor:not-allowed;filter:saturate(.55)}
 .ks-btn-special{border-color:#e07a3f}
 .ks-btn-special .ks-btn-name{color:#ffb178}
 .ks-btn-evolve{border-color:#ffd35c;background:linear-gradient(180deg,#5a3d17,#2e1c08);padding-bottom:12px}
 .ks-btn-evolve:disabled{opacity:.75}
-.ks-btn-name{font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:12.5px;color:var(--ks-gold);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ks-btn-name{font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:12.5px;color:var(--ks-gold-light);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px #000}
 .ks-btn-level{font-size:10.5px;color:var(--ks-muted);display:block;margin:2px 0 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ks-btn-cost{font-size:12.5px;font-weight:700;color:var(--ks-good);display:block}
 .ks-btn-cost.cant{color:var(--ks-bad)}
@@ -69,7 +79,10 @@
   .ks-badge-sub{display:none}
   .ks-era{max-width:40%}
   .ks-era-badge{font-size:12px}
-  .ks-section{cursor:pointer;padding:8px 10px;margin:0;border:2px solid var(--ks-edge);border-radius:9px;background:var(--ks-wood);color:var(--ks-gold);font-size:12px;min-height:40px;box-shadow:0 3px 6px rgba(0,0,0,.4)}
+  .ks-panels{display:flex;padding:8px;gap:7px}
+  .ks-group{padding:0;border:0;background:none;box-shadow:none}
+  .ks-section{cursor:pointer;padding:8px 10px;margin:0;border:1px solid var(--ks-edge);border-radius:9px;background:var(--ks-wood);color:var(--ks-gold);font-size:12px;min-height:40px;box-shadow:0 3px 6px rgba(0,0,0,.4)}
+  .ks-section-label::before{display:none}
   .ks-section-chevron{display:inline-block;transition:transform .15s ease;color:var(--ks-muted)}
   .ks-open .ks-section-chevron{transform:rotate(180deg)}
   .ks-open .ks-section{border-color:var(--ks-gold)}

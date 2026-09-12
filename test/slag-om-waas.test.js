@@ -80,7 +80,7 @@ test('createGame wijst facties toe; niet-gekozen facties en Sint-Niklaas blijven
   const g = game.createGame(players(2));
   assert.deepEqual(g.players.map((p) => p.faction), ['south', 'west']);
   assert.equal(g.sectors.south_temse.controller, 'south');
-  assert.equal(g.sectors.south_temse.troops, 0);
+  assert.equal(g.sectors.south_temse.troops, 3);
   assert.equal(g.sectors.west_lokeren.controller, 'west');
   assert.equal(g.sectors.north_stekene.controller, null);
   assert.equal(g.sectors.north_stekene.troops, game.CONFIG.rebelGarrison);
@@ -122,6 +122,29 @@ test('beurten wisselen en na een volledige ronde begint een nieuwe ronde', () =>
   assert.equal(g.round, 2);
 });
 
+test('belasting, inkomsten en onderhoud vormen samen de beurtbalans', () => {
+  const g = game.createGame(players(2));
+  game.handleAction(g, 'a', 'setTax', { policy: 'low' });
+  game.handleAction(g, 'a', 'recruit', { sectorId: 'south_temse', unit: 'militia' });
+  assert.equal(g.players[0].treasury, 7);
+  game.handleAction(g, 'a', 'endTurn');
+  game.handleAction(g, 'b', 'endTurn');
+  assert.equal(g.players[0].support, 8);
+  assert.equal(g.players[0].treasury, 12, 'lage belasting op 13 inkomen minus 4 onderhoud');
+});
+
+test('gebouwen ontsluiten specialisatie en legers kunnen een buur veroveren', () => {
+  const g = game.createGame(players(2));
+  assert.throws(() => game.handleAction(g, 'a', 'recruit', { sectorId: 'south_temse', unit: 'armored' }), /kazerne/);
+  game.handleAction(g, 'a', 'build', { sectorId: 'south_temse', building: 'barracks' });
+  game.handleAction(g, 'a', 'recruit', { sectorId: 'south_temse', unit: 'armored' });
+  assert.equal(g.sectors.south_temse.units.armored, 1);
+  const target = board.sectors.get('south_temse').connections.find((c) => g.sectors[c.to].controller === 'south').to;
+  game.handleAction(g, 'a', 'move', { from: 'south_temse', to: target });
+  assert.equal(g.sectors.south_temse.troops, 0);
+  assert.equal(g.sectors[target].troops, 4);
+});
+
 test('een NPC beëindigt zijn beurt via tick', () => {
   const g = game.createGame(players(2, true));
   game.handleAction(g, 'a', 'endTurn');
@@ -130,4 +153,58 @@ test('een NPC beëindigt zijn beurt via tick', () => {
   assert.equal(game.tick(g, Date.now() + game.CONFIG.npcTurnDelayMs + 1), true);
   assert.equal(g.turnIndex, 0);
   assert.equal(game.results(g).length, 2);
+  assert.ok(g.log.some((line) => line.includes('Bob werft')));
+});
+
+test('oude bordstate krijgt belastingkeuzes, startlegers en eindige economie', () => {
+  const g = game.createGame(players()); delete g.rulesVersion;
+  for (const p of g.players) delete p.taxPolicy;
+  for (const s of Object.values(g.sectors)) { delete s.units; delete s.movement; delete s.population; if (s.controller) s.troops = 0; }
+  const v = game.serialize(g, 'a', new Map());
+  assert.equal(Object.keys(v.config.taxPolicies).length, 3);
+  assert.equal(v.players[0].army, 3); assert.equal(v.players[0].upkeep, 3);
+  game.handleAction(g, 'a', 'endTurn'); game.handleAction(g, 'b', 'endTurn');
+  assert.ok(g.players.every((p) => Number.isFinite(p.treasury)));
+  game.serialize(g, 'a', new Map()); assert.equal(g.sectors.south_temse.troops, 3);
+});
+
+test('uitgeputte legers kunnen niet opnieuw marcheren of aanvallen', () => {
+  const g = game.createGame(players());
+  const from = 'south_temse';
+  const to = board.sectors.get(from).connections.find((c) => g.sectors[c.to].controller === 'south' && !c.kinds.includes('road')).to;
+  game.handleAction(g, 'a', 'move', { from, to });
+  assert.equal(g.sectors[to].movement, 0);
+  assert.throws(() => game.handleAction(g, 'a', 'move', { from: to, to: from }), /beweging/);
+  game.handleAction(g, 'a', 'endTurn'); game.handleAction(g, 'b', 'endTurn');
+  game.handleAction(g, 'a', 'move', { from: to, to: from });
+  assert.equal(g.sectors[from].troops, 3);
+});
+
+test('verovering bewaart colonnes en blokkeert doorvechten', () => {
+  const g = game.createGame(players());
+  const from = 'south_temse', to = board.sectors.get(from).connections[0].to;
+  g.sectors[from].units = { militia: 0, armored: 4 }; g.sectors[from].troops = 4;
+  g.sectors[to].controller = null; g.sectors[to].units = { militia: 2, armored: 0 }; g.sectors[to].troops = 2;
+  game.handleAction(g, 'a', 'move', { from, to });
+  assert.equal(g.sectors[to].controller, 'south'); assert.equal(g.sectors[to].units.armored, 3);
+  assert.equal(g.sectors[to].movement, 0);
+});
+
+test('werving verbruikt bevolking en weigert vervalste types', () => {
+  const g = game.createGame(players()); g.players[0].treasury = 100;
+  g.sectors.south_temse.population = 2;
+  game.handleAction(g, 'a', 'recruit', { sectorId: 'south_temse' });
+  assert.throws(() => game.handleAction(g, 'a', 'recruit', { sectorId: 'south_temse' }), /bevolking/);
+  assert.throws(() => game.handleAction(g, 'a', 'setTax', { policy: '__proto__' }), /Ongeldig/);
+  assert.throws(() => game.handleAction(g, 'a', 'build', { sectorId: 'south_temse', building: 'constructor' }), /Onbekend/);
+});
+
+test('Sint-Niklaas met voldoende vermogen sluit de partij en rangschikking af', () => {
+  const g = game.createGame(players());
+  g.sectors.center_sint_niklaas.controller = 'south'; g.players[0].treasury = 50;
+  game.handleAction(g, 'a', 'endTurn');
+  assert.equal(g.gameOver, true); assert.equal(g.winnerId, 'a');
+  assert.equal(game.serialize(g, 'a').canEndTurn, false);
+  assert.ok(game.results(g).find((p) => p.playerId === 'a').won);
+  assert.throws(() => game.handleAction(g, 'a', 'endTurn'), /afgelopen/);
 });

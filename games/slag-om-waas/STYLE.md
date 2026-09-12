@@ -12,7 +12,7 @@ Visuele referentie: de conceptkaart "De Slag om Waas" (oude naam) (tabletop-stra
 
 1. Titlebar (Pluto) met ronde en speler aan de beurt.
 2. Bord links (of bovenaan op mobiel), paneel rechts (320px) of eronder.
-3. Paneel-volgorde: beurtblok → spelerskaarten (factie, schatkist, draagvlak, sectoren, legermacht) → sectorinfo (perkament) → legende → log.
+3. Paneel-volgorde: beurtblok → spelerskaarten (factie, schatkist, draagvlak, sectoren, legermacht) → legende → log. Provincie-informatie en acties openen uitsluitend na selectie in een perkamenten pop-up (max. 420px, scrollbaar op mobiel). Sluiten met kruisje, Escape of buiten de pop-up klikken; geen automatische selectie bij openen.
 
 ## Bord
 
@@ -20,7 +20,7 @@ Visuele referentie: de conceptkaart "De Slag om Waas" (oude naam) (tabletop-stra
 - Provincies zijn Voronoi-cellen, gegroepeerd per regio (`#regio-<id>`, `.biome-*`). Basiskleur per biome (licht/donker naargelang terrein): Noord `#d4e6f1`/`#85c1e9` sparren, West `#f8c471`/`#e59866` duinarcering, Oost `#58d68d`/`#28b463` akkerrijen, Zuid `#5dade2`/`#2e86c1` waterrimpels, Sint-Niklaas `#a6acaf`/`#7f8c8d` metselwerk. Veroverd gebied krijgt een tint (38 %) van de veroveraar; rebellenland wordt licht gedoofd.
 - Factiegrenzen: brede gekleurde lijn met feDropShadow-gloed in de factiekleur plus een dunne lichte kernlijn (neon-effect), naar binnen geclipt en enkel waar de buur tot een andere groep behoort. Interne celgrenzen dun, halftransparant perkamentbruin.
 - Hover: lichte brightness. Geselecteerd: witte rand met gloed; buren: crème rand; overige sectoren gedimd (55 %).
-- Hoofdwegen: crème dashed op donkere onderlijn, vloeiend (Catmull-Rom). Moervaart: blauw met lichte oever, houten brugjes op de bruggen. Schelde: brede meanderende band met lichte oeverrand, koggeschepen. Stadsmuur: cirkel met kantelen rond Sint-Niklaas.
+- Hoofdwegen: crème dashed op donkere onderlijn, vloeiend (Catmull-Rom). Moervaart: blauwe strook van 18 kaarteenheden met lichte oever van 26, houten brugjes op de bruggen. Durme: decoratieve meander links (westelijk) van Lokerzand, dezelfde rivierbreedte en oever, met eigen naamlabel. Schelde: brede meanderende band met lichte oeverrand, koggeschepen. Stadsmuur: cirkel met kantelen rond Sint-Niklaas.
 - Troepenbadges: cirkel in factiekleur; rebellen donkerbruin met gestippelde rand.
 - Labels in Cinzel (fallback Georgia) met lichte outline; hoofdsteden groter, Sint-Niklaas het grootst. Vector-POI-iconen: kasteel (Sint-Niklaas), stadstoren (Lokerzand), haven/kogge (Temsehaven, Steendorpwerf, Doelhaven, Zwijndrechtwerf), bomenclusters (Stekenburg, Pauwelsbos, Stropersbos, Sinaaiwoud), molens (Beverhof, Kielpolder).
 - Perkament-titelbanner linksboven, kompasroos eronder; buitenwereld (Nederland, Antwerpen, Bornem, Gent) als kapitalen buiten de bordrand.

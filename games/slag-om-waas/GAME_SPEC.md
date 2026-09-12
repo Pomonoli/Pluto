@@ -1,4 +1,16 @@
 # TOTAL WAAS
+## Speelbare campagne (regelsversie 3)
+
+Deze regels vervangen conflicterende fasebeschrijvingen hieronder. Elke factie begint met 10 goud en 3 milities in haar hoofdstad. Opgeslagen bordpartijen worden automatisch aangevuld.
+
+- Beleid: laag geeft 75% belasting en +2 draagvlak, normaal 100%, knevelarij 150% en -2. Vanaf de volgende eigen beurt wordt belasting ontvangen en onderhoud betaald. Draagvlak 8+ geeft 20% bonus en 1 goud wervingskorting; 1–3 halveert belasting; 0 veroorzaakt een opstand. Onbetaalde legers verliezen per provincie een eenheid en 2 draagvlak.
+- Militie: 3 goud, kracht 1, onderhoud 1. Colonne: kazerne vereist, 6 goud, kracht 2, onderhoud 2. Werving kost 1 lokale bevolking, minimumvoorraad 2. Provincies starten met 5; herstel per beurt 2/1/0 bij laag/normaal/knevelarij (maximum 10).
+- Gebouwen: economie geeft +1 belastingbasis, kazerne ontsluit colonnes, fort geeft +1 verdediging, burgerlijk geeft +1 draagvlak, infrastructuur geeft 3 in plaats van 2 bewegingspunten vanaf de volgende beurt. Elk type maximaal eenmaal per provincie, beperkt door bouwplaatsen.
+- Hele legers bewegen langs bestaande verbindingen: weg kost 1 punt, andere verbindingen 2. Samengevoegde legers gebruiken het laagste resterende budget. Bruggen geven bezette verdedigers +1 kracht. Auto-resolve: aanvaller moet strikt sterker zijn. Verliezen zijn de helft van de verdedigingskracht, afgerond omhoog; bij verovering overleeft minstens één aanvaller. Overlevende eenheidstypes blijven behouden; na strijd geen beweging meer.
+- NPC's kiezen beleid, werven, bouwen economie, marcheren naar grenzen en vallen zwakkere buren aan.
+- Overwinning aan een beurtovergang: bezit Sint-Niklaas plus minstens 23 provincies óf 50 goud.
+- Sint-Niklaas is voorlopig neutraal en veroverbaar. Senaatsmissies, regionale handelsketens en burgeroorlog zijn nog geen onderdeel van deze campagne.
+
 ## Game Design & Board Specification
 
 > De game heette tot v1.34 "De Slag om Waas"; de pluginmap blijft `games/slag-om-waas` zodat bestaande rooms en statistieken blijven werken.
