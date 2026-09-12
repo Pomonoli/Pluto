@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.34.0 — Gravity, Total Waas en Kasteel Strijd 1-tegen-1
+
+- Nieuwe original **Gravity**: een solo-puzzelgame waarin je routes tekent
+  en elke asteroïde naar een planeet brengt, met een eigen puzzelgenerator,
+  stijlgids en regressietests.
+- **De Slag om Waas heet voortaan Total Waas** (de pluginmap blijft
+  `slag-om-waas`, bestaande rooms en statistieken blijven werken). De kaart
+  kreeg een hoogwaardige bordspel-esthetiek: houten lijst met 2.5D-dikte,
+  biome-paletten per regio met sparren-, duin-, akker-, water- en
+  metselpatronen, gloeiende factiegrenzen, vloeiende Schelde en Moervaart met
+  bruggen, stadsmuur rond Sint-Niklaas, vector-iconen (kasteel, toren, haven,
+  bomen, molens), Cinzel-labels, titelbanner en kompasroos.
+- **Kasteel Strijd** wordt een 1-tegen-1-game tegen een andere speler of NPC,
+  met een gedeeld slagveld en per speler eigen goud, upgrades en tijdperken.
+  De simulatie is afgesplitst naar `simulation.js`.
+- Gravity en Total Waas staan nu ook in de speltabel en de pluginchecks.
+
 ## v1.33.0 — Kasteel Strijd
 
 - Nieuwe original **Kasteel Strijd**: een solo castle-defense game waarin twee

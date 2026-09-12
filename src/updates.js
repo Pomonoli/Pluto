@@ -787,6 +787,16 @@ const RELEASES = [
     features:[
       "Kasteel Strijd: solo castle-defense door zeven tijdperken, met upgrades, vier vaardigheden en een eigen leaderboard voor overlevingstijd en hoogste tijdperk."
     ]
+  },
+  {
+    version:"1.34.0",
+    games:[
+      "Gravity"
+    ],
+    features:[
+      "Kasteel Strijd is nu 1-tegen-1: speel tegen een andere speler of een NPC op een gedeeld slagveld.",
+      "De Slag om Waas heet voortaan Total Waas en kreeg een volwaardige bordspelkaart met biomes, gloeiende grenzen, de Schelde en vector-iconen."
+    ]
   }
 ];
 

@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.33.0
+## Nieuw in versie 1.34.0
 
-**Kasteel Strijd** is een nieuwe original: een solo castle-defense game waarin troepen automatisch spawnen en op elkaar afstormen terwijl jij met goud je Basis, Aanval en Verdediging opbouwt en vier vaardigheden inzet. Evolueer dwars door zeven tijdperken, van de Prehistorie tot de Hedendaagse Tijd, met per tijdperk een eigen kasteel en eigen speelgoedsoldaatjes. Je overlevingstijd, hoogste tijdperk en overwinningen tellen mee op het leaderboard.
+Drie games in één release. **Gravity** is een nieuwe solo-puzzelgame: teken routes en breng elke asteroïde naar een planeet. **De Slag om Waas heet nu Total Waas** en kreeg een volwaardige bordspelkaart: houten lijst met 2.5D-dikte, biomes met patronen per regio, gloeiende factiegrenzen, meanderende Schelde, stadsmuur, vector-iconen en Cinzel-typografie. **Kasteel Strijd** wordt een 1-tegen-1-game tegen een andere speler of NPC, met een gedeeld slagveld en eigen goud, upgrades en tijdperken.
 
 ## Nieuw in versie 1.0.0
 
@@ -24,6 +24,7 @@ Alle games zijn ondergebracht in zelfstandige modules onder `games/`. Iedere gam
 | Cluedo | 2-6 | Ja |
 | CycClub | 1-6 | Ja |
 | Elements Arena | 2-4 | Ja |
+| Gravity | 1 | Niet van toepassing |
 | Hartenjagen | 4 | Ja |
 | Hofslag | 2-4 | Ja |
 | Isle of Skye | 2-4 | Ja |
