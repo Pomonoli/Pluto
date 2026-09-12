@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.35.1 — Total Waas - Castle Def
+
+- Total Waas - Castle Def
+
 ## v1.35.0 — Castle Defense
 
 - **Kasteel Strijd heet voortaan Castle Defense** (de pluginmap blijft

@@ -809,6 +809,12 @@ const RELEASES = [
       "Castle Defense: de NPC spaart voor torens en economie, zet werkers en een held in en countert jouw troepensamenstelling.",
       "Castle Defense op mobiel: inklapbare secties, compactere knoppen en een groter, horizontaal scrollbaar slagveld (liggend spelen aanbevolen)."
     ]
+  },
+  {
+    version:"1.35.1",
+    improvements:[
+      "Total Waas - Castle Def"
+    ]
   }
 ];
 
