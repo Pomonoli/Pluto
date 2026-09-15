@@ -101,6 +101,23 @@ test('Carcassonne-host kiest tegelset en burgers in de lobby en start met die op
   assert.equal(room.gameState.board.size+room.gameState.deck.length+Number(Boolean(room.gameState.currentTile)),36);
 });
 
+test('Total Waas-spelers kiezen elk hun eigen unieke factie in de lobby',()=>{
+  const {runtime,makeSocket}=harness(),host=makeSocket('host',null,null);
+  const created=invoke(host,'room:create',{gameKey:'slag-om-waas',name:'Ada',token:'aaaaaaaaaaaaaaaa'});
+  const room=runtime.rooms.get(created.roomId),other=makeSocket('other',null,null);
+  invoke(other,'room:join',{roomId:room.id,name:'Bob',token:'bbbbbbbbbbbbbbbb'});
+  const [ada,bob]=room.players;
+  assert.deepEqual(room.gameOptions,{factions:{}});
+  assert.equal(invoke(host,'room:setPlayerOptions',{faction:'east'}).ok,true);
+  assert.equal(invoke(other,'room:setPlayerOptions',{faction:'north'}).ok,true);
+  assert.deepEqual(room.gameOptions.factions,{[ada.id]:'east',[bob.id]:'north'});
+  const duplicate=invoke(other,'room:setPlayerOptions',{faction:'east'});
+  assert.equal(duplicate.ok,false);assert.match(duplicate.error,/Ada/);
+  assert.equal(invoke(other,'room:setPlayerOptions',{playerId:ada.id,faction:'west'}).ok,false);
+  assert.equal(invoke(host,'room:start').ok,true);
+  assert.deepEqual(room.gameState.players.map(player=>player.faction),['east','north']);
+});
+
 test('niet-host verlaat een afgewerkt spel definitief zonder de overige spelers te storen',()=>{
   const {runtime,makeSocket}=harness(),room=playingRoom();
   room.status='finished';room.matchRecorded=true;runtime.rooms.set(room.id,room);

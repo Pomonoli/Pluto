@@ -827,6 +827,18 @@ const RELEASES = [
     improvements:[
       "Total Waas - Castle Def"
     ]
+  },
+  {
+    version:"1.36.0",
+    improvements:[
+      "Total Waas: compacte actietabs, legerfiguren op het bord, zichtbare gebouwen met hoofdstadsgebonden upgrades en een privé-economie."
+    ]
+  },
+  {
+    version:"1.37.0",
+    improvements:[
+      "Total Waas: Risk-dobbelgevechten met kasteelbonussen, inzetbare overwinningskaarten en duidelijke hoofdstadsevolutie."
+    ]
   }
 ];
 

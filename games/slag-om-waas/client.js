@@ -36,6 +36,37 @@ const POI_ICONS = {
 const BOATS = [[992, 300], [1004, 610], [930, 880], [700, 990], [470, 1000]];
 // Decoratieve rivierloop langs de westkant van Lokerzand; spelverbindingen blijven in board.js.
 const DURME_PATH = [[38, 500], [66, 519], [62, 548], [83, 576], [72, 610], [91, 644], [72, 680], [53, 706], [28, 740]];
+const LOBBY_FACTIONS = [
+  { id: 'south', name: 'Zuid', title: 'Temsewater & Durmeland', emblem: '🌊', color: '#22b8dd', terrain: 'Water en moeras' },
+  { id: 'west', name: 'West', title: 'Lokerzand & Moerbeekvlakte', emblem: '☀', color: '#f0a12e', terrain: 'Zand en open vlaktes' },
+  { id: 'north', name: 'Noord', title: 'Stekenwoud & Gillsmark', emblem: '❄', color: '#2f6fd6', terrain: 'Bos en wintergrond' },
+  { id: 'east', name: 'Oost', title: 'Beverpolders & Scheldeland', emblem: '🌾', color: '#7cbf2a', terrain: 'Polders en landbouw' }
+];
+
+export function renderLobbyOptions({ room, container, E, socket, handleAck }) {
+  const me = room.players.find(player => player.isMe);
+  if (!me) return;
+  const selected = room.gameOptions?.factions?.[me.id] || null;
+  const selections = room.gameOptions?.factions || {};
+  const wrap = E('section', 'sow-faction-picker');
+  const head = E('div', 'sow-faction-picker-head');
+  head.append(E('strong', '', 'Kies jouw factie'), E('small', '', 'Iedere speler kiest zelf. Niet gekozen facties worden bij de start automatisch verdeeld.'));
+  const choices = E('div', 'sow-faction-choices');
+  for (const faction of LOBBY_FACTIONS) {
+    const owner = room.players.find(player => player.id !== me.id && selections[player.id] === faction.id);
+    const button = E('button', `sow-faction-choice${selected === faction.id ? ' active' : ''}`);
+    button.type = 'button'; button.disabled = Boolean(owner);
+    button.style.setProperty('--faction', faction.color);
+    button.setAttribute('aria-pressed', selected === faction.id ? 'true' : 'false');
+    button.append(E('span', 'sow-faction-choice-emblem', faction.emblem), E('strong', '', faction.name), E('span', '', faction.title), E('small', '', owner ? `Gekozen door ${owner.name}` : faction.terrain));
+    button.onclick = () => socket.emit('room:setPlayerOptions', { faction: faction.id }, handleAck);
+    choices.append(button);
+  }
+  wrap.append(head, choices);
+  const picked = room.players.filter(player => selections[player.id]);
+  if (picked.length) wrap.append(E('small', 'sow-faction-picked', picked.map(player => `${player.name}: ${LOBBY_FACTIONS.find(f => f.id === selections[player.id])?.name}`).join(' · ')));
+  container.append(wrap);
+}
 
 function svg(tag, attrs = {}) {
   const node = document.createElementNS(SVG_NS, tag);
@@ -76,7 +107,8 @@ export function render(api) {
   }
   const byId = new Map(game.board.sectors.map((sector) => [sector.id, sector]));
   if (s.selected && !byId.has(s.selected)) s.selected = null;
-  if (!s.popupOpen) s.selected = null;
+  if (!s.popupOpen && !s.moving) s.selected = null;
+  if (s.moving && (game.battle || !game.canEndTurn || game.sectors[s.moving]?.controller !== you?.faction || !game.sectors[s.moving]?.troops)) { s.moving = null; s.selected = null; }
 
   const controllerOf = (id) => game.sectors[id]?.controller || null;
   // Grenskleur van een provincie: de controller, anders de regio (Sint-Niklaas goud, rebellen hun thuiskleur).
@@ -96,7 +128,7 @@ export function render(api) {
 
   const sectorNodes = new Map();
   const highlightLayer = svg('g', { class: 'sow-highlights' });
-  boardWrap.append(buildBoard({ game, byId, factions, colorOf, controllerOf, groupOf, sectorNodes, highlightLayer, onSelect: select }));
+  boardWrap.append(buildBoard({ game, byId, factions, colorOf, controllerOf, groupOf, sectorNodes, highlightLayer, onSelect: select, onArmy: selectArmy }));
 
   const popup = E('dialog', 'sow-province-popup');
   popup.setAttribute('aria-label', 'Provincie-informatie en acties');
@@ -112,7 +144,11 @@ export function render(api) {
     const bounds = popup.getBoundingClientRect();
     if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) closePopup();
   });
-  panel.append(renderTurnBox(E, game, you, turn, factions, action), E('small', 'sow-hint', 'Klik een provincie voor informatie en acties.'), renderPlayers(E, game, factions), renderLegend(E, game.board), logBox(game.log));
+  panel.append(renderTurnBox(E, game, you, turn, factions, action), renderBattle(E, game, you, byId, action), renderCards(E, game, you, action), E('small', 'sow-hint', 'Klik een provincie voor informatie en acties.'), renderPlayers(E, game, factions), renderLegend(E, game.board), logBox(game.log));
+  if (game.battle && s.battleId !== game.battle.id) {
+    s.battleId = game.battle.id;
+    if (globalThis.matchMedia?.('(max-width: 900px)')?.matches) panel.querySelector('.sow-battle')?.scrollIntoView({ block: 'start' });
+  }
 
   function closePopup() {
     const previous = s.selected;
@@ -121,22 +157,59 @@ export function render(api) {
     boardWrap.querySelector(`[data-sector-id="${previous}"]`)?.focus();
   }
 
+  const moveHint = E('div', 'sow-move-hint');
+  moveHint.setAttribute('role', 'status');
+  boardWrap.prepend(moveHint);
+  root.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && s.moving) {
+      s.moving = null; s.selected = null; syncSelection();
+    }
+  });
+
+  function selectArmy(id) {
+    if (s.moving && s.moving !== id) { select(id); return; }
+    if (game.battle || !game.canEndTurn || game.sectors[id].controller !== you?.faction) { select(id); return; }
+    s.moving = s.moving === id ? null : id; s.selected = s.moving; s.popupOpen = false;
+    popup.close(); syncSelection();
+  }
+
   function select(id) {
-    s.selected = id; s.popupOpen = true;
+    if (s.moving) {
+      const from = s.moving;
+      const connection = byId.get(from).connections.find(c => c.to === id);
+      if (id === from) { s.moving = null; s.selected = null; syncSelection(); return; }
+      if (game.sectors[id].controller !== you?.faction && game.sectors[from].troops < 2) return;
+      if (!connection || game.sectors[from].movement < (connection.kinds.includes('road') ? 1 : 2)) return;
+      s.moving = null; s.selected = null; syncSelection(); action('move', { from, to: id }); return;
+    }
+    s.tab = 'actions'; s.selected = id; s.popupOpen = true;
     syncSelection();
   }
 
   function syncSelection() {
     highlightLayer.replaceChildren();
+    moveHint.replaceChildren(); moveHint.hidden = !s.moving;
+    if (s.moving) {
+      const movement = game.sectors[s.moving].movement;
+      const canMove = byId.get(s.moving).connections.some(c => movement >= (c.kinds.includes('road') ? 1 : 2) && (game.sectors[c.to].controller === you.faction || game.sectors[s.moving].troops >= 2));
+      moveHint.append(E('span', '', byId.get(s.moving).name + (canMove
+        ? ': kies een gemarkeerde provincie. Bij een aanval blijft één troep achter. Daarna kies je per worp of je doorgaat.'
+        : movement > 0 && game.sectors[s.moving].troops < 2 ? ': aanvallen vereist minstens 2 troepen. Werf versterkingen.' : ': onvoldoende beweging. Wacht tot je volgende beurt.')));
+      const cancel = E('button', '', 'Annuleren'); cancel.onclick = () => { s.moving = null; s.selected = null; syncSelection(); }; moveHint.append(cancel);
+    }
     const selected = s.selected ? byId.get(s.selected) : null;
-    const neighborKinds = new Map(selected ? selected.connections.map((c) => [c.to, c.kinds]) : []);
+    const neighborKinds = new Map(selected ? selected.connections.filter(c => !s.moving || (game.sectors[s.moving].movement >= (c.kinds.includes('road') ? 1 : 2) && (game.sectors[c.to].controller === you.faction || game.sectors[s.moving].troops >= 2))).map((c) => [c.to, c.kinds]) : []);
     sectorNodes.forEach((node, id) => {
       node.classList.toggle('selected', id === s.selected);
       node.classList.toggle('neighbor', neighborKinds.has(id));
       node.classList.toggle('dimmed', Boolean(selected) && id !== s.selected && !neighborKinds.has(id));
+      const hit = boardWrap.querySelector(`[data-sector-id="${id}"]`);
+      const label = (s.moving && neighborKinds.has(id) ? (game.sectors[id].controller === you.faction ? 'Verplaats naar ' : 'Val aan: ') : '') + byId.get(id).name;
+      hit?.setAttribute('aria-label', label);
     });
     if (selected) {
       for (const connection of selected.connections) {
+        if (!neighborKinds.has(connection.to)) continue;
         const target = byId.get(connection.to);
         const kind = connection.kinds.includes('bridge') ? 'bridge' : connection.kinds.includes('road') ? 'road' : connection.kinds.includes('water') ? 'water' : 'land';
         highlightLayer.append(svg('line', {
@@ -146,7 +219,7 @@ export function render(api) {
     }
     if (selected && s.popupOpen) {
       popup.setAttribute('aria-label', `${selected.name}: informatie en acties`);
-      infoBox.replaceChildren(renderSectorInfo(E, game, selected, factions, byId, select, action, you));
+      infoBox.replaceChildren(renderSectorInfo(E, game, selected, factions, byId, select, action, you, s, syncSelection));
       if (!popup.open) popup.showModal();
     }
   }
@@ -272,7 +345,7 @@ function buildTitleBanner(x, y) {
 
 /* ---------------- bord ---------------- */
 
-function buildBoard({ game, byId, factions, colorOf, controllerOf, groupOf, sectorNodes, highlightLayer, onSelect }) {
+function buildBoard({ game, byId, factions, colorOf, controllerOf, groupOf, sectorNodes, highlightLayer, onSelect, onArmy }) {
   const { board } = game;
   const pad = 52;
   const root = svg('svg', { viewBox: `${-pad} ${-pad} ${board.size + pad * 2} ${board.size + pad * 2}`, class: 'sow-svg waas-board', role: 'img', 'aria-label': 'Speelbord van het Land van Waas' });
@@ -406,6 +479,26 @@ function buildBoard({ game, byId, factions, colorOf, controllerOf, groupOf, sect
   for (const sector of board.sectors) {
     if (POI_ICONS[sector.id]) poiLayer.append(buildIcon(POI_ICONS[sector.id], sector.label[0], sector.label[1] - (sector.isCapital ? 30 : 22)));
     labelLayer.append(buildLabel(sector, game.sectors[sector.id], controllerOf(sector.id), factions));
+    const dynamic = game.sectors[sector.id];
+    if (dynamic.troops) {
+      const piece = buildArmy(sector, dynamic, dynamic.controller ? colorOf(sector.id) : '#8b8068');
+      piece.addEventListener('click', () => onArmy(sector.id));
+      piece.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onArmy(sector.id); } });
+      hitLayer.append(piece);
+    }
+    dynamic.buildings.forEach((id, i) => {
+      const marker = svg('g', { class: 'sow-building', transform: 'translate(' + (sector.label[0] - dynamic.buildings.length * 12 + i * 24) + ' ' + (sector.label[1] - 42) + ')' });
+      const title = svg('title'); title.textContent = game.config.buildings[id].label + ' → niveau ' + (dynamic.buildingLevels?.[id] || 1);
+      const silhouette = {
+        economy: 'M-10 4V-7H10V4ZM-12-7L-8-14H8L12-7ZM-4 4V-3H4V4',
+        barracks: 'M-10 4V-8L0-14 10-8V4ZM0-14V-24L10-21 0-18M-3 4V-3H3V4',
+        fort: 'M-11 4V-16H-6V-11H-2V-16H3V-11H7V-16H12V4ZM-3 4V-3Q0-8 3-3V4',
+        civic: 'M-11 4V0H11V4ZM-8 0V-9M0 0V-9M8 0V-9M-12-10L0-18 12-10Z',
+        infrastructure: 'M-12 4V-8H12V4H7V-1Q0-9-7-1V4ZM-14-8H14M-9-8V-13M0-8V-13M9-8V-13'
+      }[id];
+      marker.append(title, svg('path', { d: silhouette, fill: '#e9d6a4', stroke: '#493422', 'stroke-width': 2 }));
+      const label = svg('text', { y: 14, 'text-anchor': 'middle' }); label.textContent = ({ economy: 'E', barracks: 'K', fort: 'F', civic: 'B', infrastructure: 'I' })[id] + (dynamic.buildingLevels?.[id] || 1); marker.append(label); labelLayer.append(marker);
+    });
   }
 
   // Buitenwereld, titelbanner en kompas
@@ -457,15 +550,6 @@ function buildLabel(sector, dynamic, controller, factions) {
   const name = svg('text', { x, y: y + (isCity ? 18 : sector.isCapital ? 12 : 5), class: `sow-name${isCity ? ' center' : sector.isCapital ? ' capital' : ''}`, 'text-anchor': 'middle' });
   name.textContent = sector.name;
   group.append(name);
-  if (dynamic?.troops > 0) {
-    const badge = svg('g', { class: `sow-troops${controller ? '' : ' rebel'}` });
-    const by = y + (isCity ? 36 : sector.isCapital ? 30 : 24);
-    badge.append(svg('circle', { cx: x, cy: by, r: 12, fill: controller ? factions[controller].color : '#4a3f35' }));
-    const count = svg('text', { x, y: by + 5, 'text-anchor': 'middle' });
-    count.textContent = String(dynamic.troops);
-    badge.append(count);
-    group.append(badge);
-  }
   return group;
 }
 
@@ -488,16 +572,80 @@ function renderTurnBox(E, game, you, turn, factions, action) {
       const option = E('option', '', `${policy.label} · ×${policy.incomeMultiplier} · ${policy.supportDelta >= 0 ? '+' : ''}${policy.supportDelta} draagvlak`);
       option.value = id; option.selected = you.taxPolicy === id; tax.append(option);
     }
+    tax.disabled = Boolean(game.battle);
     tax.onchange = () => action('setTax', { policy: tax.value });
     tax.id = 'sow-tax';
     const label = E('label', 'sow-tax-label', 'Belastingbeleid'); label.htmlFor = tax.id;
     box.append(label, tax, E('small', 'sow-hint', 'Keuze geldt bij je volgende inkomstenfase.'));
     const button = E('button', 'primary sow-endturn', 'Beurt beëindigen');
     button.type = 'button';
+    button.disabled = Boolean(game.battle);
     button.onclick = () => action('endTurn');
     box.append(button);
   } else if (you && turn && turn.id !== you.id) {
     box.append(E('div', 'sow-hint', 'Wachten op de andere factie…'));
+  }
+  return box;
+}
+
+function renderBattle(E, game, you, byId, action) {
+  const battle = game.battle || game.lastBattle;
+  const box = E('section', 'sow-battle');
+  if (!battle) { box.hidden = true; return box; }
+  const source = game.sectors[battle.from], target = game.sectors[battle.to];
+  const active = Boolean(game.battle), ownAttack = battle.attackerId === you?.id;
+  box.append(E('strong', '', byId.get(battle.from).name + ' → ' + byId.get(battle.to).name));
+  if (active) {
+    box.append(E('p', 'sow-hint', 'Aanval: ' + Math.min(3, source.troops - 1) + ' dobbelstenen · verdediging: ' + Math.min(2, target.troops) + '. Eén troep blijft achter.'));
+    const fort = target.buildings.includes('fort') ? target.buildingLevels?.fort || 1 : 0;
+    const castle = byId.get(battle.to).isCapital ? target.capitalLevel || 1 : 0;
+    const bridge = byId.get(battle.from).connections.find(c => c.to === battle.to)?.kinds.includes('bridge') ? 1 : 0;
+    box.append(E('small', 'sow-hint', 'Hoogste verdedigingsworp: fort +' + fort + ', kasteel +' + castle + ', brug +' + bridge + '. Samen met colonnes maximaal +4 bonus en worpwaarde 6; gelijkspel is voor de verdediger.'));
+    box.append(E('small', 'sow-hint', 'Elke colonne geeft +1 op één eigen dobbelsteen (maximaal 6).'));
+  }
+  if (battle.lastRoll) {
+    const roll = battle.lastRoll;
+    for (const [label, values, scores, cls] of [['Aanvaller', roll.attackDice, roll.attackScores, 'attacker'], ['Verdediger', roll.defenseDice, roll.defenseScores, 'defender']]) {
+      const row = E('div', 'sow-dice-row'); row.append(E('small', '', label));
+      values.forEach(value => { const die = E('span', 'sow-die ' + cls, String(value)); die.setAttribute('aria-label', label + ' gooit ' + value); row.append(die); });
+      row.append(E('small', '', 'Met bonus: ' + scores.join(' / '))); box.append(row);
+    }
+    box.append(E('p', 'sow-hint', 'Worp ' + battle.rounds + ' · verlies aanvaller ' + roll.attackerLosses + ', verdediger ' + roll.defenderLosses + '.'));
+  }
+  if (active && ownAttack) {
+    const controls = E('div', 'sow-battle-controls');
+    const roll = E('button', 'primary', battle.rounds ? 'Gooi opnieuw' : 'Gooi dobbelstenen');
+    roll.onclick = () => action('rollBattle');
+    const retreat = E('button', '', 'Terugtrekken'); retreat.onclick = () => action('retreat');
+    controls.append(roll, retreat); box.append(controls);
+  } else if (active) box.append(E('p', 'sow-hint', 'De aanvaller kiest de volgende worp. De verdediging dobbelt automatisch mee.'));
+  else box.append(E('strong', 'sow-battle-outcome', ({ conquered: 'Provincie veroverd', retreated: 'Aanvaller teruggetrokken', defeated: 'Aanval afgeslagen' })[battle.outcome]));
+  return box;
+}
+
+function renderCards(E, game, you, action) {
+  const box = E('details', 'sow-cards');
+  if (!you || !game.config.cards) { box.hidden = true; return box; }
+  const cards = you.cards || [];
+  box.open = cards.length > 0;
+  box.append(E('summary', '', 'Jouw overwinningskaarten (' + cards.length + ')'));
+  box.append(E('p', 'sow-hint', 'Je eerste verovering per beurt geeft één kaart. Bewaar kaarten of speel ze tijdens je eigen beurt, buiten een gevecht.'));
+  for (const card of cards) {
+    const item = game.config.cards[card.type];
+    if (!item) continue;
+    const row = E('div', 'sow-card');
+    row.append(E('strong', '', item.label), E('small', '', item.description));
+    let target;
+    if (item.troops) {
+      target = E('select', ''); target.setAttribute('aria-label', 'Provincie voor ' + item.label);
+      for (const sector of game.board.sectors.filter(s => game.sectors[s.id].controller === you.faction)) {
+        const option = E('option', '', sector.name); option.value = sector.id; target.append(option);
+      }
+      row.append(target);
+    }
+    const button = E('button', '', 'Speel kaart'); button.disabled = !game.canEndTurn || Boolean(game.battle) || Boolean(item.troops && !target.children.length);
+    button.onclick = () => action('playCard', { cardId: card.id, ...(target ? { sectorId: target.value } : {}) });
+    row.append(button); box.append(row);
   }
   return box;
 }
@@ -517,83 +665,87 @@ function renderPlayers(E, game, factions) {
       stat.append(E('span', 'sow-stat-icon', icon), E('b', '', String(value)), E('small', '', label));
       stats.append(stat);
     });
-    card.append(head, stats, E('small', 'sow-balance', `Opbrengst ${player.income} · onderhoud ${player.upkeep}`));
+    card.append(head, stats);
+    if (player.isYou) card.append(E('small', 'sow-balance', `Opbrengst ${player.income} · onderhoud ${player.upkeep}`));
     wrap.append(card);
   }
   return wrap;
 }
 
-function renderSectorInfo(E, game, sector, factions, byId, select, action, you) {
-  const box = E('div', 'sow-info');
-  if (!sector) {
-    box.append(E('div', 'sow-info-empty', 'Klik een provincie op het bord om details en verbindingen te zien.'));
-    return box;
-  }
-  const dynamic = game.sectors[sector.id] || { controller: null, troops: 0, buildings: [] };
-  const home = factions[sector.factionHome];
-  const controller = dynamic.controller ? factions[dynamic.controller] : null;
-  const isCity = sector.id === 'center_sint_niklaas';
+function renderSectorInfo(E, game, sector, factions, byId, select, action, you, state, refresh) {
+  const box = E('div', 'sow-info'), d = game.sectors[sector.id], own = d.controller === you?.faction;
   const head = E('div', 'sow-info-head');
-  head.style.setProperty('--faction', (controller || home).color);
-  head.append(E('span', 'sow-emblem', isCity ? '🏰' : home.emblem), E('strong', '', sector.name));
-  if (sector.isCapital) head.append(E('span', 'sow-tag', isCity ? 'Hoofdprijs' : 'Hoofdstad'));
-  if (sector.isStrategic && !isCity) head.append(E('span', 'sow-tag', 'Strategisch'));
+  head.style.setProperty('--faction', factions[d.controller || sector.factionHome].color);
+  head.append(E('strong', '', sector.name));
+  if (sector.isCapital && sector.factionHome !== 'center') head.append(E('span', 'sow-tag', 'Hoofdstad'));
   box.append(head);
-
-  const rows = E('dl', 'sow-info-rows');
-  const row = (label, value) => { rows.append(E('dt', '', label), E('dd', '', value)); };
-  row('Controller', controller ? `${controller.name} · ${controller.title}` : (isCity ? 'Neutraal garnizoen' : 'Rebellen (neutraal)'));
-  row('Regio', `${home.name}${home.external ? ` · ${home.title}` : ''}`);
-  row('Terrein', game.board.terrains[sector.terrain].label);
-  row('Troepen', `${dynamic.units?.militia || 0} militie · ${dynamic.units?.armored || 0} colonne`);
-  row('Bevolking', `${dynamic.population}/10 · werving kost 1`);
-  row('Beweging', `${dynamic.movement} punten · weg 1, overige 2`);
-  row('Gebouwen', dynamic.buildings.length ? dynamic.buildings.map((id) => game.config.buildings[id]?.label || id).join(', ') : `0 / ${sector.buildSlots} bouwplaatsen`);
-  row('Inkomen', `${sector.economicValue} per ronde`);
-  box.append(rows);
-
-  box.append(E('div', 'sow-info-sub', 'Verbindingen'));
-  const list = E('div', 'sow-connections');
-  for (const connection of sector.connections) {
-    const target = byId.get(connection.to);
-    const targetController = game.sectors[connection.to]?.controller;
-    const chip = E('button', 'sow-connection');
-    chip.type = 'button';
-    chip.style.setProperty('--faction', targetController ? factions[targetController].color : (target.factionHome === 'center' ? factions.center.color : 'transparent'));
-    chip.title = connection.kinds.map((kind) => KIND_LABEL[kind]).join(', ');
-    chip.append(E('span', 'sow-connection-kinds', connection.kinds.map((kind) => KIND_ICON[kind]).join('')), E('span', '', target.name));
-    chip.onclick = () => select(connection.to);
-    list.append(chip);
+  const tabs = E('div', 'sow-tabs'); tabs.setAttribute('role', 'tablist');
+  const content = E('div', 'sow-tab-content'); content.id = 'sow-tab-panel'; content.setAttribute('role', 'tabpanel');
+  for (const [id, label] of [['actions', 'Acties'], ['city', 'Stad'], ['connections', 'Verbindingen']]) {
+    const tab = E('button', '', label); tab.id = 'sow-tab-' + id; tab.setAttribute('role', 'tab'); tab.setAttribute('aria-selected', String((state.tab || 'actions') === id)); tab.setAttribute('aria-controls', content.id);
+    tab.onclick = () => { state.tab = id; refresh(); document.getElementById(tab.id)?.focus(); }; tabs.append(tab);
   }
-  box.append(list);
-  if (game.canEndTurn && you && dynamic.controller === you.faction) {
+  content.setAttribute('aria-labelledby', 'sow-tab-' + (state.tab || 'actions')); box.append(tabs, content);
+  const capitalLevel = Number.isInteger(d.capitalLevel) && d.capitalLevel > 0 ? d.capitalLevel : 1;
+  const maxLevel = game.config.maxBuildingLevel || 3;
+  const capitalCost = (game.config.capitalUpgradeCost || 8) * capitalLevel;
+  const upgradesAvailable = Boolean(game.config.maxBuildingLevel && Number.isInteger(d.capitalLevel));
+  const evolution = capitalLevel < maxLevel ? 'Naar niveau ' + (capitalLevel + 1) + ': bezit je eigen hoofdstad en betaal ' + capitalCost + ' goud. Daarna kun je elk gebouw in je gebied afzonderlijk upgraden tot niveau ' + (capitalLevel + 1) + '.' : 'Maximum niveau bereikt. Alle gebouwen kunnen naar niveau ' + maxLevel + '.';
+  const level = id => d.buildings.includes(id) ? d.buildingLevels?.[id] || 1 : 0;
+  if (state.tab === 'city') {
+    const rows = E('dl', 'sow-info-rows'); const row = (label, value) => rows.append(E('dt', '', label), E('dd', '', value));
+    row('Eigenaar', d.controller ? factions[d.controller].name : 'Neutraal'); row('Regio', factions[sector.factionHome].name);
+    row('Terrein', game.board.terrains[sector.terrain].label); row('Troepen', (d.units?.militia || 0) + ' militie · ' + (d.units?.armored || 0) + ' colonne');
+    row('Bevolking', d.population + '/10'); row('Beweging', d.movement + ' punten · weg 1, overige 2');
+    if (sector.isCapital && sector.factionHome !== 'center') {
+      row('Hoofdstad', 'Niveau ' + capitalLevel); row('Evolutie', evolution);
+    }
+    row('Gebouwen', d.buildings.length + '/' + sector.buildSlots + ' bouwplaatsen');
+    for (const id of d.buildings) row(game.config.buildings[id].label, 'Niveau ' + level(id));
+    if (own) row('Inkomen', (sector.economicValue + d.buildings.reduce((sum, id) => sum + (game.config.buildings[id].incomeBonus || 0) * level(id), 0)) + ' per ronde vóór belastingen');
+    content.append(rows);
+  } else if (state.tab === 'connections') {
+    content.append(E('p', 'sow-hint', 'Selecteer een provincie om die te bekijken. Legers verplaats je via hun figuur op het bord.'));
+    const list = E('div', 'sow-connections');
+    for (const c of sector.connections) { const button = E('button', 'sow-connection', c.kinds.map(k => KIND_ICON[k]).join('') + ' ' + byId.get(c.to).name); button.title = c.kinds.map(k => KIND_LABEL[k]).join(', '); button.onclick = () => select(c.to); list.append(button); } content.append(list);
+  } else {
+    if (game.battle) { content.append(E('p', 'sow-hint', 'Rond eerst het gevecht af via het gevechtspaneel.')); return box; }
+    if (!own || !game.canEndTurn) { content.append(E('p', 'sow-hint', own ? 'Je kunt acties uitvoeren wanneer je aan de beurt bent.' : 'Je kunt alleen in je eigen provincies bouwen en werven.')); return box; }
     const actions = E('div', 'sow-actions');
-    const militiaCost = Math.max(1, game.config.units.militia.cost - (you.support >= 8 ? 1 : 0));
-    const militia = E('button', '', `Werf militie (${militiaCost} goud)`);
-    militia.disabled = you.treasury < militiaCost || dynamic.population < 2;
-    militia.onclick = () => action('recruit', { sectorId: sector.id, unit: 'militia' }); actions.append(militia);
-    if (dynamic.buildings.includes('barracks')) {
-      const cost = Math.max(1, game.config.units.armored.cost - (you.support >= 8 ? 1 : 0));
-      const armored = E('button', '', `Werf colonne (${cost} goud)`);
-      armored.disabled = you.treasury < cost || dynamic.population < 2;
-      armored.onclick = () => action('recruit', { sectorId: sector.id, unit: 'armored' }); actions.append(armored);
+    const add = (label, benefit, cost, type, data, blocked = '') => {
+      const button = E('button', ''); button.append(E('strong', '', label), E('small', 'sow-benefit', benefit), E('small', 'sow-cost', cost + ' goud'));
+      button.disabled = Boolean(blocked) || you.treasury < cost; button.title = blocked || (you.treasury < cost ? 'Onvoldoende goud' : benefit);
+      if (blocked) button.append(E('small', '', blocked)); button.onclick = () => action(type, { sectorId: sector.id, ...data }); actions.append(button);
+    };
+    for (const [id, unit] of Object.entries(game.config.units)) {
+      if (unit.requires && !d.buildings.includes(unit.requires)) continue;
+      const cost = Math.max(1, unit.cost - (you.support >= 8 ? 1 : 0) - Math.max(0, level('barracks') - 1));
+      add('Werf ' + unit.label, 'Troepen +1' + (id === 'armored' ? ' · +1 op één dobbelsteen (max. 6)' : '') + ' · onderhoud +' + unit.upkeep + ' · bevolking −1', cost, 'recruit', { unit: id }, d.population < 2 ? 'Minimaal 2 bevolking nodig' : '');
     }
-    if (dynamic.buildings.length < sector.buildSlots) for (const [id, building] of Object.entries(game.config.buildings)) {
-      if (dynamic.buildings.includes(id)) continue;
-      const button = E('button', '', `Bouw ${building.label} (${building.cost})`);
-      button.disabled = you.treasury < building.cost;
-      button.onclick = () => action('build', { sectorId: sector.id, building: id }); actions.append(button);
+    if (sector.id === factions[you.faction].capital) {
+      content.append(E('p', 'sow-evolution', 'Hoofdstad · niveau ' + capitalLevel + '. ' + evolution));
+      if (!upgradesAvailable) content.append(E('p', 'sow-hint', 'Evolutie is beschikbaar zodra de spelserver is bijgewerkt.'));
+      else if (capitalLevel < maxLevel) add('Evolueer hoofdstad', 'Niveau ' + (capitalLevel + 1) + ' ontsluit sterkere gebouwen in je hele gebied', capitalCost, 'upgrade', { building: 'capital' });
     }
-    if (dynamic.troops > 0) for (const connection of sector.connections) {
-      const target = byId.get(connection.to), enemy = game.sectors[connection.to]?.controller !== you.faction;
-      const button = E('button', enemy ? 'danger' : '', `${enemy ? 'Val aan' : 'Verplaats'} → ${target.name}`);
-      button.disabled = dynamic.movement < (connection.kinds.includes('road') ? 1 : 2);
-      button.onclick = () => action('move', { from: sector.id, to: target.id }); actions.append(button);
+    const benefit = (id, upgrading) => ({ economy: 'Inkomen +1 per ronde', barracks: upgrading ? 'Wervingskosten −1 goud (min. 1)' : 'Ontsluit colonnes · +1 op een dobbelsteen', fort: '+1 op hoogste verdedigingsdobbelsteen (max. 6)', civic: 'Draagvlak +1 direct (max. 10)', infrastructure: 'Beweging +1 vanaf volgende beurt' })[id];
+    for (const [id, building] of Object.entries(game.config.buildings)) {
+      const current = level(id);
+      if (!current && d.buildings.length < sector.buildSlots) add('Bouw ' + building.label, benefit(id, false), building.cost, 'build', { building: id });
+      else if (current && current < game.config.maxBuildingLevel) add(building.label + ' → niveau ' + (current + 1), benefit(id, true), building.cost * (current + 1), 'upgrade', { building: id }, (!upgradesAvailable || current >= (you.capitalLevel || 1)) ? 'Hoofdstad niveau ' + (current + 1) + ' nodig' : '');
     }
-    box.append(E('div', 'sow-info-sub', 'Acties'), actions);
-    box.append(E('small', '', 'Verplaats je hele leger. Na een aanval is het uitgeput. Win met Sint-Niklaas en 23 provincies of 50 goud.'));
+    content.append(actions, E('small', 'sow-hint', 'Gebouwniveaus volgen je eigen hoofdstad (max. ' + maxLevel + '). Klik op een legerfiguur op het bord om te bewegen.'));
   }
   return box;
+}
+
+function buildArmy(sector, dynamic, color) {
+  const n = dynamic.troops, kind = n >= 20 ? 'Vliegtuig' : n >= 10 ? 'Artillerie' : n >= 5 ? 'Tank' : 'Soldaten';
+  const g = svg('g', { class: 'sow-army', transform: 'translate(' + sector.label[0] + ' ' + (sector.label[1] + 30) + ')', tabindex: 0, role: 'button', 'aria-label': sector.name + ': ' + n + ' troepen, ' + kind });
+  const title = svg('title'); title.textContent = n + ' troepen · ' + kind + ' · klik om te selecteren';
+  g.append(title, svg('rect', { x: -27, y: -20, width: 54, height: 43, rx: 12, fill: 'transparent' }), svg('ellipse', { cx: 0, cy: 12, rx: 24, ry: 7, fill: '#342519', opacity: .6 }));
+  const paths = n >= 20 ? 'M0-21L5-5 23 5 23 10 5 5 4 16 11 21 0 18-11 21-4 16-5 5-23 10-23 5-5-5Z' : n >= 10 ? 'M-18 7L-8-4 17-19 21-14-3 2 11 7 11 12-18 12ZM-13 7A6 6 0 1 0-13 19A6 6 0 1 0-13 7M10 7A6 6 0 1 0 10 19A6 6 0 1 0 10 7' : n >= 5 ? 'M-23 4Q-27 16-17 17H17Q27 16 23 4ZM-16 4V-5H12L18 4ZM-6-5V-12H9V-5M8-10H28V-6H8' : 'M-6-10A7 7 0 1 0 6-10A7 7 0 1 0-6-10M-7-3H7L12 8 7 10 5 4 4 13 10 20H2L-1 12-5 20H-13L-7 10-8 3-13 8-16 4Z';
+  g.append(svg('path', { d: paths, fill: color, stroke: '#30281c', 'stroke-width': 2, 'stroke-linejoin': 'round' }));
+  const count = svg('text', { x: 24, y: 24, 'text-anchor': 'middle', class: 'sow-army-count' }); count.textContent = n; g.append(count); return g;
 }
 
 function renderLegend(E, board) {
@@ -613,7 +765,7 @@ function renderLegend(E, board) {
     item.append(E('span', 'sow-legend-icon', KIND_ICON[kind]), E('span', '', label));
     kinds.append(item);
   }
-  wrap.append(terrains, kinds);
+  wrap.append(terrains, kinds, E('p', 'sow-hint', 'Legers: 1–4 soldaten · 5–9 tanks · 10–19 artillerie · 20+ vliegtuigen. Elk figuur toont de legergrootte. Colonnes geven +1 op een dobbelsteen (max. 6). Gebouwen: E economie · K kazerne · F fort · B burgerlijk · I infrastructuur; cijfer = niveau.'));
   return wrap;
 }
 

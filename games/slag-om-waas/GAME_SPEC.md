@@ -1,15 +1,36 @@
 # TOTAL WAAS
-## Speelbare campagne (regelsversie 3)
+## Speelbare campagne (regelsversie 4)
 
 Deze regels vervangen conflicterende fasebeschrijvingen hieronder. Elke factie begint met 10 goud en 3 milities in haar hoofdstad. Opgeslagen bordpartijen worden automatisch aangevuld.
 
+- Factiekeuze: iedere menselijke speler kiest in de lobby zelf tussen Zuid, West, Noord en Oost. Een gekozen factie is niet meer beschikbaar voor anderen. Wie niet kiest en NPC's krijgen bij de start automatisch een unieke resterende factie. De gekozen factie bepaalt de hoofdstad, provincies, kleur en starttroepen; de speler die bovenaan in de lobby staat, begint.
+
 - Beleid: laag geeft 75% belasting en +2 draagvlak, normaal 100%, knevelarij 150% en -2. Vanaf de volgende eigen beurt wordt belasting ontvangen en onderhoud betaald. Draagvlak 8+ geeft 20% bonus en 1 goud wervingskorting; 1–3 halveert belasting; 0 veroorzaakt een opstand. Onbetaalde legers verliezen per provincie een eenheid en 2 draagvlak.
-- Militie: 3 goud, kracht 1, onderhoud 1. Colonne: kazerne vereist, 6 goud, kracht 2, onderhoud 2. Werving kost 1 lokale bevolking, minimumvoorraad 2. Provincies starten met 5; herstel per beurt 2/1/0 bij laag/normaal/knevelarij (maximum 10).
-- Gebouwen: economie geeft +1 belastingbasis, kazerne ontsluit colonnes, fort geeft +1 verdediging, burgerlijk geeft +1 draagvlak, infrastructuur geeft 3 in plaats van 2 bewegingspunten vanaf de volgende beurt. Elk type maximaal eenmaal per provincie, beperkt door bouwplaatsen.
-- Hele legers bewegen langs bestaande verbindingen: weg kost 1 punt, andere verbindingen 2. Samengevoegde legers gebruiken het laagste resterende budget. Bruggen geven bezette verdedigers +1 kracht. Auto-resolve: aanvaller moet strikt sterker zijn. Verliezen zijn de helft van de verdedigingskracht, afgerond omhoog; bij verovering overleeft minstens één aanvaller. Overlevende eenheidstypes blijven behouden; na strijd geen beweging meer.
+- Militie: 3 goud, onderhoud 1. Colonne: kazerne vereist, 6 goud, onderhoud 2; elke colonne geeft +1 op één eigen dobbelsteen (maximaal 6). Werving kost 1 lokale bevolking, minimumvoorraad 2. Provincies starten met 5; herstel per beurt 2/1/0 bij laag/normaal/knevelarij (maximum 10).
+- Gebouwen (basisniveau 1): economie geeft +1 belastingbasis, kazerne ontsluit colonnes, fort geeft +1 verdediging, burgerlijk geeft +1 draagvlak, infrastructuur geeft 3 in plaats van 2 bewegingspunten vanaf de volgende beurt. Elk type maximaal eenmaal per provincie, beperkt door bouwplaatsen.
+- Hele legers verplaatsen binnen eigen gebied langs bestaande verbindingen: weg kost 1 punt, andere verbindingen 2. Samengevoegde legers gebruiken het laagste resterende budget. Een aanval vereist minstens 2 troepen; één blijft achter. De aanval opent een gevecht met losse Risk-worpen: maximaal 3 aanvalsdobbelstenen (troepen minus één) tegen maximaal 2 verdedigingsdobbelstenen (aantal verdedigers). Vergelijk de hoogste paren; gelijkspel wint de verdediger. Elk verloren paar kost één troep, eerst militie, daarna colonnes. Ga door of trek terug; na de aanval geen beweging meer. Bij verovering verplaatsen alle overlevenden behalve één garnizoen naar het doel.
 - NPC's kiezen beleid, werven, bouwen economie, marcheren naar grenzen en vallen zwakkere buren aan.
 - Overwinning aan een beurtovergang: bezit Sint-Niklaas plus minstens 23 provincies óf 50 goud.
 - Sint-Niklaas is voorlopig neutraal en veroverbaar. Senaatsmissies, regionale handelsketens en burgeroorlog zijn nog geen onderdeel van deze campagne.
+
+### Provinciepanelen, legerfiguren en upgrades
+
+- Provincies openen een compact venster met Acties als standaardtab, naast Stad en Verbindingen. Elke actie vermeldt kosten en effect. Klik op een legerfiguur en daarna op een gemarkeerde provincie om het leger te verplaatsen of een dobbelgevecht te openen; annuleren kan met de knop boven het bord of dezelfde legerfiguur.
+- Legerfiguren geven omvang aan: 1–4 soldaten, 5–9 tanks, 10–19 artillerie, 20+ vliegtuigen. Dit zijn visuele categorieën; militie en colonnes behouden hun onderhoud; colonnes versterken dobbelstenen.
+- De eigen oorspronkelijke hoofdstad begint op niveau 1. Upgrade naar niveau 2 kost 8 goud, naar 3 kost 16 goud. Alleen die hoofdstad ontsluit hogere gebouwniveaus. Bij verlies van de hoofdstad is de limiet voor nieuwe upgrades weer 1; bestaande en veroverde upgrades blijven behouden.
+- Elk gebouw begint op niveau 1. Upgrade kost de bouwprijs maal het nieuwe niveau, gebruikt geen extra bouwplaats en vereist het overeenkomstige hoofdstadsniveau. Voorlopig maximaal niveau 3.
+- Economie: +1 inkomen per niveau. Fort: +1 op de hoogste verdedigingsdobbelsteen per niveau. Kazerne: niveau 1 ontsluit colonnes, elk hoger niveau geeft 1 goud korting op alle lokale werving (minimaal 1 goud). Burgerlijk: +1 draagvlak direct bij bouw en elke upgrade (maximum 10). Infrastructuur: 2 + gebouwniveau bewegingspunten vanaf de volgende eigen beurt.
+- Gebouwen en niveaus zijn zichtbaar op het bord en in Stad. NPC's investeren bij voldoende reserves ook in hoofdstads- en economie-upgrades.
+- Alleen de eigenaar ontvangt zijn economische totalen, belastingbeleid en economische logregels. Schatkist, draagvlak, provincies, legermacht en gebouwen blijven openbaar. Publieke bezittingen laten uiteraard toe de economie deels in te schatten.
+
+### Risk-gevechten en overwinningskaarten
+
+- Dobbelstenen worden uitsluitend op de server willekeurig geworpen. Een gevecht blokkeert overige acties en het beëindigen van de beurt tot de aanvaller stopt, niet meer kan aanvallen of wint. De verdediging werpt automatisch mee. Het gevechtspaneel toont natuurlijke worpen, scores na bonussen en verliezen; het log bewaart die samenvatting.
+- Fortniveau en kasteelniveau (hoofdstadsniveau, Sint-Niklaas begint op 1) geven samen een bonus op de hoogste verdedigingsdobbelsteen. Een brug geeft daar +1 bij. Iedere colonne verhoogt één eigen dobbelsteen met 1, te beginnen bij de hoogste; een achterblijvende colonne telt niet mee bij de aanval. De gezamenlijke verdedigingsbonus is maximaal +4 per steen en de eindscore maximaal 6. Zo blijft zelfs een zwaar versterkte hoofdstad veroverbaar.
+- Bij verovering: draagvlak +1 en maximaal één overwinningskaart per eigen beurt, direct bij de eerste verovering. Onverdedigde provincies worden zonder worp veroverd. Terugtrekken of verliezen geeft draagvlak −1; geen kaart. Gebouwen blijven behouden.
+- Overwinningskaarten zijn privé en worden bewaard tot gebruik: Versterkingen geeft 3 milities in een eigen provincie, Oorlogsbuit geeft 5 goud, Volksheld geeft 2 draagvlak (maximaal 10). De kaart wordt verbruikt bij een geldige inzet. Geen bevolking of goud nodig voor kaartversterkingen; die troepen hebben wel normaal onderhoud. Kaarten zijn uitsluitend buiten gevechten tijdens de eigen beurt inzetbaar. Dit is een Total Waas-variant met directe bonussen, geen ruilsets van drie kaarten.
+- NPC's spelen hun kaarten, voeren dobbelgevechten en trekken terug wanneer hun kleine aanvalsmacht geen zinvolle kans meer heeft.
+- Bestaande partijen krijgen ontbrekende hoofdstadsniveaus en kaarthanden zonder legers te resetten. Bij een oude server blijft de client een geldig basisniveau tonen en meldt hij dat evolutie een bijgewerkte server vereist.
 
 ## Game Design & Board Specification
 

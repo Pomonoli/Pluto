@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.37.0 — Total Waas: vrije factiekeuze, Risk-gevechten en hoofdstadsevolutie.
+
+- Iedere speler kiest in de Total Waas-lobby zelf een unieke factie; NPC's en spelers zonder keuze krijgen automatisch een vrije factie.
+- Risk-dobbelgevechten verwerken kasteelbonussen en leveren inzetbare overwinningskaarten op.
+- Hoofdsteden tonen hun niveau en voorwaarden voor evolutie en gebouwupgrades duidelijk.
+
+## v1.36.0 — Total Waas: compacte actietabs, legerfiguren op het bord, zichtbare gebouwen met hoofdstadsgebonden upgrades en een privé-economie.
+
+- Total Waas: compacte actietabs, legerfiguren op het bord, zichtbare gebouwen met hoofdstadsgebonden upgrades en een privé-economie.
+
 ## v1.35.3 — Total Waas - Castle Def
 
 - Total Waas - Castle Def

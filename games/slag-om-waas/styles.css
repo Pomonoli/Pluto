@@ -137,7 +137,7 @@
 /* ---------- paneel ---------- */
 .sow-panel { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .sow-root .sow-province-popup {
-  width: min(420px, calc(100vw - 24px)); max-height: calc(100dvh - 32px);
+  width: min(390px, calc(100vw - 24px)); max-height: min(540px, calc(100dvh - 32px));
   box-sizing: border-box; margin: auto; padding: 0; overflow: auto;
   border: 1px solid #c9b58e; border-radius: 12px; background: #f3e7cf; color: #2b2118;
   box-shadow: 0 18px 64px #0008; overscroll-behavior: contain;
@@ -215,3 +215,52 @@
 .sow-actions button { padding: 5px 7px; border: 1px solid #b79d70; border-radius: 6px; background: #fff9ea; color: var(--sow-ink); font: 700 .7rem system-ui, sans-serif; cursor: pointer; }
 .sow-actions button:hover { background: #fff; }
 .sow-actions button.danger { color: #7a241d; border-color: #a65347; }
+
+/* Compacte provincie-tabs en speelstukken boven de provincie-hitvlakken. */
+.sow-root .sow-tabs { display:flex; gap:4px; margin:10px 0; }
+.sow-root .sow-tabs button { flex:1; min-height:38px; padding:6px; border:1px solid #b79d70; border-radius:6px; background:#eadbbd; color:#493422; cursor:pointer; font:600 12px system-ui; }
+.sow-root .sow-tabs button[aria-selected="true"] { background:#493422; color:#fff5dc; }
+.sow-root .sow-tab-content { min-height:145px; }
+.sow-root .sow-actions button { display:flex; flex-direction:column; gap:4px; align-items:flex-start; text-align:left; padding:9px; min-height:86px; }
+.sow-root .sow-actions small { font-size:11px; }
+.sow-root .sow-actions .sow-benefit { font-weight:400; line-height:1.35; color:#40532c; }
+.sow-root .sow-cost { color:#785326; }
+.sow-root .sow-tab-content > .sow-hint { display:block; margin-top:10px; font:12px/1.4 system-ui; }
+.sow-root .sow-army { cursor:pointer; filter:drop-shadow(2px 3px 1px #24190b80); pointer-events:all; }
+.sow-root .sow-army:hover, .sow-root .sow-army:focus-visible { filter:drop-shadow(0 0 4px white); outline:none; }
+.sow-root .sow-army-count { font:bold 20px system-ui; fill:white; stroke:#30281c; stroke-width:4px; paint-order:stroke; }
+.sow-root .sow-building text { font:bold 12px system-ui; fill:#30281c; stroke:#fff0c9; stroke-width:2px; paint-order:stroke; }
+.sow-root .sow-move-hint { background:#f3e7cf; color:#30281c; padding:10px; border-radius:8px; margin-bottom:8px; font:13px/1.4 system-ui; }
+.sow-root .sow-move-hint[hidden] { display:none; }
+.sow-root .sow-move-hint button { margin-left:10px; padding:6px; cursor:pointer; }
+.sow-root .sow-battle, .sow-root .sow-cards { background:var(--sow-panel); color:var(--sow-text); border:1px solid var(--sow-border); border-radius:10px; padding:12px; font:13px/1.4 system-ui; }
+.sow-root .sow-battle[hidden], .sow-root .sow-cards[hidden] { display:none; }
+.sow-root .sow-battle .sow-hint { display:block; margin:8px 0; }
+.sow-root .sow-dice-row { display:flex; flex-wrap:wrap; align-items:center; gap:5px; margin:10px 0; }
+.sow-root .sow-dice-row > small:first-child { flex-basis:100%; }
+.sow-root .sow-die { display:inline-grid; place-items:center; width:30px; height:30px; border-radius:6px; border:1px solid #5d4935; font:bold 18px system-ui; box-shadow:0 2px 0 #382618; }
+.sow-root .sow-die.attacker { background:#a93f31; color:white; }
+.sow-root .sow-die.defender { background:#fff6e1; color:#382618; }
+.sow-root .sow-battle-controls { display:flex; gap:6px; }
+.sow-root .sow-battle button, .sow-root .sow-card button { padding:9px; cursor:pointer; }
+.sow-root .sow-battle-outcome { display:block; margin-top:8px; }
+.sow-root .sow-cards summary { cursor:pointer; font-weight:700; }
+.sow-root .sow-card { display:flex; flex-direction:column; gap:7px; padding:12px; margin-top:10px; background:#f3e7cf; color:#382618; border:1px solid #b79d70; border-radius:7px; }
+.sow-root .sow-card select { max-width:100%; padding:7px; }
+.sow-root .sow-evolution { font:12px/1.45 system-ui; border-left:3px solid #bb953b; padding-left:9px; }
+
+/* Lobby: iedere speler kiest zijn eigen Wase factie. */
+.sow-faction-picker { margin:12px 0; padding:14px; border:1px solid var(--border); border-radius:14px; background:var(--panel); color:var(--text); }
+.sow-faction-picker-head { display:flex; flex-direction:column; gap:3px; margin-bottom:10px; }
+.sow-faction-picker-head small, .sow-faction-picked { color:var(--muted); }
+.sow-faction-choices { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+.sow-faction-choice { display:grid; grid-template-columns:auto 1fr; grid-template-rows:auto auto auto; column-gap:8px; align-items:center; min-width:0; padding:10px; text-align:left; border:1px solid color-mix(in srgb,var(--faction) 58%,var(--border)); border-left:5px solid var(--faction); border-radius:10px; background:color-mix(in srgb,var(--faction) 9%,var(--panel)); color:var(--text); cursor:pointer; }
+.sow-faction-choice:hover:not(:disabled) { background:color-mix(in srgb,var(--faction) 17%,var(--panel)); }
+.sow-faction-choice.active { box-shadow:0 0 0 2px var(--faction); background:color-mix(in srgb,var(--faction) 22%,var(--panel)); }
+.sow-faction-choice:disabled { opacity:.48; cursor:not-allowed; }
+.sow-faction-choice-emblem { grid-row:1 / 4; font-size:24px; }
+.sow-faction-choice span:not(.sow-faction-choice-emblem), .sow-faction-choice small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.sow-faction-choice small { color:var(--muted); }
+.sow-faction-picked { display:block; margin-top:9px; }
+@media (max-width:760px) { .sow-faction-choices { grid-template-columns:1fr 1fr; } }
+@media (max-width:420px) { .sow-faction-choices { grid-template-columns:1fr; } }

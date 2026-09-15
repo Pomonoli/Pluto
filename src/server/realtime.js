@@ -552,6 +552,26 @@ function createRealtime(io) {
       } catch (error) { ackError(ack,error.message||'Kon spelopties niet aanpassen.'); }
     });
 
+    socket.on('room:setPlayerOptions', (payload = {}, ack) => {
+      try {
+        const { room, player } = getPlayerForSocket(socket);
+        if (!room || !player) return ackError(ack, 'Je zit niet in een lobby.');
+        if (room.status !== 'lobby') return ackError(ack, 'Het spel is al gestart.');
+        const normalize = gameModule(room).normalizePlayerRoomOptions;
+        if (typeof normalize !== 'function') return ackError(ack, 'Dit spel heeft geen opties per speler.');
+        const targetId = typeof payload.playerId === 'string' ? payload.playerId : player.id;
+        const target = room.players.find((entry) => entry.id === targetId);
+        if (!target) return ackError(ack, 'Deze speler zit niet in de lobby.');
+        const isHost = player.token === room.hostToken;
+        if (target.id !== player.id && !(isHost && target.isNpc)) {
+          return ackError(ack, 'Je kunt alleen je eigen keuze of die van een NPC aanpassen.');
+        }
+        room.gameOptions = normalize(room.gameOptions || {}, payload, { player: target, players: room.players, actor: player, isHost });
+        broadcastRoom(room);
+        if (typeof ack === 'function') ack({ ok: true, gameOptions: room.gameOptions });
+      } catch (error) { ackError(ack, error.message || 'Kon de spelersoptie niet aanpassen.'); }
+    });
+
     socket.on('room:start', (_payload, ack) => {
       try {
         const { room, player } = getPlayerForSocket(socket);

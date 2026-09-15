@@ -12,7 +12,8 @@ Visuele referentie: de conceptkaart "De Slag om Waas" (oude naam) (tabletop-stra
 
 1. Titlebar (Pluto) met ronde en speler aan de beurt.
 2. Bord links (of bovenaan op mobiel), paneel rechts (320px) of eronder.
-3. Paneel-volgorde: beurtblok → spelerskaarten (factie, schatkist, draagvlak, sectoren, legermacht) → legende → log. Provincie-informatie en acties openen uitsluitend na selectie in een perkamenten pop-up (max. 420px, scrollbaar op mobiel). Sluiten met kruisje, Escape of buiten de pop-up klikken; geen automatische selectie bij openen.
+3. Paneel-volgorde: beurtblok → spelerskaarten (factie, schatkist, draagvlak, sectoren, legermacht) → legende → log. Provincie-informatie en acties openen uitsluitend na selectie in een perkamenten pop-up (max. 390px; tabs Acties (standaard), Stad en Verbindingen, scrollbaar op mobiel). Sluiten met kruisje, Escape of buiten de pop-up klikken; geen automatische selectie bij openen.
+4. Lobby: vier compacte factiekaarten in één rij, twee kolommen op tablet en één op smalle telefoon. Gebruik factiekleur, embleem, streeknaam en terrein. Markeer de eigen keuze duidelijk en dim een door een andere speler gekozen factie.
 
 ## Bord
 
@@ -21,7 +22,8 @@ Visuele referentie: de conceptkaart "De Slag om Waas" (oude naam) (tabletop-stra
 - Factiegrenzen: brede gekleurde lijn met feDropShadow-gloed in de factiekleur plus een dunne lichte kernlijn (neon-effect), naar binnen geclipt en enkel waar de buur tot een andere groep behoort. Interne celgrenzen dun, halftransparant perkamentbruin.
 - Hover: lichte brightness. Geselecteerd: witte rand met gloed; buren: crème rand; overige sectoren gedimd (55 %).
 - Hoofdwegen: crème dashed op donkere onderlijn, vloeiend (Catmull-Rom). Moervaart: blauwe strook van 18 kaarteenheden met lichte oever van 26, houten brugjes op de bruggen. Durme: decoratieve meander links (westelijk) van Lokerzand, dezelfde rivierbreedte en oever, met eigen naamlabel. Schelde: brede meanderende band met lichte oeverrand, koggeschepen. Stadsmuur: cirkel met kantelen rond Sint-Niklaas.
-- Troepenbadges: cirkel in factiekleur; rebellen donkerbruin met gestippelde rand.
+- Legers: aanklikbare vector-miniaturen in factiekleur met sokkel, schaduw en exact aantal. 1–4 soldaten, 5–9 tanks, 10–19 artillerie, 20+ vliegtuigen. De provincie blijft apart selecteerbaar. Selecteer een leger en daarna een bereikbare provincie; toon bewegingshulp en annuleren boven het bord.
+- Gebouwen: kleine vectorgebouwen boven het provincielabel, met typeletter (E/K/F/B/I) en niveau. Zichtbaar voor iedereen; eigen economische totalen uitsluitend in de eigen spelerskaart.
 - Labels in Cinzel (fallback Georgia) met lichte outline; hoofdsteden groter, Sint-Niklaas het grootst. Vector-POI-iconen: kasteel (Sint-Niklaas), stadstoren (Lokerzand), haven/kogge (Temsehaven, Steendorpwerf, Doelhaven, Zwijndrechtwerf), bomenclusters (Stekenburg, Pauwelsbos, Stropersbos, Sinaaiwoud), molens (Beverhof, Kielpolder).
 - Perkament-titelbanner linksboven, kompasroos eronder; buitenwereld (Nederland, Antwerpen, Bornem, Gent) als kapitalen buiten de bordrand.
 
@@ -35,3 +37,5 @@ Visuele referentie: de conceptkaart "De Slag om Waas" (oude naam) (tabletop-stra
 
 - Panelen gebruiken de Pluto-variabelen (`--panel`, `--text`, `--muted`, `--border`) zodat licht en donker thema automatisch kloppen.
 - Het bord en het perkamenten sectorpaneel houden hun vaste tabletop-look in beide thema's.
+
+- Gevechten: compact paneel onder het beurtblok met rode aanvalsdobbelstenen, perkamentwitte verdedigingsdobbelstenen, natuurlijke worpen, scores met bonussen en verliezen. Knoppen voor gooien en terugtrekken. Alleen de eigen overwinningskaarten tonen, als perkamentkaartjes met korte bonus en inzetknop. Hoofdstadbadge zegt uitsluitend “Hoofdstad”; niveau en evolutievoorwaarden staan in het venster.

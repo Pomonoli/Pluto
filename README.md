@@ -2,13 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.35.3
+## Nieuw in versie 1.37.0
 
-Total Waas - Castle Def
-
-## Nieuw in versie 1.35.0
-
-**Kasteel Strijd heet nu Castle Defense** en is herbouwd rond echte strategie: koop en train infanterie, schutters en zware eenheden (steen-papier-schaar), bouw torens, upgrade muren en economie en evolueer met XP uit gevechten door zeven getekende tijdperken — van Prehistorie tot Huidige Tijd — met per tijdperk een eigen landschap, basis, troepen en ultieme aanval.
+Total Waas: kies zelf een unieke factie in de lobby en speel met Risk-dobbelgevechten, kasteelbonussen, overwinningskaarten en hoofdstadsevolutie.
 
 ## Nieuw in versie 1.0.0
 

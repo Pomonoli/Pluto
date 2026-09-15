@@ -6,6 +6,13 @@
  * Waarden voor latere fases staan er al zodat balans op één plek gebeurt.
  */
 const CONFIG = {
+  maxBuildingLevel: 3,
+  capitalUpgradeCost: 8,
+  cards: {
+    reinforcements: { label: 'Versterkingen', description: 'Troepen +3 militie in een eigen provincie', troops: 3 },
+    treasury: { label: 'Oorlogsbuit', description: 'Schatkist +5 goud', gold: 5 },
+    support: { label: 'Volksheld', description: 'Draagvlak +2 (maximaal 10)', support: 2 }
+  },
   startTreasury: 10,
   startSupport: 6,
   neutralGarrison: 6, // startgarnizoen van de stad Sint-Niklaas
@@ -20,8 +27,8 @@ const CONFIG = {
 
   // Fase 2 — troepen
   units: {
-    militia: { label: 'Militie', cost: 3, upkeep: 1, strength: 1 },
-    armored: { label: 'Gepantserde colonne', cost: 6, upkeep: 2, strength: 2, requires: 'barracks' }
+    militia: { label: 'Militie', cost: 3, upkeep: 1 },
+    armored: { label: 'Gepantserde colonne', cost: 6, upkeep: 2, requires: 'barracks' }
   },
 
   // Fase 3 — gebouwen
