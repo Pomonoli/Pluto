@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.39.0 — CycClub-koersen worden interactiever met twee energiebalken, ploegacties, koersradio, positie en gebeurtenissen onderweg.
+
+- Elke renner heeft tijdens een rit een groene balk (uithouding, daalt heel de rit) en een rode balk (explosiviteit, kost bij Val aan/Kop en laadt op bij Volg/Herstel, nooit boven de groene). Hongerklop bij groen ≤ 10; na de rit wordt de groene balk weer blijvende vermoeidheid.
+- Nieuwe ploegacties: Bescherm (een knecht offert zijn beurt op, de kopman krijgt +2 en valt niet) en Lead-out in sprintsegmenten (verbrandt alle explosiviteit, de aanval van de ploeggenoot krijgt ×1,6).
+- Val aan krijgt een push-your-luck-inzet: Licht (+5, altijd), Vol (+7, 80%) of Alles (+9, 60%). Mislukt de aanval, dan ontploft de renner en zit hij de rest van de koers in de Hongerklop.
+- Koersradio kondigt per segment 1-2 renners aan die naar voren schuiven; met "Volg <naam>" zit je in hun wiel en rijd je mee in de goede ontsnapping als ze echt aanvallen.
+- Positie in de groep (Kop / Buik / Staart) volgt uit je tactiek: achteraan spaar je energie maar loop je meer valrisico.
+- Gebeurtenissen onderweg pauzeren de worp met een keuze: zijwind en waaiers, lekke band, valpartij vooraan, bevoorradingszone of rugwind.
+- NPC-ploegen gebruiken de nieuwe acties ook; spelregels, tooltips en het koersscherm zijn bijgewerkt.
+- Klassementen in rittenkoersen tonen de leider met zijn totaaltijd en iedereen erachter met +achterstand; het ploegenklassement telt per echte ploeg (minstens drie renners), zodat spelers het ook kunnen winnen.
+- Team-Tactics: tien deckbuilding-tactieken (Lead-out, Gereed voor eindsprint, Bergpunten pakken, Tussensprint pakken, Vroege vlucht, Kopman uit de wind zetten, Gat dichtrijden, Meeschuiven / Schaduwen, Bordje leeg eten, Waaier trekken) die je in de shop activeert, upgradet (niveau 1-5) en als kaarten koopt; in koers speel je per segment één kaart bovenop de rennertactieken, en bij een top 3 of leiderstrui krijg je de gespeelde kaarten terug.
+- Het CycClub-leaderboard toont per speler de gewonnen truien (Geel, Groen, Bolletjes, Wit, Ploegen) en sorteert op zeges, dan truien.
+
 ## v1.38.2 — Franchise integration
 
 - Franchise integration

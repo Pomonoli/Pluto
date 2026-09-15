@@ -878,6 +878,21 @@ const RELEASES = [
     improvements:[
       "Franchise integration"
     ]
+  },
+  {
+    version:"1.39.0",
+    features:[
+      "CycClub: twee energiebalken per renner — groen (uithouding) en rood (explosiviteit) — met Hongerklop als de groene balk leeg raakt.",
+      "CycClub: nieuwe ploegacties Bescherm en Lead-out, en een inzet (Licht / Vol / Alles) bij Val aan met kans om te ontploffen.",
+      "CycClub: koersradio kondigt aanvallers aan die je met \"Volg <naam>\" kunt markeren; je positie in de groep (Kop / Buik / Staart) telt mee.",
+      "CycClub: gebeurtenissen onderweg (zijwind, lekke band, valpartij, bevoorrading, rugwind) pauzeren het segment met een keuze.",
+      "CycClub: Team-Tactics — tien tactiekkaarten die je in de shop activeert, upgradet en koopt en in koers per segment speelt; top 3 of een leiderstrui geeft je kaarten terug."
+    ],
+    improvements:[
+      "CycClub: spelregels en koersscherm bijgewerkt; NPC-ploegen gebruiken de nieuwe acties ook.",
+      "CycClub: klassementen tonen de leider met een echte totaaltijd en de rest met +achterstand; het ploegenklassement telt per echte ploeg.",
+      "CycClub: het leaderboard toont nu ook de gewonnen truien (Geel, Groen, Bolletjes, Wit, Ploegen)."
+    ]
   }
 ];
 

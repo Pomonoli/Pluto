@@ -10,7 +10,12 @@ export const leaderboardConfig={columns:[
   {key:'username',label:'Speler',short:'Speler',width:'player'},
   {key:'netWorth',label:'Netto waarde',short:'NW',width:'wide',format:'currency'},
   {key:'victories',label:'Zeges',short:'Z'},
-  {key:'prizeMoney',label:'Prijzengeld',short:'€P',width:'wide',format:'currency'}
+  {key:'prizeMoney',label:'Prijzengeld',short:'€P',width:'wide',format:'currency'},
+  {key:'jerseyGc',label:'Geel',short:'GEE'},
+  {key:'jerseyGreen',label:'Groen',short:'GRN'},
+  {key:'jerseyPolka',label:'Bolletjes',short:'BOL'},
+  {key:'jerseyYouth',label:'Wit',short:'WIT'},
+  {key:'jerseyTeam',label:'Ploegen',short:'PLG'}
 ]};
 export function profileExtra({stat}){return stat.games?`${stat.wins} zeges`:'—'}
 export function metric({player}){return {text:euro(player.wallet), score:player.career.victories}}
@@ -24,12 +29,22 @@ const CATEGORY_LABELS={monument:'Monumenten',classic:'Vlaamse Klassiekers',stage
 const STATUS_LABELS={active:'Fit',injured:'Geblesseerd',sick:'Ziek'};
 const SPECIALISM_LABELS={sprinter:'Sprinter',climber:'Klimmer',classics:'Klassieker',allrounder:'Allrounder',puncheur:'Puncheur'};
 const ROLE_LABELS={climber:'Klimmer',sprinter:'Sprinter',allrounder:'Allrounder',domestique:'Meesterknecht'};
-const TACTIC_LABELS={recover:'Herstel',follow:'Volg',leadout:'Kop',attack:'Val aan',fetch_bidons:'Bidons'};
+const TACTIC_LABELS={recover:'Herstel',follow:'Volg',leadout:'Kop',attack:'Val aan',fetch_bidons:'Bidons',protect:'Bescherm',sprint_leadout:'Lead-out',mark:'Volg renner'};
+// Alleen tactieken zonder doelwit of segmentvoorwaarde worden tussen segmenten onthouden.
+const REMEMBERABLE_TACTICS=new Set(['recover','follow','leadout','attack','fetch_bidons']);
 const EVENT_LABELS={topdag:'Topdag',normaal:'Normale rit',pech:'Pech',valt:'Val'};
 const SEGMENT_OUTCOME_LABELS={topdag:'Topdag',normaal:'Normaal segment',pech:'Pech',valt:'Val'};
 const RACE_GROUP_LABELS={breakaway:'Kopgroep',chasers:'Volgers',peloton:'Peloton',tail:'Staart'};
+const POSITION_LABELS={front:'Kop',middle:'Buik',back:'Staart'};
+// Oudere serverstate zonder energiebalken: leid groen/rood af uit de vermoeidheid.
+function withEnergyDefaults(riderState){
+  if(Number.isFinite(riderState.endurance)&&Number.isFinite(riderState.power))return riderState;
+  const endurance=Math.max(0,100-(Number(riderState.fatigue)||0));
+  return {...riderState, endurance, power:endurance, position:riderState.position||'middle'};
+}
 const TERRAIN_TYPE_LABELS={flat:'Vlak',hills:'Heuvels',mountain:'Berg',cobbles:'Kasseien',timeTrial:'Tijdrit'};
 const CLASSIFICATION_TABS=[
+  // De server levert per rij een display-string (leider: totaaltijd, rest: +achterstand); formatValue is de fallback.
   {key:'gc', label:'Algemeen (Geel)', valueLabel:'Tijd', formatValue:(v) => `${v>0?'+':''}${v}s`},
   {key:'green', label:'Punten (Groen)', valueLabel:'Punten', formatValue:(v) => String(v)},
   {key:'polka', label:'Bergen (Bolletjes)', valueLabel:'Punten', formatValue:(v) => String(v)},
@@ -43,14 +58,14 @@ const TACTIC_STORAGE_KEY='pluto.cycclub.riderTactics';
 function loadRememberedTactics(){
   try{
     const saved=JSON.parse(localStorage.getItem(TACTIC_STORAGE_KEY)||'{}');
-    return new Map(Object.entries(saved).filter(([,tactic]) => Object.hasOwn(TACTIC_LABELS,tactic)));
+    return new Map(Object.entries(saved).filter(([,tactic]) => REMEMBERABLE_TACTICS.has(tactic)));
   }catch{
     return new Map();
   }
 }
 
 function rememberTactics(tactics){
-  try{localStorage.setItem(TACTIC_STORAGE_KEY,JSON.stringify(Object.fromEntries(tactics)))}catch{}
+  try{localStorage.setItem(TACTIC_STORAGE_KEY,JSON.stringify(Object.fromEntries([...tactics].filter(([,tactic]) => REMEMBERABLE_TACTICS.has(tactic)))))}catch{}
 }
 
 function euro(n){return `€${Math.round(n||0).toLocaleString('nl-BE')}`}
@@ -131,6 +146,11 @@ let selectedLineup=new Set();
 let lastRaceKey=null;
 let riderTactics=new Map();
 let riderGels=new Set();
+let riderTargets=new Map();
+let riderPushes=new Map();
+let selectedTacticCard=null;
+let tacticsPanelOpen=false;
+let shopView='upgrades';
 let lastSegmentKey=null;
 let clubTab='roster';
 let scoutFilterStat='';
@@ -229,6 +249,87 @@ function renderShopPanel(me){
   }
   panel.append(grid);
   return panel;
+}
+
+// Team-Tactics: deckbuilding-schil bovenop de rennertactieken. Activeren (niveau 1), upgraden
+// (niveau 2-5) en losse kaarten kopen; de voorraad is wat je in koers kunt spelen.
+function renderTeamTacticsPanel(me){
+  const panel=E('div','panel cc-panel cc-team-tactics-panel');
+  panel.append(panelHeading('Team-Tactics'));
+  panel.append(E('p','cc-shop-intro','Speel per segment één kaart bovenop de rennertactieken. Activeer een tactiek, upgrade de effectiviteit en koop kaarten voor je voorraad. Eindig je top 3 of pak je een leiderstrui, dan krijg je de gespeelde kaarten terug.'));
+  if(!Array.isArray(me.tactics)||!me.tactics.length){
+    panel.append(E('p','muted','De server stuurt nog geen Team-Tactics mee. Herstart de Pluto-server na deze update en open de club opnieuw.'));
+    return panel;
+  }
+  const grid=E('div','cc-shop-grid cc-tactics-grid');
+  for(const tactic of me.tactics||[]){
+    const box=E('div',`cc-shop-item cc-tactic-card${tactic.upgradeLevel?' cc-tactic-card-active':''}`);
+    const head=E('div','cc-tactic-card-head');
+    head.append(E('span','cc-upgrade-icon',tactic.upgradeLevel?`NIV. ${tactic.upgradeLevel}`:'INACTIEF'));
+    const stock=E('span',`cc-tactic-stock${tactic.actieveVoorraad?' has-stock':''}`,`${tactic.actieveVoorraad} kaart${tactic.actieveVoorraad===1?'':'en'}`);
+    stock.title='Actieve voorraad: het aantal keer dat je deze tactiek in koers kunt spelen.';
+    head.append(stock);
+    box.append(head,E('strong','',tactic.naam));
+    const progress=E('div','cc-progress');
+    const fill=E('div','cc-progress-fill');
+    fill.style.width=`${(tactic.upgradeLevel/tactic.maxLevel)*100}%`;
+    progress.append(fill);
+    box.append(progress);
+    box.append(E('span','cc-shop-level',`Niveau ${tactic.upgradeLevel}/${tactic.maxLevel}`));
+    box.append(E('p','cc-shop-effect',tactic.beschrijving));
+    box.append(E('p','cc-tactic-effect',tactic.upgradeLevel?tactic.effect:`Bij activatie: ${tactic.effect}`));
+    const actions=E('div','cc-tactic-actions');
+    if(!tactic.upgradeLevel){
+      const activate=E('button','primary',`Activeer · ${euro(tactic.costs.activate)}`);
+      activate.disabled=me.wallet<tactic.costs.activate;
+      activate.title='Ontgrendelt niveau 1 en geeft één kaart.';
+      activate.onclick=() => action('activateTactic',{tacticId:tactic.id});
+      actions.append(activate);
+    } else {
+      if(tactic.costs.upgrade!=null){
+        const upgrade=E('button','secondary',`Upgrade · ${euro(tactic.costs.upgrade)}`);
+        upgrade.disabled=me.wallet<tactic.costs.upgrade;
+        upgrade.title=tactic.nextEffect?`Niveau ${tactic.upgradeLevel+1}: ${tactic.nextEffect}`:'';
+        upgrade.onclick=() => action('upgradeTactic',{tacticId:tactic.id});
+        actions.append(upgrade);
+      } else actions.append(E('span','muted','Maximum niveau'));
+      const buy=E('button','primary',`Koop kaart · ${euro(tactic.costs.card)}`);
+      buy.disabled=me.wallet<tactic.costs.card||tactic.actieveVoorraad>=tactic.maxStock;
+      buy.title=tactic.actieveVoorraad>=tactic.maxStock?`Maximaal ${tactic.maxStock} kaarten per tactiek.`:'Voegt één kaart toe aan je voorraad.';
+      buy.onclick=() => action('buyTacticCard',{tacticId:tactic.id});
+      actions.append(buy);
+    }
+    box.append(actions);
+    grid.append(box);
+  }
+  panel.append(grid);
+  return panel;
+}
+
+// Shop-tab met twee gelijkwaardige views: de vier ploegupgrades en de Team-Tactics-kaarten.
+function renderShopSection(me){
+  const wrap=E('div','cc-shop-section');
+  const switcher=E('div','cc-shop-switch');
+  switcher.setAttribute('role','tablist');
+  const views={upgrades:'Upgrades',tactics:'Team-Tactics'};
+  const body=E('div','cc-shop-body');
+  const renderView=() => {
+    body.replaceChildren(shopView==='tactics'?renderTeamTacticsPanel(me):renderShopPanel(me));
+    for(const button of switcher.children){
+      const active=button.dataset.view===shopView;
+      button.classList.toggle('active',active);
+      button.setAttribute('aria-selected',active?'true':'false');
+    }
+  };
+  for(const [key,label] of Object.entries(views)){
+    const button=E('button','cc-shop-switch-btn',label);
+    button.type='button';button.dataset.view=key;button.setAttribute('role','tab');
+    button.onclick=() => {shopView=key;renderView()};
+    switcher.append(button);
+  }
+  wrap.append(switcher,body);
+  renderView();
+  return wrap;
 }
 
 function renderScoutPanel(room,game,me){
@@ -477,7 +578,7 @@ function renderClub(room,game,me){
   scoutSection.append(renderScoutPanel(room,game,me));
 
   const shopSection=E('div','cc-tab-section');
-  shopSection.append(renderShopPanel(me));
+  shopSection.append(renderShopSection(me));
 
   const racesSection=E('div','cc-tab-section');
   racesSection.append(renderRaceCatalogPanel(room,game,me));
@@ -813,28 +914,52 @@ function buildProfileChart(race){
   return wrap;
 }
 
-const TACTIC_ROLL_BONUS={recover:0,follow:2,leadout:3,attack:5,fetch_bidons:0};
 function previewTerrainFactor(role,terrainType){
   if(role==='climber')return terrainType==='mountain'?0.25:(terrainType==='flat'?-0.05:0);
   if(role==='sprinter')return terrainType==='flat'?0.20:(terrainType==='mountain'?-0.25:0);
   if(role==='allrounder')return (terrainType==='hills'||terrainType==='cobbles')?0.10:0;
   return 0;
 }
-function previewFatiguePenalty(fatigue){
-  if(fatigue<=40)return 0;
-  if(fatigue<=70)return 0.10;
-  if(fatigue<=90)return 0.25;
+function previewEndurancePenalty(endurance,bonkEndurance){
+  if(endurance>=60)return 0;
+  if(endurance>=30)return 0.10;
+  if(endurance>bonkEndurance)return 0.25;
   return 0.5;
 }
-function previewRollAdjustment(riderState,tactic,segment,hasLeadout){
-  const bonked=riderState.fatigue>=91;
-  const effectiveTactic=bonked&&(tactic==='attack'||tactic==='leadout')?'follow':tactic;
-  const terrain=previewTerrainFactor(riderState.role,segment.terrainType);
-  const tacticBonus=TACTIC_ROLL_BONUS[effectiveTactic]+((effectiveTactic==='follow'&&hasLeadout)?1.5:0);
-  const fatiguePenalty=bonked?0.5:previewFatiguePenalty(riderState.fatigue);
-  return Math.round((tacticBonus+(terrain*10)-(fatiguePenalty*10))*10)/10;
+// Schatting van de worp-aanpassing per renner: tactiek (met inzet en ploegbonussen), terrein en
+// energie-penalty. Stats, fietsen en events laat de server erbij; dit is een richtwaarde.
+function previewRollAdjustment(race,riderState,riderId,segment,choices){
+  const {tactics,targets,pushes}=choices;
+  const options=new Map((race.tacticOptions||[]).map((option) => [option.key,option]));
+  const bonkEndurance=race.bonkEndurance??10;
+  const bonuses=race.teamBonuses||{};
+  const bonked=riderState.endurance<=bonkEndurance;
+  let tactic=tactics.get(riderId)||'follow';
+  if(bonked&&!['recover','follow','fetch_bidons'].includes(tactic))tactic='follow';
+  let tacticBonus=options.get(tactic)?.rollBonus??0;
+  const sprintLeadoutFor=[...tactics.entries()].filter(([,key]) => key==='sprint_leadout').map(([id]) => targets.get(id));
+  if(tactic==='attack'){
+    const level=race.attackPushLevels?.[pushes.get(riderId)||1];
+    if(level)tacticBonus=level.rollBonus;
+    if(sprintLeadoutFor.includes(riderId))tacticBonus=Math.round(tacticBonus*(bonuses.sprintLeadoutAttackFactor||1)*10)/10;
+  } else if(sprintLeadoutFor.includes(riderId))tacticBonus+=bonuses.sprintLeadoutFollow||0;
+  const hasLeadout=[...tactics.values()].includes('leadout');
+  if(tactic==='follow'&&hasLeadout)tacticBonus+=bonuses.leadoutDraft||0;
+  if(tactic==='mark')tacticBonus=`${tacticBonus}…${bonuses.markSuccess||5}`;
+  const isProtected=[...tactics.entries()].some(([id,key]) => key==='protect'&&targets.get(id)===riderId);
+  const terrain=previewTerrainFactor(riderState.role,segment.terrainType)*10;
+  const penalty=(bonked?0.5:previewEndurancePenalty(riderState.endurance,bonkEndurance))*10;
+  const fixed=Math.round((terrain-penalty+(isProtected?(bonuses.protect||0):0))*10)/10;
+  if(typeof tacticBonus==='string'){
+    const [low,high]=tacticBonus.split('…').map(Number);
+    const fmt=(v) => `${v>=0?'+':''}${Math.round((v+fixed)*10)/10}`;
+    return `${fmt(low)} tot ${fmt(high)}`;
+  }
+  const total=Math.round((tacticBonus+fixed)*10)/10;
+  return `${total>=0?'+':''}${total}`;
 }
 
+// Blijvende vermoeidheid tussen koersen (clubfase); tijdens een rit tonen we de twee energiebalken.
 function fatigueMeter(fatigue){
   const wrap=E('div','cc-fatigue-meter');
   const bar=E('div','cc-fatigue-bar');
@@ -843,6 +968,85 @@ function fatigueMeter(fatigue){
   bar.append(fill);
   wrap.append(bar,E('span','cc-fatigue-label',`${fatigue}%`));
   return wrap;
+}
+
+function energyBar(kind,label,value,max){
+  const wrap=E('div',`cc-energy-row cc-energy-${kind}`);
+  const bar=E('div','cc-energy-bar');
+  const capped=Math.max(0,Math.min(100,value));
+  const fill=E('div',`cc-energy-fill${kind==='endurance'&&capped<=10?' cc-energy-bonk':kind==='endurance'&&capped<30?' cc-energy-low':''}`);
+  fill.style.width=`${capped}%`;
+  bar.append(fill);
+  if(kind==='power'&&max<100){
+    const cap=E('i','cc-energy-cap');
+    cap.style.left=`${Math.max(0,Math.min(100,max))}%`;
+    bar.append(cap);
+  }
+  wrap.append(E('span','cc-energy-label',label),bar,E('span','cc-energy-value',String(Math.round(value))));
+  wrap.title=kind==='endurance'
+    ?`Uithouding ${Math.round(value)}: daalt elke worp; onder 60 een worp-penalty, op 10 of lager Hongerklop.`
+    :`Explosiviteit ${Math.round(value)}: voor Val aan, Kop, Bescherm en Lead-out. Laadt op bij Volg/Herstel, nooit boven je uithouding.`;
+  return wrap;
+}
+function energyMeters(riderState){
+  const wrap=E('div','cc-energy-meters');
+  wrap.append(energyBar('endurance','Uith.',riderState.endurance??0,100),energyBar('power','Expl.',riderState.power??0,riderState.endurance??100));
+  return wrap;
+}
+
+function positionIndicator(position,labels){
+  const wrap=E('div','cc-position');
+  wrap.title='Positie in de groep. Op kop: minder valrisico, meer wind. Staart: spaart energie, meer valrisico.';
+  for(const key of ['front','middle','back']){
+    const cell=E('span',`cc-position-cell${key===position?' active':''}`,labels?.[key]||POSITION_LABELS[key]);
+    cell.title=`${POSITION_LABELS[key]} van de groep`;
+    wrap.append(cell);
+  }
+  return wrap;
+}
+
+function raceRadio(race){
+  const hints=race.hints||[];
+  if(!hints.length)return null;
+  const bar=E('div','cc-race-radio');
+  bar.append(E('strong','cc-race-radio-title','Koersradio'));
+  const text=hints.map((hint) => `${hint.riderName} (${hint.teamName})`).join(' en ');
+  bar.append(E('span','',`${text} ${hints.length>1?'schuiven':'schuift'} naar voren. Kies "Volg …" om in het wiel te zitten.`));
+  return bar;
+}
+
+function shortRiderName(name){
+  const parts=String(name||'').trim().split(/\s+/);
+  return parts.length>1?parts.slice(1).join(' '):parts[0]||'';
+}
+
+function renderEventOverlay(pendingEvent){
+  const overlay=E('div','cc-event-overlay');
+  overlay.setAttribute('role','dialog');
+  overlay.setAttribute('aria-modal','true');
+  const card=E('div','cc-event-card');
+  card.append(E('span','cc-event-kicker','Onderweg'),E('h4','cc-event-title',pendingEvent.title),E('p','cc-event-text',pendingEvent.text));
+  const options=E('div','cc-event-options');
+  for(const option of pendingEvent.options||[]){
+    const button=E('button','cc-event-option');
+    button.type='button';
+    button.append(E('strong','',option.label),E('small','',option.detail||''));
+    button.onclick=() => {
+      for(const sibling of options.children)sibling.disabled=true;
+      action('resolveEvent',{choice:option.key});
+    };
+    options.append(button);
+  }
+  card.append(options);
+  overlay.append(card);
+  return overlay;
+}
+
+function lastEventNote(lastEvent){
+  if(!lastEvent)return null;
+  const note=E('div','cc-event-note');
+  note.append(E('strong','',lastEvent.title),document.createTextNode(` — ${lastEvent.outcome||lastEvent.choice}`));
+  return note;
 }
 
 function roleImpactLegend(){
@@ -856,6 +1060,22 @@ function roleImpactLegend(){
   ].forEach(([role,label,impact]) => {
     const item=E('span','cc-role-legend-item');
     item.append(E('i',`cc-role-color cc-role-${role}`),E('b','',label),document.createTextNode(impact));
+    legend.append(item);
+  });
+  return legend;
+}
+
+function energyLegend(){
+  const legend=E('div','cc-group-legend cc-energy-legend');
+  legend.append(E('strong','cc-group-legend-title','Energie & positie'));
+  [
+    ['endurance','Uithouding','daalt elke worp · <60 penalty · ≤10 Hongerklop'],
+    ['power','Explosiviteit','Val aan/Kop/Bescherm/Lead-out · laadt op bij Volg/Herstel'],
+    ['front','Kop','minder valrisico, meer wind'],
+    ['back','Staart','spaart energie, meer valrisico']
+  ].forEach(([key,label,detail]) => {
+    const item=E('span','cc-group-legend-item');
+    item.append(E('i',`cc-group-color cc-energy-color-${key}`),E('b','',label),document.createTextNode(detail));
     legend.append(item);
   });
   return legend;
@@ -894,15 +1114,58 @@ function raceGroupLegend(){
   return legend;
 }
 
+// Uitschuifbaar paneel met de tactiekkaarten die nog in voorraad zijn; één kaart per segment.
+function renderTacticCardsPanel(me,race,onChange){
+  const cards=(me.tactics||[]).filter((tactic) => tactic.actieveVoorraad>0);
+  if(!cards.length)return null;
+  const wrap=E('div',`cc-race-tactics${tacticsPanelOpen?' open':''}`);
+  const toggle=E('button','cc-race-tactics-toggle');
+  toggle.type='button';
+  toggle.setAttribute('aria-expanded',tacticsPanelOpen?'true':'false');
+  const selected=cards.find((card) => card.id===selectedTacticCard);
+  const refreshToggle=() => {
+    const current=cards.find((card) => card.id===selectedTacticCard);
+    toggle.replaceChildren(E('span','cc-race-tactics-title',`Actieve tactieken (${cards.length})`),E('span','cc-race-tactics-selected',current?`Gespeeld: ${current.naam}`:'Geen kaart gekozen'),E('span','cc-race-tactics-chevron',tacticsPanelOpen?'▲':'▼'));
+  };
+  const list=E('div','cc-race-tactics-list');
+  list.hidden=!tacticsPanelOpen;
+  toggle.onclick=() => {tacticsPanelOpen=!tacticsPanelOpen;list.hidden=!tacticsPanelOpen;wrap.classList.toggle('open',tacticsPanelOpen);toggle.setAttribute('aria-expanded',tacticsPanelOpen?'true':'false');refreshToggle()};
+  for(const card of cards){
+    const button=E('button',`cc-race-tactic-card${card.id===selectedTacticCard?' active':''}`);
+    button.type='button';
+    button.setAttribute('aria-pressed',card.id===selectedTacticCard?'true':'false');
+    button.append(E('strong','',card.naam),E('small','',card.effect),E('span','cc-race-tactic-stock',`×${card.actieveVoorraad} · niv. ${card.upgradeLevel}`));
+    button.title=card.beschrijving;
+    button.onclick=() => {
+      selectedTacticCard=selectedTacticCard===card.id?null:card.id;
+      for(const sibling of list.children){
+        const active=sibling.dataset.card===selectedTacticCard;
+        sibling.classList.toggle('active',active);
+        sibling.setAttribute('aria-pressed',active?'true':'false');
+      }
+      refreshToggle();
+      onChange?.();
+    };
+    button.dataset.card=card.id;
+    list.append(button);
+  }
+  refreshToggle();
+  wrap.append(toggle,list);
+  return wrap;
+}
+
 function renderRacing(room,game,me){
   const race=game.race;
   if(!race){els.gameStage.append(E('p','muted','Geen actieve rit.'));return}
   const segment=race.segment;
-  const tacticLabels=race.tacticLabels||{};
+  const tacticOptions=race.tacticOptions||Object.entries(race.tacticLabels||{}).map(([key,label]) => ({key,label}));
   const segmentKey=`${race.raceId}:${race.segmentIndex}`;
   if(lastSegmentKey!==segmentKey){
     riderTactics=loadRememberedTactics();
     riderGels=new Set();
+    riderTargets=new Map();
+    riderPushes=new Map();
+    selectedTacticCard=null;
     lastSegmentKey=segmentKey;
   }
 
@@ -918,6 +1181,7 @@ function renderRacing(room,game,me){
     statusRow.append(labelValue('Terrein',TERRAIN_TYPE_LABELS[segment.terrainType]||segment.terrainType));
     if(segment.mountainCategory>0)statusRow.append(labelValue('Beklimming',`Cat. ${segment.mountainCategory}`));
     if(segment.hasIntermediateSprint)statusRow.append(labelValue('Tussensprint','Ja'));
+    else if(segment.isSprint)statusRow.append(labelValue('Sprint','Finale'));
   }
   const latestSegment=myProgress&&Object.values(myProgress.riders||{}).flatMap((rider) => rider.segments||[]).sort((a,b) => b.n-a.n)[0];
   if(latestSegment){
@@ -926,27 +1190,49 @@ function renderRacing(room,game,me){
   }
   panel.append(statusRow);
 
+  const radio=myProgress?.awaitingConfirmation&&!myProgress.pendingEvent?raceRadio(race):null;
+  if(radio)panel.append(radio);
+
   if(!myProgress){
     panel.append(E('p','muted','Je hebt geen renners in deze rit.'));
+  } else if(myProgress.pendingEvent){
+    panel.append(renderEventOverlay(myProgress.pendingEvent));
   } else if(!myProgress.awaitingConfirmation){
+    const note=lastEventNote(myProgress.lastEvent);
+    if(note)panel.append(note);
+    const playedName=(race.teamTactics||[]).find((tactic) => tactic.id===myProgress.usedTactics?.at(-1))?.naam;
+    if(playedName&&myProgress.usedTactics?.length)panel.append(E('div','cc-event-note',`Tactiekkaart gespeeld: ${playedName} · ${myProgress.usedTactics.length} gebruikt deze rit`));
     panel.append(E('p','muted','Bevestigd. Wachten tot de rest van het peloton dit segment heeft gereden…'));
   } else {
-    const activeEntries=Object.entries(myProgress.riders).filter(([,riderState]) => !riderState.dnf);
-    const grid=E('div','cc-rider-grid');
+    const activeEntries=Object.entries(myProgress.riders).filter(([,riderState]) => !riderState.dnf).map(([riderId,riderState]) => [riderId,withEnergyDefaults(riderState)]);
+    const activeIds=activeEntries.map(([riderId]) => riderId);
+    const grid=E('div','cc-rider-grid cc-active-rider-grid');
     const cardRefs=[];
     const rollBtn=E('button','primary','Werp segment');
+    const pushLevels=race.attackPushLevels||{};
+    const hints=race.hints||[];
+    const bonkEndurance=race.bonkEndurance??10;
+
+    const needsTarget=(tactic) => tacticOptions.find((option) => option.key===tactic)?.target||null;
+    const choiceIsComplete=(riderId) => {
+      const tactic=riderTactics.get(riderId);
+      if(!tactic)return false;
+      const kind=needsTarget(tactic);
+      if(!kind)return true;
+      const target=riderTargets.get(riderId);
+      if(kind==='teammate')return Boolean(target)&&target!==riderId&&activeIds.includes(target);
+      return hints.some((hint) => hint.riderId===target);
+    };
 
     const refreshTacticUI=() => {
-      const hasLeadout=activeEntries.some(([riderId]) => riderTactics.get(riderId)==='leadout');
+      const choices={tactics:riderTactics,targets:riderTargets,pushes:riderPushes};
       for(const ref of cardRefs){
         const tactic=riderTactics.get(ref.riderId);
         ref.gelBtn.classList.toggle('active',riderGels.has(ref.riderId));
-        if(tactic&&segment){
-          const adjustment=previewRollAdjustment(ref.riderState,tactic,segment,hasLeadout);
-          ref.preview.textContent=`Aanpassing worp ${adjustment>=0?'+':''}${adjustment}`;
-        } else ref.preview.textContent='';
+        ref.preview.textContent=tactic&&segment?`Worp ${previewRollAdjustment(race,ref.riderState,ref.riderId,segment,choices)}`:'';
+        ref.renderExtras();
       }
-      rollBtn.disabled=activeEntries.some(([riderId]) => !riderTactics.has(riderId));
+      rollBtn.disabled=activeIds.some((riderId) => !choiceIsComplete(riderId));
     };
 
     activeEntries.forEach(([riderId,riderState]) => {
@@ -954,62 +1240,137 @@ function renderRacing(room,game,me){
       const head=E('div','cc-rider-head');
       head.append(E('strong','',riderState.name),E('span',`cc-rider-role cc-role-${riderState.role}`,ROLE_LABELS[riderState.role]||riderState.role));
       card.append(head);
-      card.append(fatigueMeter(riderState.fatigue));
+      card.append(energyMeters(riderState));
       card.append(segmentDots(riderState.segments,SEGMENTS_PER_RACE));
+      const situation=E('div','cc-rider-situation');
       const groupLabel=riderState.dnf?'Uitgevallen':RACE_GROUP_LABELS[riderState.raceGroup]||'Startveld';
       const gapLabel=riderState.gapToLeader===0?'op kop':riderState.gapToLeader==null?'nog geen tijd':`+${riderState.gapToLeader}s`;
-      card.append(E('span',`cc-race-position cc-group-${riderState.raceGroup||'pending'}`,`${groupLabel} · ${gapLabel}`));
+      situation.append(positionIndicator(riderState.position,race.positionLabels),E('span',`cc-race-position cc-group-${riderState.raceGroup||'pending'}`,`${groupLabel} · ${gapLabel}`));
+      card.append(situation);
 
       const preview=E('span','cc-tactic-preview','');
       card.append(preview);
 
+      const bonked=riderState.endurance<=bonkEndurance;
+      const teammates=activeEntries.filter(([otherId]) => otherId!==riderId);
       const tacticButtons=E('div','cc-tactic-buttons');
       tacticButtons.setAttribute('role','group');
       tacticButtons.setAttribute('aria-label',`Tactiek voor ${riderState.name}`);
-      for(const key of Object.keys(tacticLabels)){
-        const tacticBtn=E('button','cc-tactic-btn',tacticLabels[key]);
+      const buttonRefs=[];
+      const selectTactic=(key,target) => {
+        riderTactics.set(riderId,key);
+        if(target)riderTargets.set(riderId,target);
+        else if(needsTarget(key)==='teammate'&&!teammates.some(([otherId]) => otherId===riderTargets.get(riderId)))riderTargets.set(riderId,teammates[0]?.[0]);
+        else if(!needsTarget(key))riderTargets.delete(riderId);
+        if(key==='attack'&&!riderPushes.has(riderId))riderPushes.set(riderId,1);
+        rememberTactics(riderTactics);
+        for(const ref of buttonRefs){
+          const active=ref.key===key&&(ref.target?riderTargets.get(riderId)===ref.target:true);
+          ref.button.classList.toggle('active',active);
+          ref.button.setAttribute('aria-pressed',active?'true':'false');
+        }
+        refreshTacticUI();
+      };
+      const addTacticButton=(option,{label,target,disabled,title}={}) => {
+        const tacticBtn=E('button',`cc-tactic-btn cc-tactic-${option.key}`,label||option.label);
         tacticBtn.type='button';
-        const selected=riderTactics.get(riderId)===key;
+        tacticBtn.title=title||option.description||'';
+        tacticBtn.disabled=Boolean(disabled);
+        const selected=riderTactics.get(riderId)===option.key&&(target?riderTargets.get(riderId)===target:true);
         tacticBtn.classList.toggle('active',selected);
         tacticBtn.setAttribute('aria-pressed',selected?'true':'false');
-        tacticBtn.onclick=() => {
-          riderTactics.set(riderId,key);
-          rememberTactics(riderTactics);
-          for(const button of tacticButtons.children){
-            const active=button===tacticBtn;
-            button.classList.toggle('active',active);
-            button.setAttribute('aria-pressed',active?'true':'false');
-          }
-          refreshTacticUI();
-        };
+        tacticBtn.onclick=() => selectTactic(option.key,target);
+        buttonRefs.push({key:option.key,target,button:tacticBtn});
         tacticButtons.append(tacticBtn);
+      };
+      for(const option of tacticOptions){
+        if(option.sprintOnly&&!segment?.isSprint)continue;
+        if(option.target==='teammate'&&!teammates.length)continue;
+        const cost=option.key==='attack'?(pushLevels[1]?.cost??30):option.key==='sprint_leadout'?20:Math.max(0,-(option.powerDelta||0));
+        const lacksPower=(riderState.power??0)<cost;
+        const blockedByBonk=bonked&&!['recover','follow','fetch_bidons'].includes(option.key);
+        const disabled=lacksPower||blockedByBonk;
+        const title=blockedByBonk?'Hongerklop: alleen Herstel, Volg of Bidons.':lacksPower?`Te weinig explosiviteit (nodig: ${cost}).`:option.description;
+        if(option.key==='mark'){
+          for(const hint of hints)addTacticButton(option,{label:`Volg ${shortRiderName(hint.riderName)}`,target:hint.riderId,disabled,title:disabled?title:`${hint.riderName} (${hint.teamName}): ${option.description}`});
+          continue;
+        }
+        addTacticButton(option,{disabled,title});
       }
+      const buttonCount=tacticButtons.childElementCount;
+      tacticButtons.style.setProperty('--cc-tactic-cols',String(buttonCount<=5?buttonCount:Math.ceil(buttonCount/2)));
       card.append(tacticButtons);
 
-      const gelBtn=E('button','secondary cc-gel-btn',`Gel ${riderState.gelsRemaining}`);
+      const extras=E('div','cc-tactic-extras');
+      card.append(extras);
+      const renderExtras=() => {
+        extras.replaceChildren();
+        const tactic=riderTactics.get(riderId);
+        if(tactic==='attack'){
+          extras.append(E('span','cc-extras-label','Inzet'));
+          for(const level of ['1','2','3']){
+            const config=pushLevels[level];
+            if(!config)continue;
+            const btn=E('button','cc-push-btn');
+            btn.type='button';
+            btn.append(E('strong','',config.label),E('small','',`+${config.rollBonus} · ${config.successPct}% · ${config.cost}`));
+            btn.disabled=(riderState.power??0)<config.cost;
+            btn.title=btn.disabled?`Te weinig explosiviteit (nodig: ${config.cost}).`:`Bonus +${config.rollBonus}, kost ${config.cost} explosiviteit, ${config.successPct}% kans dat de aanval slaagt. Mislukt hij, dan ontploft de renner voor de rest van de koers.`;
+            btn.classList.toggle('active',String(riderPushes.get(riderId)||1)===level);
+            btn.onclick=() => {riderPushes.set(riderId,Number(level));refreshTacticUI()};
+            extras.append(btn);
+          }
+        } else if(needsTarget(tactic)==='teammate'){
+          extras.append(E('span','cc-extras-label',tactic==='protect'?'Bescherm':'Lead-out voor'));
+          for(const [otherId,otherState] of teammates){
+            const btn=E('button','cc-target-btn',shortRiderName(otherState.name));
+            btn.type='button';
+            btn.classList.toggle('active',riderTargets.get(riderId)===otherId);
+            btn.onclick=() => {riderTargets.set(riderId,otherId);refreshTacticUI()};
+            extras.append(btn);
+          }
+        }
+        extras.hidden=!extras.childElementCount;
+      };
+
+      const gelBtn=E('button','secondary cc-gel-btn');
       gelBtn.type='button';
+      gelBtn.title='Gel: +25 explosiviteit en +10 uithouding, direct vóór de worp. Tik om aan/uit te zetten.';
       gelBtn.disabled=riderState.gelsRemaining<=0;
+      gelBtn.setAttribute('aria-pressed','false');
+      const renderGel=() => {
+        const on=riderGels.has(riderId);
+        gelBtn.replaceChildren(E('span','cc-gel-icon',on?'✓':'+'),E('span','',on?'Gel ingezet':`Gel · ${riderState.gelsRemaining}`));
+        gelBtn.setAttribute('aria-pressed',on?'true':'false');
+      };
+      renderGel();
       gelBtn.onclick=() => {
         if(riderGels.has(riderId))riderGels.delete(riderId);
         else riderGels.add(riderId);
+        renderGel();
         refreshTacticUI();
       };
       card.append(gelBtn);
 
-      cardRefs.push({riderId,riderState,gelBtn,preview});
+      cardRefs.push({riderId,riderState,gelBtn,preview,renderExtras});
       grid.append(card);
     });
     panel.append(grid);
     refreshTacticUI();
 
+    const cardsPanel=renderTacticCardsPanel(me,race);
+    if(cardsPanel)panel.append(cardsPanel);
+
     const actionsRow=E('div','cc-rider-actions');
     rollBtn.onclick=() => {
-      const tactics=Object.fromEntries(riderTactics);
+      const tactics=Object.fromEntries([...riderTactics].filter(([riderId]) => activeIds.includes(riderId)));
       const gels=Object.fromEntries([...riderGels].map((riderId) => [riderId,true]));
-      action('rollSegment',{tactics,gels});
+      const targets=Object.fromEntries([...riderTargets].filter(([riderId]) => needsTarget(tactics[riderId])));
+      const pushes=Object.fromEntries([...riderPushes].filter(([riderId]) => tactics[riderId]==='attack'));
+      action('rollSegment',{tactics,gels,targets,pushes,card:selectedTacticCard||undefined});
     };
     actionsRow.append(rollBtn);
-    if(rollBtn.disabled)actionsRow.append(E('span','muted','Ken elke renner een tactiek toe.'));
+    if(rollBtn.disabled)actionsRow.append(E('span','muted',activeIds.some((riderId) => !riderTactics.has(riderId))?'Ken elke renner een tactiek toe.':'Kies nog een doelwit.'));
     panel.append(actionsRow);
   }
 
@@ -1020,6 +1381,7 @@ function renderRacing(room,game,me){
       const head=E('div','cc-rider-head');
       head.append(E('strong','',riderState.name),E('span','muted',riderState.dnf?'Uitgevallen':`${riderState.pr} pt`));
       card.append(head);
+      if(!riderState.dnf)card.append(energyMeters(withEnergyDefaults(riderState)));
       card.append(segmentDots(riderState.segments,SEGMENTS_PER_RACE));
       if(!riderState.dnf){
         const groupLabel=RACE_GROUP_LABELS[riderState.raceGroup]||'Startveld';
@@ -1031,7 +1393,7 @@ function renderRacing(room,game,me){
     panel.append(historyGrid);
   }
 
-  panel.append(segmentProgressLegend(),raceGroupLegend(),roleImpactLegend());
+  panel.append(segmentProgressLegend(),energyLegend(),raceGroupLegend(),roleImpactLegend());
 
   const readyList=E('div','cc-ready-list');
   (race.allProgress||[]).forEach((entry) => {
@@ -1058,7 +1420,9 @@ function segmentDots(segments,totalSegments=0){
   (segments||[]).forEach((segment) => {
     const dot=E('span',`cc-segment-dot cc-segment-${segment.outcome}`);
     const tacticLabel=TACTIC_LABELS[segment.tactic]||segment.tactic||'';
-    dot.title=`Segment ${segment.n}: worp ${segment.roll} · ${tacticLabel} (×${segment.multiplier?.toFixed?.(2)??segment.multiplier}) — ${SEGMENT_OUTCOME_LABELS[segment.outcome]||segment.outcome}`;
+    const pushLabel=segment.push&&segment.push>1?` inzet ${segment.push}`:'';
+    const extra=[segment.exploded?'ontploft':'',segment.event?`event: ${segment.event}`:''].filter(Boolean).join(' · ');
+    dot.title=`Segment ${segment.n}: worp ${segment.roll} · ${tacticLabel}${pushLabel} (×${segment.multiplier?.toFixed?.(2)??segment.multiplier}) — ${SEGMENT_OUTCOME_LABELS[segment.outcome]||segment.outcome}${extra?` · ${extra}`:''}`;
     row.append(dot);
   });
   for(let n=(segments||[]).length+1;n<=totalSegments;n++){
@@ -1116,12 +1480,13 @@ function renderClassificationTabs(classifications){
     const table=E('table','stats-table');
     const head=E('tr');
     const isTeam=tab.key==='team';
-    (isTeam?['#','Speler',tab.valueLabel]:['#','Renner','Speler',tab.valueLabel,'Ritzeges']).forEach((label) => head.append(E('th','',label)));
+    (isTeam?['#','Ploeg',tab.valueLabel]:['#','Renner','Speler',tab.valueLabel,'Ritzeges']).forEach((label) => head.append(E('th','',label)));
     table.append(head);
     rows.slice(0,10).forEach((entry) => {
       const tr=E('tr');
-      if(isTeam)tr.append(E('td','',String(entry.place)),E('td','',entry.playerName),E('td','',tab.formatValue(entry.value)));
-      else tr.append(E('td','',String(entry.place)),E('td','',entry.riderName),E('td','',entry.playerName),E('td','',tab.formatValue(entry.value)),E('td','',String(entry.stageWins||0)));
+      const shown=entry.display??tab.formatValue(entry.value);
+      if(isTeam)tr.append(E('td','',String(entry.place)),E('td','',entry.playerName),E('td','',shown));
+      else tr.append(E('td','',String(entry.place)),E('td','',entry.riderName),E('td','',entry.playerName),E('td','',shown),E('td','',String(entry.stageWins||0)));
       table.append(tr);
     });
     const tableWrap=E('div','stats-table-wrap');
@@ -1144,16 +1509,30 @@ function backToClubButton(){
   return actionsRow;
 }
 
+// "Tactieken terugverdiend!" wanneer de speler top 3 reed of een leiderstrui pakte.
+function tacticRefundNote(result,me,game){
+  const used=result?.usedTactics?.[me.id]||[];
+  if(!used.length)return null;
+  const refunded=result.tacticRefunds?.[me.id]||[];
+  const names=(ids) => ids.map((id) => (me.tactics||[]).find((tactic) => tactic.id===id)?.naam||id).join(', ');
+  const note=E('div',`cc-refund-note${refunded.length?' cc-refund-won':''}`);
+  if(refunded.length)note.append(E('strong','','Tactieken terugverdiend!'),E('span','',`Top 3 of leiderstrui: ${names(refunded)} ${refunded.length===1?'is':'zijn'} terug in je voorraad.`));
+  else note.append(E('strong','','Tactieken verbruikt'),E('span','',`${names(used)} — top 3 of een leiderstrui had ze terugverdiend.`));
+  return note;
+}
+
 function renderResult(room,game,me){
   const result=game.lastResult;
   if(!result){els.gameStage.append(E('p','muted','Geen resultaat beschikbaar.'));return}
-  if(result.type==='grand_tour_final')renderGrandTourFinalResult(room,game,result);
-  else renderOneDayResult(result);
+  if(result.type==='grand_tour_final')renderGrandTourFinalResult(room,game,result,me);
+  else renderOneDayResult(result,me,game);
 }
 
-function renderOneDayResult(result){
+function renderOneDayResult(result,me,game){
   const panel=E('div','panel cc-panel cc-result-panel');
   panel.append(panelHeading(result.raceName));
+  const refund=tacticRefundNote(result,me,game);
+  if(refund)panel.append(refund);
   renderClassificationPanel(panel,result);
   panel.append(backToClubButton());
   els.gameStage.append(panel);
@@ -1164,6 +1543,8 @@ function renderStageResult(room,game,me){
   if(!result){els.gameStage.append(E('p','muted','Geen ritresultaat beschikbaar.'));return}
   const panel=E('div','panel cc-panel cc-result-panel');
   panel.append(panelHeading(`${result.raceName} · Rit ${result.stageNumber}/${result.totalStages}`));
+  const refund=tacticRefundNote(result,me,game);
+  if(refund)panel.append(refund);
   renderClassificationPanel(panel,result);
 
   if(result.classifications){
@@ -1185,9 +1566,11 @@ function renderStageResult(room,game,me){
   els.gameStage.append(panel);
 }
 
-function renderGrandTourFinalResult(room,game,result){
+function renderGrandTourFinalResult(room,game,result,me){
   const panel=E('div','panel cc-panel cc-result-panel');
   panel.append(panelHeading(`${result.raceName} · Eindklassement`));
+  const refund=me?tacticRefundNote(result,me,game):null;
+  if(refund)panel.append(refund);
 
   panel.append(renderClassificationTabs(result.classifications));
 

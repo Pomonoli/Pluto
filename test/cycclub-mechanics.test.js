@@ -43,6 +43,30 @@ function savedTeam(riders) {
 
 const FLAT_SEGMENT = {segmentIndex: 0, totalSegments: 8, terrainType: 'flat', elevationGain: 20, hasIntermediateSprint: false, mountainCategory: 0};
 const MOUNTAIN_SEGMENT = {segmentIndex: 0, totalSegments: 8, terrainType: 'mountain', elevationGain: 900, hasIntermediateSprint: false, mountainCategory: 0};
+const SPRINT_SEGMENT = {...FLAT_SEGMENT, segmentIndex: 7, isSprint: true};
+
+// Zet een renner in een bekende energietoestand (groen/rood/positie) voor een segmentberekening.
+function withEnergy(rider, {endurance = 100, power = endurance, position = 'middle'} = {}) {
+  rider.endurance = endurance;
+  rider.power = Math.min(power, endurance);
+  rider.position = position;
+  return rider;
+}
+
+// Speelt één segment als p1: lost een eventuele gebeurtenis op of werpt met de opgegeven tactiek.
+function playSegmentAsP1(game, tactic = 'follow') {
+  const prog = game.race.progress.p1;
+  if (!prog || prog.confirmed) return;
+  if (prog.pendingEvent) {
+    cc.handleAction(game, 'p1', 'resolveEvent', {choice: prog.pendingEvent.options[0].key});
+    return;
+  }
+  const activeIds = Object.keys(prog.riders).filter((id) => !prog.riders[id].dnf);
+  if (!activeIds.length) return;
+  const tactics = {};
+  for (const id of activeIds) tactics[id] = tactic;
+  cc.handleAction(game, 'p1', 'rollSegment', {tactics, gels: {}});
+}
 
 test('calculateSegmentStep: climbers are boosted on mountains, sprinters on flat', () => {
   const climber = makeRider({id: 'c1', specialism: 'climber'});
@@ -72,31 +96,220 @@ test('race groups are determined by the time gap to the leader', () => {
   assert.equal(cc.raceGroupForGap(61), 'tail');
 });
 
-test('calculateSegmentStep: tactics change fatigue as documented', () => {
+test('calculateSegmentStep: the green bar drains per tactic and the red bar is spent or recharged', () => {
   const attacker = makeRider({id: 'a1', fatigue: 20});
   const recoverer = makeRider({id: 'r2', fatigue: 20});
   const team = makeTeam();
+  // fatigue 20 → groen 80 en rood 80 bij de start van de rit
   cc.calculateSegmentStep([attacker, recoverer], {a1: 'attack', r2: 'recover'}, {}, FLAT_SEGMENT, 5, team);
-  assert.equal(attacker.fatigue, 55); // +35
-  assert.equal(recoverer.fatigue, 10); // -10
+  assert.equal(attacker.endurance, 70); // −10 uithouding
+  assert.equal(attacker.power, 50); // −30 explosiviteit (inzet Licht)
+  assert.equal(attacker.position, 'front');
+  assert.equal(recoverer.endurance, 78); // −2 uithouding
+  assert.equal(recoverer.power, 78); // +30, maar nooit boven de groene balk
+  assert.equal(recoverer.position, 'back');
 });
 
-test('calculateSegmentStep: a gel immediately relieves fatigue and consumes one gel', () => {
-  const rider = makeRider({id: 'g1', fatigue: 60, gelsRemaining: 2});
+test('calculateSegmentStep: the red bar can never exceed the remaining green bar', () => {
+  const rider = withEnergy(makeRider({id: 'cap1'}), {endurance: 40, power: 40});
+  cc.calculateSegmentStep([rider], {cap1: 'recover'}, {}, FLAT_SEGMENT, 5, makeTeam());
+  assert.equal(rider.endurance, 38);
+  assert.equal(rider.power, 38);
+});
+
+test('calculateSegmentStep: a gel immediately boosts both bars and consumes one gel', () => {
+  const rider = withEnergy(makeRider({id: 'g1', gelsRemaining: 2}), {endurance: 40, power: 10});
   const team = makeTeam();
   cc.calculateSegmentStep([rider], {g1: 'follow'}, {g1: true}, FLAT_SEGMENT, 5, team);
-  // -25 (gel) then +5 (follow fatigueDelta) = 40
-  assert.equal(rider.fatigue, 40);
+  // gel: groen 40→50, rood 10→35; volg: groen −4 = 46, rood +15 = 50 → begrensd op 46
+  assert.equal(rider.endurance, 46);
+  assert.equal(rider.power, 46);
   assert.equal(rider.gelsRemaining, 1);
 });
 
-test('calculateSegmentStep: fetch_bidons relieves teammates but not itself', () => {
-  const bidonRider = makeRider({id: 'b1', fatigue: 30});
-  const teammate = makeRider({id: 't1', fatigue: 30});
+test('calculateSegmentStep: fetch_bidons recharges teammates but not itself', () => {
+  const bidonRider = withEnergy(makeRider({id: 'b1'}), {endurance: 70, power: 20});
+  const teammate = withEnergy(makeRider({id: 't1'}), {endurance: 70, power: 20});
   const team = makeTeam();
   cc.calculateSegmentStep([bidonRider, teammate], {b1: 'fetch_bidons', t1: 'follow'}, {}, FLAT_SEGMENT, 5, team);
-  assert.equal(bidonRider.fatigue, 45); // +15 own fatigueDelta, no relief to self
-  assert.equal(teammate.fatigue, 20); // -15 relief, +5 own follow delta = 20
+  assert.equal(bidonRider.power, 20); // geen eigen boost
+  assert.equal(teammate.power, 50); // +15 bidons, +15 volg
+  assert.equal(bidonRider.endurance, 64);
+});
+
+test('calculateSegmentStep: the position in the group changes energy and follows from the tactic', () => {
+  const tail = withEnergy(makeRider({id: 'tail'}), {endurance: 60, power: 20, position: 'back'});
+  const front = withEnergy(makeRider({id: 'front'}), {endurance: 60, power: 20, position: 'front'});
+  cc.calculateSegmentStep([tail, front], {tail: 'follow', front: 'follow'}, {}, FLAT_SEGMENT, 5, makeTeam());
+  assert.equal(tail.endurance, 58); // 4 − 2 (staart spaart)
+  assert.equal(tail.power, 40); // +15 volg, +5 staart
+  assert.equal(front.endurance, 54); // 4 + 2 (kop in de wind)
+  assert.equal(front.power, 35);
+  assert.equal(tail.position, 'middle');
+  assert.equal(front.position, 'middle');
+});
+
+test('calculateSegmentStep: protecting a teammate gives him +2 and crash immunity, costs the helper', () => {
+  const helper = makeRider({id: 'h1'});
+  const leader = makeRider({id: 'l1'});
+  const alone = makeRider({id: 'l2'});
+  const team = makeTeam();
+  const protectedRun = cc.calculateSegmentStep([helper, leader], {h1: 'protect', l1: 'follow'}, {}, FLAT_SEGMENT, 5, team, {targets: {h1: 'l1'}});
+  const aloneRun = cc.calculateSegmentStep([alone], {l2: 'follow'}, {}, FLAT_SEGMENT, 5, team);
+  assert.equal(protectedRun.h1.tactic, 'protect');
+  assert.equal(protectedRun.l1.protected, true);
+  assert.equal(protectedRun.l1.crashImmune, true);
+  assert.equal(Math.round((protectedRun.l1.personalMultiplier - aloneRun.l2.personalMultiplier) * 100) / 100, 0.2);
+  assert.equal(helper.power, 85);
+  // Zonder geldig doelwit valt Bescherm terug op Volg.
+  const noTarget = cc.calculateSegmentStep([makeRider({id: 'h2'})], {h2: 'protect'}, {}, FLAT_SEGMENT, 5, team, {targets: {h2: 'h2'}});
+  assert.equal(noTarget.h2.tactic, 'follow');
+});
+
+test('calculateSegmentStep: a sprint lead-out burns all power and multiplies the sprinter\'s attack', () => {
+  const leadout = makeRider({id: 'lo'});
+  const sprinter = makeRider({id: 'sp', specialism: 'sprinter'});
+  const soloSprinter = makeRider({id: 'sp2', specialism: 'sprinter'});
+  const team = makeTeam();
+  const withLeadout = cc.calculateSegmentStep([leadout, sprinter], {lo: 'sprint_leadout', sp: 'attack'}, {}, SPRINT_SEGMENT, 5, team, {targets: {lo: 'sp'}});
+  const solo = cc.calculateSegmentStep([soloSprinter], {sp2: 'attack'}, {}, SPRINT_SEGMENT, 5, team);
+  assert.equal(withLeadout.lo.tactic, 'sprint_leadout');
+  assert.equal(leadout.power, 0);
+  // aanvalsbonus 5 × 1,6 = 8 → +0,3 op de multiplier tegenover een gewone aanval
+  assert.equal(Math.round((withLeadout.sp.personalMultiplier - solo.sp2.personalMultiplier) * 100) / 100, 0.3);
+  // Buiten een sprintsegment is een lead-out niet mogelijk.
+  const flat = cc.calculateSegmentStep([makeRider({id: 'lo2'}), makeRider({id: 'sp3'})], {lo2: 'sprint_leadout', sp3: 'attack'}, {}, FLAT_SEGMENT, 5, team, {targets: {lo2: 'sp3'}});
+  assert.equal(flat.lo2.tactic, 'follow');
+});
+
+test('calculateSegmentStep: push your luck scales the attack and can blow the rider up for the rest of the race', () => {
+  const team = makeTeam();
+  const light = makeRider({id: 'p1'});
+  const full = makeRider({id: 'p2'});
+  const allIn = makeRider({id: 'p3'});
+  const safeRoll = cc.calculateSegmentStep([light, full, allIn], {p1: 'attack', p2: 'attack', p3: 'attack'}, {}, FLAT_SEGMENT, 8, team, {pushes: {p1: 1, p2: 2, p3: 3}});
+  assert.equal(safeRoll.p1.push, 1);
+  assert.equal(safeRoll.p3.push, 3);
+  assert.equal(Math.round((safeRoll.p2.personalMultiplier - safeRoll.p1.personalMultiplier) * 100) / 100, 0.2);
+  assert.equal(Math.round((safeRoll.p3.personalMultiplier - safeRoll.p1.personalMultiplier) * 100) / 100, 0.4);
+  assert.equal(allIn.power, 40); // 100 − 60
+  // Bij worp 2 mislukt inzet Alles en Vol, maar Licht nooit.
+  const safe = makeRider({id: 'q1'});
+  const boom = makeRider({id: 'q3'});
+  const lowRoll = cc.calculateSegmentStep([safe, boom], {q1: 'attack', q3: 'attack'}, {}, FLAT_SEGMENT, 2, team, {pushes: {q1: 1, q3: 3}});
+  assert.equal(lowRoll.q1.exploded, false);
+  assert.equal(lowRoll.q3.exploded, true);
+  assert.ok(lowRoll.q3.personalMultiplier < lowRoll.q1.personalMultiplier);
+  assert.equal(boom.power, 0);
+  assert.ok(boom.endurance <= cc.BONK_ENDURANCE);
+  // Een ontplofte renner zit in de Hongerklop en kan niet meer aanvallen.
+  const after = cc.calculateSegmentStep([boom], {q3: 'attack'}, {}, FLAT_SEGMENT, 9, team, {pushes: {q3: 3}});
+  assert.equal(after.q3.tactic, 'follow');
+  assert.ok(after.q3.personalMultiplier <= 0.5);
+  // Te weinig explosiviteit voor de gekozen inzet zakt naar een haalbare inzet.
+  const tired = withEnergy(makeRider({id: 't1'}), {endurance: 80, power: 50});
+  const downgraded = cc.calculateSegmentStep([tired], {t1: 'attack'}, {}, FLAT_SEGMENT, 8, team, {pushes: {t1: 3}});
+  assert.equal(downgraded.t1.push, 2);
+});
+
+test('calculateSegmentStep: marking an announced rival pays off only when he really attacks', () => {
+  const team = makeTeam();
+  const inBreak = makeRider({id: 'm1'});
+  const bluffed = makeRider({id: 'm2'});
+  const unknown = makeRider({id: 'm3'});
+  const results = cc.calculateSegmentStep([inBreak, bluffed, unknown], {m1: 'mark', m2: 'mark', m3: 'mark'}, {}, FLAT_SEGMENT, 5, team,
+    {targets: {m1: 'rival-a', m2: 'rival-b', m3: 'rival-z'}, rivalAttacks: {'rival-a': true, 'rival-b': false}});
+  assert.equal(results.m1.tactic, 'mark');
+  assert.equal(results.m2.tactic, 'mark');
+  assert.equal(results.m3.tactic, 'follow');
+  assert.equal(Math.round((results.m1.personalMultiplier - results.m2.personalMultiplier) * 100) / 100, 0.4);
+  assert.equal(inBreak.power, 75);
+  assert.equal(inBreak.position, 'front');
+});
+
+test('race events: choices adjust energy immediately and add roll modifiers to the pending roll', () => {
+  const riders = [withEnergy(makeRider({id: 'e1', gelsRemaining: 1}), {endurance: 80, power: 60, position: 'back'}), withEnergy(makeRider({id: 'e2'}), {endurance: 80, power: 60, position: 'front'})];
+  const prog = {pendingRoll: {roll: 5, tactics: {e1: 'follow', e2: 'follow'}, targets: {}, rollModifiers: {}}, pendingEvent: cc.buildRaceEvent('crosswind', riders), lastEventType: null};
+  assert.equal(prog.pendingEvent.options.length, 2);
+  cc.applyRaceEvent(prog, riders, 'sit_in');
+  assert.equal(prog.pendingEvent, null);
+  assert.equal(prog.lastEventType, 'crosswind');
+  assert.deepEqual(prog.pendingRoll.rollModifiers, {e1: -2}); // staart −2, kop ongedeerd
+  const puncture = {pendingRoll: {roll: 5, tactics: {}, targets: {}, rollModifiers: {}}, pendingEvent: {...cc.buildRaceEvent('puncture', riders), riderId: 'e1'}};
+  assert.ok(puncture.pendingEvent.options.some((option) => option.key === 'gel'));
+  cc.applyRaceEvent(puncture, riders, 'gel');
+  assert.equal(riders[0].gelsRemaining, 0);
+  assert.equal(riders[0].power, 50);
+  assert.equal(puncture.pendingRoll.rollModifiers.e1, undefined);
+  assert.throws(() => cc.applyRaceEvent({pendingEvent: cc.buildRaceEvent('feedzone', riders), pendingRoll: {}}, riders, 'nope'), /Onbekende keuze/);
+});
+
+test('rollSegment can pause on an event that must be resolved before the segment closes', () => {
+  const {game, player1} = buildGame();
+  cc.handleAction(game, 'p1', 'selectRace', {raceId: cc.RACE_CATALOG[0].id});
+  const riderIds = player1.team.riders.slice(0, 3).map((rider) => rider.id);
+  cc.handleAction(game, 'p1', 'submitLineup', {riderIds});
+  const originalRandom = Math.random;
+  Math.random = () => 0; // dwingt een gebeurtenis af
+  try {
+    cc.handleAction(game, 'p1', 'rollSegment', {tactics: Object.fromEntries(riderIds.map((id) => [id, 'follow'])), gels: {}});
+  } finally {
+    Math.random = originalRandom;
+  }
+  const prog = game.race.progress.p1;
+  assert.ok(prog.pendingEvent, 'er hangt een gebeurtenis');
+  assert.equal(prog.confirmed, false);
+  const state = cc.serialize(game, 'p1', new Map());
+  assert.equal(state.race.myProgress.pendingEvent.title, prog.pendingEvent.title);
+  assert.throws(() => cc.handleAction(game, 'p1', 'rollSegment', {tactics: {}, gels: {}}), /vorige worp/);
+  cc.handleAction(game, 'p1', 'resolveEvent', {choice: prog.pendingEvent.options[0].key});
+  assert.equal(prog.pendingEvent, null);
+  assert.equal(prog.confirmed, true);
+  assert.ok(prog.lastEvent.title);
+});
+
+test('rollSegment validates team targets, sprint lead-outs and announced rivals', () => {
+  const {game, player1} = buildGame();
+  cc.handleAction(game, 'p1', 'selectRace', {raceId: cc.RACE_CATALOG[0].id});
+  const riderIds = player1.team.riders.slice(0, 3).map((rider) => rider.id);
+  cc.handleAction(game, 'p1', 'submitLineup', {riderIds});
+  const [a, b, c] = riderIds;
+  const base = {[b]: 'follow', [c]: 'follow'};
+  assert.throws(() => cc.handleAction(game, 'p1', 'rollSegment', {tactics: {...base, [a]: 'protect'}, targets: {[a]: a}}), /ploeggenoot/);
+  assert.throws(() => cc.handleAction(game, 'p1', 'rollSegment', {tactics: {...base, [a]: 'mark'}, targets: {[a]: 'niemand'}}), /aangekondigde/);
+  if (!cc.isSprintSegment(game.race.segments[0])) {
+    assert.throws(() => cc.handleAction(game, 'p1', 'rollSegment', {tactics: {...base, [a]: 'sprint_leadout'}, targets: {[a]: b}}), /sprintsegment/);
+  }
+  const state = cc.serialize(game, 'p1', new Map());
+  assert.ok(Array.isArray(state.race.hints));
+  assert.ok(state.race.hints.length >= 1 && state.race.hints.length <= 2);
+  assert.equal(state.race.hints.some((hint) => 'willAttack' in hint), false, 'de betrouwbaarheid blijft verborgen');
+  assert.equal(state.race.tacticOptions.length, cc.RIDER_TACTICS.length);
+  assert.equal(state.race.myProgress.riders[a].endurance, 100);
+  assert.equal(state.race.myProgress.riders[a].position, 'middle');
+});
+
+test('after a race the green bar becomes lasting fatigue and the in-race energy fields disappear', () => {
+  const {game, player1} = buildGame();
+  cc.handleAction(game, 'p1', 'selectRace', {raceId: cc.RACE_CATALOG[0].id});
+  const riderIds = player1.team.riders.slice(0, 3).map((rider) => rider.id);
+  cc.handleAction(game, 'p1', 'submitLineup', {riderIds});
+  let fakeNow = Date.now();
+  let guard = 0;
+  while (game.phase === 'racing' && guard < 200) {
+    guard += 1;
+    fakeNow += 1000;
+    playSegmentAsP1(game, 'recover');
+    cc.tick(game, fakeNow);
+  }
+  assert.equal(game.phase, 'result');
+  for (const rider of player1.team.riders) {
+    assert.equal('endurance' in rider, false);
+    assert.equal('power' in rider, false);
+    assert.equal('position' in rider, false);
+  }
+  const raced = player1.team.riders.filter((rider) => riderIds.includes(rider.id) && rider.status === 'active');
+  for (const rider of raced) assert.ok(rider.fatigue >= 22 && rider.fatigue <= 60, `vermoeidheid ${rider.fatigue}`);
 });
 
 test('calculateSegmentStep: leadout grants a draft bonus to teammates who follow', () => {
@@ -109,11 +322,12 @@ test('calculateSegmentStep: leadout grants a draft bonus to teammates who follow
   assert.ok(withLeadout.f1.personalMultiplier > withoutLeadout.f2.personalMultiplier);
 });
 
-test('calculateSegmentStep: bonked riders (fatigue >= 91) cannot attack or lead out and are capped', () => {
+test('calculateSegmentStep: bonked riders (green bar <= 10) cannot attack or lead out and are capped', () => {
   const bonked = makeRider({id: 'bk1', fatigue: 95});
   const team = makeTeam();
   const results = cc.calculateSegmentStep([bonked], {bk1: 'attack'}, {}, FLAT_SEGMENT, 10, team);
   assert.equal(results.bk1.tactic, 'follow');
+  assert.equal(results.bk1.bonked, true);
   assert.ok(results.bk1.personalMultiplier <= 0.5);
 });
 
@@ -126,6 +340,10 @@ test('buildSegmentPlan: produces the expected number of segments with valid terr
   assert.ok(plan.filter((segment) => segment.hasIntermediateSprint).length <= 1);
   const mountainCats = plan.filter((segment) => segment.terrainType === 'mountain').map((segment) => segment.mountainCategory);
   assert.ok(mountainCats.every((cat) => cat >= 1 && cat <= 4));
+  for (const segment of plan) {
+    if (segment.hasIntermediateSprint) assert.equal(segment.isSprint, true);
+    if (segment.isSprint) assert.ok(['flat', 'hills', 'cobbles'].includes(segment.terrainType));
+  }
 });
 
 test('hydrating a team saved before gelsRemaining existed defaults it to a full ration, not NaN/undefined', () => {
@@ -258,13 +476,7 @@ test('a full one-day race resolves to a one_day result via rollSegment', () => {
   while (game.phase === 'racing' && guard < 200) {
     guard += 1;
     fakeNow += 1000;
-    const prog = game.race.progress.p1;
-    if (prog && !prog.confirmed) {
-      const activeIds = Object.keys(prog.riders).filter((id) => !prog.riders[id].dnf);
-      const tactics = {};
-      for (const id of activeIds) tactics[id] = 'follow';
-      cc.handleAction(game, 'p1', 'rollSegment', {tactics, gels: {}});
-    }
+    playSegmentAsP1(game);
     cc.tick(game, fakeNow);
   }
   assert.equal(game.phase, 'result');
@@ -284,15 +496,7 @@ test('a full grand tour produces all five classifications', () => {
       const riderIds = player1.team.riders.filter((rider) => rider.status === 'active').slice(0, 3).map((rider) => rider.id);
       cc.handleAction(game, 'p1', 'submitLineup', {riderIds});
     } else if (game.phase === 'racing') {
-      const prog = game.race.progress.p1;
-      if (prog && !prog.confirmed) {
-        const activeIds = Object.keys(prog.riders).filter((id) => !prog.riders[id].dnf);
-        if (activeIds.length) {
-          const tactics = {};
-          for (const id of activeIds) tactics[id] = 'follow';
-          cc.handleAction(game, 'p1', 'rollSegment', {tactics, gels: {}});
-        }
-      }
+      playSegmentAsP1(game);
     } else if (game.phase === 'stageResult') {
       cc.handleAction(game, 'p1', 'nextStage', {});
     }
@@ -333,15 +537,7 @@ test('a stage race runs to a final classification and counts as a stage-race win
       const riderIds = player1.team.riders.filter((rider) => rider.status === 'active').slice(0, 3).map((rider) => rider.id);
       cc.handleAction(game, 'p1', 'submitLineup', {riderIds});
     } else if (game.phase === 'racing') {
-      const prog = game.race.progress.p1;
-      if (prog && !prog.confirmed) {
-        const activeIds = Object.keys(prog.riders).filter((id) => !prog.riders[id].dnf);
-        if (activeIds.length) {
-          const tactics = {};
-          for (const id of activeIds) tactics[id] = 'follow';
-          cc.handleAction(game, 'p1', 'rollSegment', {tactics, gels: {}});
-        }
-      }
+      playSegmentAsP1(game);
     } else if (game.phase === 'stageResult') {
       stagesSeen += 1;
       cc.handleAction(game, 'p1', 'nextStage', {});
@@ -441,15 +637,7 @@ test('finishing a stage race records the win per race and hands out the five jer
       const riderIds = player1.team.riders.filter((rider) => rider.status === 'active').slice(0, 3).map((rider) => rider.id);
       cc.handleAction(game, 'p1', 'submitLineup', {riderIds});
     } else if (game.phase === 'racing') {
-      const prog = game.race.progress.p1;
-      if (prog && !prog.confirmed) {
-        const activeIds = Object.keys(prog.riders).filter((id) => !prog.riders[id].dnf);
-        if (activeIds.length) {
-          const tactics = {};
-          for (const id of activeIds) tactics[id] = 'follow';
-          cc.handleAction(game, 'p1', 'rollSegment', {tactics, gels: {}});
-        }
-      }
+      playSegmentAsP1(game);
     } else if (game.phase === 'stageResult') {
       cc.handleAction(game, 'p1', 'nextStage', {});
     }
@@ -483,5 +671,157 @@ test('finishing a stage race records the win per race and hands out the five jer
     for (const raceId of Object.keys(player.team.career.raceWins)) {
       assert.ok(!raceId.includes('::stage:'), `ritwinst apart geboekt: ${raceId}`);
     }
+  }
+});
+
+test('time classifications show the leader with a total time and everyone else as a gap; teams group per real team', () => {
+  const entry = (playerId, riderId, teamId, time, age = 30) => ({
+    playerId, playerName: playerId, riderId, riderName: riderId, rider: {teamId}, age,
+    totalPr: 0, stageWins: 0, timeAccumulated: time, pointsGreen: 0, pointsPolka: 0
+  });
+  const gc = {
+    'p1:a': entry('p1', 'a', 'x', -30, 22), 'p1:b': entry('p1', 'b', 'x', 10), 'p1:c': entry('p1', 'c', 'x', 20),
+    'npc:n1': entry('__race_npcs__', 'n1', 'catalog-0', -66, 24), 'npc:n2': entry('__race_npcs__', 'n2', 'catalog-0', 0)
+  };
+  const standings = cc.classificationStandings(gc, 4 * 3600);
+  assert.deepEqual(standings.gc.map((row) => [row.riderId, row.value, row.display]), [
+    ['n1', 0, cc.formatRaceTime(4 * 3600 - 66)], ['a', 36, '+36s'], ['n2', 66, '+66s'], ['b', 76, '+76s'], ['c', 86, '+86s']
+  ]);
+  assert.equal(standings.gc[0].display, `3u58'54"`);
+  assert.equal(standings.youth[0].riderId, 'n1');
+  assert.equal(standings.youth[1].display, '+36s');
+  // Het NPC-veld telt per echte ploeg mee en alleen met minstens drie renners.
+  assert.deepEqual(standings.team.map((row) => [row.playerName, row.value]), [['p1', 0]]);
+  gc['npc:n3'] = entry('__race_npcs__', 'n3', 'catalog-0', -50);
+  const withTeam = cc.classificationStandings(gc, 0);
+  assert.equal(withTeam.team.length, 2);
+  assert.equal(withTeam.team[0].playerId, '__race_npcs__');
+  assert.equal(withTeam.team[1].display, '+116s');
+});
+
+test('team tactics: every team owns the ten tactics, inactive and without stock by default', () => {
+  const game = cc.createGame([{id: 'p1', name: 'Alice', isNpc: false}]);
+  const tactics = game.players[0].team.tactics;
+  assert.equal(Object.keys(tactics).length, 10);
+  assert.equal(cc.TEAM_TACTICS.length, 10);
+  for (const row of Object.values(tactics)) assert.deepEqual(row, {upgradeLevel: 0, actieveVoorraad: 0});
+  const serialized = cc.serialize(game, 'p1', new Map()).players[0].tactics;
+  assert.equal(serialized.length, 10);
+  assert.deepEqual(serialized.map((tactic) => tactic.naam), ['Lead-out', 'Gereed voor eindsprint', 'Bergpunten pakken', 'Tussensprint pakken', 'Vroege vlucht', 'Kopman uit de wind zetten', 'Gat dichtrijden', 'Meeschuiven / Schaduwen', 'Bordje leeg eten', 'Waaier trekken']);
+  // Een oude save zonder tactieken, of met kapotte waarden, hydrateert veilig.
+  const hydrated = cc.createGame([{id: 'p2', name: 'Bob', isNpc: false, cycclubTeam: {...savedTeam([]), tactics: {waaier: {upgradeLevel: 9, actieveVoorraad: -3}, onbekend: {upgradeLevel: 2}}}}]);
+  assert.deepEqual(hydrated.players[0].team.tactics.waaier, {upgradeLevel: 5, actieveVoorraad: 0});
+  assert.equal('onbekend' in hydrated.players[0].team.tactics, false);
+});
+
+test('team tactics shop: activate, upgrade and buy cards cost budget and respect the limits', () => {
+  const game = cc.createGame([{id: 'p1', name: 'Alice', isNpc: false}]);
+  const team = game.players[0].team;
+  team.wallet = 100000;
+  assert.throws(() => cc.handleAction(game, 'p1', 'upgradeTactic', {tacticId: 'lead_out'}), /Activeer/);
+  assert.throws(() => cc.handleAction(game, 'p1', 'buyTacticCard', {tacticId: 'lead_out'}), /Activeer/);
+  assert.throws(() => cc.handleAction(game, 'p1', 'activateTactic', {tacticId: 'nope'}), /Onbekende/);
+  cc.handleAction(game, 'p1', 'activateTactic', {tacticId: 'lead_out'});
+  assert.deepEqual(team.tactics.lead_out, {upgradeLevel: 1, actieveVoorraad: 1});
+  assert.equal(team.wallet, 100000 - cc.TEAM_TACTIC_ACTIVATE_COST);
+  assert.throws(() => cc.handleAction(game, 'p1', 'activateTactic', {tacticId: 'lead_out'}), /al geactiveerd/);
+  cc.handleAction(game, 'p1', 'upgradeTactic', {tacticId: 'lead_out'});
+  assert.equal(team.tactics.lead_out.upgradeLevel, 2);
+  assert.equal(team.wallet, 100000 - cc.TEAM_TACTIC_ACTIVATE_COST - cc.TEAM_TACTIC_UPGRADE_COSTS[0]);
+  cc.handleAction(game, 'p1', 'buyTacticCard', {tacticId: 'lead_out'});
+  assert.equal(team.tactics.lead_out.actieveVoorraad, 2);
+  team.tactics.lead_out.actieveVoorraad = cc.TEAM_TACTIC_MAX_STOCK;
+  assert.throws(() => cc.handleAction(game, 'p1', 'buyTacticCard', {tacticId: 'lead_out'}), /maximaal/);
+  team.tactics.lead_out.upgradeLevel = cc.TEAM_TACTIC_MAX_LEVEL;
+  assert.throws(() => cc.handleAction(game, 'p1', 'upgradeTactic', {tacticId: 'lead_out'}), /maximum/);
+  team.wallet = 10;
+  assert.throws(() => cc.handleAction(game, 'p1', 'activateTactic', {tacticId: 'waaier'}), /budget/);
+  const shown = cc.serialize(game, 'p1', new Map()).players[0].tactics.find((tactic) => tactic.id === 'lead_out');
+  assert.equal(shown.costs.upgrade, null);
+  assert.equal(shown.actieveVoorraad, cc.TEAM_TACTIC_MAX_STOCK);
+});
+
+test('team tactic cards modify the segment calculation per card', () => {
+  const team = makeTeam();
+  const flat = {...FLAT_SEGMENT, segmentIndex: 7};
+  // Meeschuiven: Volg kost geen uithouding en laadt extra explosiviteit.
+  const shadow = withEnergy(makeRider({id: 's1'}), {endurance: 80, power: 20});
+  cc.calculateSegmentStep([shadow], {s1: 'follow'}, {}, FLAT_SEGMENT, 5, team, {card: {id: 'meeschuiven', level: 2}});
+  assert.equal(shadow.endurance, 80);
+  assert.equal(shadow.power, 20 + 15 + 6);
+  // Gereed voor eindsprint: +2 op de worp in het laatste segment op niveau 1.
+  const plain = cc.calculateSegmentStep([makeRider({id: 'e0'})], {e0: 'follow'}, {}, flat, 5, team);
+  const boosted = cc.calculateSegmentStep([makeRider({id: 'e1'})], {e1: 'follow'}, {}, flat, 5, team, {card: {id: 'eindsprint', level: 1}});
+  assert.equal(Math.round((boosted.e1.personalMultiplier - plain.e0.personalMultiplier) * 100) / 100, 0.2);
+  // Waaier trekken: ploegmultiplier en een kruis-effect op Herstel bij anderen.
+  const echelon = cc.calculateSegmentStep([makeRider({id: 'w1'})], {w1: 'follow'}, {}, FLAT_SEGMENT, 5, team, {card: {id: 'waaier', level: 1}});
+  assert.equal(echelon.w1.personalMultiplier, Math.round(0.7 * 1.16 * 1000) / 1000);
+  assert.deepEqual(echelon.cardEffect, {id: 'waaier', level: 1, cross: {penaltyRecover: 1.3}});
+  // Bordje leeg eten telt alleen als er knechtenwerk gedaan wordt.
+  const lazy = cc.calculateSegmentStep([makeRider({id: 'b1'})], {b1: 'follow'}, {}, FLAT_SEGMENT, 5, team, {card: {id: 'bordje_leeg', level: 1}});
+  assert.equal(lazy.cardEffect.cross, null);
+  const busy = cc.calculateSegmentStep([makeRider({id: 'b2'})], {b2: 'fetch_bidons'}, {}, FLAT_SEGMENT, 5, team, {card: {id: 'bordje_leeg', level: 3}});
+  assert.deepEqual(busy.cardEffect.cross, {penaltyAll: 0.9});
+  // Gat dichtrijden: alleen Kop vanuit een slechte positie, en het kost extra uithouding.
+  const chaser = withEnergy(makeRider({id: 'g1'}), {endurance: 80, power: 80, position: 'back'});
+  const chase = cc.calculateSegmentStep([chaser], {g1: 'leadout'}, {}, FLAT_SEGMENT, 5, team, {card: {id: 'gat_dichtrijden', level: 1}});
+  assert.equal(Math.round((chase.g1.personalMultiplier - 0.8) * 100) / 100, 0.2);
+  assert.equal(chaser.endurance, 80 - (8 - 2 + 7)); // Kop 8, staart −2, kaart +7
+  // Onbekende kaart doet niets.
+  const none = cc.calculateSegmentStep([makeRider({id: 'n1'})], {n1: 'follow'}, {}, FLAT_SEGMENT, 5, team, {card: {id: 'nope', level: 1}});
+  assert.equal(none.n1.personalMultiplier, 0.7);
+  assert.equal(none.cardEffect, null);
+});
+
+test('playing a card in a race consumes stock, is refunded after a top-3 finish and penalises rivals', () => {
+  const {game, player1} = buildGame();
+  player1.team.tactics.waaier = {upgradeLevel: 2, actieveVoorraad: 2};
+  player1.team.tactics.lead_out = {upgradeLevel: 1, actieveVoorraad: 0};
+  cc.handleAction(game, 'p1', 'selectRace', {raceId: cc.RACE_CATALOG[0].id});
+  const riderIds = player1.team.riders.slice(0, 3).map((rider) => rider.id);
+  cc.handleAction(game, 'p1', 'submitLineup', {riderIds});
+  const tactics = Object.fromEntries(riderIds.map((id) => [id, 'follow']));
+  assert.throws(() => cc.handleAction(game, 'p1', 'rollSegment', {tactics, card: 'lead_out'}), /geen kaarten/);
+  assert.throws(() => cc.handleAction(game, 'p1', 'rollSegment', {tactics, card: 'bergpunten'}), /niet geactiveerd/);
+  cc.handleAction(game, 'p1', 'rollSegment', {tactics, card: 'waaier'});
+  const prog = game.race.progress.p1;
+  if (prog.pendingEvent) cc.handleAction(game, 'p1', 'resolveEvent', {choice: prog.pendingEvent.options[0].key});
+  assert.equal(player1.team.tactics.waaier.actieveVoorraad, 1);
+  assert.deepEqual(prog.usedTactics, ['waaier']);
+  assert.deepEqual(prog.cardEffect, {id: 'waaier', level: 2, cross: {penaltyRecover: 1.6}});
+  // Een NPC-renner die Herstel koos, verliest 0,16 op zijn multiplier zodra het segment sluit.
+  let fakeNow = Date.now();
+  let guard = 0;
+  while (game.race.segmentIndex === 0 && guard < 20) { guard += 1; fakeNow += 1000; cc.tick(game, fakeNow); }
+  const npcProg = game.race.progress.__race_npcs__;
+  const recovered = Object.values(npcProg.riders).map((state) => state.segments[0]).find((entry) => entry && entry.tactic === 'recover');
+  if (recovered) assert.ok(recovered.multiplier <= 1.0, 'herstelde NPC-renner draagt de penalty');
+  assert.equal(cc.serialize(game, 'p1', new Map()).race.myProgress.usedTactics.length, 1);
+  // Forceer een podiumplaats: alle andere renners uitgevallen, dan rijden we de rit uit.
+  for (const riderId of Object.keys(npcProg.riders)) npcProg.riders[riderId].dnf = true;
+  guard = 0;
+  while (game.phase === 'racing' && guard < 100) { guard += 1; fakeNow += 1000; playSegmentAsP1(game); cc.tick(game, fakeNow); }
+  assert.equal(game.phase, 'result');
+  assert.deepEqual(game.lastResult.usedTactics.p1, ['waaier']);
+  assert.deepEqual(game.lastResult.tacticRefunds.p1, ['waaier']);
+  assert.equal(player1.team.tactics.waaier.actieveVoorraad, 2);
+});
+
+test('cards are not refunded without a podium or a jersey', () => {
+  const {game, player1} = buildGame();
+  player1.team.tactics.eindsprint = {upgradeLevel: 1, actieveVoorraad: 1};
+  for (const rider of player1.team.riders) rider.fatigue = 95; // Hongerklop: kansloos
+  cc.handleAction(game, 'p1', 'selectRace', {raceId: cc.RACE_CATALOG[0].id});
+  const riderIds = player1.team.riders.slice(0, 3).map((rider) => rider.id);
+  cc.handleAction(game, 'p1', 'submitLineup', {riderIds});
+  cc.handleAction(game, 'p1', 'rollSegment', {tactics: Object.fromEntries(riderIds.map((id) => [id, 'recover'])), card: 'eindsprint'});
+  let fakeNow = Date.now();
+  let guard = 0;
+  while (game.phase === 'racing' && guard < 100) { guard += 1; fakeNow += 1000; playSegmentAsP1(game, 'recover'); cc.tick(game, fakeNow); }
+  assert.equal(game.phase, 'result');
+  const best = game.lastResult.classification.find((entry) => entry.playerId === 'p1');
+  if (!best || best.place > 3) {
+    assert.deepEqual(game.lastResult.tacticRefunds, {});
+    assert.equal(player1.team.tactics.eindsprint.actieveVoorraad, 0);
   }
 });

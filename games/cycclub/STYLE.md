@@ -61,6 +61,10 @@ Gebruik vijf vaste primaire bestemmingen in een bottom navigation:
 - Per categorie zichtbaar: naam, huidig niveau 1-5, huidige bonus/effect, volgende kost en upgrade-actie.
 - Maximum niveau is duidelijk maar niet dominant.
 - Onbetaalbare upgrade is disabled, maar prijs en effect blijven leesbaar.
+- De Upgrades-tab heeft een segmented control `Upgrades | Team-Tactics`. Tactiekkaarten gebruiken dezelfde
+  shop-cards (niveau, voortgang, effect) plus een voorraadchip; acties zijn Activeer, Upgrade en Koop kaart.
+- In koers staat één uitschuifbaar paneel `Actieve tactieken` boven `Werp segment`; alleen kaarten met voorraad
+  worden getoond, de gekozen kaart krijgt een gele glow. Het resultaatscherm meldt `Tactieken terugverdiend!`.
 
 ## Opstellingsfase
 
@@ -86,9 +90,11 @@ Dit is het belangrijkste scherm en heeft de strengste layoutregels.
   - alle 8 segmenten met huidig segment duidelijk gemarkeerd;
   - alle maximaal 3 eigen renners;
   - groep + exacte achterstand per renner;
-  - vermoeidheid per renner;
+  - groene (uithouding) en rode (explosiviteit) energiebalk per renner;
+  - positie in de groep (Kop / Buik / Staart) per renner;
+  - koersradio-melding (aangekondigde renners) wanneer die er is;
   - resterende gels;
-  - tactiekkeuze;
+  - tactiekkeuze, inclusief inzet bij Val aan en doelwit bij Bescherm / Lead-out;
   - knop om het segment te werpen.
 
 ### Koersprofiel
@@ -103,16 +109,18 @@ Dit is het belangrijkste scherm en heeft de strengste layoutregels.
 
 De kernactie is frequent, dus optimaliseer op één tap.
 
-- Toon voor elke renner de vijf tactieken als **directe knoppen**:
-  - Herstel
-  - Volg
-  - Kop
-  - Val aan
-  - Bidons
+- Toon voor elke renner de tactieken als **directe knoppen**:
+  - Herstel, Volg, Kop, Val aan, Bidons (altijd);
+  - Bescherm (alleen met een ploeggenoot in koers);
+  - Lead-out (alleen in een sprintsegment);
+  - `Volg <naam>` per aangekondigde renner uit de koersradio.
 - Gebruik hier **geen dropdowns**: dat zou elke segmentbeurt extra taps geven.
 - Geselecteerde tactiek is onmiddellijk en sterk herkenbaar.
-- `Val aan` krijgt een duidelijk warm/rood risico-accent.
-- Disabled tactieken, bijvoorbeeld door Hongerklop, blijven zichtbaar met duidelijk disabled state.
+- `Val aan` krijgt een duidelijk warm/rood risico-accent; de inzet (Licht / Vol / Alles) verschijnt als kleine
+  segmentknoppen onder de tactieken met bonus, slaagkans en kost in rood.
+- Bescherm en Lead-out tonen op dezelfde plek de ploeggenoten als doelwitchips; de eerste is standaard gekozen.
+- Disabled tactieken (Hongerklop, te weinig explosiviteit) blijven zichtbaar met duidelijk disabled state en een
+  tooltip met de reden.
 - Gel staat direct bij de betreffende renner en toont het resterende aantal.
 - Alle drie rennerblokken moeten tegelijk zichtbaar blijven; geen carousel of swipe nodig om tussen renners te wisselen.
 
@@ -120,8 +128,14 @@ De kernactie is frequent, dus optimaliseer op één tap.
 
 - `Werp segment` is de primaire CTA onderaan.
 - Houd deze fixed binnen het koersscherm.
-- Maak duidelijk wanneer nog een tactiek ontbreekt en disable de worp dan.
+- Maak duidelijk wanneer nog een tactiek of doelwit ontbreekt en disable de worp dan.
 - Toon een compacte samenvatting van gekozen tactieken vlak bij de CTA indien ruimte dit toelaat.
+
+### Gebeurtenissen onderweg
+
+- Een event na de worp verschijnt als **overlay binnen het koersscherm** (geen page-scroll, geen navigatie).
+- Titel, korte situatieschets en 2-3 keuzeknoppen met elk één regel effect; keuze is één tap.
+- Na de keuze toont het wachtscherm kort de uitkomst van het event.
 
 ## Resultaten en Grote Rondes
 

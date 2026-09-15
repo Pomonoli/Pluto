@@ -684,6 +684,8 @@ function cycclubLeaderboard(limit = 100) {
       const wallet = Number(state?.wallet || 0);
       const netWorth = wallet + (state?.riders || []).reduce((sum, rider) => sum + Number(rider.marketValue || 0), 0);
       const career = state?.career || {};
+      const jerseys = career.jerseys && typeof career.jerseys === 'object' ? career.jerseys : {};
+      const jersey = (key) => Math.max(0, Math.floor(Number(jerseys[key]) || 0));
       return {
         username: row.username,
         draws: 0,
@@ -693,11 +695,17 @@ function cycclubLeaderboard(limit = 100) {
         monumentsWon: Number(career.monumentsWon || 0),
         grandToursWon: Number(career.grandToursWon || 0),
         gtStagesWon: Number(career.gtStagesWon || 0),
-        prizeMoney: Math.round(Number(career.prizeMoney || 0))
+        prizeMoney: Math.round(Number(career.prizeMoney || 0)),
+        jerseyGc: jersey('gc'),
+        jerseyGreen: jersey('green'),
+        jerseyPolka: jersey('polka'),
+        jerseyYouth: jersey('youth'),
+        jerseyTeam: jersey('team'),
+        jerseys: jersey('gc') + jersey('green') + jersey('polka') + jersey('youth') + jersey('team')
       };
     })
     .filter(Boolean)
-    .sort((a, b) => b.victories - a.victories || b.netWorth - a.netWorth || a.username.localeCompare(b.username, 'nl-BE', { sensitivity: 'base' }))
+    .sort((a, b) => b.victories - a.victories || b.jerseys - a.jerseys || b.netWorth - a.netWorth || a.username.localeCompare(b.username, 'nl-BE', { sensitivity: 'base' }))
     .slice(0, safeLimit);
 }
 
