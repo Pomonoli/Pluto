@@ -2,6 +2,10 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
+## Nieuw in versie 1.37.1
+
+Lokereeeeuuh
+
 ## Nieuw in versie 1.37.0
 
 Total Waas: kies zelf een unieke factie in de lobby en speel met Risk-dobbelgevechten, kasteelbonussen, overwinningskaarten en hoofdstadsevolutie.

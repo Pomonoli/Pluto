@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.37.1 — Lokereeeeuuh
+
+- Lokereeeeuuh
+
 ## v1.37.0 — Total Waas: vrije factiekeuze, Risk-gevechten en hoofdstadsevolutie.
 
 - Iedere speler kiest in de Total Waas-lobby zelf een unieke factie; NPC's en spelers zonder keuze krijgen automatisch een vrije factie.
