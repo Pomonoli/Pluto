@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.39.2 — Cycclupgrade
+
+- Cycclupgrade
+
 ## v1.39.1 — Cycclupgrade
 
 - Cycclupgrade

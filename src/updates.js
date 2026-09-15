@@ -899,6 +899,12 @@ const RELEASES = [
     improvements:[
       "Cycclupgrade"
     ]
+  },
+  {
+    version:"1.39.2",
+    improvements:[
+      "Cycclupgrade"
+    ]
   }
 ];
 
