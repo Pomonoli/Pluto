@@ -93,6 +93,16 @@ test('provincie opent Acties, onthoudt tab bij updates en reset bij heropenen', 
   assert.equal(h.cls('sow-balance').length, 1);
 });
 
+test('bord gebruikt geschilderde streekverlopen, terreintextuur en één kaartpatina', () => {
+  const h = harness();
+  assert.equal(h.cls('sow-map-patina').length, 1);
+  assert.equal(h.cls('sow-board-inner-rim').length, 1);
+  const fills = h.cls('sow-cell-fill');
+  assert.equal(fills.length, h.game.board.sectors.length);
+  assert.ok(fills.every(node => /^url\(#sow-biome-(north|west|east|south|center)\)$/.test(node.getAttribute('fill'))));
+  assert.equal(h.cls('sow-cell-pattern').length, h.game.board.sectors.length);
+});
+
 test('legerfiguur selecteert bordbeweging, weigert onbereikbaar doel en annuleert met Escape', () => {
   const h = harness(), army = () => h.cls('sow-army').find(n => n.getAttribute('aria-label').startsWith('Temsehaven:'));
   army().click();

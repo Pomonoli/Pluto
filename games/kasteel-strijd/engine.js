@@ -1,3 +1,5 @@
+import { createFranchiseArt } from './franchise-art.js?v=5';
+
 // Castle Defense — canvasrenderer voor de authoritatieve serversnapshots.
 // Elk tijdperk heeft een eigen getekende wereld (achtergrond, basis, toren, figuren) met inktlijn.
 // ---------- World constants ----------
@@ -103,6 +105,8 @@ export function createBattle({ canvas }) {
   function rect(x, y, w, h, color, lw = 1.6) { ctx.beginPath(); ctx.rect(x, y, w, h); ink(color, lw); }
   function circle(x, y, r, color, lw = 1.6) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ink(color, lw); }
   function poly(points, color, lw = 1.6) { ctx.beginPath(); points.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ink(color, lw); }
+
+  const franchiseArt = createFranchiseArt({ ctx: () => ctx, state: () => state, rect, circle, poly, limb, flag: drawFlagAt, horse: drawHorse, mammoth: drawMammoth });
 
   // ---------- Static backdrop (cached per era pair) ----------
   const farY = (x) => GROUND_Y - 130 + Math.sin(x / 90) * 18 + Math.sin(x / 37) * 6;
@@ -225,6 +229,7 @@ export function createBattle({ canvas }) {
     drawStaticDecor(state.enemy.era, true);
   }
   function drawBackground() {
+    if (state.mode === 'franchise') { franchiseArt.background(); return; }
     const key = `${state.player.era}-${state.enemy.era}`;
     if (!bgCache || bgCache.key !== key) {
       const off = makeOffscreen();
@@ -312,6 +317,11 @@ export function createBattle({ canvas }) {
   }
 
   // ---------- Bases per era ----------
+  function material(x, y, width, light, mid, shade) {
+    const gradient = ctx.createLinearGradient(x, y, x + width, y + width * 0.2);
+    gradient.addColorStop(0, light); gradient.addColorStop(0.45, mid); gradient.addColorStop(1, shade);
+    return gradient;
+  }
   function drawFlagAt(cx, topY, color) {
     ctx.strokeStyle = INK; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.moveTo(cx, topY); ctx.lineTo(cx, topY - 33); ctx.stroke();
@@ -321,19 +331,40 @@ export function createBattle({ canvas }) {
   function drawHut(cx, baseY, flag, mirror) {
     // Prehistorie: de eigen basis is een strohut met palen, de tegenstander bewoont een huidentent.
     if (mirror) { drawHideTent(cx, baseY, flag); return; }
-    poly([[cx - 92, baseY], [cx - 84, baseY - 36], [cx + 84, baseY - 36], [cx + 92, baseY]], '#a67a52');
+    ctx.beginPath(); ctx.moveTo(cx - 87, baseY - 51);
+    ctx.quadraticCurveTo(cx, baseY - 72, cx + 87, baseY - 51);
+    ctx.lineTo(cx + 89, baseY - 5); ctx.quadraticCurveTo(cx, baseY + 12, cx - 89, baseY - 5);
+    ctx.closePath(); ink(material(cx - 90, baseY - 60, 180, '#c1a079', '#a78055', '#62452f'));
     ctx.strokeStyle = '#6e4a30'; ctx.lineWidth = 1.2;
     for (let i = -4; i <= 4; i++) { ctx.beginPath(); ctx.moveTo(cx + i * 18, baseY - 36); ctx.lineTo(cx + i * 18 + 3, baseY); ctx.stroke(); }
-    poly([[cx - 100, baseY - 34], [cx, baseY - 130], [cx + 100, baseY - 34]], '#c9a06a');
+    ctx.beginPath(); ctx.moveTo(cx - 103, baseY - 40);
+    ctx.bezierCurveTo(cx - 69, baseY - 65, cx - 28, baseY - 108, cx - 4, baseY - 136);
+    ctx.quadraticCurveTo(cx + 8, baseY - 143, cx + 17, baseY - 126);
+    ctx.bezierCurveTo(cx + 41, baseY - 87, cx + 74, baseY - 58, cx + 103, baseY - 40);
+    ctx.quadraticCurveTo(cx, baseY - 17, cx - 103, baseY - 40); ctx.closePath();
+    ink(material(cx - 100, baseY - 130, 200, '#e5c888', '#bc914f', '#715334'));
+    // Individual bundles follow the slope and break up the smooth roof edge.
+    for (let i = 0; i < 46; i++) {
+      const t = i / 45, endX = cx - 100 + t * 200;
+      ctx.strokeStyle = i % 3 ? 'rgba(83,56,27,.24)' : 'rgba(255,233,170,.48)'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(cx + (t - 0.5) * 20, baseY - 126 + seeded(i) * 17);
+      ctx.quadraticCurveTo(cx + (t - 0.5) * 110, baseY - 69, endX, baseY - 37 + Math.sin(t * Math.PI) * 10 + seeded(i + 70) * 4); ctx.stroke();
+    }
     ctx.strokeStyle = '#8a6438'; ctx.lineWidth = 1.5;
     for (let i = 1; i <= 5; i++) { const y = baseY - 34 - i * 16, hw = 100 * (1 - i * 16 / 96); ctx.beginPath(); ctx.moveTo(cx - hw, y); ctx.quadraticCurveTo(cx, y + 5, cx + hw, y); ctx.stroke(); }
     ctx.strokeStyle = INK; ctx.lineWidth = 3;
     for (const dx of [-12, 0, 12]) { ctx.beginPath(); ctx.moveTo(cx + dx * 0.3, baseY - 118); ctx.lineTo(cx + dx * 1.6, baseY - 160); ctx.stroke(); }
     ctx.beginPath(); ctx.moveTo(cx - 18, baseY); ctx.lineTo(cx - 18, baseY - 34); ctx.quadraticCurveTo(cx, baseY - 58, cx + 18, baseY - 34); ctx.lineTo(cx + 18, baseY); ctx.closePath(); ink(INK);
+    ctx.strokeStyle = '#b48b55'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(cx - 21, baseY - 2); ctx.lineTo(cx - 21, baseY - 31); ctx.quadraticCurveTo(cx, baseY - 60, cx + 21, baseY - 31); ctx.lineTo(cx + 21, baseY - 2); ctx.stroke();
+    for (const dx of [-65, 65]) { limb(cx + dx, baseY - 37, cx + dx + 2, baseY, '#795334', 5); }
+    ctx.beginPath(); ctx.ellipse(cx + 46, baseY - 8, 10, 13, 0.1, 0, Math.PI * 2); ink('#9f6643', 1.2);
+    ctx.beginPath(); ctx.ellipse(cx + 46, baseY - 19, 6, 3, 0, 0, Math.PI * 2); ink('#46301f', 1);
     drawFlagAt(cx - 60, baseY - 70, flag);
   }
   function drawHideTent(cx, baseY, flag) {
-    poly([[cx - 100, baseY], [cx - 10, baseY - 138], [cx + 100, baseY]], '#b08a62');
+    ctx.beginPath(); ctx.moveTo(cx - 100, baseY); ctx.quadraticCurveTo(cx - 46, baseY - 72, cx - 10, baseY - 138);
+    ctx.quadraticCurveTo(cx + 28, baseY - 55, cx + 100, baseY); ctx.quadraticCurveTo(cx, baseY + 10, cx - 100, baseY); ctx.closePath();
+    ink(material(cx - 100, baseY - 138, 200, '#eee0bc', '#bca17a', '#73553d'));
     poly([[cx - 100, baseY], [cx - 10, baseY - 138], [cx + 30, baseY - 30], [cx + 10, baseY]], '#d7c3a3');
     ctx.strokeStyle = '#8a6a48'; ctx.lineWidth = 1.2;
     for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.moveTo(cx - 70 + i * 18, baseY - 8 - i * 6); ctx.lineTo(cx - 40 + i * 14, baseY - 60 - i * 8); ctx.stroke(); }
@@ -345,7 +376,7 @@ export function createBattle({ canvas }) {
   function drawTemple(cx, baseY, flag) {
     // Klassieke tempel: trappen, zuilen met kapiteel, architraaf en fronton.
     rect(cx - 110, baseY - 10, 220, 10, '#cfc7b7'); rect(cx - 104, baseY - 20, 208, 10, '#d9d2c1'); rect(cx - 98, baseY - 28, 196, 8, '#e3dccd');
-    rect(cx - 90, baseY - 120, 180, 92, '#8d8578');
+    rect(cx - 90, baseY - 120, 180, 92, material(cx - 90, baseY - 120, 180, '#a69b86', '#726959', '#403c34'));
     for (let i = 0; i < 6; i++) { const x = cx - 84 + i * 33.6; rect(x, baseY - 116, 16, 88, '#efe9dc', 1.4); rect(x - 3, baseY - 120, 22, 6, '#e3dccd', 1.2); ctx.strokeStyle = '#c9c1b0'; ctx.lineWidth = 1; for (let k = 1; k < 4; k++) { ctx.beginPath(); ctx.moveTo(x + k * 4, baseY - 114); ctx.lineTo(x + k * 4, baseY - 30); ctx.stroke(); } }
     rect(cx - 96, baseY - 130, 192, 12, '#e3dccd');
     poly([[cx - 104, baseY - 130], [cx, baseY - 176], [cx + 104, baseY - 130]], '#d4cbb8');
@@ -355,12 +386,18 @@ export function createBattle({ canvas }) {
   }
   function drawMedieval(cx, baseY, flag) {
     // Burcht: muur met kantelen, twee ronde torens met kegeldak, poort met valhek.
-    rect(cx - 90, baseY - 96, 180, 96, '#a9a49a');
+    rect(cx - 90, baseY - 96, 180, 96, material(cx - 90, baseY - 96, 180, '#c8c0aa', '#aaa28f', '#736c5c'));
     ctx.strokeStyle = '#7d786e'; ctx.lineWidth = 1;
     for (let y = baseY - 90; y < baseY; y += 14) { ctx.beginPath(); ctx.moveTo(cx - 90, y); ctx.lineTo(cx + 90, y); ctx.stroke(); const off = ((y / 14) % 2) * 16; for (let x = cx - 90 + off; x < cx + 90; x += 32) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + 14); ctx.stroke(); } }
     for (let i = 0; i < 6; i++) rect(cx - 86 + i * 32, baseY - 108, 16, 12, '#b5b0a6', 1.4);
     for (const dx of [-100, 100]) {
-      rect(dx + cx - 26, baseY - 170, 52, 170, '#b5b0a6');
+      rect(dx + cx - 26, baseY - 170, 52, 170, material(dx + cx - 26, baseY - 170, 52, '#d1c9b4', '#b5ad98', '#716958'));
+      for (let row = 0; row < 12; row++) {
+        const y = baseY - 164 + row * 14;
+        ctx.strokeStyle = 'rgba(65,54,39,.26)'; ctx.lineWidth = 0.8;
+        ctx.beginPath(); ctx.moveTo(cx + dx - 25, y); ctx.quadraticCurveTo(cx + dx, y + 5, cx + dx + 25, y); ctx.stroke();
+        for (const offset of (row % 2 ? [-14, 12] : [0])) { ctx.beginPath(); ctx.moveTo(cx + dx + offset, y + 2); ctx.lineTo(cx + dx + offset, y + 14); ctx.stroke(); }
+      }
       for (let i = -1; i <= 1; i++) rect(dx + cx + i * 18 - 6, baseY - 182, 12, 12, '#b5b0a6', 1.4);
       poly([[dx + cx - 30, baseY - 182], [dx + cx, baseY - 226], [dx + cx + 30, baseY - 182]], '#8a4a3a');
       rect(dx + cx - 4, baseY - 150, 8, 18, '#2b2620', 1.2); rect(dx + cx - 4, baseY - 110, 8, 18, '#2b2620', 1.2);
@@ -374,7 +411,7 @@ export function createBattle({ canvas }) {
     // Sterfort in vogelperspectief: vier bastions rond een binnenplein met een huisje.
     const pts = [[-150, 0], [-110, -30], [-70, -22], [-40, -64], [0, -58], [40, -64], [70, -22], [110, -30], [150, 0], [110, 18], [40, 10], [0, 20], [-40, 10], [-110, 18]];
     ctx.save(); ctx.translate(cx, baseY - 20);
-    poly(pts.map(([x, y]) => [x, y + 26]), wall, 2);
+    poly(pts.map(([x, y]) => [x, y + 26]), material(-150, -64, 300, top, wall, '#514638'), 2);
     ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = 1;
     for (let i = 0; i < pts.length; i++) { const [x, y] = pts[i]; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + 26); ctx.stroke(); }
     poly(pts, top, 2);
@@ -396,7 +433,7 @@ export function createBattle({ canvas }) {
       return;
     }
     // Bakstenen bunker met betonnen dek en luchtafweerkanon.
-    rect(cx - 110, baseY - 90, 220, 90, '#8a4a3a');
+    rect(cx - 110, baseY - 90, 220, 90, material(cx - 110, baseY - 90, 220, '#ab7560', '#8a5140', '#553d32'));
     ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = 1;
     for (let y = baseY - 84; y < baseY; y += 12) { ctx.beginPath(); ctx.moveTo(cx - 110, y); ctx.lineTo(cx + 110, y); ctx.stroke(); const off = ((y / 12) % 2) * 12; for (let x = cx - 110 + off; x < cx + 110; x += 24) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + 12); ctx.stroke(); } }
     rect(cx - 116, baseY - 100, 232, 12, '#9a9a90', 1.6);
@@ -411,7 +448,7 @@ export function createBattle({ canvas }) {
   }
   function drawModernBase(cx, baseY, flag) {
     // Betonnen basis met poort, antennes en een dakplatform.
-    poly([[cx - 112, baseY], [cx - 112, baseY - 80], [cx - 96, baseY - 100], [cx + 96, baseY - 100], [cx + 112, baseY - 80], [cx + 112, baseY]], '#b9b7ad', 2);
+    poly([[cx - 112, baseY], [cx - 112, baseY - 80], [cx - 96, baseY - 100], [cx + 96, baseY - 100], [cx + 112, baseY - 80], [cx + 112, baseY]], material(cx - 112, baseY - 100, 224, '#d8d2bf', '#aaa99b', '#74766c'), 2);
     ctx.strokeStyle = 'rgba(0,0,0,.18)'; ctx.lineWidth = 1; for (let i = 1; i < 5; i++) { ctx.beginPath(); ctx.moveTo(cx - 112, baseY - 16 * i); ctx.lineTo(cx + 112, baseY - 16 * i); ctx.stroke(); }
     rect(cx - 60, baseY - 150, 80, 50, '#a9a79d', 1.6); rect(cx - 66, baseY - 156, 92, 8, '#8f8d84', 1.4);
     rect(cx - 22, baseY - 44, 44, 44, '#4a4f4a', 1.4); ctx.fillStyle = '#e0b83a'; ctx.fillRect(cx - 22, baseY - 46, 44, 3);
@@ -426,9 +463,16 @@ export function createBattle({ canvas }) {
   }
   const CASTLE_TOP = [136, 130, 108, 84, 84, 100, 100];
   function drawCastle(cx, army, side, mirror) {
+    if (state.mode === 'franchise') { franchiseArt.base(cx, army, side); return; }
     const baseY = GROUND_Y + 18, flag = team(side), era = army.era;
     ctx.save();
     if (mirror) { ctx.translate(cx * 2, 0); ctx.scale(-1, 1); }
+    // Ground contact: a soft cast shadow, worn approach and scattered foundation stones.
+    for (let i = 4; i > 0; i--) {
+      ctx.fillStyle = `rgba(38,27,17,${0.035 + (4 - i) * 0.015})`;
+      ctx.beginPath(); ctx.ellipse(cx + 12, baseY + 1, 112 + i * 9, 10 + i * 3, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.beginPath(); ctx.moveTo(cx - 17, baseY - 8); ctx.lineTo(cx + 18, baseY - 8); ctx.quadraticCurveTo(cx + 29, baseY + 20, cx + 66, baseY + 42); ctx.quadraticCurveTo(cx + 8, baseY + 30, cx - 17, baseY - 8); ctx.fillStyle = era < 3 ? '#a58a65' : '#918576'; ctx.fill();
     if (era === 0) drawHut(cx, baseY, flag, mirror);
     else if (era === 1) drawTemple(cx, baseY, flag);
     else if (era === 2) drawMedieval(cx, baseY, flag);
@@ -436,6 +480,11 @@ export function createBattle({ canvas }) {
     else if (era === 4) drawStarFort(cx, baseY, flag, mirror ? '#7a3a30' : '#7d7a72', mirror ? '#b86a52' : '#b5b0a6', mirror ? '#6a2a22' : '#8a4a3a');
     else if (era === 5) drawBunker(cx, baseY, flag, mirror);
     else drawModernBase(cx, baseY, flag);
+    for (let i = 0; i < 9; i++) {
+      const x = cx - 94 + i * 23;
+      if (Math.abs(x - cx) < 29) continue;
+      ctx.beginPath(); ctx.ellipse(x, baseY + 2 + seeded(i) * 4, 5 + seeded(i + 20) * 4, 3, -0.15, 0, Math.PI * 2); ink(era === 0 ? '#958775' : '#827d6e', 0.7);
+    }
     const topY = baseY - CASTLE_TOP[era];
     army.turrets.forEach((t, i) => drawTurret(era, cx - 50 + i * 50, topY, t.cd, t.type || 'near', flag));
     ctx.restore();
@@ -448,26 +497,63 @@ export function createBattle({ canvas }) {
     }
   }
   function drawTurret(era, x, y, cd, type, flag) {
+    const wood = material(x - 20, y - 16, 40, '#bb925c', '#805635', '#493322');
+    const stone = material(x - 20, y - 16, 40, '#d1c6af', '#969381', '#5d6258');
+    ctx.fillStyle = 'rgba(30,22,15,.25)'; ctx.beginPath(); ctx.ellipse(x + 3, y + 1, 23, 5, 0, 0, Math.PI * 2); ctx.fill();
     if (type === 'bonus') {
-      // Banier: hoge stok met teamvaandel en een zachte gloed.
-      ctx.fillStyle = 'rgba(255,211,92,.25)'; ctx.beginPath(); ctx.arc(x, y - 30, 22 + Math.sin(now() * 3) * 3, 0, Math.PI * 2); ctx.fill();
-      rect(x - 8, y - 8, 16, 8, '#4a3a2a', 1.4);
-      ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y - 8); ctx.lineTo(x, y - 58); ctx.stroke();
-      const wobble = Math.sin(now() * 3 + x) * 3;
-      poly([[x, y - 58], [x + 26, y - 52 + wobble], [x + 4, y - 46], [x + 26, y - 40 + wobble], [x, y - 34]], flag, 1.4);
-      circle(x, y - 60, 3, '#e0b83a', 1);
+      ctx.fillStyle = 'rgba(255,211,92,.10)'; ctx.beginPath(); ctx.ellipse(x + 9, y - 34, 26 + Math.sin(now() * 3) * 2, 34, 0, 0, Math.PI * 2); ctx.fill();
+      poly([[x - 12, y], [x - 9, y - 12], [x + 9, y - 12], [x + 12, y]], era === 0 ? wood : stone, 1.3);
+      limb(x, y - 8, x, y - 69, era < 3 ? '#a77b45' : '#a9a89c', 3);
+      const wave = Math.sin(now() * 3 + x) * 3;
+      ctx.beginPath(); ctx.moveTo(x + 2, y - 62);
+      ctx.bezierCurveTo(x + 13, y - 69, x + 23, y - 56 + wave, x + 33, y - 62 + wave);
+      ctx.lineTo(x + 30, y - 29 + wave); ctx.quadraticCurveTo(x + 17, y - 35, x + 3, y - 29); ctx.closePath(); ink(flag, 1.3);
+      ctx.strokeStyle = '#e7c878'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(x + 5, y - 59); ctx.bezierCurveTo(x + 15, y - 63, x + 24, y - 54 + wave, x + 30, y - 58 + wave); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,245,206,.25)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x + 11, y - 59); ctx.quadraticCurveTo(x + 7, y - 44, x + 12, y - 33); ctx.stroke();
+      // Era-specific finial and a readable gilded team crest.
+      poly([[x + 17, y - 53], [x + 23, y - 47], [x + 17, y - 40], [x + 11, y - 47]], '#ecd38d', 0.8);
+      if (era === 0) poly([[x, y - 78], [x + 4, y - 69], [x, y - 65], [x - 4, y - 69]], '#d3c8ad', 1);
+      else if (era < 5) { circle(x, y - 72, 4, '#d8b762', 1); limb(x - 7, y - 66, x + 7, y - 66, '#c5a157', 2); }
+      else { circle(x, y - 72, 2, '#d1d5c4', 0.8); rect(x - 4, y - 22, 8, 10, '#657461', 1); }
       return;
     }
     const far = type === 'far';
     const recoil = cd > (far ? 1.9 : 0.8) ? (cd - (far ? 1.9 : 0.8)) * 20 : 0;
-    rect(x - (far ? 16 : 12), y - 10, far ? 32 : 24, 10, '#4a3a2a', 1.4);
-    ctx.save(); ctx.translate(x - recoil, y - 12); ctx.rotate(far ? -0.85 : -0.5); if (far) ctx.scale(1.25, 1.25);
+    // Substantial pedestal, braces and turntable anchor the weapon to the roof.
+    poly([[x - 20, y], [x - 16, y - 14], [x + 16, y - 14], [x + 20, y]], era === 0 ? wood : stone, 1.3);
+    rect(x - 19, y - 16, 38, 5, era < 3 ? '#baa98a' : '#73786a', 1);
+    if (era < 3) {
+      limb(x - 13, y - 15, x - 6, y - 29, '#765336', 4); limb(x + 13, y - 15, x + 5, y - 29, '#765336', 4);
+      limb(x - 12, y - 18, x + 11, y - 26, '#c09860', 2);
+    } else { rect(x - 9, y - 27, 18, 12, '#64695d', 1.2); circle(x, y - 20, 5, '#b2ad90', 1); }
+    rect(x - 6, y - 11, 12, 7, flag, 0.7);
+    for (const dx of [-14, 14]) circle(x + dx, y - 8, 1.5, '#ddd1ac', 0.5);
+    ctx.save(); ctx.translate(x - recoil, y - 29); ctx.rotate(far ? -0.85 : -0.25); if (far) ctx.scale(1.15, 1.15);
     if (era === 0) { rect(0, -2, 34, 4, '#8a5a34', 1.2); poly([[34, -5], [44, 0], [34, 5]], '#9aa0a6', 1.2); }
     else if (era === 1) { rect(0, -3, 30, 6, '#8a5a34', 1.2); ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(10, -16); ctx.quadraticCurveTo(0, 0, 10, 16); ctx.stroke(); }
     else if (era === 2) { rect(0, -3, 38, 6, '#8a5a34', 1.2); circle(38, 0, 7, '#7a7a7a', 1.2); }
     else if (era === 3 || era === 4) { rect(0, -5, 34, 10, '#2b2b2b', 1.2); circle(6, 8, 6, '#8a5a34', 1.2); }
     else if (era === 5) { rect(0, -6, 36, 12, '#4a4a44', 1.2); ctx.fillStyle = '#2b2a26'; for (let i = 0; i < 3; i++) ctx.fillRect(4 + i * 10, -8, 4, 16); }
     else { rect(0, -8, 30, 16, '#4f5a48', 1.2); ctx.fillStyle = '#d24b3a'; ctx.fillRect(30, -6, 8, 4); ctx.fillRect(30, 2, 8, 4); }
+    if (era < 3) {
+      // Tension ropes, bindings and a loaded projectile distinguish the old siege engines.
+      ctx.strokeStyle = '#e0cea2'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(0, -13); ctx.lineTo(24, 0); ctx.lineTo(0, 13); ctx.stroke();
+      for (const bx of [4, 8, 18]) { ctx.strokeStyle = '#cbb687'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(bx, -4); ctx.lineTo(bx, 4); ctx.stroke(); }
+      if (far) { rect(-10, -5, 16, 10, '#745333', 1); circle(-5, 0, 7, '#998779', 1.2); ctx.strokeStyle = '#e1d0a6'; ctx.beginPath(); ctx.arc(-5, 0, 4, 3.4, 5.5); ctx.stroke(); }
+      else { poly([[29, -3], [42, 0], [29, 3]], '#c6cbd0', 1); }
+    } else if (era < 6) {
+      const barrelLength = era < 5 ? 34 : 36;
+      ctx.fillStyle = 'rgba(229,226,185,.45)'; ctx.fillRect(3, -4, barrelLength - 6, 2);
+      for (const bx of [4, barrelLength - 6]) rect(bx, -7, 3, 14, era === 3 ? '#b99a52' : '#7d8376', 0.8);
+      ctx.beginPath(); ctx.ellipse(barrelLength + 1, 0, 3, far ? 7 : 5, 0, 0, Math.PI * 2); ink('#1c211e', 1);
+      if (far) { rect(-10, -7, 12, 14, '#777769', 1); circle(-5, 0, 3, '#b7a477', 0.8); }
+    } else {
+      if (far) { rect(-4, -13, 32, 5, '#7a856d', 1); for (let i = 0; i < 3; i++) circle(29, -10 + i * 7, 2.5, '#282d27', 0.8); }
+      else { rect(23, -3, 19, 6, '#979f8d', 1); rect(38, -4, 5, 8, '#343b32', 1); }
+      rect(3, -11, 8, 3, '#b1c6ba', 0.7);
+      ctx.strokeStyle = '#a8b695'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(4, -5); ctx.lineTo(22, -5); ctx.stroke();
+    }
     ctx.restore();
   }
 
@@ -475,7 +561,14 @@ export function createBattle({ canvas }) {
   function drawFigure(u, kit, step, swing, handMode, seated = false) {
     const legColor = kit.legs || SKIN;
     if (seated) { limb(0, -30, 12, -18, legColor); limb(12, -18, 11, -2, legColor); if (kit.boots) { ctx.beginPath(); ctx.ellipse(13, 0, 5, 3, 0, 0, Math.PI * 2); ink(kit.boots, 1.3); } }
-    else limb(-3, -30, -8 - step, 0, legColor); if (!seated) limb(3, -30, 8 + step, 0, legColor);
+    else {
+      // Bent knees and lifting feet replace the old straight scissor legs.
+      for (const [hip, stride] of [[-3, -step], [3, step]]) {
+        const foot = hip + stride, lift = u.state === 'move' ? Math.max(0, -stride) * 0.55 : 0;
+        limb(hip, -30, hip + stride * 0.35 + 3, -16 - lift * 0.3, legColor, 5);
+        limb(hip + stride * 0.35 + 3, -16 - lift * 0.3, foot, -lift, legColor, 4.5);
+      }
+    }
     if (kit.boots && !seated) { ctx.beginPath(); ctx.ellipse(-8 - step, 0, 6, 3.5, 0, 0, Math.PI * 2); ink(kit.boots, 1.3); ctx.beginPath(); ctx.ellipse(8 + step, 0, 6, 3.5, 0, 0, Math.PI * 2); ink(kit.boots, 1.3); }
     const bottom = kit.tunicBottom ?? -20;
     if (kit.fur) {
@@ -488,6 +581,11 @@ export function createBattle({ canvas }) {
     if (kit.vest) rect(-8, -58, 16, 18, kit.vest, 1.4);
     if (kit.crossbelt) { ctx.strokeStyle = '#efe6d4'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-8, -58); ctx.lineTo(8, -40); ctx.stroke(); }
     if (kit.patch) { ctx.fillStyle = kit.patch; ctx.fillRect(-9, -56, 5, 6); }
+    // Cloth folds, warm edge light and small fasteners also dress heroes and workers.
+    ctx.strokeStyle = 'rgba(255,236,187,.35)'; ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.moveTo(-7, -57); ctx.quadraticCurveTo(-5, -48, -7, -41); ctx.stroke();
+    ctx.strokeStyle = 'rgba(38,26,20,.32)'; ctx.beginPath(); ctx.moveTo(5, -49); ctx.quadraticCurveTo(2, -36, 7, -24); ctx.stroke();
+    if (!kit.fur) { circle(0, -39, 1.8, '#c8aa6a', 0.6); }
     const sleeve = kit.sleeves || SKIN;
     limb(-5, -56, -13, -40, sleeve);
     if (kit.shield) drawShield(kit.shield, kit.shieldColor, kit.shieldRim);
@@ -730,7 +828,24 @@ export function createBattle({ canvas }) {
     const mode = isGun(wpn) || wpn === 'crossbow' || wpn === 'bow' ? 'aim' : wpn === 'sling' ? 'hold' : 'strike';
     const hand = drawFigure(u, kitFor(u), step, swing, mode);
     drawEraDetails(u);
-    drawWeaponInk(wpn, hand, swing, t);
+    if (state.mode === 'franchise') {
+      const faction = state[u.side].faction, light = ['jedi', 'harry', 'good'].includes(faction);
+      const accent = faction === 'jedi' ? '#63bfff' : faction === 'sith' ? '#ed4545' : faction === 'good' ? '#e2ca79' : faction === 'evil' ? '#739452' : faction === 'harry' ? '#6aaee5' : '#86bd55';
+      // Shoulder mark and chest emblem keep every small unit readable as its chosen camp.
+      ctx.fillStyle = accent; ctx.beginPath(); ctx.arc(-8, -54, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = accent; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-5, -48); ctx.lineTo(0, -43); ctx.lineTo(5, -48); ctx.stroke();
+      if (['jedi', 'sith'].includes(faction) && u.role === 'melee') {
+        ctx.shadowColor = accent; ctx.shadowBlur = 7; ctx.strokeStyle = accent; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(13, -48); ctx.lineTo(29, -70 + swing * 18); ctx.stroke(); ctx.shadowBlur = 0;
+      } else if (['harry', 'voldemort'].includes(faction)) {
+        ctx.shadowColor = accent; ctx.shadowBlur = 5; ctx.fillStyle = accent;
+        for (let i = 0; i < 3; i++) { const a = u.phase * 2 + i * 2.1; ctx.beginPath(); ctx.arc(17 + Math.cos(a) * 6, -52 + Math.sin(a) * 5, 1.5, 0, Math.PI * 2); ctx.fill(); } ctx.shadowBlur = 0;
+      } else if (!light) {
+        poly([[-11, -61], [-3, -68], [8, -62], [10, -50], [0, -56], [-10, -49]], '#3b3329', 1);
+      }
+    }
+    const replacesWeapon = state.mode === 'franchise' && ['jedi', 'sith'].includes(state[u.side].faction) && u.role === 'melee';
+    if (!replacesWeapon) drawWeaponInk(wpn, hand, swing, t);
   }
 
   // ---------- Heavy units per era ----------
@@ -744,6 +859,10 @@ export function createBattle({ canvas }) {
     ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(47, -66, 1.5, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = INK; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.moveTo(-28, -44); ctx.quadraticCurveTo(-38, -34, -34, -16); ctx.stroke();
     ctx.strokeStyle = HAIR; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(22, -50); ctx.quadraticCurveTo(32, -70, 40, -70); ctx.stroke();
+    ctx.strokeStyle = '#b29a76'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(48, -61); ctx.quadraticCurveTo(23, -51, -3, -57); ctx.stroke();
+    ctx.strokeStyle = 'rgba(235,214,170,.28)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-21, -44); ctx.quadraticCurveTo(2, -54, 18, -43); ctx.stroke();
+    poly([[33, -69], [33, -79], [39, -71]], color, 1);
+    if (caparison) { ctx.strokeStyle = '#d2b977'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-26, -25); ctx.quadraticCurveTo(0, -18 + Math.sin(bob) * 2, 27, -25); ctx.stroke(); }
   }
   function drawMammoth(fur, bob) {
     const stepA = Math.sin(bob) * 4;
@@ -756,6 +875,9 @@ export function createBattle({ canvas }) {
     ctx.strokeStyle = '#efe6d4'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(44, -36); ctx.quadraticCurveTo(66, -34, 62, -18); ctx.stroke();
     ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(44, -50, 1.8, 0, Math.PI * 2); ctx.fill();
     rect(-16, -70, 32, 8, fur, 1.4);
+    ctx.strokeStyle = '#aa8052'; ctx.lineWidth = 1;
+    for (let i = 0; i < 19; i++) { const fx = -33 + i * 3.6, fy = -48 + seeded(i) * 20; ctx.beginPath(); ctx.moveTo(fx, fy); ctx.quadraticCurveTo(fx + 3, fy + 6, fx + 1, fy + 10); ctx.stroke(); }
+    ctx.beginPath(); ctx.ellipse(32, -45, 8, 12, -0.2, 0, Math.PI * 2); ink('#65412d', 1);
   }
   function drawCannon() {
     circle(-10, -12, 13, '#8a5a34', 1.8); circle(-10, -12, 4, '#4a3a2a', 1.2);
@@ -781,7 +903,7 @@ export function createBattle({ canvas }) {
     ctx.fillStyle = team(side); ctx.fillRect(-36, -30, 10, 6);
   }
   function drawHeavy(u, swing) {
-    const bob = u.phase * 7, t = team(u.side);
+    const bob = u.state === 'move' ? u.phase * 7 : 0, t = team(u.side);
     const rider = (kit, mode, wpn, sx, sy, sc = 0.8, seated = true) => { ctx.save(); ctx.translate(sx, sy); ctx.scale(sc, sc); const hand = drawFigure(u, kit, 0, swing, mode, seated); drawWeaponInk(wpn, hand, swing, t); ctx.restore(); };
     const kit = kitFor(u);
     ctx.save(); ctx.scale(1.15, 1.15);
@@ -799,14 +921,36 @@ export function createBattle({ canvas }) {
     else if (u.era === 4) { drawHorse('#3a2a20', bob, null); rider({ ...kit, helmet: 'tricorn' }, 'strike', 'saber', -2, -20); }
     else if (u.era === 5) drawTank(u.side);
     else drawArmoredCar(u.side);
+    if (state.mode === 'franchise') {
+      const faction = state[u.side].faction;
+      const accent = faction === 'jedi' ? '#63bfff' : faction === 'sith' ? '#ed4545' : faction === 'good' ? '#e2ca79' : faction === 'evil' ? '#739452' : faction === 'harry' ? '#6aaee5' : '#86bd55';
+      ctx.fillStyle = accent; ctx.fillRect(-13, -39, 12, 7);
+      ctx.shadowColor = accent; ctx.shadowBlur = 6; ctx.strokeStyle = accent; ctx.lineWidth = 2;
+      if (['jedi', 'sith'].includes(faction)) { ctx.beginPath(); ctx.moveTo(17, -45); ctx.lineTo(45, -51); ctx.stroke(); }
+      else if (['harry', 'voldemort'].includes(faction)) { ctx.beginPath(); ctx.arc(15, -50, 7 + Math.sin(u.phase * 3) * 2, 0, Math.PI * 2); ctx.stroke(); }
+      else { ctx.beginPath(); ctx.moveTo(-7, -34); ctx.lineTo(3, -48); ctx.lineTo(13, -34); ctx.stroke(); }
+      ctx.shadowBlur = 0;
+    }
+    if (u.era >= 5) {
+      // Panel seams, rivets, moving wheel spokes and exhaust give vehicles weight.
+      ctx.strokeStyle = '#bbc1a0'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(-34, -26); ctx.lineTo(28, -26); ctx.stroke();
+      for (let i = 0; i < 5; i++) circle(-30 + i * 14, -21, 1, '#c2bea2', 0.5);
+      for (const wx of (u.era === 5 ? [-30, -10, 10, 30] : [-26, 26])) {
+        ctx.strokeStyle = '#b0ac92'; ctx.beginPath(); ctx.moveTo(wx - Math.cos(bob) * 4, -7 - Math.sin(bob) * 4); ctx.lineTo(wx + Math.cos(bob) * 4, -7 + Math.sin(bob) * 4); ctx.stroke();
+      }
+      ctx.strokeStyle = '#606b56'; ctx.beginPath(); ctx.moveTo(-24, -32); ctx.quadraticCurveTo(-29, -50, -26 + Math.sin(u.phase * 4) * 2, -66); ctx.stroke();
+    }
     ctx.restore();
   }
   function drawSoldier(u) {
     const moving = u.state === 'move';
     const fighting = u.state === 'fight' || u.state === 'siege';
     const step = moving ? Math.sin(u.phase * 7) * 9 : 3;
-    const swing = fighting ? Math.sin(u.phase * 14) * 0.5 + 0.5 : 0.2;
-    if (u.role === 'heavy') drawHeavy(u, swing);
+    const working = u.role === 'worker' && u.state === 'mine';
+    const swing = working ? (Math.sin(u.phase * 8) + 1) / 2 : fighting ? Math.pow(Math.max(0, 1 - u.atkCd / (u.interval || 1)), 2) : 0.2;
+    if (state.mode === 'franchise') franchiseArt.unit(u, step, swing);
+    else if (u.role === 'heavy') drawHeavy(u, swing);
     else {
       // Reguliere troepen waren op het brede slagveld te iel; groter zonder hun grondpositie te verschuiven.
       ctx.save(); ctx.scale(u.role === 'hero' ? 1.06 : 1.18, u.role === 'hero' ? 1.06 : 1.18); drawInfantry(u, step, swing); ctx.restore();
@@ -826,7 +970,20 @@ export function createBattle({ canvas }) {
     ctx.translate(u.x, u.y); ctx.scale(u.dir, 1);
     ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.beginPath(); ctx.ellipse(0, 2, u.role === 'heavy' ? 44 : 16, 5, 0, 0, Math.PI * 2); ctx.fill();
     if (state.elapsed < state[u.side].rallyUntil) { ctx.fillStyle = 'rgba(255,211,92,.3)'; ctx.beginPath(); ctx.ellipse(0, -2, 30, 8, 0, 0, Math.PI * 2); ctx.fill(); }
+    const moving = u.state === 'move', working = u.state === 'mine';
+    const gait = Math.sin(u.phase * 7), breath = Math.sin(u.phase * 2.3);
+    if (moving) {
+      for (let i = 0; i < 3; i++) {
+        const age = (u.phase * 1.8 + i / 3) % 1;
+        ctx.fillStyle = `rgba(166,143,107,${(1 - age) * 0.17})`;
+        ctx.beginPath(); ctx.ellipse(-8 - age * (u.role === 'heavy' ? 50 : 23), -age * 8, 3 + age * 6, 2 + age * 3, 0, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    ctx.save();
+    ctx.translate(0, moving ? -Math.abs(gait) * (u.role === 'heavy' ? 1.2 : 2.4) : -breath * 0.6);
+    ctx.rotate(u.role === 'heavy' ? gait * (moving ? 0.008 : 0) : moving ? 0.035 + gait * 0.018 : working ? Math.sin(u.phase * 8) * 0.045 : breath * 0.008);
     drawSoldier(u);
+    ctx.restore();
     ctx.restore();
     if (u.hp < u.maxHp) {
       const w = u.role === 'heavy' ? 44 : u.role === 'hero' ? 34 : 28, top = u.y - (u.role === 'heavy' ? 96 : u.role === 'hero' ? 104 : 88);
@@ -838,6 +995,7 @@ export function createBattle({ canvas }) {
 
   // ---------- Effects ----------
   function drawShot(e) {
+    if (state.mode === 'franchise') { franchiseArt.shot(e); return; }
     const k = Math.min(1, e.t / 0.22);
     const x = e.x1 + (e.x2 - e.x1) * k, y = e.y1 + (e.y2 - e.y1) * k - Math.sin(k * Math.PI) * (e.heavy ? 90 : e.era <= 2 ? 26 : 4);
     const ang = Math.atan2(e.y2 - e.y1, e.x2 - e.x1);
@@ -848,6 +1006,7 @@ export function createBattle({ canvas }) {
     ctx.restore();
   }
   function drawSpecial(e) {
+    if (state.mode === 'franchise') { franchiseArt.special(e); return; }
     const mirror = e.side === 'enemy';
     const t = e.t / 1.4;
     ctx.save();
@@ -893,8 +1052,11 @@ export function createBattle({ canvas }) {
     ctx = screen;
     ctx.clearRect(0, 0, W, H);
     drawBackground();
-    drawMine(state.player.era, false); drawMine(state.enemy.era, true);
-    drawWalls(state.player.era, state.player.wallsLevel, false); drawWalls(state.enemy.era, state.enemy.wallsLevel, true);
+    if (state.mode === 'franchise') { franchiseArt.field('player'); franchiseArt.field('enemy'); }
+    else {
+      drawMine(state.player.era, false); drawMine(state.enemy.era, true);
+      drawWalls(state.player.era, state.player.wallsLevel, false); drawWalls(state.enemy.era, state.enemy.wallsLevel, true);
+    }
     drawCastle(P_CASTLE_X, state.player, 'player', false);
     drawCastle(E_CASTLE_X, state.enemy, 'enemy', true);
     const sorted = state.units.slice().sort((a, b) => a.y - b.y);

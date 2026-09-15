@@ -1,5 +1,26 @@
 # Changelog
 
+## v1.38.1 — Total Waas krijgt een rijker geschilderd spelbord naar de visuele referentie.
+
+- Total Waas krijgt een rijker geschilderd spelbord naar de visuele referentie.
+- Streken gebruiken diepere kleurverlopen en rijkere illustraties voor bos, duin, polder, water en stad.
+- De kaart vormt visueel één geheel door een warme licht- en patinalaag, duidelijkere labels en zwaardere provinciecontouren.
+- De houten speeltafel heeft een dubbele ingelegde rand en sierhoeken; rivieren, oevers en wegen kregen meer diepte.
+
+## v1.38.0 — Castle Defense krijgt Trough the Ages en drie speelbare franchisecampagnes.
+
+- Castle Defense krijgt Trough the Ages en drie speelbare franchisecampagnes.
+- De host kiest in de lobby Star Wars, Lord of the Rings of Harry Potter en speelt een van twee tegengestelde kampen.
+- Elk kamp doorloopt vijf eigen upgrades met unieke namen voor de basis, troepen, held, werker en ultieme aanval.
+- Franchiselegers en basissen krijgen herkenbare kampkleuren, emblemen, energie-effecten en magische accenten.
+
+## v1.37.2 — Castle Defense vult het scherm en toont details bij lang indrukken.
+
+- Troepen bewegen levendiger met gebogen knieën, ademhaling, werkbewegingen en stof; kleding, rijdieren en voertuigen krijgen extra details.
+- De drie dakverdedigingen zijn verfijnd met sokkels, wapendetails per tijdperk en golvende vaandels met gouden afwerking.
+- Castle Defense vult het scherm en toont details bij lang indrukken.
+- Castle Defense-basissen krijgen natuurlijkere dakvormen, materiaallicht, metselwerk, grondschaduwen en een toegangspad.
+
 ## v1.37.1 — Lokereeeeuuh
 
 - Lokereeeeuuh

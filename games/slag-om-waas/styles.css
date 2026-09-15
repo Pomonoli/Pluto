@@ -36,29 +36,36 @@
     repeating-linear-gradient(98deg, rgba(255, 255, 255, .025) 0 3px, rgba(0, 0, 0, .05) 3px 9px, rgba(255, 255, 255, .015) 9px 14px),
     radial-gradient(120% 90% at 50% 0%, rgba(255, 220, 160, .07), transparent 60%),
     linear-gradient(135deg, var(--sow-wood) 0%, #2a1a0f 45%, var(--sow-wood) 100%);
-  border: 10px solid transparent;
+  border: 12px solid transparent;
   border-image: linear-gradient(135deg, #6b4526 0%, #3a2314 30%, #7a5230 50%, #2e1c10 75%, #5a3a22 100%) 1;
   border-radius: 6px;
-  padding: 10px;
+  padding: 13px;
   box-shadow:
-    inset 0 0 0 1px rgba(201, 162, 75, .35),
-    inset 0 0 40px rgba(0, 0, 0, .7),
+    inset 0 0 0 1px rgba(246, 212, 142, .55),
+    inset 0 0 0 5px rgba(35, 19, 10, .75),
+    inset 0 0 0 7px rgba(176, 126, 67, .38),
+    inset 0 0 48px rgba(0, 0, 0, .78),
     0 2px 0 #0d0805,
     0 18px 40px rgba(0, 0, 0, .55);
 }
+.sow-board-wrap::before,.sow-board-wrap::after{content:'❦';position:absolute;z-index:2;width:38px;height:38px;display:grid;place-items:center;color:#d2ad65;font:26px Georgia,serif;text-shadow:0 1px 1px #120a05,0 0 8px rgba(221,173,86,.35);pointer-events:none}
+.sow-board-wrap::before{left:0;top:0;transform:rotate(-45deg)}.sow-board-wrap::after{right:0;bottom:0;transform:rotate(135deg)}
 .sow-svg { display: block; width: 100%; height: auto; max-height: 84vh; font-family: var(--sow-serif); }
 
 /* ---------- 2.5D bord ---------- */
 .sow-board-depth { fill: #0e0803; }
 .sow-board-depth.side { fill: #4a2e18; stroke: #6b4526; stroke-width: 2; }
 .sow-board-base { fill: url(#sow-parchment); stroke: #6b4a2a; stroke-width: 5; stroke-linejoin: round; filter: url(#sow-soft-shadow); }
+.sow-board-inner-rim{fill:none;stroke:rgba(255,240,198,.72);stroke-width:2;stroke-dasharray:3 2;pointer-events:none}
+.sow-map-patina{pointer-events:none;mix-blend-mode:soft-light;opacity:.9}
 
 /* ---------- cellen ---------- */
 .sow-sector { transition: filter .15s ease, opacity .15s ease; }
 .sow-cell-fill { stroke: none; transition: filter .15s ease; }
 .sow-cell-pattern, .sow-cell-tint, .sow-border-group { pointer-events: none; }
+.sow-cell-pattern{mix-blend-mode:multiply;opacity:.82}
 .sow-cell-tint.rebel { fill: rgba(40, 30, 20, .16); }
-.sow-cell-outline { fill: none; stroke: rgba(70, 50, 30, .45); stroke-width: 1.2; stroke-linejoin: round; pointer-events: none; transition: stroke .15s ease, stroke-width .15s ease; }
+.sow-cell-outline { fill: none; stroke: rgba(67, 43, 24, .58); stroke-width: 1.35; stroke-linejoin: round; pointer-events: none; transition: stroke .15s ease, stroke-width .15s ease; filter:drop-shadow(0 1px 0 rgba(255,244,213,.35)); }
 .sow-faction-edge { stroke-width: 11; stroke-linecap: round; opacity: .9; }
 .sow-faction-edge.neutral { stroke-width: 7; opacity: .45; stroke-dasharray: 12 8; }
 .sow-faction-edge-core { stroke: rgba(255, 255, 255, .85); stroke-width: 2.4; stroke-linecap: round; }
@@ -73,24 +80,24 @@
 
 /* ---------- rivieren, wegen, muur ---------- */
 .sow-features > * { pointer-events: none; }
-.sow-schelde-bank { fill: none; stroke: #d9ecf7; stroke-width: 34; stroke-linecap: round; stroke-linejoin: round; opacity: .9; }
-.sow-schelde { fill: none; stroke: #2e86c1; stroke-width: 24; stroke-linecap: round; stroke-linejoin: round; }
+.sow-schelde-bank { fill: none; stroke: #d9ecf7; stroke-width: 38; stroke-linecap: round; stroke-linejoin: round; opacity: .92; filter:drop-shadow(0 3px 2px rgba(31,78,104,.42)); }
+.sow-schelde { fill: none; stroke: #268fc5; stroke-width: 27; stroke-linecap: round; stroke-linejoin: round; }
 .sow-schelde-hi { fill: none; stroke: rgba(234, 246, 255, .55); stroke-width: 3; stroke-dasharray: 22 16; stroke-linecap: round; }
 .sow-schelde-label { font-size: 19px; font-style: italic; fill: #eaf6ff; letter-spacing: .12em; pointer-events: none; font-family: Georgia, serif; }
-.sow-river-bank { fill: none; stroke: #bfe0f2; stroke-width: 26; stroke-linecap: round; stroke-linejoin: round; }
-.sow-river { fill: none; stroke: #2e86c1; stroke-width: 18; stroke-linecap: round; stroke-linejoin: round; }
+.sow-river-bank { fill: none; stroke: #d6ecf4; stroke-width: 28; stroke-linecap: round; stroke-linejoin: round; filter:drop-shadow(0 2px 1px rgba(38,77,94,.35)); }
+.sow-river { fill: none; stroke: #2997c8; stroke-width: 18; stroke-linecap: round; stroke-linejoin: round; }
 .sow-river-label { font-size: 17px; font-style: italic; fill: #1e4d66; pointer-events: none; letter-spacing: .1em; font-family: Georgia, serif; }
 .sow-bridge .bridge-deck { fill: #8a5a2b; stroke: #3d2412; stroke-width: 1.5; }
 .sow-bridge .bridge-rail { stroke: #3d2412; stroke-width: 1.5; }
-.sow-road-under { fill: none; stroke: rgba(43, 33, 24, .75); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
-.sow-road { fill: none; stroke: #f3e2b8; stroke-width: 3.2; stroke-dasharray: 6 4; stroke-linecap: round; stroke-linejoin: round; }
+.sow-road-under { fill: none; stroke: rgba(52, 35, 22, .72); stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; filter:drop-shadow(0 1px 1px rgba(0,0,0,.28)); }
+.sow-road { fill: none; stroke: #f8e9c4; stroke-width: 3.4; stroke-dasharray: 7 4; stroke-linecap: round; stroke-linejoin: round; }
 .sow-wall-under { fill: none; stroke: #2b2118; stroke-width: 12; opacity: .6; }
 .sow-wall { fill: none; stroke: #d8cdb4; stroke-width: 7; }
 .sow-wall-merlons { fill: none; stroke: #5d4a33; stroke-width: 7; stroke-dasharray: 7 6; }
 
 /* ---------- labels & iconen ---------- */
 .sow-labels { pointer-events: none; }
-.sow-name { font-size: 17px; fill: var(--sow-ink); paint-order: stroke; stroke: rgba(255, 250, 235, .9); stroke-width: 4px; stroke-linejoin: round; font-weight: 600; letter-spacing: .02em; }
+.sow-name { font-size: 17px; fill: #2c2117; paint-order: stroke; stroke: rgba(255, 246, 218, .94); stroke-width: 4.5px; stroke-linejoin: round; font-weight: 700; letter-spacing: .025em; filter:drop-shadow(0 1px 0 rgba(91,57,29,.28)); }
 .sow-name.capital { font-size: 21px; font-weight: 700; }
 .sow-name.center { font-size: 25px; font-weight: 700; letter-spacing: .05em; }
 .sow-troops text { font-size: 15px; font-weight: 700; fill: #fff; font-family: system-ui, sans-serif; }
@@ -133,6 +140,7 @@
 .sow-banner .banner-paper { fill: url(#sow-parchment); stroke: #6b4a2a; stroke-width: 2; filter: url(#sow-soft-shadow); }
 .sow-banner .banner-title { font-size: 24px; font-weight: 700; fill: var(--sow-ink); letter-spacing: .04em; }
 .sow-banner .banner-sub { font-size: 9px; fill: var(--sow-ink-dim); letter-spacing: .3em; }
+.sow-banner .banner-flourish{fill:none;stroke:#b58a43;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.sow-banner .banner-flourish.fine{stroke-width:1;opacity:.7}
 
 /* ---------- paneel ---------- */
 .sow-panel { display: flex; flex-direction: column; gap: 10px; min-width: 0; }

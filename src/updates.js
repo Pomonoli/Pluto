@@ -846,6 +846,32 @@ const RELEASES = [
     improvements:[
       "Lokereeeeuuh"
     ]
+  },
+  {
+    version:"1.37.2",
+    improvements:[
+      "Castle Defense: levendigere troepen met natuurlijke stappen, ademhaling, werkbewegingen en extra kleding- en voertuigdetails.",
+      "Castle Defense: mooiere nabijtorens, zware artillerie en bonusvaandels in alle tijdperken.",
+      "Castle Defense: natuurlijkere basissen met gebogen daken, materiaallicht, metselwerk en grondschaduwen.",
+      "Castle Defense vult het scherm en toont details bij lang indrukken."
+    ]
+  },
+  {
+    version:"1.38.0",
+    features:[
+      "Castle Defense krijgt Trough the Ages en een nieuwe Franchise-spelversie.",
+      "Speel Star Wars, Lord of the Rings of Harry Potter met twee tegengestelde kampen en vijf eigen upgrades."
+    ],
+    improvements:[
+      "Franchiselegers tonen eigen eenheden, helden, basissen, acties, kampkleuren en visuele effecten."
+    ]
+  },
+  {
+    version:"1.38.1",
+    improvements:[
+      "Total Waas krijgt diepere streekkleuren en rijkere illustraties voor bos, duin, polder, water en stad.",
+      "Een warme kaartpatina, duidelijke labels, diepere oevers en een sierlijk afgewerkte houten speeltafel brengen het bord dichter bij de visuele referentie."
+    ]
   }
 ];
 

@@ -146,7 +146,8 @@ function simulation(state) {
       return;
     }
     if (action === 'evolve') {
-      if (p.era >= ERA_NAMES.length - 1 || p.xp < evolveXp(p.era)) throw new Error('Evolueren is nog niet mogelijk.');
+      const maxEra = state.mode === 'franchise' ? 4 : ERA_NAMES.length - 1;
+      if (p.era >= maxEra || p.xp < evolveXp(p.era)) throw new Error('Evolueren is nog niet mogelijk.');
       const pct = p.castleHp / p.castleMaxHp;
       p.xp -= evolveXp(p.era); p.era++;
       p.castleMaxHp = castleMaxHp(p.wallsLevel, p.era);

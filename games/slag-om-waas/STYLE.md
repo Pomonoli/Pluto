@@ -17,6 +17,8 @@ Visuele referentie: de conceptkaart "De Slag om Waas" (oude naam) (tabletop-stra
 
 ## Bord
 
+- Gebruik geschilderde kleurverlopen per streek, rijkere herhalende terreinillustraties en één zachte patinalaag over de volledige kaart. De kaart moet als één gedrukt en met de hand bijgewerkt bord lezen, met warme belichting linksboven en een donkere randvignettering.
+- De houten kist heeft een dubbele ingelegde rand, warme goudaccenten en kleine sierhoeken. Oevers werpen een subtiele schaduw; hoofdwegen hebben een donkere bedding en lichte gestippelde bovenlaag.
 - Donkerhouten achtergrond (`#1e130c`) met afgeschuinde houten lijst (border-image-gradient, houtnerf via repeating-gradient, inset-schaduw). Het bord zelf is perkament (gradient `#f4e8cf`→`#dcc9a3`) met twee donkere offset-lagen eronder voor 2.5D-dikte.
 - Provincies zijn Voronoi-cellen, gegroepeerd per regio (`#regio-<id>`, `.biome-*`). Basiskleur per biome (licht/donker naargelang terrein): Noord `#d4e6f1`/`#85c1e9` sparren, West `#f8c471`/`#e59866` duinarcering, Oost `#58d68d`/`#28b463` akkerrijen, Zuid `#5dade2`/`#2e86c1` waterrimpels, Sint-Niklaas `#a6acaf`/`#7f8c8d` metselwerk. Veroverd gebied krijgt een tint (38 %) van de veroveraar; rebellenland wordt licht gedoofd.
 - Factiegrenzen: brede gekleurde lijn met feDropShadow-gloed in de factiekleur plus een dunne lichte kernlijn (neon-effect), naar binnen geclipt en enkel waar de buur tot een andere groep behoort. Interne celgrenzen dun, halftransparant perkamentbruin.

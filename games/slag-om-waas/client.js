@@ -241,8 +241,21 @@ function buildDefs(defs, factions) {
   defs.append(soft);
 
   const parchment = svg('linearGradient', { id: 'sow-parchment', x1: 0, y1: 0, x2: 1, y2: 1 });
-  parchment.append(svg('stop', { offset: '0%', 'stop-color': '#f4e8cf' }), svg('stop', { offset: '100%', 'stop-color': '#dcc9a3' }));
+  parchment.append(svg('stop', { offset: '0%', 'stop-color': '#fff5dc' }), svg('stop', { offset: '48%', 'stop-color': '#ead8b5' }), svg('stop', { offset: '100%', 'stop-color': '#c5aa7b' }));
   defs.append(parchment);
+
+  const light = svg('radialGradient', { id: 'sow-map-light', cx: '38%', cy: '28%', r: '78%' });
+  light.append(svg('stop', { offset: '0%', 'stop-color': '#fff7d8', 'stop-opacity': .34 }), svg('stop', { offset: '58%', 'stop-color': '#fff', 'stop-opacity': 0 }), svg('stop', { offset: '100%', 'stop-color': '#3b210f', 'stop-opacity': .24 }));
+  defs.append(light);
+  const biomeColors = {
+    north: ['#edf5f3', '#bfdce5', '#88b9ca'], west: ['#ffd38b', '#eda35d', '#ca7640'],
+    east: ['#9de09c', '#50bd73', '#239259'], south: ['#88d8ef', '#48b8de', '#2586ba'], center: ['#ded2b8', '#aaa28f', '#7c7567']
+  };
+  for (const [id, colors] of Object.entries(biomeColors)) {
+    const gradient = svg('linearGradient', { id: `sow-biome-${id}`, x1: '0%', y1: '0%', x2: '100%', y2: '100%' });
+    gradient.append(...colors.map((color, index) => svg('stop', { offset: `${index * 50}%`, 'stop-color': color })));
+    defs.append(gradient);
+  }
 
   // Biome-patronen
   const make = (id, size, children) => {
@@ -251,26 +264,31 @@ function buildDefs(defs, factions) {
     defs.append(pattern);
   };
   make('winter', 30, [
-    svg('path', { d: 'M8 22 L13 9 L18 22 Z M11 22 L13 15 L15 22 Z', fill: '#1e5f3a', opacity: .55 }),
-    svg('path', { d: 'M21 27 L24 19 L27 27 Z', fill: '#2a7048', opacity: .45 }),
+    svg('path', { d: 'M7 24 L13 6 L19 24 Z M10 24 L13 15 L16 24 Z', fill: '#246b49', stroke: '#164d35', 'stroke-width': .7, opacity: .68 }),
+    svg('path', { d: 'M20 28 L24 17 L28 28 Z', fill: '#39805b', stroke: '#1b5c3d', 'stroke-width': .5, opacity: .58 }),
     svg('circle', { cx: 5, cy: 5, r: 1.4, fill: '#fff', opacity: .9 }),
-    svg('circle', { cx: 24, cy: 8, r: 1.1, fill: '#fff', opacity: .8 })
+    svg('circle', { cx: 24, cy: 8, r: 1.1, fill: '#fff', opacity: .8 }),
+    svg('path', { d: 'M1 16 Q8 13 15 16', stroke: '#fff', 'stroke-width': .8, fill: 'none', opacity: .3 })
   ]);
   make('zand', 34, [
     svg('path', { d: 'M2 12 Q10 4 18 12', stroke: '#b9722c', 'stroke-width': 1.5, fill: 'none', opacity: .5 }),
     svg('path', { d: 'M16 27 Q24 19 32 27', stroke: '#b9722c', 'stroke-width': 1.3, fill: 'none', opacity: .4 }),
-    svg('circle', { cx: 8, cy: 24, r: 1, fill: '#9c5a1e', opacity: .4 })
+    svg('circle', { cx: 8, cy: 24, r: 1, fill: '#9c5a1e', opacity: .4 }),
+    svg('circle', { cx: 27, cy: 5, r: .8, fill: '#ffe0a1', opacity: .65 }), svg('path', { d: 'M3 30 Q13 25 24 29', stroke: '#8f542b', 'stroke-width': .7, fill: 'none', opacity: .35 })
   ]);
   make('polder', 26, [
     svg('path', { d: 'M0 5 H26 M0 12 H26 M0 19 H26', stroke: '#1d8348', 'stroke-width': 1.2, opacity: .38 }),
-    svg('path', { d: 'M13 25 v-8 M9 17 l8 4 M9 21 l8 -4', stroke: '#145a32', 'stroke-width': 1, opacity: .35 })
+    svg('path', { d: 'M13 25 v-8 M9 17 l8 4 M9 21 l8 -4', stroke: '#145a32', 'stroke-width': 1, opacity: .35 }),
+    svg('rect', { x: 2, y: 7, width: 8, height: 4, fill: '#d9d36b', opacity: .18 }), svg('rect', { x: 16, y: 14, width: 8, height: 4, fill: '#f0dc79', opacity: .2 })
   ]);
   make('water', 28, [
     svg('path', { d: 'M0 8 q7 -5 14 0 t14 0', stroke: '#eaf6ff', 'stroke-width': 1.4, fill: 'none', opacity: .55 }),
-    svg('path', { d: 'M0 21 q7 -5 14 0 t14 0', stroke: '#eaf6ff', 'stroke-width': 1.1, fill: 'none', opacity: .35 })
+    svg('path', { d: 'M0 21 q7 -5 14 0 t14 0', stroke: '#eaf6ff', 'stroke-width': 1.1, fill: 'none', opacity: .35 }),
+    svg('path', { d: 'M5 14 q5 -3 10 0', stroke: '#1978aa', 'stroke-width': .8, fill: 'none', opacity: .42 })
   ]);
   make('vesting', 22, [
-    svg('path', { d: 'M0 6 H22 M0 17 H22 M6 6 V17 M17 6 V17 M11 0 V6 M11 17 V22', stroke: '#5d6d7e', 'stroke-width': 1, opacity: .4 })
+    svg('path', { d: 'M0 6 H22 M0 17 H22 M6 6 V17 M17 6 V17 M11 0 V6 M11 17 V22', stroke: '#5d5548', 'stroke-width': 1, opacity: .48 }),
+    svg('path', { d: 'M1 4 H10 M12 15 H21', stroke: '#fff7df', 'stroke-width': .7, opacity: .45 })
   ]);
 }
 
@@ -339,7 +357,10 @@ function buildTitleBanner(x, y) {
   title.textContent = 'Total Waas';
   const sub = svg('text', { x: 131, y: 34, 'text-anchor': 'middle', class: 'banner-sub' });
   sub.textContent = 'STRIJD · BOUW · VEROVER';
-  g.append(title, sub);
+  g.append(title, sub,
+    svg('path', { d: 'M5 3 q-18 -13 -27 2 q14 -4 19 10 q-17 3 -9 16 q7 -10 19 -4 M257 3 q18 -13 27 2 q-14 -4 -19 10 q17 3 9 16 q-7 -10 -19 -4', class: 'banner-flourish' }),
+    svg('path', { d: 'M42 43 q18 15 36 0 q18 15 36 0 M148 43 q18 15 36 0 q18 15 36 0', class: 'banner-flourish fine' })
+  );
   return g;
 }
 
@@ -358,6 +379,7 @@ function buildBoard({ game, byId, factions, colorOf, controllerOf, groupOf, sect
   root.append(svg('path', { d: outlinePath, class: 'sow-board-depth', transform: 'translate(8 24)' }));
   root.append(svg('path', { d: outlinePath, class: 'sow-board-depth side', transform: 'translate(4 12)' }));
   root.append(svg('path', { d: outlinePath, class: 'sow-board-base' }));
+  root.append(svg('path', { d: outlinePath, class: 'sow-board-inner-rim', transform: 'scale(.992)', 'transform-origin': `${board.size / 2} ${board.size / 2}` }));
 
   const regionLayer = svg('g', { class: 'sow-regions' });
   const featureLayer = svg('g', { class: 'sow-features' });
@@ -381,7 +403,7 @@ function buildBoard({ game, byId, factions, colorOf, controllerOf, groupOf, sect
     const controller = controllerOf(sector.id);
     const group = svg('g', { class: `sow-sector terrain-${sector.terrain}${controller ? '' : ' rebel'}`, 'data-sector': sector.id });
     const base = biome.dense.includes(sector.terrain) ? biome.dark : biome.light;
-    group.append(svg('polygon', { points: points(sector.polygon), fill: base, class: 'sow-cell-fill' }));
+    group.append(svg('polygon', { points: points(sector.polygon), fill: `url(#sow-biome-${sector.factionHome})`, 'data-base': base, class: 'sow-cell-fill' }));
     group.append(svg('polygon', { points: points(sector.polygon), fill: `url(#sow-pat-${biome.pattern})`, class: 'sow-cell-pattern' }));
     // Veroverd gebied krijgt een tint van de nieuwe eigenaar; rebellenland wordt licht gedoofd
     if (controller && controller !== sector.factionHome) {
@@ -414,6 +436,9 @@ function buildBoard({ game, byId, factions, colorOf, controllerOf, groupOf, sect
     hitLayer.append(hit);
     sectorNodes.set(sector.id, group);
   }
+
+  // A single translucent light-and-patina wash makes the separate cells read as one painted map.
+  regionLayer.append(svg('path', { d: outlinePath, fill: 'url(#sow-map-light)', class: 'sow-map-patina' }));
 
   // Stadsmuur rond Sint-Niklaas
   const city = byId.get('center_sint_niklaas');
@@ -603,6 +628,7 @@ function renderBattle(E, game, you, byId, action) {
     box.append(E('small', 'sow-hint', 'Hoogste verdedigingsworp: fort +' + fort + ', kasteel +' + castle + ', brug +' + bridge + '. Samen met colonnes maximaal +4 bonus en worpwaarde 6; gelijkspel is voor de verdediger.'));
     box.append(E('small', 'sow-hint', 'Elke colonne geeft +1 op één eigen dobbelsteen (maximaal 6).'));
   }
+
   if (battle.lastRoll) {
     const roll = battle.lastRoll;
     for (const [label, values, scores, cls] of [['Aanvaller', roll.attackDice, roll.attackScores, 'attacker'], ['Verdediger', roll.defenseDice, roll.defenseScores, 'defender']]) {

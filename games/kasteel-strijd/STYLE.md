@@ -1,5 +1,13 @@
 # Castle Defense — stijl
 
+- **Spelversies**: `Trough the Ages` behoudt zeven historische tijdperken. `Franchise` gebruikt vijf upgrades binnen Star Wars, Lord of the Rings of Harry Potter. Houd dezelfde geschilderde canvasstijl; maak kampen leesbaar met een eigen accent, borst-/basis-embleem en subtiele energie of magie. De franchisevormen blijven onderdeel van dezelfde diorama-wereld.
+
+- **Troepenanimatie**: gebogen knieën, voetlift, lichte stapvering en ademhaling; werkers buigen mee met hun gereedschap. Kleding krijgt plooien en randlicht. Paarden hebben teugels, mammoeten vachtstreken; voertuigen paneelnaden, klinknagels en bewegende wielspaken. Spaarzaam stof onder bewegende eenheden. Aanvalshoudingen volgen de aanvalscooldown; animatie verandert geen spelstaat.
+
+- **Dakverdediging**: drie leesbare silhouetten in alle tijdperken: laag gericht nabijwapen, grotere steile artillerie en golvend teamvaandel met gouden embleem. Gebruik een verankerde sokkel, steunbalken/draaivoet, materiaallicht en tijdperkdetails (touwbindingen, metalen loopringen, vizieren/raketbuizen).
+
+- **Basisafwerking**: natuurlijke dakcurves en strobanen, materiaalverlopen met warme lichtzijde en donkere flank, zichtbaar metselwerk en diepe deuropeningen. Zachte contactschaduwen, funderingsstenen en een uitgesleten toegangspad verbinden de gebouwen met het terrein; behoud de geïllustreerde inktlijn en herkenbare tijdperksilhouetten.
+
 - **Thema**: geïllustreerd slagveld met inktlijn (`INK = #3a2418`), naar de referentie-illustraties per tijdperk. Alles (figuren, basissen, decor) wordt gevuld én omlijnd via de helpers `ink/rect/circle/poly/limb` in `engine.js`.
 - **Teamkleuren**: speler groen (`#4f7942`), tegenstander rood (`#9b3b35`); zichtbaar in wapenrok/jas/schild/vlag/patch, HP-balken en vaandels. Huid `#c98e64`, haar `#3b2a1e`.
 - **Tijdperken** (7), elk met eigen achtergrond (`ERA_THEME.kind`), basis, toren, kit en zwaar voertuig:

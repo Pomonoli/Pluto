@@ -14,6 +14,25 @@ function spawn(state, engine, side, role) {
   return state.units.at(-1);
 }
 
+test('lang indrukken opent actie-info en een korte tik niet', async () => {
+  const { bindHoldInfo } = await import('../games/kasteel-strijd/client.js');
+  const button = new EventTarget();
+  let opened = 0;
+  bindHoldInfo(button, () => { opened++; }, 15);
+  const press = () => {
+    const event = new Event('pointerdown');
+    Object.defineProperty(event, 'button', { value: 0 });
+    button.dispatchEvent(event);
+  };
+  press();
+  button.dispatchEvent(new Event('pointerup'));
+  await new Promise((resolve) => setTimeout(resolve, 25));
+  assert.equal(opened, 0);
+  press();
+  await new Promise((resolve) => setTimeout(resolve, 25));
+  assert.equal(opened, 1);
+});
+
 test('createGame vereist twee spelers en start beide legers gelijk in de Prehistorie', () => {
   assert.throws(() => ks.createGame(players().slice(0, 1)), /precies twee/);
   assert.throws(() => ks.createGame([...players(), { id: 'p3' }]), /precies twee/);
@@ -27,6 +46,35 @@ test('createGame vereist twee spelers en start beide legers gelijk in de Prehist
   assert.deepEqual(game.battle.player, game.battle.enemy);
   assert.equal(game.battle.player.era, 0);
   assert.equal(game.battle.units.length, 0, 'troepen verschijnen niet vanzelf');
+});
+
+test('host kiest Trough the Ages of een franchise met twee tegengestelde kampen', () => {
+  assert.deepEqual(ks.normalizeRoomOptions({ mode: 'unknown' }), { mode: 'ages', franchise: 'starwars', hostSide: 'jedi' });
+  const game = ks.createGame(players(), { mode: 'franchise', franchise: 'starwars', hostSide: 'sith' }, T0);
+  assert.equal(game.mode, 'franchise');
+  assert.equal(game.players[0].faction, 'sith');
+  assert.equal(game.players[1].faction, 'jedi');
+  const view = ks.serialize(game, 'p1');
+  assert.equal(view.battle.mode, 'franchise');
+  assert.equal(view.battle.player.faction, 'sith');
+  assert.equal(view.content.franchiseName, 'Star Wars');
+  assert.equal(view.content.player.stage, 'Separatist Federation');
+  assert.equal(view.content.enemy.stage, 'Galactic Republic');
+  for (const [key, def] of Object.entries(ks.FRANCHISES)) {
+    assert.equal(def.sides.length, 2);
+    for (const side of def.sides) assert.equal(def.tracks[side].length, 5, `${key}/${side} heeft vijf upgrades`);
+  }
+});
+
+test('Franchise stopt na vijf stadia en Trough the Ages houdt zeven tijdperken', () => {
+  const franchise = ks.createGame(players(), { mode: 'franchise', franchise: 'lotr', hostSide: 'good' }, T0);
+  for (let era = 0; era < 4; era++) { franchise.battle.player.xp = sim.evolveXp(era); ks.handleAction(franchise, 'p1', 'evolve'); }
+  assert.equal(franchise.battle.player.era, 4);
+  franchise.battle.player.xp = 100000;
+  assert.throws(() => ks.handleAction(franchise, 'p1', 'evolve'), /nog niet mogelijk/);
+  const ages = ks.createGame(players(), { mode: 'ages' }, T0);
+  for (let era = 0; era < 6; era++) { ages.battle.player.xp = sim.evolveXp(era); ks.handleAction(ages, 'p1', 'evolve'); }
+  assert.equal(ages.battle.player.era, 6);
 });
 
 test('troepen worden gekocht, getraind in volgorde en verschijnen aan de eigen basis', () => {

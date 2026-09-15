@@ -2,13 +2,13 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.37.1
+## Nieuw in versie 1.38.1
 
-Lokereeeeuuh
+Total Waas krijgt een rijker geschilderd spelbord met diepere streekkleuren, levendiger terrein, een warme kaartpatina, duidelijkere labels en een sierlijk afgewerkte houten speeltafel.
 
-## Nieuw in versie 1.37.0
+## Nieuw in versie 1.38.0
 
-Total Waas: kies zelf een unieke factie in de lobby en speel met Risk-dobbelgevechten, kasteelbonussen, overwinningskaarten en hoofdstadsevolutie.
+Castle Defense krijgt twee spelversies: Trough the Ages met zeven historische tijdperken en Franchise met Star Wars, Lord of the Rings of Harry Potter. De host kiest zijn kamp; beide zijden doorlopen vijf eigen upgrades met unieke basissen, eenheden, helden en acties.
 
 ## Nieuw in versie 1.0.0
 
