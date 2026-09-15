@@ -893,6 +893,12 @@ const RELEASES = [
       "CycClub: klassementen tonen de leider met een echte totaaltijd en de rest met +achterstand; het ploegenklassement telt per echte ploeg.",
       "CycClub: het leaderboard toont nu ook de gewonnen truien (Geel, Groen, Bolletjes, Wit, Ploegen)."
     ]
+  },
+  {
+    version:"1.39.1",
+    improvements:[
+      "Cycclupgrade"
+    ]
   }
 ];
 

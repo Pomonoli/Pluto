@@ -2,6 +2,10 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
+## Nieuw in versie 1.39.1
+
+Cycclupgrade
+
 ## Nieuw in versie 1.39.0
 
 CycClub-koersen zijn interactiever: elke renner heeft een groene (uithouding) en rode (explosiviteit) energiebalk, knechten kunnen de kopman beschermen of een lead-out geven, Val aan krijgt een inzet met ontploffingsrisico, de koersradio kondigt aanvallers aan die je kunt volgen, je positie in de groep telt mee en gebeurtenissen onderweg (zijwind, lekke band, valpartij, bevoorrading, rugwind) vragen om een keuze. Klassementen tonen de leider met een echte totaaltijd en de rest met +achterstand, en het leaderboard toont per speler de gewonnen truien. Nieuw is ook het Team-Tactics-deck: tien tactiekkaarten die je in de shop activeert, upgradet en koopt en in koers per segment speelt — een podium of leiderstrui geeft ze terug.

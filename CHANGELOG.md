@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.39.1 — Cycclupgrade
+
+- Cycclupgrade
+
 ## v1.39.0 — CycClub-koersen worden interactiever met twee energiebalken, ploegacties, koersradio, positie en gebeurtenissen onderweg.
 
 - Elke renner heeft tijdens een rit een groene balk (uithouding, daalt heel de rit) en een rode balk (explosiviteit, kost bij Val aan/Kop en laadt op bij Volg/Herstel, nooit boven de groene). Hongerklop bij groen ≤ 10; na de rit wordt de groene balk weer blijvende vermoeidheid.
