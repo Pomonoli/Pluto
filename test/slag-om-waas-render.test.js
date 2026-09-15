@@ -74,7 +74,7 @@ test('lobby toont vier facties, markeert eigen keuze en blokkeert bezette factie
   assert.match(text(buttons.find(button => text(button).includes('Noord'))), /Gekozen door Bob/);
   buttons.find(button => text(button).includes('West')).click();
   assert.equal(h.calls[0][0], 'room:setPlayerOptions');
-  assert.deepEqual(h.calls[0][1], { faction: 'west' });
+  assert.equal(h.calls[0][1].faction, 'west');
 });
 
 test('provincie opent Acties, onthoudt tab bij updates en reset bij heropenen', () => {

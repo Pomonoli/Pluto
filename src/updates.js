@@ -837,7 +837,8 @@ const RELEASES = [
   {
     version:"1.37.0",
     improvements:[
-      "Total Waas: Risk-dobbelgevechten met kasteelbonussen, inzetbare overwinningskaarten en duidelijke hoofdstadsevolutie."
+      "Iedere speler kiest in de Total Waas-lobby zelf een unieke factie; NPC's en spelers zonder keuze krijgen automatisch een vrije factie.",
+      "Total Waas gebruikt Risk-dobbelgevechten met kasteelbonussen, inzetbare overwinningskaarten en duidelijke hoofdstadsevolutie."
     ]
   }
 ];
