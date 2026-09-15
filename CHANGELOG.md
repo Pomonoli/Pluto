@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.38.2 — Franchise integration
+
+- Franchise integration
+
 ## v1.38.1 — Total Waas krijgt een rijker geschilderd spelbord naar de visuele referentie.
 
 - Total Waas krijgt een rijker geschilderd spelbord naar de visuele referentie.

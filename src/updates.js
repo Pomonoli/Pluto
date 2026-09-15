@@ -872,6 +872,12 @@ const RELEASES = [
       "Total Waas krijgt diepere streekkleuren en rijkere illustraties voor bos, duin, polder, water en stad.",
       "Een warme kaartpatina, duidelijke labels, diepere oevers en een sierlijk afgewerkte houten speeltafel brengen het bord dichter bij de visuele referentie."
     ]
+  },
+  {
+    version:"1.38.2",
+    improvements:[
+      "Franchise integration"
+    ]
   }
 ];
 

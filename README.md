@@ -2,9 +2,9 @@
 
 Private, self-hosted minigameplatform voor vrienden, met realtime rooms, accounts, leaderboards en een installeerbare PWA.
 
-## Nieuw in versie 1.38.1
+## Nieuw in versie 1.38.2
 
-Total Waas krijgt een rijker geschilderd spelbord met diepere streekkleuren, levendiger terrein, een warme kaartpatina, duidelijkere labels en een sierlijk afgewerkte houten speeltafel.
+Franchise integration
 
 ## Nieuw in versie 1.38.0
 
